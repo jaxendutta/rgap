@@ -41,3 +41,4 @@ logs/
 # Distribution
 dist/
 build/
+rgap.egg-info/

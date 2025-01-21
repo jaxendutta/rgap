@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Start timing
+start_time=$(date +%s)
+
 # Set the default behavior for printf to include a newline
 printf_with_newline() {
     printf "$@" && echo
@@ -17,6 +20,75 @@ NC='\033[0m' # No Color
 # Get the directory where the script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 VENV_PATH="$SCRIPT_DIR/venv"
+LOG_FILE="$SCRIPT_DIR/setup.log"
+
+# Function to format time duration
+format_duration() {
+    local duration=$1
+    local minutes=$((duration / 60))
+    local seconds=$((duration % 60))
+    if [ $minutes -gt 0 ]; then
+        echo "${minutes}min ${seconds}s"
+    else
+        echo "${seconds}s"
+    fi
+}
+
+print_time_taken() {
+    end_time=$(date +%s)
+    duration=$(( end_time - start_time ))
+    print "${BLUE}Script completed in $(format_duration $duration)${NC}\n"
+}
+
+# Function to handle cleanup on error
+cleanup_on_error() {
+    local undo=$1
+    if [ "$undo" = true ]; then
+        print "${BLUE}\nCleaning up RGAP environment...${NC}"
+    else
+        print "${RED}\nError occurred. Cleaning up...${NC}"
+    fi
+    
+    # Deactivate venv if it's active
+    if [[ "$VIRTUAL_ENV" == *"$VENV_PATH"* ]]; then
+        printf "${BLUE}  Deactivating virtual environment... ${NC}"
+        deactivate 2>/dev/null
+        if [ ! -z "$OLD_PS1" ]; then
+            export PS1="$OLD_PS1"
+            unset OLD_PS1
+        fi
+        print "${GREEN}✓${NC}"
+    fi
+
+    # Remove the venv directory
+    if [ -d "$VENV_PATH" ]; then
+        printf "${BLUE}  Removing virtual environment directory... ${NC}"
+        rm -rf "$VENV_PATH"
+        print "${GREEN}✓${NC}"
+    fi
+
+    if [ "$undo" = true ]; then
+        # Remove setup.log if it exists
+        if [ -f $LOG_FILE ]; then
+            printf "${BLUE}  Removing setup log... ${NC}"
+            rm $LOG_FILE
+            print "${GREEN}✓${NC}"
+        fi
+        print "${GREEN}RGAP environment cleanup complete!${NC}"
+        print_time_taken
+        return 0
+    else
+        print "${RED}Setup failed. Check $LOG_FILE for details.${NC}"
+        print_time_taken
+        return 1
+    fi
+}
+
+# Check if -undo flag is passed
+if [ "$1" = "-undo" ]; then
+    cleanup_on_error true
+    return 0
+fi
 
 # Function to check if virtualenv exists and is valid
 check_venv() {
@@ -33,7 +105,7 @@ log_with_no_color() {
     sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g"
 }
 
-# Setup portion - capture in log but don't affect activation
+# Setup portion with both terminal output and logging
 {
     if check_venv; then
         print "${BLUE}\nFound existing RGAP virtual environment${NC}"
@@ -41,31 +113,51 @@ log_with_no_color() {
         print "${BLUE}\nSetting up new RGAP development environment...${NC}"
         
         # Run the Python setup script
-        python setup.py
+        python setup_env.py
+        setup_exit_code=$?
         
-        if [ $? -ne 0 ]; then
-            print "${RED}Environment setup failed. Please check the error messages above.${NC}"
-            exit 1
+        if [ $setup_exit_code -ne 0 ]; then
+            cleanup_on_error
+            return 1
         fi
         print "${GREEN}Environment setup completed successfully!${NC}"
     fi
-} 2>&1 | tee >(log_with_no_color > setup.log)
+} 2>&1 | tee >(log_with_no_color >> $LOG_FILE)
 
 # Now execute activation directly (not in a subshell)
-if check_venv; then
-    print "${BLUE}  Activating RGAP Virtual Environment...${NC}"
-    source "$VENV_PATH/bin/activate"
-    
-    # Add environment info to PS1 if not already there
-    if [[ $PS1 != *"RGAP"* ]]; then
-        export OLD_PS1="$PS1"
-        export PS1="(RGAP) $PS1"
-    fi
-    
-    print "${GREEN}  Activated. You're now in the RGAP Virtual Environment!${NC}"
-    print "${BLUE}\nTo set-up the RGAP Virtual Environment in any terminal, run this script again:${NC}"
-    print "  source $(basename "${BASH_SOURCE[0]}")\n"
-else
-    print "${RED}Virtual environment setup failed.${NC}"
-    exit 1
+if ! check_venv; then
+    cleanup_on_error
+    return 1
 fi
+
+print "${BLUE}  Activating RGAP Virtual Environment...${NC}"
+source "$VENV_PATH/bin/activate"
+
+# Add environment info to PS1 if not already there
+if [[ $PS1 != *"RGAP"* ]]; then
+    export OLD_PS1="$PS1"
+    export PS1="(RGAP) $PS1"
+fi
+
+print "${GREEN}  Activated. You're now in the RGAP Virtual Environment!${NC}"
+
+# Install RGAP package in development mode
+{
+    print "${BLUE}  Installing RGAP package in development mode...${NC}"
+    pip install -e . 2>&1
+    pip_exit_code=$?
+    
+    if [ $pip_exit_code -ne 0 ]; then
+        cleanup_on_error
+        return 1
+    fi
+    print "${GREEN}  RGAP package installed successfully!${NC}"
+} 2>&1 | tee >(log_with_no_color >> $LOG_FILE)
+
+print "${BLUE}\nTo set-up the RGAP Virtual Environment in any terminal, run this script again:${NC}"
+print "  source $(basename "${BASH_SOURCE[0]}")\n"
+
+# Calculate and display execution time
+end_time=$(date +%s)
+duration=$(( end_time - start_time ))
+print "${BLUE}Script completed in $(format_duration $duration)${NC}"
