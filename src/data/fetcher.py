@@ -95,7 +95,7 @@ class Fetcher:
         WHERE owner_org = '{self.config.orgs[org]}'
         AND agreement_start_date LIKE '%{year}-%'
         """
-        
+        self.year = year
         try:
             response = requests.post(
                 self.config.base_url,
@@ -150,6 +150,7 @@ class Fetcher:
             verify_ssl: Whether to verify SSL certificate
             handle_amendments: How to handle amendments ('all', 'latest', or 'none')
         """
+        self.year = year
         self._print(f'🚚 Starting tri-agency data fetch for {year}... ')
         
         all_data = []
@@ -189,7 +190,7 @@ class Fetcher:
         print('\nRecords per organization:')
         print(df['org'].value_counts())
 
-    def analyze_grants(self, df: pd.DataFrame) -> Dict:
+    def analyze_grants(self, df: pd.DataFrame, top: int = 10) -> Dict:
         """
         Analyze the grants data and return a dictionary of analysis results.
         
@@ -199,6 +200,8 @@ class Fetcher:
         if df.empty:
             print('No data to analyze!')
             return {}
+
+        self.top = top
             
         self._print('🗃️ Performing grant analysis... ')
         
@@ -221,26 +224,65 @@ class Fetcher:
 
     def _get_org_summary(self, df: pd.DataFrame) -> pd.DataFrame:
         """Calculate summary statistics by organization"""
-        return df.groupby('org').agg({
+        summary = df.groupby('org').agg({
             'agreement_value': ['count', 'sum', 'mean', 'median'],
-            'recipient_province': 'count'
+            'recipient_legal_name': 'count'
         }).round(2)
 
-    def _get_provincial_distribution(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Calculate grant distribution by province"""
-        return df.groupby(['org', 'recipient_province']).size().unstack(fill_value=0)
+        # Flatten the multi-index columns
+        summary.columns = ['# of Grants', 'Total Funding ($)', 'Average Funding ($)', 'Median Funding ($)', '# of Recipients']
+        summary.index.name = 'Organization'
+        return summary
 
-    def _get_top_recipients(self, df: pd.DataFrame, n: int = 10) -> pd.DataFrame:
+    def _get_provincial_distribution(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Calculate total funding by province for each organization"""
+        province_funding = df.pivot_table(
+            index='recipient_province',
+            columns='org',
+            values='agreement_value',
+            aggfunc='sum'
+        ).fillna(0)
+
+        # Calculate total for each province
+        province_funding['Total'] = province_funding.sum(axis=1)
+
+        # Calculate percentage distribution
+        province_pct = province_funding.div(province_funding.sum(axis=1), axis=0) * 100
+
+        # Create combined DataFrame with single index
+        combined_data = pd.DataFrame(index=province_funding.index)
+
+        # Fill in the data
+        orgs = ['CIHR', 'NSERC', 'SSHRC']
+        for org in orgs:
+            combined_data[f'{org} (%)'] = province_pct[org]
+            combined_data[f'{org} ($)'] = province_funding[org]
+
+        # Add total funding as a single column
+        combined_data['Total ($)'] = province_funding['Total']
+
+        # Sort by total funding descending
+        combined_data = combined_data.sort_values('Total ($)', ascending=False).reset_index()
+        combined_data.index += 1
+        combined_data.rename(columns={'recipient_province': 'Province/State'}, inplace=True)
+
+        return combined_data
+
+    def _get_top_recipients(self, df: pd.DataFrame) -> pd.DataFrame:
         """Get top n recipients by funding amount"""
-        return (
-            df.groupby('recipient_legal_name')
-            .agg({
-                'agreement_value': ['count', 'sum'],
-                'org': 'first'
-            })
+        data = (df.groupby('recipient_legal_name').agg({
+                'agreement_value': ['sum', 'count', 'mean'],
+                'org': lambda x: ', '.join(sorted(set(x)))
+            }).round(2)
             .sort_values(('agreement_value', 'sum'), ascending=False)
-            .head(n)
+            .head(self.top)
         )
+
+        data.columns = ['Total Funding ($)', 'Number of Agreements', 'Average Funding ($)', 'Organizations']
+        data.index.name = 'Recipient'
+        data = data.reset_index()
+        data.index = data.index + 1
+        return data
 
     def _get_funding_ranges(self, df: pd.DataFrame) -> pd.DataFrame:
         """Analyze distribution of funding amounts"""
@@ -249,33 +291,42 @@ class Fetcher:
             bins=[0, 10000, 50000, 100000, 500000, float('inf')],
             labels=['0-10K', '10K-50K', '50K-100K', '100K-500K', '500K+']
         )
-        return df.groupby(['org', 'funding_range'], observed=False).size().unstack(fill_value=0)
+        data = df.groupby(['org', 'funding_range'], observed=False).size().unstack(fill_value=0)
+        data.columns = ['0-10K', '10K-50K', '50K-100K', '100K-500K', '500K+']
+        data.index.name = 'Organization'
+        return data
 
     def _print_analysis_results(self, results: Dict) -> None:
         """Print formatted analysis results"""
         print('\nAnalysis Results')
         print('=' * 40)
         
-        print('\nSummary by Organization:')
-        display(results['summary_by_org'].style
-               .format({
-                   ('agreement_value', 'sum'): '${:,.2f}',
-                   ('agreement_value', 'mean'): '${:,.2f}',
-                   ('agreement_value', 'median'): '${:,.2f}',
-                   ('agreement_value', 'count'): '{:,}',
-                   ('recipient_province', 'count'): '{:,}'
-               }))
+        print(f'\nSummary by Organization [{self.year}]:')
+        display(results['summary_by_org'].style.format({
+                '# of Grants': '{:,}',
+                'Total Funding ($)': '${:,.2f}',
+                'Average Funding ($)': '${:,.2f}',
+                'Median Funding ($)': '${:,.2f}',
+                '# of Recipients': '{:,}'
+            }))
         
-        print('\nGrants by Province:')
-        # Transpose the provincial distribution and format
-        display(results['provincial_distribution'].T.style.format('{:,}'))
+        print(f'\nFunding Distribution by Province (and US States) [{self.year}]:')
+        display(results['provincial_distribution'].style.format({
+                'Total ($)': '${:,.2f}',
+                'CIHR (%)': '{:,.2f}%',
+                'NSERC (%)': '{:,.2f}%',
+                'SSHRC (%)': '{:,.2f}%',
+                'CIHR ($)': '${:,.2f}',
+                'NSERC ($)': '${:,.2f}',
+                'SSHRC ($)': '${:,.2f}'
+            }))
         
-        print('\nTop 10 Recipients by Funding:')
-        display(results['top_recipients'].style
-               .format({
-                   ('agreement_value', 'sum'): '${:,.2f}',
-                   ('agreement_value', 'count'): '{:,}'
-               }))
+        print(f'\nTop {len(results['top_recipients'])} Recipients by Funding [{self.year}]:')
+        display(results['top_recipients'].style.format({
+                'Total Funding ($)': "${:,.2f}",
+                'Average Funding ($)': "${:,.2f}",
+                'Number of Agreements': "{:,}"
+            }))
         
-        print('\nFunding Range Distribution:')
+        print(f'\nFunding Range Distribution [{self.year}]:')
         display(results['funding_ranges'].style.format('{:,}'))
