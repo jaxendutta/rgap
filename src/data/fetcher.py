@@ -96,38 +96,53 @@ class Fetcher:
         AND agreement_start_date LIKE '%{year}-%'
         """
         self.year = year
-        try:
-            response = requests.post(
-                self.config.base_url,
-                headers=headers,
-                json={'sql': sql_query},
-                verify=verify_ssl
-            )
-            response.raise_for_status()
-            data = response.json()
-            
-            if data.get('success'):
-                records = data['result']['records']
-                logger.info(f'Found {len(records)} raw records for {org} in {year}')
+        attempts = 0
+        max_attempts = 5
+        
+        while attempts < max_attempts:
+            try:
+                response = requests.post(
+                    self.config.base_url,
+                    headers=headers,
+                    json={'sql': sql_query},
+                    verify=verify_ssl
+                )
+                response.raise_for_status()
+                data = response.json()
                 
-                if records:
-                    df = pd.DataFrame([GrantRecord(r).record for r in records])
-                    df['org'] = org
-                    df['year'] = year
+                if data.get('success'):
+                    records = data['result']['records']
+                    logger.info(f'Found {len(records)} raw records for {org} in {year}')
                     
-                    # Handle amendments based on parameter
-                    if handle_amendments == 'latest':
-                        df = self._keep_latest_amendments(df)
-                    elif handle_amendments == 'none':
-                        df = df[df['amendment_number'] == '0']
-                    
-                    return df
-                    
-            return pd.DataFrame()
-            
-        except Exception as e:
-            logger.error(f'Error fetching {org} data: {str(e)}')
-            return pd.DataFrame()
+                    if records:
+                        df = pd.DataFrame([GrantRecord(r).record for r in records])
+                        df['org'] = org
+                        df['year'] = year
+                        
+                        # Handle amendments based on parameter
+                        if handle_amendments == 'latest':
+                            df = self._keep_latest_amendments(df)
+                        elif handle_amendments == 'none':
+                            df = df[df['amendment_number'] == '0']
+                        
+                        return df
+                        
+                return pd.DataFrame()
+                
+            except requests.exceptions.HTTPError as e:
+                if response.status_code == 500:
+                    attempts += 1
+                    logger.warning(f'Server error (500). Attempt {attempts} of {max_attempts}. Retrying...')
+                    continue
+                else:
+                    logger.error(f'Error fetching {org} data: {str(e)}')
+                    return pd.DataFrame()
+            except Exception as e:
+                logger.error(f'Error fetching {org} data: {str(e)}')
+                return pd.DataFrame()
+        
+        logger.error(f'Failed to fetch {org} data after {max_attempts} attempts.')
+        return pd.DataFrame()
 
     def _keep_latest_amendments(self, df: pd.DataFrame) -> pd.DataFrame:
         """Keep only the latest amendment for each reference number"""
@@ -155,7 +170,6 @@ class Fetcher:
         
         all_data = []
         
-        # Use tqdm for progress bar
         for org in self.config.orgs:
             self._print(f'  🔍 Fetching {org} data... ', end='', flush=True)
             org_df = self.fetch_org_year(org, year, verify_ssl, handle_amendments)
@@ -190,7 +204,7 @@ class Fetcher:
         print('\nRecords per organization:')
         print(df['org'].value_counts())
 
-    def analyze_grants(self, df: pd.DataFrame, top: int = 10) -> Dict:
+    def analyze_grants(self, df: pd.DataFrame, top: int = 10, show: bool = False) -> Dict:
         """
         Analyze the grants data and return a dictionary of analysis results.
         
@@ -206,10 +220,10 @@ class Fetcher:
         self._print('🗃️ Performing grant analysis... ')
         
         analysis_steps = [
-            ('summary_by_org', 'Calculating summary by organization', self._get_org_summary),
-            ('provincial_distribution', 'Calculating provincial distribution', self._get_provincial_distribution),
-            ('top_recipients', 'Identifying top recipients', self._get_top_recipients),
-            ('funding_ranges', 'Analyzing funding ranges', self._get_funding_ranges)
+            ('summary_by_org', 'Calculating summary by organization', self.get_org_summary),
+            ('provincial_distribution', 'Calculating provincial distribution', self.get_provincial_distribution),
+            ('top_recipients', 'Identifying top recipients', self.get_top_recipients),
+            ('funding_ranges', 'Analyzing funding ranges', self.get_funding_ranges)
         ]
 
         analysis_results = {}
@@ -219,22 +233,35 @@ class Fetcher:
             analysis_results[key] = func(df)
             self._print('✓')
         
-        self._print_analysis_results(analysis_results)
+        if show:
+            self._print_analysis_results(analysis_results)
+        
         return analysis_results
 
-    def _get_org_summary(self, df: pd.DataFrame) -> pd.DataFrame:
+    def get_org_summary(self, df: pd.DataFrame, display_table = False) -> pd.DataFrame:
         """Calculate summary statistics by organization"""
-        summary = df.groupby('org').agg({
+        data = df.groupby('org').agg({
             'agreement_value': ['count', 'sum', 'mean', 'median'],
             'recipient_legal_name': 'count'
         }).round(2)
 
         # Flatten the multi-index columns
-        summary.columns = ['# of Grants', 'Total Funding ($)', 'Average Funding ($)', 'Median Funding ($)', '# of Recipients']
-        summary.index.name = 'Organization'
-        return summary
+        data.columns = ['# of Grants', 'Total Funding ($)', 'Average Funding ($)', 'Median Funding ($)', '# of Recipients']
+        data.index.name = 'Organization'
+        data.reset_index(inplace=True)
 
-    def _get_provincial_distribution(self, df: pd.DataFrame) -> pd.DataFrame:
+        if display_table:
+            display(data.style.format({
+            '# of Grants': '{:,}',
+            'Total Funding ($)': '${:,.2f}',
+            'Average Funding ($)': '${:,.2f}',
+            'Median Funding ($)': '${:,.2f}',
+            '# of Recipients': '{:,}'
+        }))
+
+        return data
+
+    def get_provincial_distribution(self, df: pd.DataFrame, display_table = False) -> pd.DataFrame:
         """Calculate total funding by province for each organization"""
         province_funding = df.pivot_table(
             index='recipient_province',
@@ -266,52 +293,8 @@ class Fetcher:
         combined_data.index += 1
         combined_data.rename(columns={'recipient_province': 'Province/State'}, inplace=True)
 
-        return combined_data
-
-    def _get_top_recipients(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Get top n recipients by funding amount"""
-        data = (df.groupby('recipient_legal_name').agg({
-                'agreement_value': ['sum', 'count', 'mean'],
-                'org': lambda x: ', '.join(sorted(set(x)))
-            }).round(2)
-            .sort_values(('agreement_value', 'sum'), ascending=False)
-            .head(self.top)
-        )
-
-        data.columns = ['Total Funding ($)', 'Number of Agreements', 'Average Funding ($)', 'Organizations']
-        data.index.name = 'Recipient'
-        data = data.reset_index()
-        data.index = data.index + 1
-        return data
-
-    def _get_funding_ranges(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Analyze distribution of funding amounts"""
-        df['funding_range'] = pd.cut(
-            df['agreement_value'],
-            bins=[0, 10000, 50000, 100000, 500000, float('inf')],
-            labels=['0-10K', '10K-50K', '50K-100K', '100K-500K', '500K+']
-        )
-        data = df.groupby(['org', 'funding_range'], observed=False).size().unstack(fill_value=0)
-        data.columns = ['0-10K', '10K-50K', '50K-100K', '100K-500K', '500K+']
-        data.index.name = 'Organization'
-        return data
-
-    def _print_analysis_results(self, results: Dict) -> None:
-        """Print formatted analysis results"""
-        print('\nAnalysis Results')
-        print('=' * 40)
-        
-        print(f'\nSummary by Organization [{self.year}]:')
-        display(results['summary_by_org'].style.format({
-                '# of Grants': '{:,}',
-                'Total Funding ($)': '${:,.2f}',
-                'Average Funding ($)': '${:,.2f}',
-                'Median Funding ($)': '${:,.2f}',
-                '# of Recipients': '{:,}'
-            }))
-        
-        print(f'\nFunding Distribution by Province (and US States) [{self.year}]:')
-        display(results['provincial_distribution'].style.format({
+        if display_table:
+            display(combined_data.style.format({
                 'Total ($)': '${:,.2f}',
                 'CIHR (%)': '{:,.2f}%',
                 'NSERC (%)': '{:,.2f}%',
@@ -321,12 +304,63 @@ class Fetcher:
                 'SSHRC ($)': '${:,.2f}'
             }))
         
+        return combined_data
+
+    def get_top_recipients(self, df: pd.DataFrame, display_table = False, top = 10) -> pd.DataFrame:
+        """Get top n recipients by funding amount"""
+        n = self.top if hasattr(self, 'top') else top
+        data = (df.groupby('recipient_legal_name').agg({
+                'agreement_value': ['sum', 'count', 'mean'],
+                'org': lambda x: ', '.join(sorted(set(x)))
+            }).round(2)
+            .sort_values(('agreement_value', 'sum'), ascending=False)
+            .head(n)
+        )
+
+        data.columns = ['Total Funding ($)', 'Number of Agreements', 'Average Funding ($)', 'Organizations']
+        data.index.name = 'Recipient'
+        data = data.reset_index()
+        data.index = data.index + 1
+
+        if display_table:
+            display(data.style.format({
+            'Total Funding ($)': '${:,.2f}',
+            'Average Funding ($)': '${:,.2f}',
+            'Number of Agreements': '{:,}'
+        }))
+
+        return data
+
+    def get_funding_ranges(self, df: pd.DataFrame, display_table = False) -> pd.DataFrame:
+        """Analyze distribution of funding amounts"""
+        df['funding_range'] = pd.cut(
+            df['agreement_value'],
+            bins=[0, 10000, 50000, 100000, 500000, float('inf')],
+            labels=['0-10K', '10K-50K', '50K-100K', '100K-500K', '500K+']
+        )
+        
+        data = df.groupby(['org', 'funding_range'], observed=False).size().unstack(fill_value=0)
+        data.columns = ['0-10K', '10K-50K', '50K-100K', '100K-500K', '500K+']
+        data.index.name = 'Organization'
+
+        if display_table:
+            display(data.style.format('{:,}'))
+
+        return data
+
+    def _print_analysis_results(self, results: Dict) -> None:
+        """Print formatted analysis results"""
+        print('\nAnalysis Results')
+        print('=' * 40)
+        
+        print(f'\nSummary by Organization [{self.year}]:')
+        display(results['summary_by_org'])
+        
+        print(f'\nFunding Distribution by Province (and US States) [{self.year}]:')
+        display(results['provincial_distribution'])
+        
         print(f'\nTop {len(results['top_recipients'])} Recipients by Funding [{self.year}]:')
-        display(results['top_recipients'].style.format({
-                'Total Funding ($)': "${:,.2f}",
-                'Average Funding ($)': "${:,.2f}",
-                'Number of Agreements': "{:,}"
-            }))
+        display(results['top_recipients'])
         
         print(f'\nFunding Range Distribution [{self.year}]:')
-        display(results['funding_ranges'].style.format('{:,}'))
+        display(results['funding_ranges'])
