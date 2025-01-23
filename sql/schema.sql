@@ -1,31 +1,31 @@
 CREATE TABLE Users (
-    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT PRIMARY KEY IDENTITY(1,1),
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('researcher', 'admin', 'public') NOT NULL
+    role VARCHAR(20) NOT NULL CHECK (role IN ('researcher', 'admin', 'public'))
 );
 
 CREATE TABLE Grants (
-    grant_id INT PRIMARY KEY AUTO_INCREMENT,
+    grant_id INT PRIMARY KEY IDENTITY(1,1),
     title VARCHAR(200) NOT NULL,
     amount DECIMAL(12,2) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
-    status ENUM('active', 'completed', 'pending') NOT NULL,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('active', 'completed', 'pending')),
     research_field VARCHAR(100),
     description TEXT
 );
 
 CREATE TABLE Institutions (
-    inst_id INT PRIMARY KEY AUTO_INCREMENT,
+    inst_id INT PRIMARY KEY IDENTITY(1,1),
     name VARCHAR(100) NOT NULL,
     province VARCHAR(50),
-    type ENUM('university', 'research_center', 'other')
+    type VARCHAR(50) CHECK (type IN ('university', 'research_center', 'other'))
 );
 
 CREATE TABLE Researchers (
-    researcher_id INT PRIMARY KEY AUTO_INCREMENT,
+    researcher_id INT PRIMARY KEY IDENTITY(1,1),
     name VARCHAR(100) NOT NULL,
     institution_id INT,
     email VARCHAR(100),
