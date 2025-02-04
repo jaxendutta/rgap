@@ -86,8 +86,8 @@ CREATE TABLE ResearchGrant (
 CREATE TABLE FavouriteGrants (
     favourite_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    UNIQUE (user_id, grant_id),
     grant_id INT NOT NULL,
+    UNIQUE (user_id, grant_id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES User(user_id),
     FOREIGN KEY (grant_id) REFERENCES ResearchGrant(grant_id)
@@ -100,7 +100,7 @@ CREATE TABLE FavouriteRecipients (
     user_id INT NOT NULL,
     recipient_id INT NOT NULL,    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (user_id, favourite_id),
+    UNIQUE (user_id, recipient_id),
     FOREIGN KEY (user_id) REFERENCES User(user_id),
     FOREIGN KEY (recipient_id) REFERENCES Recipient(recipient_id)
 );
@@ -110,7 +110,7 @@ CREATE TABLE FavouriteRecipients (
 CREATE TABLE SearchHistory (
     history_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
-    search_terms TEXT,
+    search_terms VARCHAR(500) NOT NULL,
     -- year, org, agreement_value, recipient_city, recipient_province, recipient_country: CA/Other
     search_filters JSON,
     UNIQUE(user_id, search_terms),
