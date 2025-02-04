@@ -113,6 +113,7 @@ CREATE TABLE SearchHistory (
     search_terms TEXT,
     -- year, org, agreement_value, recipient_city, recipient_province, recipient_country: CA/Other
     search_filters JSON,
+    UNIQUE(user_id, search_terms),
     search_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     result_count INT,
     saved BOOLEAN NOT NULL,
