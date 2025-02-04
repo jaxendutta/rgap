@@ -1,42 +1,126 @@
-CREATE TABLE Users (
-    user_id INT PRIMARY KEY IDENTITY(1,1),
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
+-- Table User
+CREATE TABLE User (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(100) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('researcher', 'admin', 'public'))
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE Grants (
-    grant_id INT PRIMARY KEY IDENTITY(1,1),
-    title VARCHAR(200) NOT NULL,
-    amount DECIMAL(12,2) NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('active', 'completed', 'pending')),
-    research_field VARCHAR(100),
-    description TEXT
-);
 
-CREATE TABLE Institutions (
-    inst_id INT PRIMARY KEY IDENTITY(1,1),
-    name VARCHAR(100) NOT NULL,
+-- Table Recipient
+-- note that (legal_name, research_organization_name, country, city) have to be a unique tuple
+CREATE TABLE Recipient (
+    recipient_id INT PRIMARY KEY AUTO_INCREMENT,
+    legal_name VARCHAR(255) NOT NULL,
+    research_organization_name VARCHAR(255) NOT NULL,
+    type VARCHAR(50),
+    recipient_type ENUM(
+         'Indigenous recipients',                      
+         'For-profit organizations', 
+         'Government',
+         'International (non-government)',
+         'Not-for-profit organizations and charities', 
+         'Other',
+         'Individual or sole proprietorships', 
+         'Academia'),
+    country CHAR(2),
     province VARCHAR(50),
-    type VARCHAR(50) CHECK (type IN ('university', 'research_center', 'other'))
+    city VARCHAR(100),
+    postal_code VARCHAR(10),
+    riding_name_en VARCHAR(100),
+    riding_name_fr VARCHAR(100),
+    riding_number VARCHAR(10),
+    UNIQUE (legal_name, research_organization_name, country, city)
 );
 
-CREATE TABLE Researchers (
-    researcher_id INT PRIMARY KEY IDENTITY(1,1),
-    name VARCHAR(100) NOT NULL,
-    institution_id INT,
-    email VARCHAR(100),
-    FOREIGN KEY (institution_id) REFERENCES Institutions(inst_id)
+
+-- Table Program
+CREATE TABLE Program (
+    prog_id VARCHAR(50) PRIMARY KEY,
+    name_en VARCHAR(255) NOT NULL,
+    name_fr VARCHAR(255) NOT NULL,
+    purpose_en TEXT,
+    purpose_fr TEXT,
+    naics_identifier VARCHAR(10)
 );
 
-CREATE TABLE Grant_Researchers (
-    grant_id INT,
-    researcher_id INT,
-    role VARCHAR(50),
-    PRIMARY KEY (grant_id, researcher_id),
-    FOREIGN KEY (grant_id) REFERENCES Grants(grant_id),
-    FOREIGN KEY (researcher_id) REFERENCES Researchers(researcher_id)
+
+-- Table Organization
+CREATE TABLE Organization (
+    owner_org VARCHAR(20) PRIMARY KEY,
+    org_title VARCHAR(100) NOT NULL,
+    abbreviation VARCHAR(10)
 );
+
+
+-- Table Grant
+CREATE TABLE ResearchGrant (
+    grant_id INT AUTO_INCREMENT PRIMARY KEY,
+    ref_number VARCHAR(50),
+    amendment_number VARCHAR(10),
+    UNIQUE (ref_number, amendment_number),
+    amendment_date DATE,
+    agreement_type VARCHAR(50),
+    agreement_number VARCHAR(50),
+    agreement_value DECIMAL(15,2),
+    foreign_currency_type VARCHAR(3),
+    foreign_currency_value DECIMAL(15,2),
+    agreement_start_date DATE,
+    agreement_end_date DATE,
+    agreement_title_en TEXT,
+    agreement_title_fr TEXT,
+    description_en TEXT,
+    description_fr TEXT,
+    expected_results_en TEXT,
+    expected_results_fr TEXT,
+    owner_org VARCHAR(20),
+    recipient_business_number VARCHAR(50),
+    prog_id VARCHAR(50),
+    FOREIGN KEY (owner_org) REFERENCES Organization(owner_org),
+    FOREIGN KEY (prog_id) REFERENCES Program(prog_id)
+);
+
+
+-- Table FavouriteGrants
+CREATE TABLE FavouriteGrants (
+    favourite_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    UNIQUE (user_id, grant_id),
+    grant_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES User(user_id),
+    FOREIGN KEY (grant_id) REFERENCES ResearchGrant(grant_id)
+);
+
+
+-- Table FavouriteRecipients
+CREATE TABLE FavouriteRecipients (
+    favourite_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    recipient_id INT NOT NULL,    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, favourite_id),
+    FOREIGN KEY (user_id) REFERENCES User(user_id),
+    FOREIGN KEY (recipient_id) REFERENCES Recipient(recipient_id)
+);
+
+
+-- Table SearchHistory
+CREATE TABLE SearchHistory (
+    history_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    search_terms TEXT,
+    -- year, org, agreement_value, recipient_city, recipient_province, recipient_country: CA/Other
+    search_filters JSON,
+    search_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    result_count INT,
+    saved BOOLEAN NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES User(user_id)
+);
+
+
+
+
+
+
