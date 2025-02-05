@@ -5,7 +5,7 @@ import { clsx } from 'clsx'
 const tabs = [
   { name: 'Grants', icon: Database },
   { name: 'Recipients', icon: Users },
-  { name: 'Saved Searches', icon: Search },
+  { name: 'Searches', icon: Search },
 ]
 
 export const FavoritesPage = () => {
@@ -44,7 +44,7 @@ export const FavoritesPage = () => {
         {activeTab === 'Recipients' && (
           <div className="text-gray-500">No favorite recipients yet.</div>
         )}
-        {activeTab === 'Saved Searches' && (
+        {activeTab === 'Searches' && (
           <div className="text-gray-500">No saved searches yet.</div>
         )}
       </div>
