@@ -38,11 +38,12 @@ CREATE TABLE Recipient (
 -- Table Program
 CREATE TABLE Program (
     prog_id VARCHAR(50) PRIMARY KEY,
-    name_en VARCHAR(255) NOT NULL,
-    name_fr VARCHAR(255) NOT NULL,
+    name_en VARCHAR(255),
+    name_fr VARCHAR(255),
     purpose_en TEXT,
     purpose_fr TEXT,
-    naics_identifier VARCHAR(10)
+    naics_identifier VARCHAR(10),
+    CHECK(name_en IS NOT NULL OR name_fr IS NOT NULL)
 );
 
 
@@ -111,7 +112,9 @@ CREATE TABLE FavouriteRecipients (
 CREATE TABLE SearchHistory (
     history_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
-    search_terms VARCHAR(500) NOT NULL,
+    search_recipient VARCHAR(500),
+    search_grant VARCHAR(500),
+    CHECK(search_recipient IS NOT NULL OR search_grant IS NOT NULL),
     -- year, org, agreement_value, recipient_city, recipient_province, recipient_country: CA/Other
     search_filters JSON,
     UNIQUE(user_id, search_terms),
