@@ -1,19 +1,20 @@
 import { useState } from 'react'
-import { Database, Users, Search } from 'lucide-react'
+import { Database, University, GraduationCap, Search } from 'lucide-react'
 import { clsx } from 'clsx'
 
 const tabs = [
   { name: 'Grants', icon: Database },
-  { name: 'Recipients', icon: Users },
+  { name: 'Research Institutes', icon: University },
+  { name: 'Recipients', icon: GraduationCap },
   { name: 'Searches', icon: Search },
 ]
 
-export const FavoritesPage = () => {
+export const BookmarksPage = () => {
   const [activeTab, setActiveTab] = useState('Grants')
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-semibold mb-6">Favorites</h1>
+      <h1 className="text-2xl font-semibold mb-6">Bookmarks</h1>
       
       {/* Tabs */}
       <div className="border-b border-gray-200">
@@ -39,13 +40,16 @@ export const FavoritesPage = () => {
       {/* Tab Content */}
       <div className="mt-6">
         {activeTab === 'Grants' && (
-          <div className="text-gray-500">No favorite grants yet.</div>
+          <div className="text-gray-500">No bookmarked grants yet.</div>
+        )}
+        {activeTab === 'Research Institutes' && (
+          <div className="text-gray-500">No bookmarked research institutes yet.</div>
         )}
         {activeTab === 'Recipients' && (
-          <div className="text-gray-500">No favorite recipients yet.</div>
+          <div className="text-gray-500">No bookmarked recipients yet.</div>
         )}
         {activeTab === 'Searches' && (
-          <div className="text-gray-500">No saved searches yet.</div>
+          <div className="text-gray-500">No bookmarked searches yet.</div>
         )}
       </div>
     </div>

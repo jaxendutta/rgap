@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Search, Database, Users, BarChart2, Star } from 'lucide-react'
+import { Home, Search, Database, University, GraduationCap, BarChart2, Bookmark } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useState } from 'react'
 
@@ -7,9 +7,10 @@ const navigation = [
   { name: 'Home', icon: Home, href: '/' },
   { name: 'Search', icon: Search, href: '/search' },
   { name: 'Grants', icon: Database, href: '/grants' },
-  { name: 'Recipients', icon: Users, href: '/recipients' },
+  { name: 'Institutes', icon: University, href: '/institutes' },
+  { name: 'Recipients', icon: GraduationCap, href: '/recipients' },
   { name: 'Analytics', icon: BarChart2, href: '/analytics' },
-  { name: 'Favorites', icon: Star, href: '/favorites' },
+  { name: 'Bookmarks', icon: Bookmark, href: '/bookmarks' },
 ]
 
 const Sidebar = () => {
