@@ -105,6 +105,19 @@ log_with_no_color() {
     sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g"
 }
 
+# Function to upgrade pip if a new version is available
+upgrade_pip() {
+    print "${BLUE}Checking for pip upgrades...${NC}"
+    current_version=$(pip --version | awk '{print $2}')
+    pip install --upgrade pip --quiet
+    new_version=$(pip --version | awk '{print $2}')
+    if [ "$current_version" != "$new_version" ]; then
+        print "  ${GREEN}Successfully upgraded pip $current_version -> $new_version${NC}"
+    else
+        print "  ${BLUE}No upgrades pushed to pip. Current version: $current_version${NC}"
+    fi
+}
+
 # Setup portion with both terminal output and logging
 {
     if check_venv; then
@@ -141,9 +154,12 @@ fi
 
 print "${GREEN}  Activated. You're now in the RGAP Virtual Environment!${NC}"
 
+# Upgrade pip if a new version is available
+upgrade_pip
+
 # Install RGAP package in development mode
 {
-    print "${BLUE}  Installing RGAP package in development mode...${NC}"
+    print "${BLUE}Installing RGAP package in development mode...${NC}"
     pip install -e . 2>&1
     pip_exit_code=$?
     
@@ -151,7 +167,7 @@ print "${GREEN}  Activated. You're now in the RGAP Virtual Environment!${NC}"
         cleanup_on_error
         return 1
     fi
-    print "${GREEN}  RGAP package installed successfully!${NC}"
+    print "${GREEN}  RGAP project package installed successfully!${NC}"
 } 2>&1 | tee >(log_with_no_color >> $LOG_FILE)
 
 print "${BLUE}\nTo set-up the RGAP Virtual Environment in any terminal, run this script again:${NC}"
