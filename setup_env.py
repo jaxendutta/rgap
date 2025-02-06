@@ -52,21 +52,28 @@ class RGAPEnvironmentSetup:
         print("✓")
 
     def setup_virtualenv(self):
-        """Create a Python virtual environment"""
+        """Create a Python virtual environment and update pip if needed"""
         print("  Setting up virtual environment...", end=' ', flush=True)
         try:
+            # Update pip first
             subprocess.run([
-                sys.executable, "-m", "pip", "install", "-q", "--user", "virtualenv"
+            sys.executable, "-m", "pip", "install", "--upgrade", "pip"
             ], check=True, capture_output=True)
             
+            # Install virtualenv
             subprocess.run([
-                sys.executable, "-m", "virtualenv", str(self.env_dir)
+            sys.executable, "-m", "pip", "install", "-q", "--user", "virtualenv"
+            ], check=True, capture_output=True)
+            
+            # Create virtual environment
+            subprocess.run([
+            sys.executable, "-m", "virtualenv", str(self.env_dir)
             ], check=True, capture_output=True)
             
             print("✓")
             
         except subprocess.CalledProcessError as e:
-            print(f"\nError creating virtual environment: {e.stderr.decode()}")
+            print(f"\nError setting up virtual environment: {e.stderr.decode()}")
             sys.exit(1)
 
     def get_pip_path(self):
@@ -116,6 +123,59 @@ class RGAPEnvironmentSetup:
                     return False
         return True
 
+    def install_nvm_and_node(self):
+        """Install nvm, Node.js, npm, and npx"""
+        print("  Installing nvm, Node.js, npm, and npx...", end=' ', flush=True)
+        try:
+            # Install nvm
+            subprocess.run(
+                ["curl", "-o-", "https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh", "|", "bash"],
+                check=True,
+                capture_output=True,
+                shell=True
+            )
+            # Source nvm script
+            subprocess.run(
+                ["source", os.path.expanduser("~/.nvm/nvm.sh")],
+                check=True,
+                capture_output=True,
+                shell=True
+            )
+            # Install Node.js
+            subprocess.run(
+                ["nvm", "install", "22.13.1"],
+                check=True,
+                capture_output=True,
+                shell=True
+            )
+            # Use the installed Node.js version
+            subprocess.run(
+                ["nvm", "use", "22.13.1"],
+                check=True,
+                capture_output=True,
+                shell=True
+            )
+            # Verify installations
+            node_version = subprocess.run(
+                ["node", "-v"],
+                capture_output=True,
+                text=True
+            ).stdout.strip()
+            npm_version = subprocess.run(
+                ["npm", "-v"],
+                capture_output=True,
+                text=True
+            ).stdout.strip()
+            npx_version = subprocess.run(
+                ["npx", "-v"],
+                capture_output=True,
+                text=True
+            ).stdout.strip()
+            print(f"✓ (Node.js {node_version}, npm {npm_version}, npx {npx_version})")
+        except subprocess.CalledProcessError as e:
+            print(f"\nError installing nvm/Node.js/npm/npx: {e.stderr.decode()}")
+            sys.exit(1)
+
     def run_setup(self):
         """Run the complete setup process"""
         try:
@@ -124,7 +184,7 @@ class RGAPEnvironmentSetup:
             if not self.install_packages():
                 print("Error: Failed to install some packages!")
                 sys.exit(1)
-            
+            self.install_nvm_and_node()
         except Exception as e:
             print(f"Error during setup: {str(e)}")
             sys.exit(1)
