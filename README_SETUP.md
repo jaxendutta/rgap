@@ -21,10 +21,7 @@ mysql -u rgap_user -p rgap_db < sql/schema.sql
 ```
 
 #### 4. Insert test data
-```sql
-USE rgap_db;
-INSERT INTO Institutions (name, province, type) VALUES ('University of Waterloo', 'Ontario', 'university');
-```
+
 
 #### 5. Environment Variables
 Create a `.env` file in `server/` folder with the following content:
