@@ -1,4 +1,4 @@
-USE rgap_db;
+USE rgap;
 -- Table User
 CREATE TABLE User (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
