@@ -66,7 +66,7 @@ for _, row in df.iterrows():
 
 # insert to table Program
 for _, row in df.iterrows():
-    prog_id = row["prog_name_en"]  # 假设 Program 表的主键是 `prog_id`
+    prog_id = row["prog_name_en"]  
 
     if prog_id not in program_map:
         cursor.execute("""
@@ -126,7 +126,7 @@ for _, row in df.iterrows():
         row["agreement_title_en"], row["agreement_title_fr"],
         row["description_en"], row["description_fr"],
         row["expected_results_en"], row["expected_results_fr"],
-        owner_org, recipient_id, program_id  # ✅ 这里添加外键
+        owner_org, recipient_id, program_id  
     ))
 
 # close connection
