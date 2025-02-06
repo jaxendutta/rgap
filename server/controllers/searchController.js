@@ -1,6 +1,3 @@
-const searchQuery = require('../queries/searchQueries');
-const { sendSuccessResponse, sendErrorResponse } = require('../utils/responseHandler');
-
 const getAllGrants = async (req, res) => {
     try {
         // sample query
