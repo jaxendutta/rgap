@@ -18,7 +18,7 @@ class RGAPEnvironmentSetup:
             "Visualization": ["matplotlib", "seaborn", "plotly"],
             "Jupyter": ["jupyter", "notebook", "ipykernel"],
             "Web": ["requests", "aiohttp", "urllib3"],
-            "Data Formats": ["python-dotenv", "openpyxl", "PyYAML"],
+            "Data Formats": ["python-dotenv", "openpyxl", "PyYAML", "mysql-connector-python"],
             "Testing": ["pytest", "pytest-cov"],
             "Database": ["mysqlclient", "SQLAlchemy"],
             "Utilities": ["tqdm", "python-dateutil", "pytz"],
