@@ -23,7 +23,8 @@ services:
     stdin_open: true
     tty: true
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     environment: 
       - NODE_ENV=development
       - DB_HOST=mysql
@@ -36,6 +37,10 @@ services:
     image: mysql:8.0
     container_name: mysql
     restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      retries: 15
     environment:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
