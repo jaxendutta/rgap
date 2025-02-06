@@ -42,3 +42,6 @@ logs/
 dist/
 build/
 rgap.egg-info/
+
+# MySQL
+mysql/
