@@ -1,28 +1,27 @@
 const express = require('express');
+const cors = require('cors');
 const dotenv = require('dotenv');
-const app = express();
-
 dotenv.config();
 
+const app = express();
+
+// Middleware
 app.use(express.json());
+app.use(cors());
 
 const PORT = process.env.PORT || 3000;
-const db = require('./db/index');
+const db = require('./config/db');
+
+// Routes
+app.use('/search', require('./routes/searchRoutes'));
+
+app.use('/grant', require('./routes/grantRoutes'));
+app.use('/recepient', require('./routes/recepientRoutes'));
+
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });
-
-app.get('/test-query', (req, res) => {
-    db.query('SELECT * FROM Institutions', (err, results) => {
-        if (err) {
-            res.status(500).send('Error fetching data: ' + err.message);
-        } else {
-            res.json(results);
-        }
-    });
-});
-
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
