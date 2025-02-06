@@ -21,7 +21,7 @@ const Sidebar = () => {
     <div 
       className={clsx(
         "bg-gray-50 border-r min-h-screen transition-all duration-300 ease-in-out",
-        isExpanded ? "w-64" : "w-16"
+        isExpanded ? "w-48" : "w-16"
       )}
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
