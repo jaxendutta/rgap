@@ -273,6 +273,14 @@ setup_database() {
         "${MYSQL_BIN}/mysql" -u root --socket="${MYSQL_DIR}/run/mysql.sock" << EOF
 CREATE DATABASE IF NOT EXISTS rgap;
 USE rgap;
+
+CREATE USER 'rgap_user'@'localhost' IDENTIFIED BY '12345';
+GRANT ALL PRIVILEGES ON rgap.* TO 'rgap_user'@'localhost';
+
+CREATE USER 'rgap_user'@'%' IDENTIFIED BY '12345';
+GRANT ALL PRIVILEGES ON rgap.* TO 'rgap_user'@'%';
+
+FLUSH PRIVILEGES;
 EOF
         
         "${MYSQL_BIN}/mysql" -u root --socket="${MYSQL_DIR}/run/mysql.sock" rgap < "${PROJECT_ROOT}/sql/schema.sql"

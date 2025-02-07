@@ -41,6 +41,11 @@ The `mysql_setup.sh` script automates the following:
    - Creates `stop.sh` for stopping MySQL
    - Sets up convenient aliases
 
+5. **Local and Remote User Setup**
+   - Creates a local user for RGAP
+   - Grants necessary permissions
+   - Flushes privileges
+
 ## Directory Structure
 
 ```

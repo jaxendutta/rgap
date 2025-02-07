@@ -182,36 +182,16 @@ Using `lucide-react` for consistent iconography:
 - Action icons: Bell, User, Filter, SortDesc, BookmarkPlus
 - Tab icons: Database, University, GraduationCap, Search
 
-## Next Development Steps
-
-1. Immediate Priorities:
-   - Implement filter panel functionality
-   - Add sort options for search results
-   - Create bookmark saving mechanism
-
-2. Future Enhancements:
-   - Grant detail views
-   - Institute profiles
-   - Recipient portfolios
-   - Analytics visualizations
-   - Search history tracking
-
-3. Data Integration:
-   - Set up React Query for API calls
-   - Implement data fetching for each section
-   - Add loading states
-   - Error handling
-
 ## Running the Project
 
 1. Development:
-    ```bash
-    cd rgap/client
-    npm install
-    npm run dev
-    ```
+   ```bash
+   cd rgap/client
+   npm i
+   npm run dev
+   ```
 
 2. Build:
-    ```bash
-    npm run build
-    ```
+   ```bash
+   npm run build
+   ```
