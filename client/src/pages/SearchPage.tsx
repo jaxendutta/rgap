@@ -59,7 +59,7 @@ export const SearchPage = () => {
   useClickOutside(bookmarkRef, () => setShowBookmarkOptions(null))
 
   const handleSearch = (field: keyof typeof searchTerms, value: string) => {
-    setSearchTerms(prev => ({ ...prev, [field]: value }))
+    console.log(`Searching by ${field} for ${value}`)
   }
 
   const handleBookmarkSearch = () => {
@@ -90,8 +90,8 @@ export const SearchPage = () => {
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        handleSearch(field, inputValue); // Use local inputValue
         setSearchTerms(prev => ({ ...prev, [field]: inputValue })); // Update searchTerms on Enter
+        handleSearch(field, inputValue); // Use local inputValue to search
       } else if (e.key === 'Escape') {
         e.preventDefault();
         if (inputRef.current) {
