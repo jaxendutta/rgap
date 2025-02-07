@@ -1,12 +1,14 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import MainLayout from './components/layout/MainLayout'
-import { HomePage } from './pages/HomePage'
+import HomePage from './pages/HomePage'
 import { SearchPage } from './pages/SearchPage'
 import { InstitutesPage } from './pages/InstitutesPage'
 import InstituteProfilePage from './pages/InstituteProfilePage'
 import { RecipientsPage } from './pages/RecipientsPage'
 import { RecipientProfilePage } from './pages/RecipientProfilePage'
 import { BookmarksPage } from './pages/BookmarksPage'
+import DocsPage from './pages/DocsPage'
+import PageNotFound from './pages/PageNotFound'
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
           <Route path="/recipients" element={<RecipientsPage />} />
           <Route path="/recipients/:id" element={<RecipientProfilePage />} />
           <Route path="/bookmarks" element={<BookmarksPage />} />
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="*" element={<PageNotFound />} />
         </Routes>
       </MainLayout>
     </Router>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, Navigate } from 'react-router-dom'
 import { 
   BookmarkPlus, 
   BookmarkCheck, 
@@ -108,7 +108,7 @@ const InstituteProfilePage = () => {
   const institute = institutes.find(institute => institute.id === Number(id))
 
   if (!institute) {
-    return <div>Institute not found</div>
+    return <Navigate to="/pageNotFound" />
   }
 
   const [isBookmarked, setIsBookmarked] = useState(false)

@@ -8,11 +8,11 @@ interface MainLayoutProps {
 
 const MainLayout = ({ children }: MainLayoutProps) => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen flex flex-col">
       <Header />
-      <div className="flex">
+      <div className="flex-1 flex overflow-hidden">
         <Sidebar />
-        <main className="flex-1 p-6">
+        <main className="flex-1 overflow-auto">
           {children}
         </main>
       </div>
