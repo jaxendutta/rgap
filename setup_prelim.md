@@ -52,5 +52,5 @@
     npm run dev
 
     # Access the application
-    curl http://localhost:5173
+    curl http://localhost:3000
     ```
