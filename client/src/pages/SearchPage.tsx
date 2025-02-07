@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { clsx } from 'clsx'
-import { YearRangeFilter, ValueRangeFilter, MultiSelect, FilterTags, RangeFilter } from '../components/filter/FilterComponents'
+import { MultiSelect, FilterTags, RangeFilter } from '../components/filter/FilterComponents'
 
 // Types
 type SortField = 'date' | 'value'
