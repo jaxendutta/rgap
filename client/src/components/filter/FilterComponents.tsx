@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, ChevronDown } from 'lucide-react'
+import { FILTER_LIMITS } from './constants'
 
 interface MultiSelectProps {
   label: string
@@ -8,9 +9,19 @@ interface MultiSelectProps {
   onChange: (values: string[]) => void
 }
 
-export const MultiSelect = ({ label, options, values, onChange }: MultiSelectProps) => {
+export const MultiSelect: React.FC<MultiSelectProps> = ({ label, options, values, onChange }) => {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -63,13 +74,14 @@ interface FilterTagsProps {
   onClearAll: () => void
 }
 
-export const FilterTags = ({ filters, onRemove, onClearAll }: FilterTagsProps) => {
+export const FilterTags: React.FC<FilterTagsProps> = ({ filters, onRemove, onClearAll }) => {
+  const hasValueRangeFilter = filters.valueRange.min > 0 || filters.valueRange.max < 200000000
   const hasFilters = filters.agencies.length > 0 || 
     filters.countries.length > 0 || 
     filters.provinces.length > 0 || 
     filters.cities.length > 0 ||
     (filters.yearRange.start && filters.yearRange.end) ||
-    (filters.valueRange.min > 0 || filters.valueRange.max < 1000000)
+    hasValueRangeFilter
 
   if (!hasFilters) return null
 
@@ -104,17 +116,17 @@ export const FilterTags = ({ filters, onRemove, onClearAll }: FilterTagsProps) =
           </span>
         )}
 
-        {(filters.valueRange.min > 0 || filters.valueRange.max < 1000000) && (
+        {hasValueRangeFilter && (
           <span className="inline-flex items-center px-2 py-1 text-sm bg-gray-100 rounded-md">
-            Value: {formatValue(filters.valueRange.min)} - {formatValue(filters.valueRange.max)}
-            <button
-              onClick={() => onRemove('valueRange', '')}
-              className="ml-1 p-0.5 hover:bg-gray-200 rounded"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          </span>
-        )}
+          Value: {formatValue(filters.valueRange.min)} - {formatValue(filters.valueRange.max)}
+          <button
+            onClick={() => onRemove('valueRange', '')}
+            className="ml-1 p-0.5 hover:bg-gray-200 rounded"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </span>
+      )}
 
         {filters.agencies.map(agency => (
           <span 
@@ -190,22 +202,83 @@ interface DualRangeSliderProps {
   type?: 'currency' | 'year'
 }
 
-const DualRangeSlider = ({
+const DualRangeSlider: React.FC<DualRangeSliderProps> = ({
   min,
   max,
   value,
   onChange,
   step = 1,
   formatValue = (v: number) => v.toString(),
-  type = 'currency'
-}: DualRangeSliderProps) => {
-  const [localValue, setLocalValue] = useState(value)
+}) => {
+  const [rangeValue, setRangeValue] = useState(value)
   const [isDragging, setIsDragging] = useState<'min' | 'max' | null>(null)
+  const [inputValues, setInputValues] = useState({
+    min: formatValue(value.min),
+    max: formatValue(value.max)
+  })
   const sliderRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setLocalValue(value)
-  }, [value])
+    setRangeValue(value)
+    setInputValues({
+      min: formatValue(value.min),
+      max: formatValue(value.max)
+    })
+  }, [value, formatValue])
+
+  const handleInputFocus = (inputType: 'min' | 'max') => {
+    const currentValue = rangeValue[inputType]
+    setInputValues(prev => ({
+      ...prev,
+      [inputType]: currentValue.toString()
+    }))
+  }
+
+  const handleInputChange = (inputType: 'min' | 'max', inputValue: string) => {
+    const cleanedValue = inputValue.replace(/[^0-9.]/g, '')
+    setInputValues(prev => ({
+      ...prev,
+      [inputType]: cleanedValue
+    }))
+  }
+
+  const processInputValue = (inputType: 'min' | 'max') => {
+    const currentValue = parseFloat(inputValues[inputType])
+    if (isNaN(currentValue)) {
+      return
+    }
+
+    let newValue = Math.max(Math.min(currentValue, max), min)
+    
+    if (inputType === 'min') {
+      newValue = Math.min(newValue, rangeValue.max)
+      setRangeValue(prev => ({ ...prev, min: newValue }))
+    } else {
+      newValue = Math.max(newValue, rangeValue.min)
+      setRangeValue(prev => ({ ...prev, max: newValue }))
+    }
+
+    const updatedRange = inputType === 'min' 
+      ? { ...rangeValue, min: newValue }
+      : { ...rangeValue, max: newValue }
+
+    setInputValues({
+      min: formatValue(updatedRange.min),
+      max: formatValue(updatedRange.max)
+    })
+    onChange(updatedRange)
+  }
+
+  const handleInputBlur = (inputType: 'min' | 'max') => {
+    processInputValue(inputType)
+  }
+
+  const handleKeyDown = (inputType: 'min' | 'max', e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      processInputValue(inputType)
+    }
+  }
 
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging || !sliderRef.current) return
@@ -216,56 +289,39 @@ const DualRangeSlider = ({
     const steppedValue = Math.round(rawValue / step) * step
 
     if (isDragging === 'min') {
-      const newMin = Math.min(steppedValue, localValue.max - step)
-      setLocalValue(prev => ({ ...prev, min: newMin }))
-      onChange({ ...localValue, min: newMin })
+      const newMin = Math.min(steppedValue, rangeValue.max - step)
+      setRangeValue(prev => ({ ...prev, min: newMin }))
+      onChange({ ...rangeValue, min: newMin })
     } else {
-      const newMax = Math.max(steppedValue, localValue.min + step)
-      setLocalValue(prev => ({ ...prev, max: newMax }))
-      onChange({ ...localValue, max: newMax })
+      const newMax = Math.max(steppedValue, rangeValue.min + step)
+      setRangeValue(prev => ({ ...prev, max: newMax }))
+      onChange({ ...rangeValue, max: newMax })
     }
   }
 
   useEffect(() => {
     if (isDragging) {
+      const handleMouseUp = () => setIsDragging(null)
       window.addEventListener('mousemove', handleMouseMove)
-      window.addEventListener('mouseup', () => setIsDragging(null))
+      window.addEventListener('mouseup', handleMouseUp)
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove)
+        window.removeEventListener('mouseup', handleMouseUp)
+      }
     }
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', () => setIsDragging(null))
-    }
-  }, [isDragging, localValue])
+  }, [isDragging, rangeValue])
 
-  const handleInputChange = (type: 'min' | 'max', inputValue: string) => {
-    const numValue = parseFloat(inputValue.replace(/[^0-9.]/g, ''))
-    if (isNaN(numValue)) return
-
-    const newValue = {
-      ...localValue,
-      [type]: numValue
-    }
-
-    if (type === 'min' && numValue < newValue.max) {
-      setLocalValue(newValue)
-      onChange(newValue)
-    } else if (type === 'max' && numValue > newValue.min) {
-      setLocalValue(newValue)
-      onChange(newValue)
-    }
+  const getLeftPercent = () => {
+    return ((rangeValue.min - min) / (max - min)) * 100
   }
-
-  const getLeftPercent = () => ((localValue.min - min) / (max - min)) * 100
-  const getRightPercent = () => ((localValue.max - min) / (max - min)) * 100
+  
+  const getRightPercent = () => {
+    return ((rangeValue.max - min) / (max - min)) * 100
+  }
 
   return (
     <div className="px-2 py-4 space-y-6">
-      {/* Slider */}
-      <div 
-        ref={sliderRef}
-        className="relative w-full h-2 bg-gray-200 rounded-full cursor-pointer"
-      >
-        {/* Selected Range */}
+      <div ref={sliderRef} className="relative w-full h-2 bg-gray-200 rounded-full cursor-pointer">
         <div
           className="absolute h-full bg-blue-500 rounded-full"
           style={{
@@ -273,15 +329,11 @@ const DualRangeSlider = ({
             right: `${100 - getRightPercent()}%`
           }}
         />
-        
-        {/* Min Handle */}
         <div
           className="absolute top-1/2 -ml-3 -mt-3 w-6 h-6 bg-white border-2 border-blue-500 rounded-full cursor-grab"
           style={{ left: `${getLeftPercent()}%` }}
           onMouseDown={() => setIsDragging('min')}
         />
-        
-        {/* Max Handle */}
         <div
           className="absolute top-1/2 -ml-3 -mt-3 w-6 h-6 bg-white border-2 border-blue-500 rounded-full cursor-grab"
           style={{ left: `${getRightPercent()}%` }}
@@ -289,13 +341,15 @@ const DualRangeSlider = ({
         />
       </div>
 
-      {/* Input Fields */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1">
           <input
             type="text"
-            value={formatValue(localValue.min)}
-            onChange={e => handleInputChange('min', e.target.value)}
+            value={inputValues.min}
+            onChange={(e) => handleInputChange('min', e.target.value)}
+            onFocus={() => handleInputFocus('min')}
+            onBlur={() => handleInputBlur('min')}
+            onKeyDown={(e) => handleKeyDown('min', e)}
             className="w-full px-3 py-1.5 text-sm border rounded-md"
           />
         </div>
@@ -303,8 +357,11 @@ const DualRangeSlider = ({
         <div className="flex-1">
           <input
             type="text"
-            value={formatValue(localValue.max)}
-            onChange={e => handleInputChange('max', e.target.value)}
+            value={inputValues.max}
+            onChange={(e) => handleInputChange('max', e.target.value)}
+            onFocus={() => handleInputFocus('max')}
+            onBlur={() => handleInputBlur('max')}
+            onKeyDown={(e) => handleKeyDown('max', e)}
             className="w-full px-3 py-1.5 text-sm border rounded-md"
           />
         </div>
@@ -322,36 +379,16 @@ interface RangeFilterProps {
   max?: number
 }
 
-export const RangeFilter = ({
+export const RangeFilter: React.FC<RangeFilterProps> = ({
   label,
   type,
   value,
   onChange,
   min: propMin,
   max: propMax
-}: RangeFilterProps) => {
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-
-  const formatValue = (val: number) => {
-    if (type === 'currency') {
-      return new Intl.NumberFormat('en-CA', {
-        style: 'currency',
-        currency: 'CAD',
-        maximumFractionDigits: 0
-      }).format(val)
-    }
-    return val.toString()
-  }
-
-  const min = propMin ?? (type === 'currency' ? 0 : 1990)
-  const max = propMax ?? (type === 'currency' ? 1000000 : new Date().getFullYear())
-  const step = type === 'currency' ? 1000 : 1
-
-  const displayValue = 
-    value.min === min && value.max === max 
-      ? 'Any'
-      : `${formatValue(value.min)} - ${formatValue(value.max)}`
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -362,6 +399,46 @@ export const RangeFilter = ({
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // Use constants for limits
+  const min = propMin ?? (
+    type === 'currency' 
+      ? FILTER_LIMITS.GRANT_VALUE.MIN 
+      : FILTER_LIMITS.YEAR.MIN
+  )
+  const max = propMax ?? (
+    type === 'currency'
+      ? FILTER_LIMITS.GRANT_VALUE.MAX
+      : FILTER_LIMITS.YEAR.MAX
+  )
+  
+  const step = type === 'currency' 
+    ? FILTER_LIMITS.GRANT_VALUE.DEFAULT_STEP 
+    : FILTER_LIMITS.YEAR.DEFAULT_STEP
+
+  // Get quick ranges based on type
+  const quickRanges = type === 'year' 
+    ? [
+        ...FILTER_LIMITS.YEAR.getQuickRanges(),
+        { label: 'All time', range: { min, max }}
+      ]
+    : [
+        ...FILTER_LIMITS.GRANT_VALUE.QUICK_RANGES.map(({ label, min, max }) => ({
+          label,
+          range: { min, max }
+        })),
+        { label: 'All values', range: { min, max }}
+      ]
+
+  const formatValue = (val: number) => 
+    type === 'currency'
+      ? new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(val)
+      : val.toString()
+
+  const displayValue = 
+    value.min === min && value.max === max 
+      ? 'Any'
+      : `${formatValue(value.min)} - ${formatValue(value.max)}`
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -380,15 +457,33 @@ export const RangeFilter = ({
       {isOpen && (
         <div className="absolute z-10 w-72 mt-1 bg-white rounded-lg shadow-lg border">
           <div className="p-4">
-            <DualRangeSlider
-              min={min}
-              max={max}
-              step={step}
-              value={value}
-              onChange={onChange}
-              formatValue={formatValue}
-              type={type}
-            />
+            <div className="mb-4 space-y-1">
+              {quickRanges.map((item) => (
+                <button
+                  key={item.label}
+                  className="w-full px-2 py-1.5 text-left text-sm hover:bg-gray-50 rounded"
+                  onClick={() => {
+                    const range = 'range' in item ? item.range : { min: item.min, max: item.max }
+                    onChange(range)
+                    setIsOpen(false)
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="border-t pt-4">
+              <DualRangeSlider
+                min={min}
+                max={max}
+                step={step}
+                value={value}
+                onChange={onChange}
+                formatValue={formatValue}
+                type={type}
+              />
+            </div>
           </div>
         </div>
       )}
