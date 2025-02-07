@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Search, University, GraduationCap, BarChart2, Bookmark } from 'lucide-react'
+import { Home, Search, University, GraduationCap, Bookmark } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useState } from 'react'
 
@@ -8,7 +8,6 @@ const navigation = [
   { name: 'Search', icon: Search, href: '/search' },
   { name: 'Institutes', icon: University, href: '/institutes' },
   { name: 'Recipients', icon: GraduationCap, href: '/recipients' },
-  { name: 'Analytics', icon: BarChart2, href: '/analytics' },
   { name: 'Bookmarks', icon: Bookmark, href: '/bookmarks' },
 ]
 

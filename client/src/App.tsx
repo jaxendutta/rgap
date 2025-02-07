@@ -6,7 +6,6 @@ import { InstitutesPage } from './pages/InstitutesPage'
 import InstituteProfilePage from './pages/InstituteProfilePage'
 import { RecipientsPage } from './pages/RecipientsPage'
 import { RecipientProfilePage } from './pages/RecipientProfilePage'
-import { AnalyticsPage } from './pages/AnalyticsPage'
 import { BookmarksPage } from './pages/BookmarksPage'
 
 function App() {
@@ -20,7 +19,6 @@ function App() {
           <Route path="/institutes/:id" element={<InstituteProfilePage />} />
           <Route path="/recipients" element={<RecipientsPage />} />
           <Route path="/recipients/:id" element={<RecipientProfilePage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/bookmarks" element={<BookmarksPage />} />
         </Routes>
       </MainLayout>
