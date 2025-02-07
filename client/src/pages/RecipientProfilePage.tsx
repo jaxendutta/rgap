@@ -15,6 +15,14 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { clsx } from 'clsx'
 import { formatCurrency, formatDate } from '../utils/NumberDisplayFormat'
+import { Recipient, ResearchGrant } from '../components/types/types'
+
+// Data
+// Make a copy of the mock data for now
+import { mock_data } from '../test-data/mockdata'
+const recipients: Recipient[] = [...mock_data.Recipient]
+const grants: ResearchGrant[] = [...mock_data.ResearchGrant]
+const filteredGrants = (recipient_id: number) => grants.filter(g => g.recipient_id === recipient_id)
 
 // Types
 type SortField = 'date' | 'value'
@@ -26,14 +34,14 @@ interface SortConfig {
 }
 
 // Sort functions
-const sortByDate = (a: { start_date: string }, b: { start_date: string }, direction: SortDirection): number => {
+const sortByDate = (a: ResearchGrant, b: ResearchGrant, direction: SortDirection): number => {
   const multiplier = direction === 'asc' ? 1 : -1
-  return multiplier * (new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
+  return multiplier * (new Date(a.agreement_start_date).getTime() - new Date(b.agreement_start_date).getTime())
 }
 
-const sortByValue = (a: { value: number }, b: { value: number }, direction: SortDirection): number => {
+const sortByValue = (a: ResearchGrant, b: ResearchGrant, direction: SortDirection): number => {
   const multiplier = direction === 'asc' ? 1 : -1
-  return multiplier * (a.value - b.value)
+  return multiplier * (a.agreement_value - b.agreement_value)
 }
 
 // Components
@@ -98,6 +106,12 @@ const SortButton = ({
 
 export const RecipientProfilePage = () => {
   const { id } = useParams()
+  const recipient = recipients.find(r => r.recipient_id === Number(id))
+
+  if (!recipient) {
+    return <div>Recipient not found</div>
+  }
+
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     field: 'date',
@@ -112,8 +126,8 @@ export const RecipientProfilePage = () => {
   }
 
   // Sort grants based on current configuration
-  const sortedGrants = [...mockRecipientDetails.grants].sort((a, b) => 
-    sortConfig.field === 'value' 
+  const sortedGrants = [...filteredGrants(Number(id))].sort((a, b) =>
+    sortConfig.field === 'value'
       ? sortByValue(a, b, sortConfig.direction)
       : sortByDate(a, b, sortConfig.direction)
   )
@@ -125,52 +139,51 @@ export const RecipientProfilePage = () => {
         {/* Profile Card */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 lg:col-span-1">
           <div className="flex justify-between">
-            <div className="space-y-3">
-              <h1 className="text-2xl font-semibold">{mockRecipientDetails.name}</h1>
-              <div className="flex items-center text-gray-600">
-                <University className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span>{mockRecipientDetails.institute}</span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span>{mockRecipientDetails.location}</span>
-              </div>
-            </div>
-            <button 
-              onClick={() => setIsBookmarked(!isBookmarked)}
-              className={clsx(
-                "p-2 h-fit rounded-full transition-colors hover:bg-gray-50",
-                isBookmarked
-                  ? "text-blue-600 hover:text-blue-700"
-                  : "text-gray-400 hover:text-gray-600"
-              )}
-            >
-              {isBookmarked 
-                ? <BookmarkCheck className="h-5 w-5" />
-                : <BookmarkPlus className="h-5 w-5" />
-              }
-            </button>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold">{recipient.legal_name}</h1>
+          <div className="flex items-center text-gray-600">
+            <University className="h-4 w-4 mr-2 flex-shrink-0" />
+            <span>{recipient.research_organization_name}</span>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+            <span>{recipient.city}, {recipient.province}</span>
+          </div>
+        </div>
+        <button 
+          onClick={() => setIsBookmarked(!isBookmarked)}
+          className={clsx(
+            "p-2 h-fit rounded-full transition-colors hover:bg-gray-50",
+            isBookmarked
+          ? "text-blue-600 hover:text-blue-700"
+          : "text-gray-400 hover:text-gray-600"
+          )}
+        >
+          {isBookmarked 
+            ? <BookmarkCheck className="h-5 w-5" />
+            : <BookmarkPlus className="h-5 w-5" />
+          }
+        </button>
           </div>
         </div>
 
         {/* Stats Cards */}
         <StatCard 
           icon={FileText}
-          label="Total Grants"
-          value={mockRecipientDetails.stats.total_grants.value}
-          trend={mockRecipientDetails.stats.total_grants.trend}
+          label="Grants"
+          value={filteredGrants(Number(id)).length}
         />
         <StatCard 
           icon={DollarSign}
           label="Total Funding"
-          value={formatCurrency(mockRecipientDetails.stats.total_value.value)}
-          trend={mockRecipientDetails.stats.total_value.trend}
+          value={formatCurrency(filteredGrants(Number(id)).reduce((acc, g) => acc + g.agreement_value, 0)) || 'N/A'}
         />
         <StatCard 
           icon={BarChart2}
-          label="Average Grant"
-          value={formatCurrency(mockRecipientDetails.stats.avg_grant_size.value)}
-          trend={mockRecipientDetails.stats.avg_grant_size.trend}
+          label="Average Funding"
+          value={filteredGrants(Number(id)).length 
+            ? formatCurrency(filteredGrants(Number(id)).reduce((acc, g) => acc + g.agreement_value, 0) / filteredGrants(Number(id)).length)
+            : 'N/A'}
         />
       </div>
 
@@ -179,8 +192,17 @@ export const RecipientProfilePage = () => {
         <h2 className="text-lg font-semibold mb-4">Funding History</h2>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart 
-              data={mockRecipientDetails.funding_history}
+            <LineChart
+              data={filteredGrants(Number(id)).reduce((acc: { year: number, value: number }[], g) => {
+                const year = new Date(g.agreement_start_date).getFullYear()
+                const existing = acc.find(item => item.year === year)
+                if (existing) {
+                  existing.value += g.agreement_value
+                } else {
+                  acc.push({ year, value: g.agreement_value })
+                }
+                return acc
+              }, [])}
               margin={{ top: 10, right: 30, left: 50, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -197,7 +219,7 @@ export const RecipientProfilePage = () => {
                 tickMargin={8}
               />
               <Tooltip 
-                formatter={(value: number) => [`${value.toLocaleString()}`, 'Funding']}
+                formatter={(value: number) => [`$${value.toLocaleString()}`, 'Funding']}
                 contentStyle={{
                   backgroundColor: 'white',
                   border: '1px solid #e5e7eb',
@@ -244,21 +266,25 @@ export const RecipientProfilePage = () => {
 
         <div className="divide-y">
           {sortedGrants.map(grant => (
-            <div key={grant.id} className="p-6 hover:bg-gray-50 transition-colors">
+            <div key={grant.ref_number} className="p-6 hover:bg-gray-50 transition-colors">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <div className="text-lg font-medium">{grant.title}</div>
+                  <div className="text-lg font-medium">{grant.agreement_title_en}</div>
                   <div className="text-sm text-gray-500 flex items-center">
                     <FileText className="h-4 w-4 mr-2 inline-flex-shrink-0" />
-                    {grant.ref_number} • {grant.agency}
+                    {grant.ref_number} • {grant.owner_org}
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="font-medium">
-                    {formatCurrency(grant.value)}
+                    {formatCurrency(grant.agreement_value)}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {formatDate(grant.start_date)} - {formatDate(grant.end_date)}
+                    <div className="flex items-end">
+                      <span>{formatDate(grant.agreement_start_date)}</span>
+                      <span className="text-gray-400 mx-1">│</span>
+                      <span>{formatDate(grant.agreement_end_date)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -268,56 +294,6 @@ export const RecipientProfilePage = () => {
       </div>
     </div>
   )
-}
-
-// Mock Data
-const mockRecipientDetails = {
-  id: 1,
-  name: 'Dr. Jane Smith',
-  institute: 'University of Toronto',
-  type: 'Academia',
-  location: 'Toronto, ON',
-  stats: {
-    total_grants: { value: 12, trend: 'up' as const },
-    total_value: { value: 1250000, trend: 'up' as const },
-    avg_grant_size: { value: 104166, trend: 'down' as const }
-  },
-  funding_history: [
-    { year: 2019, value: 170000 },
-    { year: 2020, value: 200000 },
-    { year: 2021, value: 275000 },
-    { year: 2022, value: 325000 },
-    { year: 2023, value: 300000 }
-  ],
-  grants: [
-    {
-      id: 1,
-      ref_number: 'NSERC-2024-0123',
-      title: 'Advanced Machine Learning for Computer Vision',
-      agency: 'NSERC',
-      value: 325000,
-      start_date: '2024-01-01',
-      end_date: '2026-12-31'
-    },
-    {
-      id: 2,
-      ref_number: 'NSERC-2023-0456',
-      title: 'Deep Learning Applications in Healthcare',
-      agency: 'NSERC',
-      value: 250000,
-      start_date: '2023-05-01',
-      end_date: '2025-04-30'
-    },
-    {
-      id: 3,
-      ref_number: 'CIHR-2022-0789',
-      title: 'AI-Driven Medical Image Analysis',
-      agency: 'CIHR',
-      value: 175000,
-      start_date: '2022-09-01',
-      end_date: '2024-08-31'
-    }
-  ]
 }
 
 export default RecipientProfilePage

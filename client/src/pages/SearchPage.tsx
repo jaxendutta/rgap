@@ -4,6 +4,7 @@ import {
   BookmarkPlus, 
   University,
   GraduationCap,
+  BookMarked,
   FileText,
   SlidersHorizontal,
   BookmarkCheck,
@@ -14,8 +15,17 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { clsx } from 'clsx'
+import { Link } from 'react-router-dom'
 import { RangeFilter, MultiSelect, FilterTags } from '../components/filter/FilterComponents'
 import { DEFAULT_FILTER_STATE, FilterValues } from '../components/filter/constants'
+import { ResearchGrant, Recipient } from '../components/types/types'
+
+// Data
+// Make a copy of the mock data for now
+import { mock_data, mockInstitutes, filterOptions } from '../test-data/mockdata'
+const recipients: Recipient[] = [...mock_data.Recipient]
+const results: ResearchGrant[] = [...mock_data.ResearchGrant]
+const institutes = [...mockInstitutes]
 
 // Types
 type SortField = 'date' | 'value'
@@ -30,28 +40,6 @@ interface SearchTerms {
   recipient: string
   institute: string
   grant: string
-}
-
-interface SearchResult {
-  id: number
-  ref_number: string
-  recipient: string
-  institute: string
-  grant: string
-  value: number
-  startDate: string
-  endDate: string
-  agency: string
-  city: string
-  province: string
-}
-
-// Constants
-const filterOptions = {
-  agency: ['NSERC', 'SSHRC', 'CIHR'],
-  country: ['Canada', 'International', 'United States', 'United Kingdom', 'France'],
-  province: ['Ontario', 'Quebec', 'British Columbia', 'Alberta'],
-  city: ['Toronto', 'Montreal', 'Vancouver', 'Ottawa']
 }
 
 // Components
@@ -140,95 +128,13 @@ const SearchField = ({
   )
 }
 
-// Mock data and visualization utils
-const mockResults: SearchResult[] = [
-  {
-    id: 1,
-    ref_number: 'NSERC-2023-1234',
-    recipient: 'Dr. Jane Smith',
-    institute: 'University of Toronto',
-    grant: 'Advanced Materials Research',
-    value: 750000,
-    startDate: '2023-05-01',
-    endDate: '2024-04-30',
-    agency: 'NSERC',
-    city: 'Toronto',
-    province: 'ON'
-  },
-  {
-    id: 2,
-    ref_number: 'SSHRC-2022-5678',
-    recipient: 'Dr. John Doe',
-    institute: 'McGill University',
-    grant: 'Social Sciences Research',
-    value: 500000,
-    startDate: '2022-09-01',
-    endDate: '2023-08-31',
-    agency: 'SSHRC',
-    city: 'Montreal',
-    province: 'QC'
-  },
-  {
-    id: 3,
-    ref_number: 'CIHR-2021-9012',
-    recipient: 'Dr. Alice Johnson',
-    institute: 'University of British Columbia',
-    grant: 'Health Sciences Research',
-    value: 1200000,
-    startDate: '2021-01-01',
-    endDate: '2022-12-31',
-    agency: 'CIHR',
-    city: 'Vancouver',
-    province: 'BC'
-  },
-  {
-    id: 4,
-    ref_number: 'NSERC-2023-5678',
-    recipient: 'Dr. Robert Wilson',
-    institute: 'University of Alberta',
-    grant: 'Quantum Computing Research',
-    value: 950000,
-    startDate: '2023-01-15',
-    endDate: '2025-01-14',
-    agency: 'NSERC',
-    city: 'Edmonton',
-    province: 'AB'
-  },
-  {
-    id: 5,
-    ref_number: 'SSHRC-2023-9012',
-    recipient: 'Dr. Sarah Chen',
-    institute: 'University of Waterloo',
-    grant: 'Digital Humanities Research',
-    value: 350000,
-    startDate: '2023-03-01',
-    endDate: '2024-02-28',
-    agency: 'SSHRC',
-    city: 'Waterloo',
-    province: 'ON'
-  },
-  {
-    id: 6,
-    ref_number: 'CIHR-2022-1234',
-    recipient: 'Dr. Michael Brown',
-    institute: 'Western University',
-    grant: 'Medical Research Initiative',
-    value: 880000,
-    startDate: '2022-07-01',
-    endDate: '2024-06-30',
-    agency: 'CIHR',
-    city: 'London',
-    province: 'ON'
-  }
-]
-
 // Transform results for visualization
-const transformResultsForVisualization = (results: SearchResult[]) => {
+const transformResultsForVisualization = (results: ResearchGrant[]) => {
   const yearMap = new Map()
   
   results.forEach(result => {
-    const year = new Date(result.startDate).getFullYear()
-    const value = result.value
+    const year = new Date(result.agreement_start_date).getFullYear()
+    const value = result.agreement_value
     
     if (!yearMap.has(year)) {
       yearMap.set(year, {
@@ -240,7 +146,7 @@ const transformResultsForVisualization = (results: SearchResult[]) => {
     }
     
     const yearData = yearMap.get(year)
-    yearData[result.agency] += value
+    yearData[result.org] += value
   })
   
   return Array.from(yearMap.values())
@@ -248,13 +154,13 @@ const transformResultsForVisualization = (results: SearchResult[]) => {
 }
 
 // Sort function
-const sortResults = (results: SearchResult[], config: SortConfig): SearchResult[] => {
+const sortResults = (results: ResearchGrant[], config: SortConfig): ResearchGrant[] => {
   return [...results].sort((a, b) => {
     if (config.field === 'value') {
-      return config.direction === 'asc' ? a.value - b.value : b.value - a.value
+      return config.direction === 'asc' ? a.agreement_value - b.agreement_value : b.agreement_value - a.agreement_value
     } else { // date
-      const aDate = new Date(a.startDate).getTime()
-      const bDate = new Date(b.startDate).getTime()
+      const aDate = new Date(a.agreement_start_date).getTime()
+      const bDate = new Date(b.agreement_start_date).getTime()
       return config.direction === 'asc' ? aDate - bDate : bDate - aDate
     }
   })
@@ -322,7 +228,7 @@ export const SearchPage = () => {
   }
 
   // Apply sorting to results
-  const sortedResults = sortResults(mockResults, sortConfig)
+  const sortedResults = sortResults(results, sortConfig)
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -501,7 +407,7 @@ export const SearchPage = () => {
           <h3 className="text-lg font-medium mb-4">Funding Trends by Agency</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={transformResultsForVisualization(mockResults)} margin={{ top: 10, right: 30, left: 50, bottom: 5 }}>
+                <LineChart data={transformResultsForVisualization(results)} margin={{ top: 10, right: 30, left: 50, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis 
                   dataKey="year" 
@@ -553,73 +459,92 @@ export const SearchPage = () => {
 
       {/* Results Section */}
       <div className="space-y-4">
-        {sortedResults.map((result) => (
-          <div
-            key={result.id}
-            className="bg-white p-4 rounded-lg border border-gray-200 hover:border-gray-300 relative"
-          >
-            <button
-              onClick={() => setShowBookmarkOptions(result.ref_number)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        {sortedResults.map((result) => {
+          const recipient = recipients.find(recipient => recipient.recipient_id === result.recipient_id)
+          return recipient && (
+            <div
+              key={result.ref_number}
+              className="bg-white p-4 rounded-lg border border-gray-200 hover:border-gray-300 relative"
             >
-              <BookmarkPlus className="h-5 w-5" />
-            </button>
-
-            {/* Result Content */}
-            <div className="pr-8">
-              {/* Main Info */}
-              <div className="flex justify-between">
-                <div>
-                  <h3 className="font-medium text-lg">{result.recipient}</h3>
-                  <p className="text-gray-600 flex items-center">
-                    <University className="h-4 w-4 mr-1.5" />
-                    {result.institute}
-                  </p>
-                  <p className="text-gray-600">{result.grant}</p>
-                  <p className="text-sm text-gray-500 flex items-center">
-                    <FileText className="h-4 w-4 mr-1.5" />
-                    Ref: {result.ref_number}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium text-lg">
-                    {new Intl.NumberFormat('en-CA', {
-                      style: 'currency',
-                      currency: 'CAD',
-                      maximumFractionDigits: 0
-                    }).format(result.value)}
-                  </p>
-                  <p className="text-gray-600">{result.agency}</p>
-                  <p className="text-sm text-gray-500">{result.city}, {result.province}</p>
-                  <p className="text-sm text-gray-500">{result.startDate} - {result.endDate}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Bookmark Options Dropdown */}
-            {showBookmarkOptions === result.ref_number && (
-              <div 
-                ref={bookmarkRef}
-                className="absolute right-4 top-12 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 w-48"
+              <button
+          onClick={() => setShowBookmarkOptions(result.ref_number)}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
               >
-                {[
-                  { type: 'grant', icon: FileText, label: 'Bookmark Grant' },
-                  { type: 'recipient', icon: GraduationCap, label: 'Bookmark Recipient' },
-                  { type: 'institute', icon: University, label: 'Bookmark Institute' }
-                ].map(({ type, icon: Icon, label }) => (
-                  <button
-                    key={type}
-                    onClick={() => handleBookmark(type, result.ref_number)}
-                    className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-50"
-                  >
-                    <Icon className="h-4 w-4 mr-2" />
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
+          <BookmarkPlus className="h-5 w-5" />
+              </button>
+
+              {/* Result Content */}
+              <div className="pr-8">
+          {/* Main Info */}
+          <div className="flex justify-between">
+            <div>
+              <h3 className="font-medium text-lg">
+                <Link 
+                  to={`/recipients/${result.recipient_id}`}
+                  className="text-lg font-medium hover:text-blue-600 transition-colors"
+                >
+                  {recipient.legal_name}
+                </Link>
+              </h3>
+              <p className="text-gray-600">
+                {/* TODO: Link to the recipient's research organization */}
+                <Link 
+                  to={`/institutes/${institutes.find(institute => institute.name === recipient.research_organization_name)?.id}`}
+                  className="flex items-center hover:text-blue-600 transition-colors"
+                >
+                  <University className="h-4 w-4 mr-1.5" />
+                  {recipient.research_organization_name}
+                </Link>
+              </p>
+              <p className="text-gray-600 flex items-center">
+                <BookMarked className="h-4 w-4 mr-1.5" />
+                {result.agreement_title_en}
+              </p>
+              <p className="text-sm text-gray-500 flex items-center pt-0.5">
+                <FileText className="h-4 w-4 mr-1.5" />
+                Ref: {result.ref_number}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="font-medium text-lg">
+                {new Intl.NumberFormat('en-CA', {
+            style: 'currency',
+            currency: 'CAD',
+            maximumFractionDigits: 0
+                }).format(result.agreement_value)}
+              </p>
+              <p className="text-gray-600">{result.org}</p>
+              <p className="text-sm text-gray-500">{recipient.city}, {recipient.province}</p>
+              <p className="text-sm text-gray-500">{result.agreement_start_date} - {result.agreement_end_date}</p>
+            </div>
           </div>
-        ))}
+              </div>
+
+              {/* Bookmark Options Dropdown */}
+              {showBookmarkOptions === result.ref_number && (
+          <div 
+            ref={bookmarkRef}
+            className="absolute right-4 top-12 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 w-48"
+          >
+            {[
+              { type: 'grant', icon: FileText, label: 'Bookmark Grant' },
+              { type: 'recipient', icon: GraduationCap, label: 'Bookmark Recipient' },
+              { type: 'institute', icon: University, label: 'Bookmark Institute' }
+            ].map(({ type, icon: Icon, label }) => (
+              <button
+                key={type}
+                onClick={() => handleBookmark(type, result.ref_number)}
+                className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-50"
+              >
+                <Icon className="h-4 w-4 mr-2" />
+                {label}
+              </button>
+            ))}
+          </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

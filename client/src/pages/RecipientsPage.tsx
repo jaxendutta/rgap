@@ -1,50 +1,22 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookmarkPlus, BookmarkCheck, MapPin, University, TrendingUp, TrendingDown } from 'lucide-react'
+import { BookmarkPlus, BookmarkCheck, MapPin, University } from 'lucide-react'
 import { clsx } from 'clsx'
+import { formatCurrency, formatDate } from '../utils/NumberDisplayFormat'
+import { Recipient, ResearchGrant } from '../components/types/types'
 
-const mockRecipients = [
-  {
-    id: 1,
-    name: 'Dr. Jane Smith',
-    institute: 'University of Toronto',
-    type: 'Academia',
-    location: 'Toronto, ON',
-    totalGrants: 12,
-    totalValue: '$1,250,000',
-    latestGrant: '2024-01-14',
-    trending: 'up'
-  },
-  {
-    id: 2,
-    name: 'Dr. Michael Chen',
-    institute: 'McGill University',
-    type: 'Academia',
-    location: 'Montreal, QC',
-    totalGrants: 8,
-    totalValue: '$950,000',
-    latestGrant: '2024-01-31',
-    trending: 'down'
-  },
-  {
-    id: 3,
-    name: 'Dr. Sarah Johnson',
-    institute: 'University of British Columbia',
-    type: 'Academia',
-    location: 'Vancouver, BC',
-    totalGrants: 15,
-    totalValue: '$2,100,000',
-    latestGrant: '2024-01-29',
-    trending: 'up'
-  }
-]
+// Data
+// Make a copy of the mock data for now
+import { mock_data } from '../test-data/mockdata'
+const recipients: Recipient[] = [...mock_data.Recipient]
+const grants: ResearchGrant[] = [...mock_data.ResearchGrant]
 
 export const RecipientsPage = () => {
   const [bookmarked, setBookmarked] = useState<number[]>([])
 
   const toggleBookmark = (id: number) => {
-    setBookmarked(prev => 
-      prev.includes(id) 
+    setBookmarked(prev =>
+      prev.includes(id)
         ? prev.filter(b => b !== id)
         : [...prev, id]
     )
@@ -62,40 +34,46 @@ export const RecipientsPage = () => {
 
       {/* Grid of Recipients */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockRecipients.map(recipient => (
-          <div 
-            key={recipient.id} 
+        {recipients.map((recipient: Recipient) => (
+          <div
+            key={recipient.recipient_id}
             className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 hover:shadow-sm"
           >
             {/* Card Header */}
             <div className="p-6 space-y-4">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <Link 
-                    to={`/recipients/${recipient.id}`}
+                  <Link
+                    to={`/recipients/${recipient.recipient_id}`}
                     className="text-lg font-medium hover:text-blue-600 transition-colors"
                   >
-                    {recipient.name}
+                    {recipient.legal_name}
                   </Link>
-                  <div className="flex items-center text-gray-600">
-                    <University className="h-4 w-4 mr-1 flex-shrink-0" />
-                    <span>{recipient.institute}</span>
-                  </div>
+                    <div className="flex items-center text-gray-600">
+                    {/* TODO: Link to the recipient's research organization */}
+                    <Link
+                      to={`/institutes/1`}
+                      className="flex items-center hover:text-blue-600 transition-colors"
+                    >
+                      <University className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <span>{recipient.research_organization_name}</span>
+                    </Link>
+                    </div>
                   <div className="flex items-center text-gray-600">
                     <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                    <span>{recipient.location}</span>
+                    <span>{recipient.city}, {recipient.province}</span>
                   </div>
                 </div>
-                <button 
-                  onClick={() => toggleBookmark(recipient.id)}
+                <button
+                  onClick={() => toggleBookmark(recipient.recipient_id)}
                   className={clsx(
                     "p-2 rounded-full transition-colors hover:bg-gray-50",
-                    bookmarked.includes(recipient.id)
+                    bookmarked.includes(recipient.recipient_id)
                       ? "text-blue-600 hover:text-blue-700"
                       : "text-gray-400 hover:text-gray-600"
                   )}
                 >
-                  {bookmarked.includes(recipient.id) 
+                  {bookmarked.includes(recipient.recipient_id)
                     ? <BookmarkCheck className="h-5 w-5" />
                     : <BookmarkPlus className="h-5 w-5" />
                   }
@@ -103,24 +81,28 @@ export const RecipientsPage = () => {
               </div>
 
               {/* Stats Table */}
-              <div className="pt-4 border-t space-y-2">
+              <div className="pt-4 border-t">
                 <div className="grid grid-cols-3 text-sm">
-                  <div className="text-gray-600">Total Grants</div>
-                  <div className="text-gray-600">Total Value</div>
-                  <div className="text-gray-600">Latest</div>
+                  <div className="text-gray-600">Grants</div>
+                  <div className="text-gray-600">Total Funding</div>
+                  <div className="text-gray-600">Latest Grant</div>
                 </div>
                 <div className="grid grid-cols-3 items-center">
                   <div className="font-medium flex items-center">
-                    {recipient.totalGrants}
-                    {recipient.trending === 'up' ? (
-                      <TrendingUp className="h-4 w-4 ml-1 text-green-500" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4 ml-1 text-red-500" />
-                    )}
+                    {grants.filter(grant => grant.recipient_id === recipient.recipient_id).length}
                   </div>
-                  <div className="font-medium">{recipient.totalValue}</div>
+                  <div className="font-medium">
+                    {formatCurrency(grants.filter(grant => grant.recipient_id === recipient.recipient_id).reduce((acc, grant) => acc + grant.agreement_value, 0))}
+                  </div>
                   <div className="font-medium text-gray-900">
-                    {new Date(recipient.latestGrant).toLocaleDateString()}
+                  {(() => {
+                    const recipientGrants = grants
+                      .filter(grant => grant.recipient_id === recipient.recipient_id)
+                      .sort((a, b) => new Date(b.agreement_start_date).getTime() - new Date(a.agreement_start_date).getTime());
+                    return recipientGrants.length > 0
+                      ? formatDate(new Date(recipientGrants[0].agreement_start_date).toLocaleDateString())
+                      : 'N/A';
+                  })()}
                   </div>
                 </div>
               </div>

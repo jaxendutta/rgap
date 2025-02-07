@@ -17,36 +17,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { clsx } from 'clsx'
 import { formatCurrency, formatDate } from '../utils/NumberDisplayFormat'
 
-// Mock Data
-const mockInstituteDetails = {
-  id: 1,
-  name: 'University of California, Berkeley',
-  location: 'Berkeley, CA',
-  type: 'Public',
-  recent_grants: [
-    { id: 1, title: 'Research Grant', ref_number: 'R01GM12345', agency: 'NIH', recipient: 'John Doe', start_date: '2021-01-01', end_date: '2023-12-31', value: 100000 },
-    { id: 2, title: 'Scholarship Grant', ref_number: 'P20GM12345', agency: 'NSF', recipient: 'Jane Doe', start_date: '2022-01-01', end_date: '2023-12-31', value: 50000 },
-    { id: 3, title: 'Equipment Grant', ref_number: 'U01GM12345', agency: 'CDC', recipient: 'James Doe', start_date: '2023-01-01', end_date: '2023-12-31', value: 250000 }
-  ],
-  top_recipients: [
-    { id: 1, name: 'John Doe', department: 'Biology', grants: 3, total_funding: 500000 },
-    { id: 2, name: 'Jane Doe', department: 'Physics', grants: 2, total_funding: 250000 },
-    { id: 3, name: 'James Doe', department: 'Chemistry', grants: 1, total_funding: 100000 }
-  ],
-  stats: {
-    total_grants: { value: 10, trend: 'up' as 'up' | 'down' },
-    total_value: { value: 1000000, trend: 'down' as 'up' | 'down' },
-    recipients: { value: 20, trend: 'up' as 'up' | 'down' }
-  },
-  funding_history: [
-    { year: 2016, value: 500000 },
-    { year: 2017, value: 600000 },
-    { year: 2018, value: 700000 },
-    { year: 2019, value: 800000 },
-    { year: 2020, value: 900000 },
-    { year: 2021, value: 1000000 }
-  ]
-}
+// Data
+// Make a copy of the mock data for now
+import { mockInstitutes } from '../test-data/mockdata'
+const institutes = [ ...mockInstitutes ]
 
 // Types
 type SortField = 'date' | 'value' | 'grants_count'
@@ -131,6 +105,12 @@ const SortButton = ({
 
 const InstituteProfilePage = () => {
   const { id } = useParams()
+  const institute = institutes.find(institute => institute.id === Number(id))
+
+  if (!institute) {
+    return <div>Institute not found</div>
+  }
+
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [recipientBookmarks, setRecipientBookmarks] = useState<number[]>([])
   const [activeTab, setActiveTab] = useState<ActiveTab>('grants')
@@ -151,13 +131,13 @@ const InstituteProfilePage = () => {
   }
 
   // Sort data based on current configuration
-  const sortedGrants = [...mockInstituteDetails.recent_grants].sort((a, b) => 
+  const sortedGrants = [...institute.grants].sort((a, b) => 
     sortConfig.field === 'value' 
       ? sortByValue(a, b, sortConfig.direction)
       : sortByDate(a, b, sortConfig.direction)
   )
 
-  const sortedRecipients = [...mockInstituteDetails.top_recipients].sort((a, b) => 
+  const sortedRecipients = [...institute.recipients].sort((a, b) => 
     sortConfig.field === 'value'
       ? sortByValue(a, b, sortConfig.direction, 'total_funding')
       : sortByGrantsCount(a, b, sortConfig.direction)
@@ -170,15 +150,15 @@ const InstituteProfilePage = () => {
         {/* Profile Card */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 lg:col-span-1">
           <div className="flex justify-between">
-            <div className="space-y-3">
-              <h1 className="text-2xl font-semibold">{mockInstituteDetails.name}</h1>
+            <div className="space-y-1">
+              <h1 className="text-2xl font-semibold">{institute.name}</h1>
               <div className="flex items-center text-gray-600">
                 <University className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span>{mockInstituteDetails.type}</span>
+                <span>{institute.type}</span>
               </div>
               <div className="flex items-center text-gray-600">
                 <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span>{mockInstituteDetails.location}</span>
+                <span>{institute.city}, {institute.province}</span>
               </div>
             </div>
             <button 
@@ -202,20 +182,20 @@ const InstituteProfilePage = () => {
         <StatCard 
           icon={FileText}
           label="Grants"
-          value={mockInstituteDetails.stats.total_grants.value}
-          trend={mockInstituteDetails.stats.total_grants.trend}
+          value={institute.stats.total_grants.value}
+          trend={institute.stats.total_grants.trend}
         />
         <StatCard 
           icon={DollarSign}
           label="Total Funding"
-          value={formatCurrency(mockInstituteDetails.stats.total_value.value)}
-          trend={mockInstituteDetails.stats.total_value.trend}
+          value={formatCurrency(institute.stats.total_value.value)}
+          trend={institute.stats.total_value.trend}
         />
         <StatCard 
           icon={Users}
           label="Recipients"
-          value={mockInstituteDetails.stats.recipients.value}
-          trend={mockInstituteDetails.stats.recipients.trend}
+          value={institute.stats.recipients.value}
+          trend={institute.stats.recipients.trend}
         />
       </div>
 
@@ -225,7 +205,7 @@ const InstituteProfilePage = () => {
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart 
-              data={mockInstituteDetails.funding_history}
+              data={institute.funding_history}
               margin={{ top: 10, right: 30, left: 50, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

@@ -73,7 +73,7 @@ CREATE TABLE ResearchGrant (
     description_fr TEXT,
     expected_results_en TEXT,
     expected_results_fr TEXT,
-    owner_org VARCHAR(20),
+    org VARCHAR(20),
     recipient_id INT,
     prog_id VARCHAR(50),
     FOREIGN KEY (recipient_id) REFERENCES Recipient(recipient_id),

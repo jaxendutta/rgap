@@ -1,47 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookmarkPlus, BookmarkCheck, MapPin, University, TrendingUp, TrendingDown, Users } from 'lucide-react'
+import { BookmarkPlus, BookmarkCheck, MapPin, University, Users } from 'lucide-react'
 import { clsx } from 'clsx'
 import { formatCurrency } from '../utils/NumberDisplayFormat'
 
-const mockInstitutes = [
-  {
-    id: 1,
-    name: 'University of Toronto',
-    type: 'University',
-    city: 'Toronto',
-    province: 'ON',
-    totalGrants: 245,
-    recipients: 89,
-    totalValue: 28500000,
-    latestGrant: '2024-02-01',
-    trending: 'up'
-  },
-  {
-    id: 2,
-    name: 'McGill University',
-    type: 'University',
-    city: 'Montreal',
-    province: 'QC',
-    totalGrants: 198,
-    recipients: 72,
-    totalValue: 22300000,
-    latestGrant: '2024-01-28',
-    trending: 'up'
-  },
-  {
-    id: 3,
-    name: 'University of British Columbia',
-    type: 'University',
-    city: 'Vancouver',
-    province: 'BC',
-    totalGrants: 212,
-    recipients: 81,
-    totalValue: 25700000,
-    latestGrant: '2024-01-25',
-    trending: 'down'
-  }
-]
+// Data
+// Make a copy of the mock data for now
+import { mockInstitutes } from '../test-data/mockdata'
+const institutes = [...mockInstitutes]
 
 export const InstitutesPage = () => {
   const [bookmarked, setBookmarked] = useState<number[]>([])
@@ -66,7 +32,7 @@ export const InstitutesPage = () => {
 
       {/* Grid of Institutes */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockInstitutes.map(institute => (
+        {institutes.map(institute => (
           <div 
             key={institute.id} 
             className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 hover:shadow-sm"
@@ -107,7 +73,7 @@ export const InstitutesPage = () => {
               </div>
 
               {/* Stats Grid */}
-              <div className="pt-4 border-t space-y-2">
+              <div className="pt-4 border-t">
                 <div className="grid grid-cols-3 text-sm">
                   <div className="text-gray-600">Active Grants</div>
                   <div className="text-gray-600">Recipients</div>
@@ -115,18 +81,15 @@ export const InstitutesPage = () => {
                 </div>
                 <div className="grid grid-cols-3 items-center">
                   <div className="font-medium flex items-center">
-                    {institute.totalGrants}
-                    {institute.trending === 'up' ? (
-                      <TrendingUp className="h-4 w-4 ml-1 text-green-500" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4 ml-1 text-red-500" />
-                    )}
+                  {institute.grants.length}
                   </div>
                   <div className="font-medium flex items-center">
-                    <Users className="h-4 w-4 mr-1" />
-                    {institute.recipients}
+                  <Users className="h-4 w-4 mr-1" />
+                  {institute.recipients.length}
                   </div>
-                  <div className="font-medium">{formatCurrency(institute.totalValue)}</div>
+                  <div className="font-medium">
+                  {formatCurrency(institute.funding_history.reduce((acc, { value }) => acc + value, 0))}
+                  </div>
                 </div>
               </div>
             </div>
