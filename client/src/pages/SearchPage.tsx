@@ -522,37 +522,6 @@ export const SearchPage = () => {
                     }).format(value),
                     name
                   ]}
-                  labelFormatter={(label) => `${label}`}
-                  contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    padding: '12px 16px',
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-                    width: '180px',
-                    alignItems: 'center'
-                  }}
-                  // Apply a wrapper style to each tooltip item
-                  wrapperStyle={{
-                    width: '100%',
-                    padding: '2px 0'
-                  }}
-                  // Style for each item row
-                  itemStyle={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '2px 0',
-                    margin: 0
-                  }}
-                  // Style for the year label
-                  labelStyle={{
-                    color: '#374151',
-                    fontWeight: '600',
-                    marginBottom: '4px',
-                    fontSize: '15px'
-                  }}
-                  separator="" 
                 />
                 <Legend />
                 <Line 

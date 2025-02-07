@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { clsx } from 'clsx'
+import { formatCurrency, formatDate } from '../utils/NumberDisplayFormat'
 
 // Mock Data
 const mockInstituteDetails = {
@@ -55,23 +56,6 @@ type ActiveTab = 'grants' | 'recipients'
 interface SortConfig {
   field: SortField
   direction: SortDirection
-}
-
-// Utility functions
-const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('en-CA', {
-    style: 'currency',
-    currency: 'CAD',
-    maximumFractionDigits: 0
-  }).format(value)
-}
-
-const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString()
-}
-
-const formatMillions = (value: number): string => {
-  return `${(value / 1000000).toFixed(1)}M`
 }
 
 // Sort functions
