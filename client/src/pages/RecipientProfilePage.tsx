@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { clsx } from 'clsx'
+import { formatCurrency, formatDate } from '../utils/NumberDisplayFormat'
 
 // Types
 type SortField = 'date' | 'value'
@@ -22,19 +23,6 @@ type SortDirection = 'asc' | 'desc'
 interface SortConfig {
   field: SortField
   direction: SortDirection
-}
-
-// Utility functions
-const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('en-CA', {
-    style: 'currency',
-    currency: 'CAD',
-    maximumFractionDigits: 0
-  }).format(value)
-}
-
-const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString()
 }
 
 // Sort functions
@@ -175,13 +163,13 @@ export const RecipientProfilePage = () => {
         <StatCard 
           icon={DollarSign}
           label="Total Funding"
-          value={mockRecipientDetails.stats.total_value.value}
+          value={formatCurrency(mockRecipientDetails.stats.total_value.value)}
           trend={mockRecipientDetails.stats.total_value.trend}
         />
         <StatCard 
           icon={BarChart2}
           label="Average Grant"
-          value={mockRecipientDetails.stats.avg_grant_size.value}
+          value={formatCurrency(mockRecipientDetails.stats.avg_grant_size.value)}
           trend={mockRecipientDetails.stats.avg_grant_size.trend}
         />
       </div>

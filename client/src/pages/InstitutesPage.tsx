@@ -1,17 +1,19 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookmarkPlus, BookmarkCheck, MapPin, Building2, TrendingUp, TrendingDown, Users } from 'lucide-react'
+import { BookmarkPlus, BookmarkCheck, MapPin, University, TrendingUp, TrendingDown, Users } from 'lucide-react'
 import { clsx } from 'clsx'
+import { formatCurrency } from '../utils/NumberDisplayFormat'
 
 const mockInstitutes = [
   {
     id: 1,
     name: 'University of Toronto',
     type: 'University',
-    location: 'Toronto, ON',
+    city: 'Toronto',
+    province: 'ON',
     totalGrants: 245,
-    activeRecipients: 89,
-    totalValue: '$28.5M',
+    recipients: 89,
+    totalValue: 28500000,
     latestGrant: '2024-02-01',
     trending: 'up'
   },
@@ -19,10 +21,11 @@ const mockInstitutes = [
     id: 2,
     name: 'McGill University',
     type: 'University',
-    location: 'Montreal, QC',
+    city: 'Montreal',
+    province: 'QC',
     totalGrants: 198,
-    activeRecipients: 72,
-    totalValue: '$22.3M',
+    recipients: 72,
+    totalValue: 22300000,
     latestGrant: '2024-01-28',
     trending: 'up'
   },
@@ -30,10 +33,11 @@ const mockInstitutes = [
     id: 3,
     name: 'University of British Columbia',
     type: 'University',
-    location: 'Vancouver, BC',
+    city: 'Vancouver',
+    province: 'BC',
     totalGrants: 212,
-    activeRecipients: 81,
-    totalValue: '$25.7M',
+    recipients: 81,
+    totalValue: 25700000,
     latestGrant: '2024-01-25',
     trending: 'down'
   }
@@ -78,12 +82,12 @@ export const InstitutesPage = () => {
                     {institute.name}
                   </Link>
                   <div className="flex items-center text-gray-600">
-                    <Building2 className="h-4 w-4 mr-1 flex-shrink-0" />
+                    <University className="h-4 w-4 mr-1 flex-shrink-0" />
                     <span>{institute.type}</span>
                   </div>
                   <div className="flex items-center text-gray-600">
                     <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                    <span>{institute.location}</span>
+                    <span>{institute.city}, {institute.province}</span>
                   </div>
                 </div>
                 <button 
@@ -120,9 +124,9 @@ export const InstitutesPage = () => {
                   </div>
                   <div className="font-medium flex items-center">
                     <Users className="h-4 w-4 mr-1" />
-                    {institute.activeRecipients}
+                    {institute.recipients}
                   </div>
-                  <div className="font-medium">{institute.totalValue}</div>
+                  <div className="font-medium">{formatCurrency(institute.totalValue)}</div>
                 </div>
               </div>
             </div>
