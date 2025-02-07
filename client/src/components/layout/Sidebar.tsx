@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, Search, University, GraduationCap, Bookmark } from 'lucide-react'
+import { Home, Search, University, GraduationCap, Bookmark, BookOpen } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useState } from 'react'
 
@@ -9,6 +9,7 @@ const navigation = [
   { name: 'Institutes', icon: University, href: '/institutes' },
   { name: 'Recipients', icon: GraduationCap, href: '/recipients' },
   { name: 'Bookmarks', icon: Bookmark, href: '/bookmarks' },
+  { name: 'Documentation', icon: BookOpen, href: '/docs' },
 ]
 
 const Sidebar = () => {

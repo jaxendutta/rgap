@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookmarkPlus, BookmarkCheck, MapPin, University } from 'lucide-react'
+import { BookmarkPlus, BookmarkCheck, MapPin, University, FileText, Calendar } from 'lucide-react'
 import { clsx } from 'clsx'
 import { formatCurrency, formatDate } from '../utils/NumberDisplayFormat'
 import { Recipient, ResearchGrant } from '../components/types/types'
@@ -89,20 +89,22 @@ export const RecipientsPage = () => {
                 </div>
                 <div className="grid grid-cols-3 items-center">
                   <div className="font-medium flex items-center">
+                    <FileText className="h-4 w-4 mr-1" />
                     {grants.filter(grant => grant.recipient_id === recipient.recipient_id).length}
                   </div>
                   <div className="font-medium">
                     {formatCurrency(grants.filter(grant => grant.recipient_id === recipient.recipient_id).reduce((acc, grant) => acc + grant.agreement_value, 0))}
                   </div>
-                  <div className="font-medium text-gray-900">
-                  {(() => {
-                    const recipientGrants = grants
-                      .filter(grant => grant.recipient_id === recipient.recipient_id)
-                      .sort((a, b) => new Date(b.agreement_start_date).getTime() - new Date(a.agreement_start_date).getTime());
-                    return recipientGrants.length > 0
-                      ? formatDate(new Date(recipientGrants[0].agreement_start_date).toLocaleDateString())
-                      : 'N/A';
-                  })()}
+                  <div className="font-medium text-gray-900 flex items-center">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    {(() => {
+                      const recipientGrants = grants
+                        .filter(grant => grant.recipient_id === recipient.recipient_id)
+                        .sort((a, b) => new Date(b.agreement_start_date).getTime() - new Date(a.agreement_start_date).getTime());
+                      return recipientGrants.length > 0
+                        ? formatDate(new Date(recipientGrants[0].agreement_start_date).toLocaleDateString())
+                        : 'N/A';
+                    })()}
                   </div>
                 </div>
               </div>

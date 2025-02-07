@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookmarkPlus, BookmarkCheck, MapPin, University, Users } from 'lucide-react'
+import { BookmarkPlus, BookmarkCheck, MapPin, University, Users, FileText } from 'lucide-react'
 import { clsx } from 'clsx'
 import { formatCurrency } from '../utils/NumberDisplayFormat'
 
@@ -81,7 +81,8 @@ export const InstitutesPage = () => {
                 </div>
                 <div className="grid grid-cols-3 items-center">
                   <div className="font-medium flex items-center">
-                  {institute.grants.length}
+                    <FileText className="h-4 w-4 mr-1" />
+                    {institute.grants.length}
                   </div>
                   <div className="font-medium flex items-center">
                   <Users className="h-4 w-4 mr-1" />
