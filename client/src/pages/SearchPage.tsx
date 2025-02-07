@@ -14,7 +14,8 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { clsx } from 'clsx'
-import { MultiSelect, FilterTags, RangeFilter } from '../components/filter/FilterComponents'
+import { RangeFilter, MultiSelect, FilterTags } from '../components/filter/FilterComponents'
+import { DEFAULT_FILTER_STATE, FilterValues } from '../components/filter/constants'
 
 // Types
 type SortField = 'date' | 'value'
@@ -31,28 +32,13 @@ interface SearchTerms {
   grant: string
 }
 
-interface FilterValues {
-  yearRange: {
-    start: string
-    end: string
-  }
-  valueRange: {
-    min: number
-    max: number
-  }
-  agencies: string[]
-  countries: string[]
-  provinces: string[]
-  cities: string[]
-}
-
 interface SearchResult {
   id: number
   ref_number: string
   recipient: string
   institute: string
   grant: string
-  value: string
+  value: number
   startDate: string
   endDate: string
   agency: string
@@ -66,19 +52,6 @@ const filterOptions = {
   country: ['Canada', 'International', 'United States', 'United Kingdom', 'France'],
   province: ['Ontario', 'Quebec', 'British Columbia', 'Alberta'],
   city: ['Toronto', 'Montreal', 'Vancouver', 'Ottawa']
-}
-
-// Utility functions
-const parseCurrencyValue = (value: string): number => {
-  return parseFloat(value.replace(/[$,]/g, ''))
-}
-
-const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('en-CA', {
-    style: 'currency',
-    currency: 'CAD',
-    maximumFractionDigits: 0
-  }).format(value)
 }
 
 // Components
@@ -175,7 +148,7 @@ const mockResults: SearchResult[] = [
     recipient: 'Dr. Jane Smith',
     institute: 'University of Toronto',
     grant: 'Advanced Materials Research',
-    value: '$750,000',
+    value: 750000,
     startDate: '2023-05-01',
     endDate: '2024-04-30',
     agency: 'NSERC',
@@ -188,7 +161,7 @@ const mockResults: SearchResult[] = [
     recipient: 'Dr. John Doe',
     institute: 'McGill University',
     grant: 'Social Sciences Research',
-    value: '$500,000',
+    value: 500000,
     startDate: '2022-09-01',
     endDate: '2023-08-31',
     agency: 'SSHRC',
@@ -201,7 +174,7 @@ const mockResults: SearchResult[] = [
     recipient: 'Dr. Alice Johnson',
     institute: 'University of British Columbia',
     grant: 'Health Sciences Research',
-    value: '$1,200,000',
+    value: 1200000,
     startDate: '2021-01-01',
     endDate: '2022-12-31',
     agency: 'CIHR',
@@ -214,7 +187,7 @@ const mockResults: SearchResult[] = [
     recipient: 'Dr. Robert Wilson',
     institute: 'University of Alberta',
     grant: 'Quantum Computing Research',
-    value: '$950,000',
+    value: 950000,
     startDate: '2023-01-15',
     endDate: '2025-01-14',
     agency: 'NSERC',
@@ -227,7 +200,7 @@ const mockResults: SearchResult[] = [
     recipient: 'Dr. Sarah Chen',
     institute: 'University of Waterloo',
     grant: 'Digital Humanities Research',
-    value: '$350,000',
+    value: 350000,
     startDate: '2023-03-01',
     endDate: '2024-02-28',
     agency: 'SSHRC',
@@ -240,7 +213,7 @@ const mockResults: SearchResult[] = [
     recipient: 'Dr. Michael Brown',
     institute: 'Western University',
     grant: 'Medical Research Initiative',
-    value: '$880,000',
+    value: 880000,
     startDate: '2022-07-01',
     endDate: '2024-06-30',
     agency: 'CIHR',
@@ -255,7 +228,7 @@ const transformResultsForVisualization = (results: SearchResult[]) => {
   
   results.forEach(result => {
     const year = new Date(result.startDate).getFullYear()
-    const value = parseCurrencyValue(result.value)
+    const value = result.value
     
     if (!yearMap.has(year)) {
       yearMap.set(year, {
@@ -274,30 +247,17 @@ const transformResultsForVisualization = (results: SearchResult[]) => {
     .sort((a, b) => a.year - b.year)
 }
 
-// Sort functions
-const sortByValue = (a: SearchResult, b: SearchResult, direction: SortDirection): number => {
-  const aValue = parseCurrencyValue(a.value)
-  const bValue = parseCurrencyValue(b.value)
-  return direction === 'asc' ? aValue - bValue : bValue - aValue
-}
-
-const sortByDate = (a: SearchResult, b: SearchResult, direction: SortDirection): number => {
-  const aDate = new Date(a.startDate).getTime()
-  const bDate = new Date(b.startDate).getTime()
-  return direction === 'asc' ? aDate - bDate : bDate - aDate
-}
-
-// Hook for handling clicks outside elements
-const useClickOutside = (ref: React.RefObject<HTMLElement>, handler: () => void) => {
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        handler()
-      }
+// Sort function
+const sortResults = (results: SearchResult[], config: SortConfig): SearchResult[] => {
+  return [...results].sort((a, b) => {
+    if (config.field === 'value') {
+      return config.direction === 'asc' ? a.value - b.value : b.value - a.value
+    } else { // date
+      const aDate = new Date(a.startDate).getTime()
+      const bDate = new Date(b.startDate).getTime()
+      return config.direction === 'asc' ? aDate - bDate : bDate - aDate
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [ref, handler])
+  })
 }
 
 export const SearchPage = () => {
@@ -307,20 +267,7 @@ export const SearchPage = () => {
     institute: '',
     grant: ''
   })
-  const [filters, setFilters] = useState<FilterValues>({
-    yearRange: {
-      start: '',
-      end: ''
-    },
-    valueRange: {
-      min: 0,
-      max: 1000000
-    },
-    agencies: [],
-    countries: [],
-    provinces: [],
-    cities: []
-  })
+  const [filters, setFilters] = useState<FilterValues>(DEFAULT_FILTER_STATE)
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     field: 'date',
     direction: 'desc'
@@ -349,10 +296,10 @@ export const SearchPage = () => {
   const handleRemoveFilter = (type: string, value: string) => {
     setFilters(prev => {
       if (type === 'yearRange') {
-        return { ...prev, yearRange: { start: '', end: '' } }
+        return { ...prev, yearRange: { start: DEFAULT_FILTER_STATE.yearRange.start, end: DEFAULT_FILTER_STATE.yearRange.end } }
       }
       if (type === 'valueRange') {
-        return { ...prev, valueRange: { min: 0, max: 1000000 } }
+        return { ...prev, valueRange: DEFAULT_FILTER_STATE.valueRange }
       }
       return {
         ...prev,
@@ -364,14 +311,7 @@ export const SearchPage = () => {
   }
 
   const handleClearAllFilters = () => {
-    setFilters({
-      yearRange: { start: '', end: '' },
-      valueRange: { min: 0, max: 1000000 },
-      agencies: [],
-      countries: [],
-      provinces: [],
-      cities: []
-    })
+    setFilters(DEFAULT_FILTER_STATE)
   }
 
   const toggleSort = (field: SortField) => {
@@ -380,6 +320,9 @@ export const SearchPage = () => {
       direction: prev.field === field && prev.direction === 'desc' ? 'asc' : 'desc'
     }))
   }
+
+  // Apply sorting to results
+  const sortedResults = sortResults(mockResults, sortConfig)
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -609,7 +552,7 @@ export const SearchPage = () => {
 
       {/* Results Section */}
       <div className="space-y-4">
-        {mockResults.map((result) => (
+        {sortedResults.map((result) => (
           <div
             key={result.id}
             className="bg-white p-4 rounded-lg border border-gray-200 hover:border-gray-300 relative"
@@ -638,7 +581,13 @@ export const SearchPage = () => {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-lg">{result.value}</p>
+                  <p className="font-medium text-lg">
+                    {new Intl.NumberFormat('en-CA', {
+                      style: 'currency',
+                      currency: 'CAD',
+                      maximumFractionDigits: 0
+                    }).format(result.value)}
+                  </p>
                   <p className="text-gray-600">{result.agency}</p>
                   <p className="text-sm text-gray-500">{result.city}, {result.province}</p>
                   <p className="text-sm text-gray-500">{result.startDate} - {result.endDate}</p>
