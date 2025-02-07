@@ -501,7 +501,7 @@ export const SearchPage = () => {
           <h3 className="text-lg font-medium mb-4">Funding Trends by Agency</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={transformResultsForVisualization(mockResults)} margin={{ top: 10, right: 30, left: 50, bottom: 5 }}>
+                <LineChart data={transformResultsForVisualization(mockResults)} margin={{ top: 10, right: 30, left: 50, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis 
                   dataKey="year" 
@@ -509,18 +509,50 @@ export const SearchPage = () => {
                   axisLine={{ stroke: '#e5e7eb' }}
                 />
                 <YAxis 
-                  tickFormatter={(value) => `${value/1000}k`}
+                  tickFormatter={(value) => `${value/1000}K`}
                   tickLine={false}
                   axisLine={{ stroke: '#e5e7eb' }}
                 />
                 <Tooltip 
-                  formatter={(value: number) => [`${value.toLocaleString()}`, 'Funding']}
+                  formatter={(value: number, name: string) => [
+                    new Intl.NumberFormat('en-CA', {
+                      style: 'currency',
+                      currency: 'CAD',
+                      maximumFractionDigits: 0
+                    }).format(value),
+                    name
+                  ]}
+                  labelFormatter={(label) => `${label}`}
                   contentStyle={{
                     backgroundColor: 'white',
                     border: '1px solid #e5e7eb',
-                    borderRadius: '6px',
-                    padding: '8px 12px'
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+                    width: '180px',
+                    alignItems: 'center'
                   }}
+                  // Apply a wrapper style to each tooltip item
+                  wrapperStyle={{
+                    width: '100%',
+                    padding: '2px 0'
+                  }}
+                  // Style for each item row
+                  itemStyle={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '2px 0',
+                    margin: 0
+                  }}
+                  // Style for the year label
+                  labelStyle={{
+                    color: '#374151',
+                    fontWeight: '600',
+                    marginBottom: '4px',
+                    fontSize: '15px'
+                  }}
+                  separator="" 
                 />
                 <Legend />
                 <Line 
@@ -544,7 +576,7 @@ export const SearchPage = () => {
                   strokeWidth={2}
                   dot={{ fill: '#059669', strokeWidth: 2 }}
                 />
-              </LineChart>
+                </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
