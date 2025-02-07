@@ -272,7 +272,7 @@ export const RecipientProfilePage = () => {
                   <div className="text-lg font-medium">{grant.agreement_title_en}</div>
                   <div className="text-sm text-gray-500 flex items-center">
                     <FileText className="h-4 w-4 mr-2 inline-flex-shrink-0" />
-                    {grant.ref_number} • {grant.owner_org}
+                    {grant.ref_number} • {grant.org}
                   </div>
                 </div>
                 <div className="text-right">
