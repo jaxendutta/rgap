@@ -59,9 +59,9 @@ interface SortConfig {
 
 // Utility functions
 const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-CA', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'CAD',
     maximumFractionDigits: 0
   }).format(value)
 }
