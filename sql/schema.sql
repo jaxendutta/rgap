@@ -120,7 +120,6 @@ CREATE TABLE SearchHistory (
    CHECK(search_recipient IS NOT NULL OR search_grant IS NOT NULL OR quick_search IS NOT NULL OR search_institution IS NOT NULL),
    -- year, org, agreement_value, recipient_city, recipient_province, recipient_country: CA/Other
    search_filters JSON,
-   UNIQUE(user_id, quick_search),
    search_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
    result_count INT,
    saved BOOLEAN NOT NULL,
