@@ -1,18 +1,18 @@
 USE rgap;
+
 -- Table User
 CREATE TABLE User (
-    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT PRIMARY KEY IDENTITY(1,1),
     email VARCHAR(255) UNIQUE NOT NULL,
     name VARCHAR(100) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
-
 
 -- Table Recipient
 -- note that (legal_name, research_organization_name, country, city) have to be a unique tuple
 CREATE TABLE Recipient (
-    recipient_id INT PRIMARY KEY AUTO_INCREMENT,
+    recipient_id INT PRIMARY KEY IDENTITY(1,1),
     legal_name VARCHAR(255) NOT NULL,
     research_organization_name VARCHAR(255) NOT NULL,
     type VARCHAR(50),
@@ -35,7 +35,6 @@ CREATE TABLE Recipient (
     UNIQUE (legal_name, research_organization_name, country, city)
 );
 
-
 -- Table Program
 CREATE TABLE Program (
     prog_id VARCHAR(50) PRIMARY KEY,
@@ -47,7 +46,6 @@ CREATE TABLE Program (
     CHECK(name_en IS NOT NULL OR name_fr IS NOT NULL)
 );
 
-
 -- Table Organization
 CREATE TABLE Organization (
     owner_org VARCHAR(20) PRIMARY KEY,
@@ -55,10 +53,9 @@ CREATE TABLE Organization (
     abbreviation VARCHAR(10)
 );
 
-
 -- Table Grant
 CREATE TABLE ResearchGrant (
-    grant_id INT AUTO_INCREMENT PRIMARY KEY,
+    grant_id INT PRIMARY KEY IDENTITY(1,1),
     ref_number VARCHAR(50),
     amendment_number VARCHAR(10),
     UNIQUE (ref_number, amendment_number),
@@ -84,10 +81,9 @@ CREATE TABLE ResearchGrant (
     FOREIGN KEY (prog_id) REFERENCES Program(prog_id)
 );
 
-
 -- Table FavouriteGrants
 CREATE TABLE FavouriteGrants (
-    favourite_id INT AUTO_INCREMENT PRIMARY KEY,
+    favourite_id INT PRIMARY KEY IDENTITY(1,1),
     user_id INT NOT NULL,
     grant_id INT NOT NULL,
     UNIQUE (user_id, grant_id),
@@ -95,7 +91,6 @@ CREATE TABLE FavouriteGrants (
     FOREIGN KEY (user_id) REFERENCES User(user_id),
     FOREIGN KEY (grant_id) REFERENCES ResearchGrant(grant_id)
 );
-
 
 -- Table FavouriteRecipients
 CREATE TABLE FavouriteRecipients (
@@ -108,10 +103,9 @@ CREATE TABLE FavouriteRecipients (
     FOREIGN KEY (recipient_id) REFERENCES Recipient(recipient_id)
 );
 
-
 -- Table SearchHistory
 CREATE TABLE SearchHistory (
-   history_id INT PRIMARY KEY AUTO_INCREMENT,
+   history_id INT PRIMARY KEY IDENTITY(1,1),
    user_id INT NOT NULL,
    quick_search VARCHAR(500),
    search_recipient VARCHAR(500),
@@ -125,10 +119,3 @@ CREATE TABLE SearchHistory (
    saved BOOLEAN NOT NULL,
    FOREIGN KEY (user_id) REFERENCES User(user_id)
 );
-
-
-
-
-
-
-
