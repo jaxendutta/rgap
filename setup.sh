@@ -120,21 +120,19 @@ upgrade_pip() {
 
 # Setup portion with both terminal output and logging
 {
-    if check_venv; then
-        print "${BLUE}\nFound existing RGAP virtual environment${NC}"
-    else
-        print "${BLUE}\nSetting up new RGAP development environment...${NC}"
-        
-        # Run the Python setup script
-        python setup_env.py
-        setup_exit_code=$?
-        
-        if [ $setup_exit_code -ne 0 ]; then
-            cleanup_on_error
-            return 1
-        fi
-        print "${GREEN}Environment setup completed successfully!${NC}"
+    # Remove the if/else and just always run setup
+    print "${BLUE}\nChecking RGAP development environment...${NC}"
+
+    # Run the Python setup script
+    python setup_env.py
+    setup_exit_code=$?
+
+    if [ $setup_exit_code -ne 0 ]; then
+        cleanup_on_error
+        return 1
     fi
+
+    print "${GREEN}Environment check/setup completed successfully!${NC}"
 } 2>&1 | tee >(log_with_no_color >> $LOG_FILE)
 
 # Now execute activation directly (not in a subshell)
@@ -142,6 +140,84 @@ if ! check_venv; then
     cleanup_on_error
     return 1
 fi
+
+# Function to install Node.js
+setup_node() {
+    print "${BLUE}Setting up Node.js toolchain...${NC}"
+    
+    # Check if nvm is installed
+    if [ -d "$HOME/.nvm" ]; then
+        print "  ${BLUE}Found existing nvm installation${NC}"
+        
+        # Upgrade nvm itself
+        print "  ${BLUE}Checking for nvm updates...${NC}"
+        current_version=$(nvm --version 2>/dev/null || echo "unknown")
+        
+        # Only try to upgrade if we got a valid version
+        if [ "$current_version" != "unknown" ]; then
+            # Use curl to get the latest version number
+            latest_version=$(curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+            
+            if [ "$current_version" != "$latest_version" ]; then
+                print "  ${BLUE}Upgrading nvm $current_version -> $latest_version${NC}"
+                curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/$latest_version/install.sh" | bash
+            else
+                print "  ${BLUE}nvm is up to date ($current_version)${NC}"
+            fi
+        fi
+    else
+        print "  ${BLUE}Installing nvm...${NC}"
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+    fi
+    
+    # Load nvm
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    
+    # Check Node.js and upgrade if needed
+    if command -v node > /dev/null; then
+        current_version=$(node -v)
+        print "  ${BLUE}Checking for Node.js updates...${NC}"
+        
+        # Get the latest LTS version without the 'v' prefix
+        latest_version=$(nvm version-remote --lts | sed 's/v//')
+        current_version=$(echo $current_version | sed 's/v//')
+        
+        # Version comparison
+        if [ "$current_version" != "$latest_version" ]; then
+            print "  ${BLUE}Upgrading Node.js v$current_version -> v$latest_version${NC}"
+            nvm install --lts --reinstall-packages-from=current --latest-npm
+            nvm use --lts
+            nvm alias default "lts/*"
+        else
+            print "  ${BLUE}Node.js is up to date (v$current_version)${NC}"
+        fi
+    else
+        print "  ${BLUE}Installing Node.js LTS...${NC}"
+        nvm install --lts --latest-npm
+        nvm use --lts
+        nvm alias default "lts/*"
+    fi
+    
+    # Check npm and upgrade if needed (only if it wasn't just upgraded by nvm)
+    if command -v npm > /dev/null; then
+        current_version=$(npm -v)
+        print "  ${BLUE}Checking for npm updates...${NC}"
+        latest_version=$(npm view npm version 2>/dev/null)
+        
+        if [ "$current_version" != "$latest_version" ]; then
+            print "  ${BLUE}Upgrading npm $current_version -> $latest_version${NC}"
+            npm install -g npm@latest
+        else
+            print "  ${BLUE}npm is up to date ($current_version)${NC}"
+        fi
+    else
+        print "  ${RED}npm not found after Node.js installation${NC}"
+        return 1
+    fi
+    
+    print "${GREEN}Node.js toolchain setup complete!${NC}"
+}
 
 print "${BLUE}  Activating RGAP Virtual Environment...${NC}"
 source "$VENV_PATH/bin/activate"
@@ -156,6 +232,14 @@ print "${GREEN}  Activated. You're now in the RGAP Virtual Environment!${NC}"
 
 # Upgrade pip if a new version is available
 upgrade_pip
+
+# Set up Node.js tools
+setup_node
+node_exit_code=$?
+if [ $node_exit_code -ne 0 ]; then
+    cleanup_on_error
+    return 1
+fi
 
 # Install RGAP package in development mode
 {

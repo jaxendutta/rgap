@@ -1,11 +1,12 @@
-#!/usr/bin/env python3
-
 import os
 import sys
 import subprocess
 import platform
 from pathlib import Path
+import hashlib
+import json
 import argparse
+from typing import Dict, Set
 
 class RGAPEnvironmentSetup:
     def __init__(self, base_dir: str, env_name: str = "venv"):
@@ -18,14 +19,14 @@ class RGAPEnvironmentSetup:
             "Visualization": ["matplotlib", "seaborn", "plotly"],
             "Jupyter": ["jupyter", "notebook", "ipykernel"],
             "Web": ["requests", "aiohttp", "urllib3"],
-            "Data Formats": ["python-dotenv", "openpyxl", "PyYAML", "mysql-connector-python"],
+            "Data Formats": ["python-dotenv", "mysql-connector-python"],
             "Testing": ["pytest", "pytest-cov"],
-            "Database": ["mysqlclient", "SQLAlchemy"],
+            "Database": ["mysqlclient"],
             "Utilities": ["tqdm", "python-dateutil", "pytz"],
             "Optional": ["jupyterlab"]
         }
-        # Calculate total number of packages
         self.total_packages = sum(len(packages) for packages in self.package_groups.values())
+        self.cache_file = self.env_dir / ".package_cache.json"
 
     def create_directory_structure(self):
         """Create the basic project directory structure"""
@@ -51,23 +52,109 @@ class RGAPEnvironmentSetup:
 
         print("✓")
 
+    def get_installed_packages(self) -> Set[str]:
+        """Get currently installed packages in the virtualenv"""
+        if not self.env_dir.exists():
+            return set()
+
+        pip_path = self.get_pip_path()
+        try:
+            result = subprocess.run(
+                [pip_path, "freeze"],
+                capture_output=True,
+                text=True
+            )
+            packages = set()
+            for line in result.stdout.splitlines():
+                package = line.split('==')[0].lower()
+                packages.add(package)
+            return packages
+        except subprocess.CalledProcessError:
+            return set()
+
+    def get_package_versions(self) -> Dict[str, str]:
+        """Get versions of all installed packages"""
+        if not self.env_dir.exists():
+            return {}
+
+        pip_path = self.get_pip_path()
+        versions = {}
+        try:
+            for package in self.get_all_required_packages():
+                result = subprocess.run(
+                    [pip_path, "show", package],
+                    capture_output=True,
+                    text=True
+                )
+                if result.returncode == 0:
+                    for line in result.stdout.splitlines():
+                        if line.startswith("Version:"):
+                            versions[package] = line.split(":", 1)[1].strip()
+                            break
+        except subprocess.CalledProcessError:
+            pass
+        return versions
+
+    def get_all_required_packages(self) -> Set[str]:
+        """Get all required packages across all groups"""
+        packages = set()
+        for group_packages in self.package_groups.values():
+            packages.update(group_packages)
+        return packages
+
+    def calculate_project_hash(self) -> str:
+        """Calculate hash of project files to detect changes"""
+        hasher = hashlib.sha256()
+        setup_py = self.base_dir / "setup.py"
+        if setup_py.exists():
+            hasher.update(setup_py.read_bytes())
+        
+        src_dir = self.base_dir / "src"
+        if src_dir.exists():
+            for root, _, files in os.walk(src_dir):
+                for file in sorted(files):
+                    if file.endswith('.py'):
+                        path = Path(root) / file
+                        hasher.update(path.read_bytes())
+        
+        return hasher.hexdigest()
+
+    def load_cache(self) -> Dict:
+        """Load the package installation cache"""
+        if self.cache_file.exists():
+            try:
+                with open(self.cache_file) as f:
+                    return json.load(f)
+            except json.JSONDecodeError:
+                pass
+        return {}
+
+    def save_cache(self, cache: Dict):
+        """Save the package installation cache"""
+        with open(self.cache_file, 'w') as f:
+            json.dump(cache, f)
+
     def setup_virtualenv(self):
         """Create a Python virtual environment and update pip if needed"""
+        if self.env_dir.exists():
+            print("  Virtual environment already exists")
+            return
+
         print("  Setting up virtual environment...", end=' ', flush=True)
         try:
             # Update pip first
             subprocess.run([
-            sys.executable, "-m", "pip", "install", "--upgrade", "pip"
+                sys.executable, "-m", "pip", "install", "--upgrade", "pip"
             ], check=True, capture_output=True)
             
             # Install virtualenv
             subprocess.run([
-            sys.executable, "-m", "pip", "install", "-q", "--user", "virtualenv"
+                sys.executable, "-m", "pip", "install", "-q", "--user", "virtualenv"
             ], check=True, capture_output=True)
             
             # Create virtual environment
             subprocess.run([
-            sys.executable, "-m", "virtualenv", str(self.env_dir)
+                sys.executable, "-m", "virtualenv", str(self.env_dir)
             ], check=True, capture_output=True)
             
             print("✓")
@@ -111,70 +198,60 @@ class RGAPEnvironmentSetup:
             return False
 
     def install_packages(self):
-        """Install all required packages with progress tracking"""
-        print("  Installing packages...")
+        """Install required packages that aren't already installed"""
+        print("  Checking package status...")
+        
+        installed_packages = self.get_installed_packages()
+        required_packages = self.get_all_required_packages()
+        missing_packages = required_packages - installed_packages
+        
+        if not missing_packages:
+            print("    All required packages are already installed!")
+            return True
+        
+        print(f"  Installing {len(missing_packages)} missing packages...")
         current_count = 0
         
         for group_name, packages in self.package_groups.items():
-            print(f"    {group_name} packages:")
-            for package in packages:
-                current_count += 1
-                if not self.install_package(package, current_count):
-                    return False
+            missing_in_group = [p for p in packages if p in missing_packages]
+            if missing_in_group:
+                print(f"    {group_name} packages:")
+                for package in missing_in_group:
+                    current_count += 1
+                    if not self.install_package(package, current_count):
+                        return False
         return True
 
-    def install_nvm_and_node(self):
-        """Install nvm, Node.js, npm, and npx"""
-        print("  Installing nvm, Node.js, npm, and npx...", end=' ', flush=True)
+    def install_project(self):
+        """Install the project package if changed"""
+        print("  Checking project status...")
+        
+        current_hash = self.calculate_project_hash()
+        cache = self.load_cache()
+        
+        if cache.get('project_hash') == current_hash:
+            print("    No changes detected in project files")
+            return True
+        
+        print("    Installing project in development mode...", end=' ', flush=True)
+        pip_path = self.get_pip_path()
+        
         try:
-            # Install nvm
             subprocess.run(
-                ["curl", "-o-", "https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh", "|", "bash"],
+                [pip_path, "install", "-e", "."],
                 check=True,
-                capture_output=True,
-                shell=True
+                capture_output=True
             )
-            # Source nvm script
-            subprocess.run(
-                ["source", os.path.expanduser("~/.nvm/nvm.sh")],
-                check=True,
-                capture_output=True,
-                shell=True
-            )
-            # Install Node.js
-            subprocess.run(
-                ["nvm", "install", "22.13.1"],
-                check=True,
-                capture_output=True,
-                shell=True
-            )
-            # Use the installed Node.js version
-            subprocess.run(
-                ["nvm", "use", "22.13.1"],
-                check=True,
-                capture_output=True,
-                shell=True
-            )
-            # Verify installations
-            node_version = subprocess.run(
-                ["node", "-v"],
-                capture_output=True,
-                text=True
-            ).stdout.strip()
-            npm_version = subprocess.run(
-                ["npm", "-v"],
-                capture_output=True,
-                text=True
-            ).stdout.strip()
-            npx_version = subprocess.run(
-                ["npx", "-v"],
-                capture_output=True,
-                text=True
-            ).stdout.strip()
-            print(f"✓ (Node.js {node_version}, npm {npm_version}, npx {npx_version})")
+            cache['project_hash'] = current_hash
+            self.save_cache(cache)
+            print("✓")
+            return True
         except subprocess.CalledProcessError as e:
-            print(f"\nError installing nvm/Node.js/npm/npx: {e.stderr.decode()}")
-            sys.exit(1)
+            print("✗")
+            print(f"Error installing project: {e.stderr.decode()}")
+            return False
+
+
 
     def run_setup(self):
         """Run the complete setup process"""
@@ -184,7 +261,11 @@ class RGAPEnvironmentSetup:
             if not self.install_packages():
                 print("Error: Failed to install some packages!")
                 sys.exit(1)
-            self.install_nvm_and_node()
+            if not self.install_project():
+                print("Error: Failed to install project!")
+                sys.exit(1)
+
+            
         except Exception as e:
             print(f"Error during setup: {str(e)}")
             sys.exit(1)
