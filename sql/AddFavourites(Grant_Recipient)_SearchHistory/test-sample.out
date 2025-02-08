@@ -1,0 +1,6 @@
+favourite_id	user_id	grant_id	created_at
+2	3	2	2025-02-07 20:18:40
+favourite_id	user_id	recipient_id	created_at
+1	4	1	2025-02-07 20:18:40
+history_id	user_id	quick_search	search_recipient	search_grant	search_institution	search_filters	search_time	result_count	saved
+1	1	NULL	2	NULL	NULL	NULL	2025-02-07 20:18:41	0	1
