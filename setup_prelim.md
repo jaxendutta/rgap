@@ -72,3 +72,13 @@
     # Access the application
     curl http://localhost:3000
     ```
+
+> [!TIP]  
+> You can also test out our MySQL Server through API calls when it is running! Try running the following command in your terminal:
+> ```bash
+> # Make sure the server is running by following the steps 1-6 above!
+> curl -X POST http://localhost:3030/search \ 
+> -H "Content-Type: application/json" \
+> -d '{"searchTerms":{"institute":"waterloo"},"filters":{},"sortConfig":{"field":"date","direction":"desc"}}'
+> ```
+> This will return a list of grants that have the word "waterloo" in their institute name, sorted by date in descending order.

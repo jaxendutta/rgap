@@ -1,5 +1,32 @@
 # Research Grant Analytics Platform (RGAP)
-## Subtitle: A Tri-Agency Funding Analytics Platform
+
+> [!IMPORTANT]  
+> Head to the [Milestone 1 Preliminary Setup Guide](setup_prelim.md) to have a walkthrough of how to run our application for Milestone 1.
+
+## Table of Contents
+- [Research Grant Analytics Platform (RGAP)](#research-grant-analytics-platform-rgap)
+  - [Table of Contents](#table-of-contents)
+  - [1. Project Overview](#1-project-overview)
+    - [Key Focus Areas:](#key-focus-areas)
+  - [2. Technology Stack](#2-technology-stack)
+    - [Frontend:](#frontend)
+    - [Backend:](#backend)
+    - [Development Tools:](#development-tools)
+  - [3. Project Structure](#3-project-structure)
+  - [4. Features](#4-features)
+    - [Basic Features:](#basic-features)
+    - [Advanced Features:](#advanced-features)
+  - [5. Data Management](#5-data-management)
+    - [Sample Dataset:](#sample-dataset)
+    - [Production Dataset:](#production-dataset)
+    - [Data Processing Pipeline:](#data-processing-pipeline)
+  - [6. Performance Optimization](#6-performance-optimization)
+    - [Database Level:](#database-level)
+    - [Application Level:](#application-level)
+  - [7. Development Workflow](#7-development-workflow)
+    - [Milestone Planning:](#milestone-planning)
+    - [Quality Assurance:](#quality-assurance)
+  - [8. Documentation](#8-documentation)
 
 ## 1. Project Overview
 RGAP is a comprehensive web-based analytics platform analyzing research funding data from Canada's three major research funding agencies: NSERC (Natural Sciences and Engineering Research Council), CIHR (Canadian Institutes of Health Research), and SSHRC (Social Sciences and Humanities Research Council). The platform leverages open data from Open Canada (https://search.open.canada.ca/grants), which provides detailed grant information from these agencies:
@@ -9,7 +36,8 @@ RGAP is a comprehensive web-based analytics platform analyzing research funding 
 - SSHRC: ~44,398 grant records
 Total Dataset: ~170,116 grants
 
-The platform will provide researchers, administrators, and the public with insights into funding patterns, institutional success rates, and research investment trends across Canadian academic institutions.
+The platform will provide researchers, administrators, and the public with insights into
+funding patterns, institutional success rates, and research investment trends across Canadian academic institutions.
 
 ### Key Focus Areas:
 - Integration of tri-agency funding data (~170,000 grants)
