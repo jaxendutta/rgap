@@ -1,5 +1,10 @@
 # RGAP MySQL Database Setup on Student Linux Server
 
+> [!TIP]
+> If you would like to run our application on your local machine, please refer to the [Local Preliminary Setup Guide](setup_prelim_local.md) for a walkthrough of how to run our application for Milestone 1.
+> 
+> This guide is for setting up the MySQL database on the student Linux server.
+
 1. Setup Virtual Environment
     ```bash
     source setup.sh
