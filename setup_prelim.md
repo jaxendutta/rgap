@@ -5,6 +5,9 @@
 > 
 > This guide is for setting up the MySQL database on the student Linux server.
 
+> [!IMPORTANT]
+> Our code is housed on the `develop` branch. Please ensure you are on the 'develop' branch when following this guide!
+
 1. Setup Virtual Environment
     ```bash
     source setup.sh
