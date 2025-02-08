@@ -1,0 +1,27 @@
+-- Most popular searches for the Recipient search bar
+search_recipient,frequency
+Alice,1
+Bob,1
+Diana,1
+
+-- Most popular searches for the Institution search bar
+search_institution,frequency
+University of Waterloo,1
+MIT,1
+
+-- Most popular searches for the Grant search bar
+search_grant,frequency
+machine learning,1
+quantum,1
+data mining,1
+
+-- Most popular searches from the quick search bar
+quick_search,frequency
+NSERC,1
+
+-- Modified from 1 to handle ties (for Recipient search bar)
+search_recipient,frequency,last_search
+Diana,1,Diana
+Bob,1,Bob
+Alice,1,Alice
+

@@ -1,0 +1,8 @@
+history_id,user_id,quick_search,search_recipient,search_grant,search_institution,search_filters,search_time,result_count,saved
+1,1,,,"machine learning",,{},2025-02-06 12:00:00,3,0
+2,2,,Alice,,,{},2025-02-06 12:05:00,2,0
+3,3,,,,University of Waterloo,{},2025-02-06 12:10:00,5,0
+4,1,NSERC,,,,{},2025-02-06 12:15:00,10,0
+5,2,,Bob,quantum,MIT,{},2025-02-06 12:20:00,1,0
+6,3,,,"data mining",,{},2025-02-06 12:25:00,4,0
+7,1,,Diana,,,{},2025-02-06 12:30:00,2,0

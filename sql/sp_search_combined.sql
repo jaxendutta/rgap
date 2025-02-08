@@ -1,5 +1,4 @@
 DELIMITER $$
-
 CREATE PROCEDURE sp_search_combined(
     IN p_user_id INT,
     IN p_search_grant VARCHAR(500),
@@ -8,93 +7,83 @@ CREATE PROCEDURE sp_search_combined(
 )
 BEGIN
     DECLARE v_count INT DEFAULT 0;
-
-    /*
-      Insert the search into SearchHistory.
-      The procedure records the search parameters and the current time.
-      (If a parameter isn’t used, pass in an empty string or NULL to sp.)
-    */
+    
+    -- Check that at least one grant matches the search grant text
+    SELECT COUNT(*) INTO v_count
+    FROM ResearchGrant
+    WHERE agreement_title_en LIKE CONCAT('%', p_search_grant, '%');
+    IF v_count = 0 THEN
+       SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No matching grant found.';
+    END IF;
+    
+    -- Check that at least one recipient matches the search recipient text
+    SELECT COUNT(*) INTO v_count
+    FROM Recipient
+    WHERE legal_name LIKE CONCAT('%', p_search_recipient, '%');
+    IF v_count = 0 THEN
+       SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No matching recipient found.';
+    END IF;
+    
+    -- Check that at least one institution matches the search institution text
+    SELECT COUNT(*) INTO v_count
+    FROM Recipient
+    WHERE research_organization_name LIKE CONCAT('%', p_search_institution, '%');
+    IF v_count = 0 THEN
+       SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No matching institution found.';
+    END IF;
+    
+    -- Insert the combined search record into SearchHistory with all three search parameters and the current timestamp
     INSERT INTO SearchHistory (
-        user_id,
-        search_grant,
-        search_recipient,
-        search_institution,
-        search_time,
-        result_count,
+        user_id, 
+        search_grant, 
+        search_recipient, 
+        search_institution, 
+        search_time, 
+        result_count, 
         saved
     )
     VALUES (
-        p_user_id,
-        p_search_grant,
-        p_search_recipient,
-        p_search_institution,
-        NOW(),
-        0,
+        p_user_id, 
+        p_search_grant, 
+        p_search_recipient, 
+        p_search_institution, 
+        NOW(), 
+        0, 
         FALSE
     );
-
-    /*
-      Retrieve matching rows.
-      The query joins ResearchGrant with Recipient so that we can apply the various filters.
-      For each filter, if the search parameter is NULL or an empty string, that condition is ignored.
-    */
+    
+    -- Retrieve matching rows that satisfy all three conditions
     SELECT 
-        RG.grant_id,
-        RG.agreement_title_en AS matched_grant_text,
-        RG.agreement_start_date AS grant_date,
+        R.legal_name AS recipient,
+        R.research_organization_name AS institution,
+        RG.agreement_title_en AS grant_name,
+        RG.ref_number AS grant_ref_number,
         RG.agreement_value AS grant_value,
-        R.recipient_id,
-        R.legal_name AS matched_recipient_text,
-        R.research_organization_name AS matched_institution_text
+        O.org_title AS organization,
+        RG.agreement_start_date AS agreement_start_date,
+        RG.agreement_end_date AS agreement_end_date
     FROM ResearchGrant RG
     JOIN Recipient R ON RG.recipient_id = R.recipient_id
-    WHERE 
-        (
-            p_search_grant IS NULL 
-            OR p_search_grant = '' 
-            OR RG.agreement_title_en LIKE CONCAT('%', p_search_grant, '%')
-        )
-        AND (
-            p_search_recipient IS NULL 
-            OR p_search_recipient = '' 
-            OR R.legal_name LIKE CONCAT('%', p_search_recipient, '%')
-        )
-        AND (
-            p_search_institution IS NULL 
-            OR p_search_institution = '' 
-            OR R.research_organization_name LIKE CONCAT('%', p_search_institution, '%')
-        );
-
-    /*
-      Count the matching rows using the same filter conditions.
-    */
+    JOIN Organization O ON RG.owner_org = O.owner_org
+    WHERE RG.agreement_title_en LIKE CONCAT('%', p_search_grant, '%')
+      AND R.legal_name LIKE CONCAT('%', p_search_recipient, '%')
+      AND R.research_organization_name LIKE CONCAT('%', p_search_institution, '%');
+    
+    -- Count the matching rows for the combined search
     SELECT COUNT(*) INTO v_count
     FROM ResearchGrant RG
     JOIN Recipient R ON RG.recipient_id = R.recipient_id
-    WHERE 
-        (
-            p_search_grant IS NULL 
-            OR p_search_grant = '' 
-            OR RG.agreement_title_en LIKE CONCAT('%', p_search_grant, '%')
-        )
-        AND (
-            p_search_recipient IS NULL 
-            OR p_search_recipient = '' 
-            OR R.legal_name LIKE CONCAT('%', p_search_recipient, '%')
-        )
-        AND (
-            p_search_institution IS NULL 
-            OR p_search_institution = '' 
-            OR R.research_organization_name LIKE CONCAT('%', p_search_institution, '%')
-        );
-
-    /*
-      Update the most recent SearchHistory record for this user with the result count.
-      The ORDER BY ... LIMIT 1 clause ensures we update the latest record.
-    */
+    WHERE RG.agreement_title_en LIKE CONCAT('%', p_search_grant, '%')
+      AND R.legal_name LIKE CONCAT('%', p_search_recipient, '%')
+      AND R.research_organization_name LIKE CONCAT('%', p_search_institution, '%');
+    
+    -- Update the SearchHistory record with the result count
     UPDATE SearchHistory
     SET result_count = v_count
-    WHERE user_id = p_user_id
+    WHERE user_id = p_user_id 
+      AND search_grant = p_search_grant
+      AND search_recipient = p_search_recipient
+      AND search_institution = p_search_institution
     ORDER BY search_time DESC
     LIMIT 1;
 END $$
