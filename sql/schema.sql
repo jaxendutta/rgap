@@ -1,8 +1,8 @@
 USE rgap;
 
 -- Table User
-CREATE TABLE User (
-    user_id INT PRIMARY KEY IDENTITY(1,1),
+CREATE TABLE `User` (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(255) UNIQUE NOT NULL,
     name VARCHAR(100) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE User (
 -- Table Recipient
 -- note that (legal_name, research_organization_name, country, city) have to be a unique tuple
 CREATE TABLE Recipient (
-    recipient_id INT PRIMARY KEY IDENTITY(1,1),
+    recipient_id INT PRIMARY KEY AUTO_INCREMENT,
     legal_name VARCHAR(255) NOT NULL,
     research_organization_name VARCHAR(255) NOT NULL,
     type VARCHAR(50),
@@ -55,7 +55,7 @@ CREATE TABLE Organization (
 
 -- Table Grant
 CREATE TABLE ResearchGrant (
-    grant_id INT PRIMARY KEY IDENTITY(1,1),
+    grant_id INT PRIMARY KEY AUTO_INCREMENT,
     ref_number VARCHAR(50),
     amendment_number VARCHAR(10),
     UNIQUE (ref_number, amendment_number),
@@ -74,6 +74,7 @@ CREATE TABLE ResearchGrant (
     expected_results_en TEXT,
     expected_results_fr TEXT,
     org VARCHAR(20),
+    owner_org VARCHAR(20),
     recipient_id INT,
     prog_id VARCHAR(50),
     FOREIGN KEY (recipient_id) REFERENCES Recipient(recipient_id),
@@ -83,7 +84,7 @@ CREATE TABLE ResearchGrant (
 
 -- Table FavouriteGrants
 CREATE TABLE FavouriteGrants (
-    favourite_id INT PRIMARY KEY IDENTITY(1,1),
+    favourite_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     grant_id INT NOT NULL,
     UNIQUE (user_id, grant_id),
@@ -105,7 +106,7 @@ CREATE TABLE FavouriteRecipients (
 
 -- Table SearchHistory
 CREATE TABLE SearchHistory (
-   history_id INT PRIMARY KEY IDENTITY(1,1),
+   history_id INT PRIMARY KEY AUTO_INCREMENT,
    user_id INT NOT NULL,
    quick_search VARCHAR(500),
    search_recipient VARCHAR(500),
