@@ -60,6 +60,18 @@ class DatabasePopulator:
             print("Database: ", self.db_config['database'])
             print("Port: ", self.db_config['port'])
 
+        self.db_config['database'] = 'rgap'
+        self.db_config['port'] = 7272
+
+        print("\nModified Database configuration:")
+        print("Date source: ", env_path)
+        print("-------------------------")
+        print("Host: ", self.db_config['host'])
+        print("User: ", self.db_config['user'])
+        print("Password: ", self.db_config['password'])
+        print("Database: ", self.db_config['database'])
+        print("Port: ", self.db_config['port'])
+
     def connect_db(self) -> None:
         """Establish database connection"""
         try:

@@ -20,12 +20,16 @@ import { RangeFilter, MultiSelect, FilterTags } from '../components/filter/Filte
 import { DEFAULT_FILTER_STATE, FilterValues } from '../components/filter/constants'
 import { ResearchGrant, Recipient } from '../components/types/types'
 
+import { useGrantSearch, SearchResult } from '../hooks/useGrantSearch'
+
 // Data
 // Make a copy of the mock data for now
+/*
 import { mock_data, mockInstitutes, filterOptions } from '../test-data/mockdata'
 const recipients: Recipient[] = [...mock_data.Recipient]
 const results: ResearchGrant[] = [...mock_data.ResearchGrant]
 const institutes = [...mockInstitutes]
+*/
 
 // Types
 type SortField = 'date' | 'value'
@@ -40,6 +44,14 @@ interface SearchTerms {
   recipient: string
   institute: string
   grant: string
+}
+
+// Filter Options
+const filterOptions = {
+  agency: ['NSERC', 'SSHRC', 'CIHR'],
+  country: ['Canada', 'United States', 'United Kingdom', 'France', 'Germany'],
+  province: ['Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba'],
+  city: ['Toronto', 'Montreal', 'Vancouver', 'Ottawa', 'Edmonton']
 }
 
 // Components
@@ -129,12 +141,12 @@ const SearchField = ({
 }
 
 // Transform results for visualization
-const transformResultsForVisualization = (results: ResearchGrant[]) => {
+const transformResultsForVisualization = (results: SearchResult[]) => {
   const yearMap = new Map()
   
   results.forEach(result => {
-    const year = new Date(result.agreement_start_date).getFullYear()
-    const value = result.agreement_value
+    const year = new Date(result.startDate).getFullYear()
+    const value = result.value
     
     if (!yearMap.has(year)) {
       yearMap.set(year, {
@@ -146,7 +158,7 @@ const transformResultsForVisualization = (results: ResearchGrant[]) => {
     }
     
     const yearData = yearMap.get(year)
-    yearData[result.org] += value
+    yearData[result.agency] += value
   })
   
   return Array.from(yearMap.values())
@@ -185,8 +197,20 @@ export const SearchPage = () => {
   const filterRef = useRef<HTMLDivElement>(null)
   const bookmarkRef = useRef<HTMLDivElement>(null)
 
-  const handleSearch = (field: keyof SearchTerms, value: string) => {
-    console.log(`Searching by ${field} for ${value}`)
+  // Add the search query
+  const { data: searchResults, isLoading, error, refetch } = useGrantSearch({
+    searchTerms,
+    filters,
+    sortConfig
+  })
+
+  const handleSearch = () => {
+    console.log('Initiating search with:', {
+      searchTerms,
+      filters,
+      sortConfig
+    })
+    refetch()
   }
 
   const handleBookmarkSearch = () => {
@@ -228,7 +252,7 @@ export const SearchPage = () => {
   }
 
   // Apply sorting to results
-  const sortedResults = sortResults(results, sortConfig)
+  // const sortedResults = sortResults(results, sortConfig)
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -243,7 +267,7 @@ export const SearchPage = () => {
           {showFilters ? 'Hide Filters' : 'Show Filters'}
         </button>
       </div>
-
+  
       {/* Search Fields */}
       <div className="grid gap-4">
         <SearchField 
@@ -268,7 +292,7 @@ export const SearchPage = () => {
           setSearchTerms={setSearchTerms}
         />
       </div>
-
+  
       {/* Filters Panel */}
       {showFilters && (
         <div ref={filterRef} className="bg-white p-6 rounded-lg border border-gray-200 space-y-6">
@@ -296,7 +320,7 @@ export const SearchPage = () => {
                 valueRange: range
               }))}
             />
-
+  
             {/* Multi-select Filters */}
             <MultiSelect
               label="Funding Agencies"
@@ -325,18 +349,18 @@ export const SearchPage = () => {
           </div>
         </div>
       )}
-
+  
       {/* Filter Tags */}
       <FilterTags
         filters={filters}
         onRemove={handleRemoveFilter}
         onClearAll={handleClearAllFilters}
       />
-
+  
       {/* Search Actions */}
       <div className="flex justify-between items-center">
         <button
-          onClick={() => handleSearch('recipient', searchTerms.recipient)}
+          onClick={handleSearch}
           className="flex items-center pl-3 pr-4 py-1.5 bg-gray-900 text-white rounded-md hover:bg-gray-800"
           title="Search"
         >
@@ -361,7 +385,7 @@ export const SearchPage = () => {
           Bookmark Search
         </button>
       </div>
-
+  
       {/* Results Header with Sort Controls */}
       <div className="flex items-center justify-between border-b pb-2">
         <h2 className="text-lg font-medium">Search Results</h2>
@@ -400,14 +424,17 @@ export const SearchPage = () => {
           </button>
         </div>
       </div>
-
+  
       {/* Visualization Panel */}
-      {showVisualization && (
+      {showVisualization && searchResults && searchResults.length > 0 && (
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <h3 className="text-lg font-medium mb-4">Funding Trends by Agency</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={transformResultsForVisualization(results)} margin={{ top: 10, right: 30, left: 50, bottom: 5 }}>
+              <LineChart 
+                data={transformResultsForVisualization(searchResults)} 
+                margin={{ top: 10, right: 30, left: 50, bottom: 5 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis 
                   dataKey="year" 
@@ -451,100 +478,124 @@ export const SearchPage = () => {
                   strokeWidth={2}
                   dot={{ fill: '#059669', strokeWidth: 2 }}
                 />
-                </LineChart>
+              </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
       )}
-
+  
       {/* Results Section */}
       <div className="space-y-4">
-        {sortedResults.map((result) => {
-          const recipient = recipients.find(recipient => recipient.recipient_id === result.recipient_id)
-          return recipient && (
-            <div
-              key={result.ref_number}
-              className="bg-white p-4 rounded-lg border border-gray-200 hover:border-gray-300 relative"
-            >
-              <button
-          onClick={() => setShowBookmarkOptions(result.ref_number)}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              >
-          <BookmarkPlus className="h-5 w-5" />
-              </button>
-
-              {/* Result Content */}
-              <div className="pr-8">
-          {/* Main Info */}
-          <div className="flex justify-between">
-            <div>
-              <h3 className="font-medium text-lg">
-                <Link 
-                  to={`/recipients/${result.recipient_id}`}
-                  className="text-lg font-medium hover:text-blue-600 transition-colors"
-                >
-                  {recipient.legal_name}
-                </Link>
-              </h3>
-              <p className="text-gray-600">
-                {/* TODO: Link to the recipient's research organization */}
-                <Link 
-                  to={`/institutes/${institutes.find(institute => institute.name === recipient.research_organization_name)?.id}`}
-                  className="flex items-center hover:text-blue-600 transition-colors"
-                >
-                  <University className="h-4 w-4 mr-1.5" />
-                  {recipient.research_organization_name}
-                </Link>
-              </p>
-              <p className="text-gray-600 flex items-center">
-                <BookMarked className="h-4 w-4 mr-1.5" />
-                {result.agreement_title_en}
-              </p>
-              <p className="text-sm text-gray-500 flex items-center pt-0.5">
-                <FileText className="h-4 w-4 mr-1.5" />
-                Ref: {result.ref_number}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="font-medium text-lg">
-                {new Intl.NumberFormat('en-CA', {
-            style: 'currency',
-            currency: 'CAD',
-            maximumFractionDigits: 0
-                }).format(result.agreement_value)}
-              </p>
-              <p className="text-gray-600">{result.org}</p>
-              <p className="text-sm text-gray-500">{recipient.city}, {recipient.province}</p>
-              <p className="text-sm text-gray-500">{result.agreement_start_date} - {result.agreement_end_date}</p>
+        {isLoading && (
+          <div className="flex justify-center py-8">
+            <div className="flex flex-col items-center space-y-2">
+              <span className="text-gray-500">Loading results...</span>
+              <span className="text-sm text-gray-400">This may take a few seconds</span>
             </div>
           </div>
-              </div>
+        )}
 
-              {/* Bookmark Options Dropdown */}
-              {showBookmarkOptions === result.ref_number && (
-          <div 
-            ref={bookmarkRef}
-            className="absolute right-4 top-12 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 w-48"
+        {error && (
+          <div className="flex justify-center py-8 text-red-500">
+            <div className="flex flex-col items-center space-y-2">
+              <span>Error loading results</span>
+              <span className="text-sm">
+                {error instanceof Error ? error.message : 'Unknown error occurred'}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {searchResults && !isLoading && searchResults.length === 0 && (
+          <div className="flex justify-center py-8">
+            <span className="text-gray-500">No results found</span>
+          </div>
+        )}
+
+        {searchResults && !isLoading && searchResults.length > 0 && searchResults.map((result) => (
+          <div
+            key={result.ref_number}
+            className="bg-white p-4 rounded-lg border border-gray-200 hover:border-gray-300 relative"
           >
-            {[
-              { type: 'grant', icon: FileText, label: 'Bookmark Grant' },
-              { type: 'recipient', icon: GraduationCap, label: 'Bookmark Recipient' },
-              { type: 'institute', icon: University, label: 'Bookmark Institute' }
-            ].map(({ type, icon: Icon, label }) => (
-              <button
-                key={type}
-                onClick={() => handleBookmark(type, result.ref_number)}
-                className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-50"
-              >
-                <Icon className="h-4 w-4 mr-2" />
-                {label}
-              </button>
-            ))}
-          </div>
-              )}
+            <button
+              onClick={() => setShowBookmarkOptions(result.ref_number)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <BookmarkPlus className="h-5 w-5" />
+            </button>
+  
+            {/* Result Content */}
+            <div className="pr-8">
+              {/* Main Info */}
+              <div className="flex justify-between">
+                <div>
+                  <h3 className="font-medium text-lg">
+                    <Link 
+                      to={`/recipients/${result.recipient_id}`}
+                      className="text-lg font-medium hover:text-blue-600 transition-colors"
+                    >
+                      {result.recipient}
+                    </Link>
+                  </h3>
+                  <p className="text-gray-600">
+                    <Link 
+                      to={`/institutes/${result.institute}`}
+                      className="flex items-center hover:text-blue-600 transition-colors"
+                    >
+                      <University className="h-4 w-4 mr-1.5" />
+                      {result.institute}
+                    </Link>
+                  </p>
+                  <p className="text-gray-600 flex items-center">
+                    <BookMarked className="h-4 w-4 mr-1.5" />
+                    {result.grant}
+                  </p>
+                  <p className="text-sm text-gray-500 flex items-center pt-0.5">
+                    <FileText className="h-4 w-4 mr-1.5" />
+                    Ref: {result.ref_number}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-medium text-lg">
+                    {new Intl.NumberFormat('en-CA', {
+                      style: 'currency',
+                      currency: 'CAD',
+                      maximumFractionDigits: 0
+                    }).format(result.value)}
+                  </p>
+                  <p className="text-gray-600">{result.agency}</p>
+                  <p className="text-sm text-gray-500">{result.city}, {result.province}</p>
+                  <p className="text-sm text-gray-500">
+                    {new Date(result.startDate).getFullYear()} - {new Date(result.endDate).getFullYear()}
+                  </p>
+                </div>
+              </div>
             </div>
-          )
-        })}
+  
+            {/* Bookmark Options Dropdown */}
+            {showBookmarkOptions === result.ref_number && (
+              <div 
+                ref={bookmarkRef}
+                className="absolute right-4 top-12 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 w-48"
+              >
+                {[
+                  { type: 'grant', icon: FileText, label: 'Bookmark Grant' },
+                  { type: 'recipient', icon: GraduationCap, label: 'Bookmark Recipient' },
+                  { type: 'institute', icon: University, label: 'Bookmark Institute' }
+                ].map(({ type, icon: Icon, label }) => (
+                  <button
+                    key={type}
+                    onClick={() => handleBookmark(type, result.ref_number)}
+                    className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-50"
+                  >
+                    <Icon className="h-4 w-4 mr-2" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   )

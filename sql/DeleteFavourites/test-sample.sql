@@ -1,13 +1,13 @@
-INSERT INTO User (user_id, email, name, password_hash)
+INSERT INTO [User] (user_id, email, name, password_hash)
 VALUES(1, "example1@gmail.com", "Name1", "password1") ;
 
-INSERT INTO User (user_id, email, name, password_hash)
+INSERT INTO [User] (user_id, email, name, password_hash)
 VALUES(2, "example2@gmail.com", "Name2", "password2") ;
 
-INSERT INTO User (user_id, email, name, password_hash)
+INSERT INTO [User] (user_id, email, name, password_hash)
 VALUES(3, "example3@gmail.com", "Name3", "password3") ;
 
-INSERT INTO User (user_id, email, name, password_hash)
+INSERT INTO [User] (user_id, email, name, password_hash)
 VALUES(4, "example4@gmail.com", "Name4", "password4") ;
 
 

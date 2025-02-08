@@ -1,0 +1,55 @@
+-- Users
+user_id | email                | name        | password_hash | created_at
+--------|----------------------|-------------|---------------|-------------------
+1       | testuser@example.com | Test User   | hashed_password | 2024-10-27 10:00:00
+
+-- Recipients
+recipient_id | legal_name     | research_organization_name | type | recipient_type | country | province | city      | postal_code | riding_name_en | riding_name_fr | riding_number |
+------------|-----------------|---------------------------|------|----------------|---------|----------|-----------|------------|----------------|----------------|---------------|
+1           | Test Recipient  | Test Organization          | NULL | NULL           | CA      | NULL     | Waterloo  | NULL       | NULL           | NULL           | NULL          |
+
+-- Programs
+prog_id   | name_en             | name_fr             | purpose_en | purpose_fr | naics_identifier
+----------|----------------------|----------------------|------------|------------|------------------
+TEST_PROG | Test Program (EN)   | Programme Test (FR)   | NULL       | NULL       | NULL
+
+-- Organizations
+owner_org | org_title             | abbreviation
+----------|----------------------|-------------
+TEST_ORG  | Test Organization Title | NULL
+
+-- Grants
+grant_id | ref_number | amendment_number | amendment_date | agreement_type | agreement_number | agreement_value | foreign_currency_type | foreign_currency_value | agreement_start_date | agreement_end_date | agreement_title_en | agreement_title_fr | description_en | description_fr | expected_results_en | expected_results_fr | owner_org | recipient_id | prog_id
+--------|------------|-----------------|----------------|----------------|----------------|----------------|----------------------|----------------------|----------------------|--------------------|--------------------|--------------------|----------------|----------------|----------------------|----------------------|----------|-------------|---------
+1       | GRANT123   | 0               | NULL           | NULL           | NULL           | 50000.00        | NULL                  | NULL                  | 2024-01-01           | 2025-01-01         | Test Grant Title   | NULL               | NULL            | NULL            | NULL                  | NULL                  | TEST_ORG | 1           | TEST_PROG
+
+-- FavouriteGrants
+favourite_id | user_id | grant_id | created_at
+-----------|---------|---------|-------------------
+1          | 1       | 1       | 2024-10-27 10:01:00
+
+-- FavouriteRecipients
+favourite_id | user_id | recipient_id | created_at
+-----------|---------|-------------|-------------------
+1          | 1       | 1           | 2024-10-27 10:02:00
+
+-- SearchHistory
+history_id | user_id | quick_search | search_recipient | search_grant | search_institution | search_filters | search_time       | result_count | saved
+-----------|---------|-------------|-----------------|-------------|-----------------|---------------|--------------------|-------------|-------
+1          | 1       | Test Search | NULL             | NULL         | NULL             | NULL          | 2024-10-27 10:03:00 | 10           | 1
+
+
+-- View Favourite Grants with details
+favourite_id | bookmarked_at | grant_id | ref_number | agreement_number | agreement_value | agreement_title_en | agreement_title_fr | agreement_start_date | agreement_end_date | agency | recipient_name | research_organization_name | city      | province
+------------|-------------|---------|------------|-----------------|----------------|--------------------|--------------------|----------------------|--------------------|--------|---------------|---------------------------|-----------|----------
+1           | 2024-10-27 10:01:00 | 1       | GRANT123   | NULL           | 50000.00        | Test Grant Title   | NULL               | 2024-01-01           | 2025-01-01         | Test Organization Title | Test Recipient  | Test Organization          | Waterloo  | NULL
+
+-- View Favourite Recipients with details
+favourite_id | bookmarked_at | recipient_id | legal_name     | research_organization_name | recipient_type | city      | province | total_grants | total_funding | latest_grant_date
+------------|-------------|-------------|-----------------|---------------------------|----------------|-----------|----------|-------------|-------------|------------------
+1           | 2024-10-27 10:02:00 | 1           | Test Recipient  | Test Organization          | NULL           | Waterloo  | NULL     | 1           | 50000.00     | 2024-01-01
+
+-- View Search History for a user
+history_id | user_id | quick_search | search_recipient | search_grant | search_institution | search_filters | search_time       | result_count | saved
+-----------|---------|-------------|-----------------|-------------|-----------------|---------------|--------------------|-------------|-------
+1          | 1       | Test Search | NULL             | NULL         | NULL             | NULL          | 2024-10-27 10:03:00 | 10           | 1
