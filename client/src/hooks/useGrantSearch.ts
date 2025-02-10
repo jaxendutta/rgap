@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import axios from 'axios'
 import { FilterValues } from '../components/filter/constants'
+import { ResearchGrant } from '../types/models'
 
 const API = axios.create({ baseURL: 'http://localhost:3030' })
 
@@ -20,21 +21,6 @@ interface SearchParams {
   searchTerms: SearchTerms
   filters: FilterValues
   sortConfig: SortConfig
-}
-
-// Interface for search results
-export interface SearchResult {
-  ref_number: string
-  recipient_id: number
-  recipient: string
-  institute: string
-  grant: string
-  value: number
-  agency: string
-  startDate: string
-  endDate: string
-  city: string
-  province: string
 }
 
 // Helper to handle null values in responses
@@ -88,7 +74,7 @@ export function useGrantSearch(
     searchParams: SearchParams, 
     options?: { enabled?: boolean }
   ) {
-    return useQuery<SearchResult[]>({
+    return useQuery<ResearchGrant[]>({
       queryKey: ["SearchGrants", searchParams],
       queryFn: async () => {
         try {
@@ -102,7 +88,7 @@ export function useGrantSearch(
           console.log(`Making ${isEmptySearch ? 'GET' : 'POST'} request to: ${endpoint}`)
   
           if (isEmptySearch) {
-            const response = await API.get<SearchResult[]>(endpoint, {
+            const response = await API.get<ResearchGrant[]>(endpoint, {
               timeout: 150000 // Increase timeout to 15 seconds
             })
             return replaceNulls(response.data)
@@ -117,7 +103,7 @@ export function useGrantSearch(
           
           console.log('Search request payload:', payload)
   
-          const response = await API.post<{ data: SearchResult[] }>(endpoint, payload, {
+          const response = await API.post<{ data: ResearchGrant[] }>(endpoint, payload, {
             timeout: 5000, // 5 seconds
             headers: {
               'Content-Type': 'application/json'
@@ -144,7 +130,7 @@ export function useGrantSearch(
 
 // Additional specific queries with proper typing
 export function useRecipientSearch(searchTerm?: string) {
-  return useQuery<SearchResult[]>({
+  return useQuery<ResearchGrant[]>({
     queryKey: ['recipients', searchTerm],
     queryFn: async () => {
       const response = await API.get('/recipients', {
@@ -157,7 +143,7 @@ export function useRecipientSearch(searchTerm?: string) {
 }
 
 export function useInstituteSearch(searchTerm?: string) {
-  return useQuery<SearchResult[]>({
+  return useQuery<ResearchGrant[]>({
     queryKey: ['institutes', searchTerm],
     queryFn: async () => {
       const response = await API.get('/institutes', {

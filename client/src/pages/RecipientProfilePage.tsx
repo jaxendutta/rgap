@@ -15,7 +15,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { clsx } from 'clsx'
 import { formatCurrency, formatDate } from '../utils/NumberDisplayFormat'
-import { Recipient, ResearchGrant } from '../components/types/types'
+import { Recipient, ResearchGrant } from '../types/models'
 
 // Data
 // Make a copy of the mock data for now

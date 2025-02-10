@@ -51,26 +51,16 @@ class DatabasePopulator:
         if not all(self.db_config.values()):
             raise ValueError("Missing required database configuration in .env file")
         else:
-            print("Database configuration:")
-            print("Date source: ", env_path)
-            print("-------------------------")
-            print("Host: ", self.db_config['host'])
-            print("User: ", self.db_config['user'])
-            print("Password: ", self.db_config['password'])
-            print("Database: ", self.db_config['database'])
-            print("Port: ", self.db_config['port'])
-
-        self.db_config['database'] = 'rgap'
-        self.db_config['port'] = 7272
-
-        print("\nModified Database configuration:")
-        print("Date source: ", env_path)
-        print("-------------------------")
-        print("Host: ", self.db_config['host'])
-        print("User: ", self.db_config['user'])
-        print("Password: ", self.db_config['password'])
-        print("Database: ", self.db_config['database'])
-        print("Port: ", self.db_config['port'])
+            print("\nDatabase configuration:")
+            print("=" * 50)
+            print("Environment variable path: ", env_path)
+            print("-" * 50)
+            print(f"{'Host:':<15} {self.db_config['host']}")
+            print(f"{'User:':<15} {self.db_config['user']}")
+            print(f"{'Password:':<15} {self.db_config['password']}")
+            print(f"{'Database:':<15} {self.db_config['database']}")
+            print(f"{'Port:':<15} {self.db_config['port']}")
+            print("-" * 50 + "\n")
 
     def connect_db(self) -> None:
         """Establish database connection"""
@@ -274,7 +264,7 @@ class DatabasePopulator:
 def main():
     try:
         populator = DatabasePopulator()
-        csv_path = Path(__file__).parents[0] / 'data' / 'tri_agency_grants_2019.csv'
+        csv_path = Path(__file__).parents[0] / 'data' / 'data_2019.csv'
         
         if not csv_path.exists():
             raise FileNotFoundError(f"CSV file not found at {csv_path}")

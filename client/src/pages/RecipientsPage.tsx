@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { BookmarkPlus, BookmarkCheck, MapPin, University, FileText, Calendar } from 'lucide-react'
 import { clsx } from 'clsx'
 import { formatCurrency, formatDate } from '../utils/NumberDisplayFormat'
-import { Recipient, ResearchGrant } from '../components/types/types'
+import { Recipient, ResearchGrant } from '../types/models'
 
 // Data
 // Make a copy of the mock data for now

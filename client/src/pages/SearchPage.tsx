@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { 
-  Search as SearchIcon, 
-  BookmarkPlus, 
+import {
+  Search as SearchIcon,
+  BookmarkPlus,
   University,
   GraduationCap,
   BookMarked,
@@ -18,9 +18,9 @@ import { clsx } from 'clsx'
 import { Link } from 'react-router-dom'
 import { RangeFilter, MultiSelect, FilterTags } from '../components/filter/FilterComponents'
 import { DEFAULT_FILTER_STATE, FilterValues } from '../components/filter/constants'
-import { ResearchGrant, Recipient } from '../components/types/types'
+import { ResearchGrant, Recipient } from '../types/models'
 
-import { useGrantSearch, SearchResult } from '../hooks/useGrantSearch'
+import { useGrantSearch } from '../hooks/useGrantSearch'
 
 // Data
 // Make a copy of the mock data for now
@@ -55,13 +55,13 @@ const filterOptions = {
 }
 
 // Components
-const SortButton = ({ 
-  label, 
+const SortButton = ({
+  label,
   icon: Icon,
-  field, 
-  currentField, 
-  direction, 
-  onClick 
+  field,
+  currentField,
+  direction,
+  onClick
 }: {
   label: string
   icon: React.ElementType
@@ -141,13 +141,13 @@ const SearchField = ({
 }
 
 // Transform results for visualization
-const transformResultsForVisualization = (results: SearchResult[]) => {
+const transformResultsForVisualization = (results: ResearchGrant[]) => {
   const yearMap = new Map()
-  
+
   results.forEach(result => {
-    const year = new Date(result.startDate).getFullYear()
-    const value = result.value
-    
+    const year = new Date(result.agreement_start_date).getFullYear()
+    const value = result.agreement_value
+
     if (!yearMap.has(year)) {
       yearMap.set(year, {
         year,
@@ -156,11 +156,11 @@ const transformResultsForVisualization = (results: SearchResult[]) => {
         CIHR: 0
       })
     }
-    
+
     const yearData = yearMap.get(year)
-    yearData[result.agency] += value
+    yearData[result.org] += value
   })
-  
+
   return Array.from(yearMap.values())
     .sort((a, b) => a.year - b.year)
 }
@@ -233,7 +233,7 @@ export const SearchPage = () => {
       }
       return {
         ...prev,
-        [type]: Array.isArray(prev[type as keyof FilterValues]) 
+        [type]: Array.isArray(prev[type as keyof FilterValues])
           ? (prev[type as keyof FilterValues] as string[]).filter((v: string) => v !== value)
           : prev[type as keyof FilterValues]
       }
@@ -259,7 +259,7 @@ export const SearchPage = () => {
       {/* Search Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Advanced Search</h1>
-        <button 
+        <button
           onClick={() => setShowFilters(!showFilters)}
           className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
         >
@@ -267,32 +267,32 @@ export const SearchPage = () => {
           {showFilters ? 'Hide Filters' : 'Show Filters'}
         </button>
       </div>
-  
+
       {/* Search Fields */}
       <div className="grid gap-4">
-        <SearchField 
-          field="recipient" 
+        <SearchField
+          field="recipient"
           icon={GraduationCap}
           onSearch={handleSearch}
           searchTerms={searchTerms}
           setSearchTerms={setSearchTerms}
         />
-        <SearchField 
-          field="institute" 
+        <SearchField
+          field="institute"
           icon={University}
           onSearch={handleSearch}
           searchTerms={searchTerms}
           setSearchTerms={setSearchTerms}
         />
-        <SearchField 
-          field="grant" 
+        <SearchField
+          field="grant"
           icon={FileText}
           onSearch={handleSearch}
           searchTerms={searchTerms}
           setSearchTerms={setSearchTerms}
         />
       </div>
-  
+
       {/* Filters Panel */}
       {showFilters && (
         <div ref={filterRef} className="bg-white p-6 rounded-lg border border-gray-200 space-y-6">
@@ -310,7 +310,7 @@ export const SearchPage = () => {
                 }
               }))}
             />
-            
+
             <RangeFilter
               label="Value"
               type="currency"
@@ -320,7 +320,7 @@ export const SearchPage = () => {
                 valueRange: range
               }))}
             />
-  
+
             {/* Multi-select Filters */}
             <MultiSelect
               label="Funding Agencies"
@@ -349,14 +349,14 @@ export const SearchPage = () => {
           </div>
         </div>
       )}
-  
+
       {/* Filter Tags */}
       <FilterTags
         filters={filters}
         onRemove={handleRemoveFilter}
         onClearAll={handleClearAllFilters}
       />
-  
+
       {/* Search Actions */}
       <div className="flex justify-between items-center">
         <button
@@ -385,7 +385,7 @@ export const SearchPage = () => {
           Bookmark Search
         </button>
       </div>
-  
+
       {/* Results Header with Sort Controls */}
       <div className="flex items-center justify-between border-b pb-2">
         <h2 className="text-lg font-medium">Search Results</h2>
@@ -410,8 +410,8 @@ export const SearchPage = () => {
             onClick={() => setShowVisualization(!showVisualization)}
             className={clsx(
               'flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-md',
-              showVisualization 
-                ? 'bg-gray-100 text-gray-900' 
+              showVisualization
+                ? 'bg-gray-100 text-gray-900'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
             )}
           >
@@ -424,29 +424,29 @@ export const SearchPage = () => {
           </button>
         </div>
       </div>
-  
+
       {/* Visualization Panel */}
       {showVisualization && searchResults && searchResults.length > 0 && (
         <div className="bg-white p-6 rounded-lg border border-gray-200">
           <h3 className="text-lg font-medium mb-4">Funding Trends by Agency</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart 
-                data={transformResultsForVisualization(searchResults)} 
+              <LineChart
+                data={transformResultsForVisualization(searchResults)}
                 margin={{ top: 10, right: 30, left: 50, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis 
-                  dataKey="year" 
+                <XAxis
+                  dataKey="year"
                   tickLine={false}
                   axisLine={{ stroke: '#e5e7eb' }}
                 />
-                <YAxis 
-                  tickFormatter={(value) => `${value/1000}K`}
+                <YAxis
+                  tickFormatter={(value) => `${value / 1000}K`}
                   tickLine={false}
                   axisLine={{ stroke: '#e5e7eb' }}
                 />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: number, name: string) => [
                     new Intl.NumberFormat('en-CA', {
                       style: 'currency',
@@ -457,24 +457,24 @@ export const SearchPage = () => {
                   ]}
                 />
                 <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="NSERC" 
-                  stroke="#2563eb" 
+                <Line
+                  type="monotone"
+                  dataKey="NSERC"
+                  stroke="#2563eb"
                   strokeWidth={2}
                   dot={{ fill: '#2563eb', strokeWidth: 2 }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="SSHRC" 
-                  stroke="#7c3aed" 
+                <Line
+                  type="monotone"
+                  dataKey="SSHRC"
+                  stroke="#7c3aed"
                   strokeWidth={2}
                   dot={{ fill: '#7c3aed', strokeWidth: 2 }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="CIHR" 
-                  stroke="#059669" 
+                <Line
+                  type="monotone"
+                  dataKey="CIHR"
+                  stroke="#059669"
                   strokeWidth={2}
                   dot={{ fill: '#059669', strokeWidth: 2 }}
                 />
@@ -483,7 +483,7 @@ export const SearchPage = () => {
           </div>
         </div>
       )}
-  
+
       {/* Results Section */}
       <div className="space-y-4">
         {isLoading && (
@@ -523,32 +523,32 @@ export const SearchPage = () => {
             >
               <BookmarkPlus className="h-5 w-5" />
             </button>
-  
+
             {/* Result Content */}
             <div className="pr-8">
               {/* Main Info */}
               <div className="flex justify-between">
                 <div>
                   <h3 className="font-medium text-lg">
-                    <Link 
+                    <Link
                       to={`/recipients/${result.recipient_id}`}
                       className="text-lg font-medium hover:text-blue-600 transition-colors"
                     >
-                      {result.recipient}
+                      {result.legal_name}
                     </Link>
                   </h3>
                   <p className="text-gray-600">
-                    <Link 
-                      to={`/institutes/${result.institute}`}
+                    <Link
+                      to={`/institutes/${result.research_organization_name}`}
                       className="flex items-center hover:text-blue-600 transition-colors"
                     >
                       <University className="h-4 w-4 mr-1.5" />
-                      {result.institute}
+                      {result.research_organization_name}
                     </Link>
                   </p>
                   <p className="text-gray-600 flex items-center">
                     <BookMarked className="h-4 w-4 mr-1.5" />
-                    {result.grant}
+                    {result.agreement_title_en}
                   </p>
                   <p className="text-sm text-gray-500 flex items-center pt-0.5">
                     <FileText className="h-4 w-4 mr-1.5" />
@@ -561,20 +561,20 @@ export const SearchPage = () => {
                       style: 'currency',
                       currency: 'CAD',
                       maximumFractionDigits: 0
-                    }).format(result.value)}
+                    }).format(result.agreement_value)}
                   </p>
-                  <p className="text-gray-600">{result.agency}</p>
+                  <p className="text-gray-600">{result.org}</p>
                   <p className="text-sm text-gray-500">{result.city}, {result.province}</p>
                   <p className="text-sm text-gray-500">
-                    {new Date(result.startDate).getFullYear()} - {new Date(result.endDate).getFullYear()}
+                    {new Date(result.agreement_start_date).getFullYear()} - {new Date(result.agreement_end_date).getFullYear()}
                   </p>
                 </div>
               </div>
             </div>
-  
+
             {/* Bookmark Options Dropdown */}
             {showBookmarkOptions === result.ref_number && (
-              <div 
+              <div
                 ref={bookmarkRef}
                 className="absolute right-4 top-12 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 w-48"
               >
