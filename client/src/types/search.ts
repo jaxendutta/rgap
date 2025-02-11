@@ -3,7 +3,7 @@ import { DEFAULT_FILTER_STATE } from '@/constants/filters'
 export type SortDirection = 'asc' | 'desc'
 
 export interface SortConfig {
-  field: 'date' | 'value'
+  field: 'date' | 'value' | 'results'
   direction: SortDirection
 }
 

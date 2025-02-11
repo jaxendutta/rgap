@@ -9,14 +9,12 @@ import {
   Eye,
   EyeOff,
   Shield,
-  Calendar,
-  ArrowUpDown,
-  CalendarDays,
-  Search,
+  Calendar
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card } from '@/components/common/ui/Card'
 import { Button } from '@/components/common/ui/Button'
+import { SortButton } from '@/components/common/ui/SortButton'
 import { SearchHistoryCard } from '@/components/features/account/SearchHistoryCard'
 import { cn } from '@/utils/cn'
 import MockupMessage from '../components/common/messages/mockup'
@@ -39,8 +37,7 @@ export default function AccountPage() {
   const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('profile')
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
-  const [selectedSearch, setSelectedSearch] = useState<number | null>(null)
-  const [sortConfig, setSortConfig] = useState<{field: SortField, direction: SortDirection}>({
+  const [sortConfig, setSortConfig] = useState<{ field: SortField, direction: SortDirection }>({
     field: 'date',
     direction: 'desc'
   })
@@ -58,8 +55,8 @@ export default function AccountPage() {
       const dateB = new Date(b.timestamp).getTime()
       return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA
     } else {
-      return sortConfig.direction === 'asc' 
-        ? a.results - b.results 
+      return sortConfig.direction === 'asc'
+        ? a.results - b.results
         : b.results - a.results
     }
   })
@@ -93,7 +90,7 @@ export default function AccountPage() {
         {TABS.map(({ id, label, icon: Icon }) => {
           const isActive = activeTab === id
           const isLogout = id === 'logout'
-          
+
           return (
             <button
               key={id}
@@ -101,7 +98,7 @@ export default function AccountPage() {
               className={cn(
                 'w-full flex items-center py-3 rounded-lg transition-all duration-200 gap-0.5 lg:gap-2',
                 isActive
-                  ? isLogout 
+                  ? isLogout
                     ? 'bg-red-600 text-white hover:bg-red-700'
                     : 'bg-gray-900 text-white hover:bg-gray-800'
                   : isLogout
@@ -244,52 +241,33 @@ export default function AccountPage() {
 
           {/* Search History */}
           {activeTab === 'history' && (
-            <Card className="p-6">
-              <div className="flex flex-col space-y-4">
-                <div className="flex items-center justify-between">
+            <Card className="p-4 lg:p-6">
+              <div className="space-y-4">
+                {/* Header */}
+                <div className="flex justify-between gap-4">
                   <h2 className="text-2xl font-medium">Recent Searches</h2>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
+                  <div className="flex flex-wrap items-center gap-2">
+                    <SortButton
+                      label="Date"
+                      icon={Calendar}
+                      field="date"
+                      currentField={sortConfig.field}
+                      direction={sortConfig.direction}
                       onClick={() => toggleSort('date')}
-                      className={cn(
-                        sortConfig.field === 'date' && 'border-gray-900'
-                      )}
-                    >
-                      <CalendarDays className="h-4 w-4 mr-1" />
-                      Date
-                      <ArrowUpDown className={cn(
-                        "h-3 w-3 ml-1",
-                        sortConfig.field === 'date' && 'text-gray-900'
-                      )} />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
+                    />
+                    <SortButton
+                      label="Results"
+                      icon={History}
+                      field="results"
+                      currentField={sortConfig.field}
+                      direction={sortConfig.direction}
                       onClick={() => toggleSort('results')}
-                      className={cn(
-                        sortConfig.field === 'results' && 'border-gray-900'
-                      )}
-                    >
-                      <Search className="h-4 w-4 mr-1" />
-                      Results
-                      <ArrowUpDown className={cn(
-                        "h-3 w-3 ml-1",
-                        sortConfig.field === 'results' && 'text-gray-900'
-                      )} />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setSelectedSearch(null)}
-                    >
-                      Collapse All
-                    </Button>
+                    />
                   </div>
                 </div>
 
-                <motion.div 
+                {/* Search History Cards */}
+                <motion.div
                   layout
                   className="grid grid-cols-1 gap-4"
                 >
@@ -305,10 +283,6 @@ export default function AccountPage() {
                       <SearchHistoryCard
                         search={search}
                         onRerun={handleRerunSearch}
-                        isSelected={selectedSearch === search.id}
-                        onToggleSelect={() => setSelectedSearch(
-                          selectedSearch === search.id ? null : search.id
-                        )}
                       />
                     </motion.div>
                   ))}
