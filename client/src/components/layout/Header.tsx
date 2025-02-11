@@ -24,7 +24,7 @@ const Header = () => {
           <button className="p-1 text-gray-600 hover:text-gray-800">
             <Bell className="h-6 w-6" />
           </button>
-            <Link to="/auth" className="p-1 text-gray-600 hover:text-gray-800">
+            <Link to="/account" className="p-1 text-gray-600 hover:text-gray-800">
               <User className="h-6 w-6" />
             </Link>
         </div>
