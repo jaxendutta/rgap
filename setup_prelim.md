@@ -14,9 +14,20 @@ Let's setup the virtual environment first! Run the following on the terminal:
 source setup_env.sh
 ```
 
+Unpack the compressed data file to get the data for populating the tables.
+
+```bash
+cd scripts/data
+7z e data_2019.7z
+cd ../..
+```
+
 ## Run the Application
 
-### Method 1: Docker
+> [!IMPORTANT]
+> Please ensure your local ports `3000`, `3030` and `7272` are not in use before running the application! If you're using VS Code, please head to the Ports tab and ensure these ports are not in use!
+
+### Method 1: Docker Compose
 Run the application using Docker Compose by running the following command:
 ```bash
 ./setup_app.sh

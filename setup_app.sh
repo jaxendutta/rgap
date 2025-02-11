@@ -42,7 +42,8 @@ cleanup() {
         pgrep -af "$SCRIPT_DIR/client"
         echo -e "${BLUE}To kill a process, use the following command:${NC}"
         echo -e "${GREEN}kill -9 <PID>${NC}\n"
-        echo -e "${BLUE}We will try cleaning these up for you, but incase we fail, please help us out by killing them yourself!${NC}\n"
+        echo -e "${BLUE}We will try cleaning these up for you, but incase we fail, please help us out by killing them yourself!${NC}"
+        echo -e "${RED}If you are using VS Code, navigate to the PORTS Tab and manage your currently running ports.${NC}\n"
         return 1
     else
         echo -e "${GREEN}No old processes found. You're good to go!${NC}"
@@ -96,9 +97,10 @@ CLIENT_PID=$!
 
 echo -e "${GREEN}Application started successfully!${NC}"
 echo -e "${BLUE}Access the application at:${NC}"
-echo -e "  Frontend: http://localhost:3000"
-echo -e "  API: http://localhost:3030"
 echo -e "  MySQL: localhost:7272"
+echo -e "  Backend API: http://localhost:3030"
+echo -e "  Frontend Client: http://localhost:3000"
+
 echo
 echo -e "${BLUE}To stop the application:${NC}"
 echo -e "  1. Press Ctrl+C"
