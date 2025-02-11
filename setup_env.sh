@@ -105,7 +105,7 @@ log_with_no_color() {
     sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g"
 }
 
-# Function to upgrade pip if a new version is available
+# Function to upgrade pip if needed
 upgrade_pip() {
     print "${BLUE}Checking for pip upgrades...${NC}"
     current_version=$(pip --version | awk '{print $2}')
@@ -118,30 +118,7 @@ upgrade_pip() {
     fi
 }
 
-# Setup portion with both terminal output and logging
-{
-    # Remove the if/else and just always run setup
-    print "${BLUE}\nChecking RGAP development environment...${NC}"
-
-    # Run the Python setup script
-    python setup_env.py
-    setup_exit_code=$?
-
-    if [ $setup_exit_code -ne 0 ]; then
-        cleanup_on_error
-        return 1
-    fi
-
-    print "${GREEN}Environment check/setup completed successfully!${NC}"
-} 2>&1 | tee >(log_with_no_color >> $LOG_FILE)
-
-# Now execute activation directly (not in a subshell)
-if ! check_venv; then
-    cleanup_on_error
-    return 1
-fi
-
-# Function to install Node.js
+# Function to set up Node.js
 setup_node() {
     print "${BLUE}Setting up Node.js toolchain...${NC}"
     
@@ -199,7 +176,7 @@ setup_node() {
         nvm alias default "lts/*"
     fi
     
-    # Check npm and upgrade if needed (only if it wasn't just upgraded by nvm)
+    # Check npm and upgrade if needed
     if command -v npm > /dev/null; then
         current_version=$(npm -v)
         print "  ${BLUE}Checking for npm updates...${NC}"
@@ -219,6 +196,33 @@ setup_node() {
     print "${GREEN}Node.js toolchain setup complete!${NC}"
 }
 
+# Setup portion with both terminal output and logging
+{
+    print "${BLUE}\nChecking RGAP development environment...${NC}"
+
+    # Create virtual environment if it doesn't exist
+    if ! check_venv; then
+        print "${BLUE}Creating new virtual environment...${NC}"
+        python -m venv "$VENV_PATH"
+        
+        if [ $? -ne 0 ]; then
+            cleanup_on_error
+            return 1
+        fi
+    fi
+
+    print "${GREEN}Environment check completed successfully!${NC}"
+} 2>&1 | tee >(log_with_no_color >> $LOG_FILE)
+
+# Setup MySQL path
+export PATH="$SCRIPT_DIR/mysql/mysql-8.0.36-linux-glibc2.28-x86_64/bin:$PATH"
+
+# Now execute activation
+if ! check_venv; then
+    cleanup_on_error
+    return 1
+fi
+
 print "${BLUE}  Activating RGAP Virtual Environment...${NC}"
 source "$VENV_PATH/bin/activate"
 
@@ -230,7 +234,7 @@ fi
 
 print "${GREEN}  Activated. You're now in the RGAP Virtual Environment!${NC}"
 
-# Upgrade pip if a new version is available
+# Upgrade pip
 upgrade_pip
 
 # Set up Node.js tools
@@ -257,7 +261,7 @@ fi
 print "${BLUE}\nTo set-up the RGAP Virtual Environment in any terminal, run this script again:${NC}"
 print "  source $(basename "${BASH_SOURCE[0]}")\n"
 
+print "${BLUE}Run './setup_app.sh' to start the application${NC}"
+
 # Calculate and display execution time
-end_time=$(date +%s)
-duration=$(( end_time - start_time ))
-print "${BLUE}Script completed in $(format_duration $duration)${NC}"
+print_time_taken

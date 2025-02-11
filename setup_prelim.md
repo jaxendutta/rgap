@@ -8,29 +8,52 @@
 > [!IMPORTANT]
 > Our code is housed on the `develop` branch. Please ensure you are on the 'develop' branch when following this guide!
 
-1. Setup Virtual Environment
-    ```bash
-    source setup.sh
-    ```
+## Get Started
+Let's setup the virtual environment first! Run the following on the terminal:
+```bash
+source setup_env.sh
+```
 
-2. Setup MySQL
+## Run the Application
+
+### Method 1: Docker
+Run the application using Docker Compose by running the following command:
+```bash
+./setup_app.sh
+```
+
+This script will:
+- Install MySQL Server for Ubuntu 20.04 LTS
+- Start the MySQL Server
+- Create a database named `rgap`
+- Create tables in the `rgap` database
+- Populate the tables with data
+- Create a user named `rgap_user` with all privileges on the `rgap` database
+- Create a user named `rgap_user` with all privileges on the `rgap` database for all hosts
+- Flush privileges
+- Exit the MySQL Server
+- Create a `.env` file in the `ROOT` folder with the necessary environment variables
+- Populate the tables with data
+- Run the MySQL Server
+- Run the client
+- Launch the application on `localhost:3000`
+
+## Method 2: Manual Setup with some Automation
+You can also run the application manually by following the steps below:
+
+1. Install and Setup MySQL Server
     ```bash
     cd scripts
-    # Run mysql-rgap-stop if there is a MySQL Server running
     ./mysql_setup.sh
     ```
 
     This script will:
-    - Install MySQL Server for Ubuntu 20.04 LTS
-    - Start the MySQL Server
-    - Create a database named `rgap`
-    - Create tables in the `rgap` database
-    - Populate the tables with data
-    - Create a user named `rgap_user` with all privileges on the `rgap` database
-    - Create a user named `rgap_user` with all privileges on the `rgap` database for all hosts
-    - Flush privileges
+      - Install MySQL Server for Ubuntu 20.04 LTS
+      - Start the MySQL Server
+      - Create a database named `rgap`
+      - Create tables in the `rgap` database
 
-3. Environment Variables
+2. Environment Variables
     Create a `.env` file in `ROOT` folder with the following content:
     ```bash
     DB_HOST=localhost
@@ -41,13 +64,16 @@
     PORT=3030
     ```
 
-4. Populate the Tables
+3. Populate the Tables
     ```bash
     # In the virtual environment
     python populate_tables.py
     ```
 
-5. Run MySQL Server
+    This script will:
+      - Populate the tables with data in the provided in the    `scripts/data/data_2019.csv` file
+
+4. Run MySQL Server
     ```bash
     # Install dependencies
     cd ../server
@@ -60,7 +86,7 @@
     curl http://localhost:3030
     ```
 
-6. Run the Client
+5. Run the Client
     ```bash
     # Install dependencies
     cd ../client
@@ -73,15 +99,16 @@
     curl http://localhost:3000
     ```
 
-7. You can now search for grants. For the purposes of this milestone, go through the following steps:
-    - Click on the seach page
-    - Type in "waterloo" in the institutes search bar
-    - Prss the `Enter` key
-    - Click the `Search` button
-    - You should see a list of grants that have the word "waterloo" in their research organization/institute name
-  
-    > [!CAUTION]
-    > You must press Enter before clicking the search button!
+## Test the Application
+You can now search for grants. For the purposes of this milestone, go through the following steps:
+
+ - Click on the seach page
+ - Type in the following:
+   - `"kim"` in the recipients search bar
+   - `"waterloo"` in the institutes search bar
+ - Press the `Enter` key or click on the `Search` button
+ - You should see a list of grants that have the substring `"kim"` in their recipient's legal name and  `"waterloo"` in their research organization/institute name
+ - You may choose to try out the filters and sorting options as well, however they have not been extensively tested yet
 
 ## Alternative Accesses to Database Server
 

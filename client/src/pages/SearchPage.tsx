@@ -43,7 +43,13 @@ export const SearchPage = () => {
     sortConfig
   }
 
-  const { data, isLoading, error, refetch } = useGrantSearch(searchParams)
+  const { data, isLoading, error, refetch } = useGrantSearch({
+    ...searchParams,
+    sortConfig: {
+      ...searchParams.sortConfig,
+      field: searchParams.sortConfig.field === 'results' ? 'date' : searchParams.sortConfig.field
+    }
+  })
 
   const handleSearch = useCallback(() => {
     if (searchTerms.recipient === '' && searchTerms.institute === '' && searchTerms.grant === '') {
@@ -187,8 +193,8 @@ export const SearchPage = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center">
           <h2 className="text-lg font-medium">Search Results</h2>
           {!isInitialState && !isLoading && (
-            <span className="text-sm text-gray-500">
-              ({data?.length || 0} results found)
+            <span className="text-sm text-gray-500 ml-1">
+              ({data?.length || 0} results)
             </span>
           )}
         </div>

@@ -4,13 +4,8 @@
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 RED='\033[0;31m'
-NC='\033[0m'
-
-# Get the absolute path of the project root
-PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
-MYSQL_DIR="${PROJECT_ROOT}/mysql"
-MYSQL_VERSION="mysql-8.0.36-linux-glibc2.28-x86_64"
-MYSQL_BIN="${MYSQL_DIR}/${MYSQL_VERSION}/bin"
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
 # Print with color
 print_status() {
@@ -25,64 +20,79 @@ print_error() {
     echo -e "${RED}==>${NC} $1"
 }
 
-# Function to check if a command succeeded
-check_error() {
-    if [ $? -ne 0 ]; then
-        print_error "$1"
+print_warning() {
+    echo -e "${YELLOW}==>${NC} $1"
+}
+
+# Function to check if MySQL is running
+check_mysql_running() {
+    if pgrep -f "mysqld" >/dev/null; then
+        return 0 # MySQL is running
+    else
+        return 1 # MySQL is not running
+    fi
+}
+
+# Function to prompt user for action on running MySQL
+handle_running_mysql() {
+    print_warning "MySQL is currently running!"
+    echo
+    echo "Choose an action:"
+    echo "1) Kill existing MySQL and continue setup"
+    echo "2) Exit setup"
+    echo
+    read -p "Enter your choice (1/2): " choice
+
+    case $choice in
+    1)
+        print_status "Stopping existing MySQL processes..."
+        pkill -9 -f "mysqld" 2>/dev/null
+        sleep 2
+        if check_mysql_running; then
+            print_error "Failed to stop MySQL. Please stop it manually and try again."
+            exit 1
+        fi
+        print_success "Existing MySQL processes stopped."
+        return 0
+        ;;
+    2)
+        print_status "Setup cancelled by user."
+        exit 0
+        ;;
+    *)
+        print_error "Invalid choice. Setup cancelled."
         exit 1
-    fi
+        ;;
+    esac
 }
 
-# Create project directory structure
-setup_directories() {
-    print_status "Creating project directory structure..."
-    
-    directories=(
-        "${PROJECT_ROOT}/mysql/data"
-        "${PROJECT_ROOT}/mysql/run"
-        "${PROJECT_ROOT}/mysql/log"
-        "${PROJECT_ROOT}/sql"
-        "${PROJECT_ROOT}/data/raw"
-        "${PROJECT_ROOT}/data/processed"
-        "${PROJECT_ROOT}/data/sample"
-        "${PROJECT_ROOT}/client/src/components"
-        "${PROJECT_ROOT}/server/src"
-    )
-    
-    for dir in "${directories[@]}"; do
-        mkdir -p "$dir"
-        check_error "Failed to create directory: $dir"
-    done
-    
-    print_success "Directory structure created successfully"
-}
+# Check for existing MySQL processes at start
+if check_mysql_running; then
+    handle_running_mysql
+fi
 
-# Download and extract MySQL
-setup_mysql() {
-    print_status "Setting up MySQL..."
-    
-    cd "${MYSQL_DIR}"
-    
-    # Download MySQL if not already downloaded
-    if [ ! -f "${MYSQL_VERSION}.tar.xz" ]; then
-        print_status "Downloading MySQL..."
-        wget "https://dev.mysql.com/get/Downloads/MySQL-8.0/${MYSQL_VERSION}.tar.xz"
-        check_error "Failed to download MySQL"
-    fi
-    
-    # Extract MySQL if not already extracted
-    if [ ! -d "${MYSQL_VERSION}" ]; then
-        print_status "Extracting MySQL..."
-        tar xf "${MYSQL_VERSION}.tar.xz"
-        check_error "Failed to extract MySQL"
-    fi
-}
+print_status "Setting up MySQL..."
+
+cd "${MYSQL_DIR}"
+
+# Download MySQL if not already downloaded
+if [ ! -f "${MYSQL_VERSION}.tar.xz" ]; then
+    print_status "Downloading MySQL..."
+    wget "https://dev.mysql.com/get/Downloads/MySQL-8.0/${MYSQL_VERSION}.tar.xz"
+    check_error "Failed to download MySQL"
+fi
+
+# Extract MySQL if not already extracted
+if [ ! -d "${MYSQL_VERSION}" ]; then
+    print_status "Extracting MySQL..."
+    tar xf "${MYSQL_VERSION}.tar.xz"
+    check_error "Failed to extract MySQL"
+fi
 
 # Create MySQL configuration
-create_mysql_config() {
-    print_status "Creating MySQL configuration..."
-    
-    cat > "${MYSQL_DIR}/my.cnf" << EOF
+print_status "Creating MySQL configuration..."
+
+cat >"${MYSQL_DIR}/my.cnf" <<EOF
 [mysqld]
 basedir = ${MYSQL_DIR}/${MYSQL_VERSION}
 datadir = ${MYSQL_DIR}/data
@@ -118,15 +128,12 @@ max_connections = 151
 socket = ${MYSQL_DIR}/run/mysql.sock
 EOF
 
-    check_error "Failed to create MySQL configuration"
-}
+check_error "Failed to create MySQL configuration"
 
 # Create MySQL startup script
-create_mysql_scripts() {
-    print_status "Creating MySQL control scripts..."
-    
-    # Update the start.sh script portion in create_mysql_scripts():
-cat > "${MYSQL_DIR}/start.sh" << EOF
+print_status "Creating MySQL control scripts..."
+
+cat >"${MYSQL_DIR}/start.sh" <<EOF
 #!/bin/bash
 
 MYSQL_DIR="${MYSQL_DIR}"
@@ -144,13 +151,6 @@ if [ -f "\${MYSQL_DIR}/run/mysql.pid" ]; then
         rm -f "\${MYSQL_DIR}/run/mysql.pid"
     fi
 fi
-
-echo "Cleaning up old processes..."
-pkill -9 -f "mysqld" 2>/dev/null || true
-sleep 2
-
-echo "Cleaning up old files..."
-rm -f "\${MYSQL_DIR}/run/mysql.sock"
 
 echo "Starting MySQL in the background..."
 cd "\${MYSQL_DIR}/${MYSQL_VERSION}"
@@ -188,8 +188,8 @@ tail -n 10 "\${MYSQL_DIR}/log/error.log"
 exit 1
 EOF
 
-    # Create stop script
-    cat > "${MYSQL_DIR}/stop.sh" << EOF
+# Create stop script
+cat >"${MYSQL_DIR}/stop.sh" <<EOF
 #!/bin/bash
 
 MYSQL_DIR="${MYSQL_DIR}"
@@ -218,98 +218,20 @@ rm -f "\${MYSQL_DIR}/run/mysql.sock" "\${MYSQL_DIR}/run/mysql.pid"
 echo "MySQL stopped and cleaned up"
 EOF
 
-    chmod +x "${MYSQL_DIR}/start.sh" "${MYSQL_DIR}/stop.sh"
-    check_error "Failed to create MySQL control scripts"
-}
+chmod +x "${MYSQL_DIR}/start.sh" "${MYSQL_DIR}/stop.sh"
 
 # Initialize MySQL
-initialize_mysql() {
-    print_status "Initializing MySQL..."
-    
-    # Clean up existing data
-    rm -rf "${MYSQL_DIR}/data/"*
-    
-    # Initialize MySQL
-    cd "${MYSQL_DIR}/${MYSQL_VERSION}"
-    "${MYSQL_BIN}/mysqld" --defaults-file="${MYSQL_DIR}/my.cnf" --initialize-insecure --user=$(whoami)
-    check_error "Failed to initialize MySQL"
-}
+print_status "Initializing MySQL..."
 
-# Setup aliases
-setup_aliases() {
-    print_status "Setting up MySQL aliases..."
-    
-    # Remove old aliases first
-    sed -i '/mysql-rgap/d' ~/.bashrc
-    
-    # Add new aliases
-    cat >> ~/.bashrc << EOF
+# Clean up existing data
+rm -rf "${MYSQL_DIR}/data/"*
 
-# MySQL aliases for RGAP project
-alias mysql-rgap-start="${MYSQL_DIR}/start.sh"
-alias mysql-rgap-stop="${MYSQL_DIR}/stop.sh"
-alias mysql-rgap="${MYSQL_BIN}/mysql --socket=${MYSQL_DIR}/run/mysql.sock"
-EOF
-    
-    # Add MySQL bin to PATH
-    echo "export PATH=\"\${PATH}:${MYSQL_BIN}\"" >> ~/.bashrc
-    
-    print_success "Aliases added to ~/.bashrc"
-    
-    # Source bashrc in the current shell
-    source ~/.bashrc
-}
+# Initialize MySQL
+cd "${MYSQL_DIR}/${MYSQL_VERSION}"
+"${MYSQL_BIN}/mysqld" --defaults-file="${MYSQL_DIR}/my.cnf" --initialize-insecure --user=$(whoami)
 
-# Set up database schema
-setup_database() {
-    print_status "Setting up database schema..."
-    
-    # Start MySQL
-    "${MYSQL_DIR}/start.sh"
-    sleep 5
-    
-    if [ -f "${PROJECT_ROOT}/sql/schema.sql" ]; then
-        # Create database and import schema
-        "${MYSQL_BIN}/mysql" -u root --socket="${MYSQL_DIR}/run/mysql.sock" << EOF
-CREATE DATABASE IF NOT EXISTS rgap;
-USE rgap;
-
-CREATE USER 'rgap_user'@'localhost' IDENTIFIED BY '12345';
-GRANT ALL PRIVILEGES ON rgap.* TO 'rgap_user'@'localhost';
-
-CREATE USER 'rgap_user'@'%' IDENTIFIED BY '12345';
-GRANT ALL PRIVILEGES ON rgap.* TO 'rgap_user'@'%';
-
-FLUSH PRIVILEGES;
-EOF
-        
-        "${MYSQL_BIN}/mysql" -u root --socket="${MYSQL_DIR}/run/mysql.sock" rgap < "${PROJECT_ROOT}/sql/schema.sql"
-        check_error "Failed to set up database schema"
-    else
-        print_status "No schema.sql found - skipping database initialization"
-    fi
-}
-
-# Main setup process
-main() {
-    print_status "Starting RGAP project setup..."
-    
-    setup_directories
-    setup_mysql
-    create_mysql_config
-    create_mysql_scripts
-    initialize_mysql
-    setup_aliases
-    setup_database
-    
-    print_success "RGAP project setup completed successfully!"
-    print_status "MySQL commands are now available:"
-    echo "• mysql-rgap-start  - Start the MySQL server"
-    echo "• mysql-rgap        - Connect to MySQL (e.g., mysql-rgap -u root rgap)"
-    echo "• mysql-rgap-stop   - Stop the MySQL server"
-    
-    print_status "MySQL is now ready to use!"
-}
-
-# Run main setup
-main
+print_success "MySQL setup completed successfully!"
+print_status "You can now use:"
+echo "• mysql-rgap-start  - Start the MySQL server"
+echo "• mysql-rgap        - Connect to MySQL"
+echo "• mysql-rgap-stop   - Stop the MySQL server"
