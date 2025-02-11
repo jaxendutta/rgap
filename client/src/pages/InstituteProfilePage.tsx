@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { clsx } from 'clsx'
-import { formatCurrency, formatDate } from '../utils/NumberDisplayFormat'
+import { formatCurrency, formatDate } from '../utils/format'
 
 // Data
 // Make a copy of the mock data for now

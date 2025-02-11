@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { BookmarkPlus, BookmarkCheck, MapPin, University, FileText, Calendar } from 'lucide-react'
 import { clsx } from 'clsx'
-import { formatCurrency, formatDate } from '../utils/NumberDisplayFormat'
+import { formatCurrency, formatDate } from '../utils/format'
 import { Recipient, ResearchGrant } from '../types/models'
 
 // Data

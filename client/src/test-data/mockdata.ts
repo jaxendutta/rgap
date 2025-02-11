@@ -1,3 +1,5 @@
+import { GrantSearchParams } from '@/types/search'
+
 export const filterOptions = {
     agency: ['NSERC', 'SSHRC', 'CIHR'],
     country: ['Canada', 'International', 'United States', 'United Kingdom', 'France'],
@@ -468,3 +470,126 @@ export const mockInstitutes = [
         ]
     }
 ];
+
+export const mock_searches = [
+    {
+        id: 1,
+        search_params: {
+            searchTerms: {
+                recipient: 'kim',
+                institute: 'waterloo',
+                grant: ''
+            },
+            filters: {
+                agencies: ['NSERC'],
+                countries: ['Canada'],
+                provinces: ['ON'],
+                cities: ['Toronto'],
+                yearRange: { start: 2020, end: 2025 },
+                valueRange: { min: 1000, max: 1000000 }
+            },
+            sortConfig: {
+                field: 'date',
+                direction: 'asc'
+            }
+        } as GrantSearchParams,
+        results: 8869,
+        timestamp: new Date('2025-01-01 12:00:00')
+    },
+    {
+        id: 2,
+        search_params: {
+            searchTerms: {
+                recipient: 'jane',
+                institute: '',
+                grant: 'health'
+            },
+            filters: {
+                agencies: ['CIHR', 'NSERC'],
+                countries: ['Canada'],
+                provinces: ['QC'],
+                cities: ['Montreal'],
+                yearRange: { start: 2020, end: 2025 },
+                valueRange: { min: 1000, max: 1000000 }
+            },
+            sortConfig: {
+                field: 'date',
+                direction: 'asc'
+            }
+        } as GrantSearchParams,
+        results: 5421,
+        timestamp: new Date('2025-01-02 12:00:00')
+    },
+    {
+        id: 3,
+        search_params: {
+            searchTerms: {
+                recipient: '',
+                institute: 'research',
+                grant: 'science'
+            },
+            filters: {
+                agencies: ['SSHRC'],
+                countries: ['Canada'],
+                provinces: ['BC'],
+                cities: ['Vancouver'],
+                yearRange: { start: 2020, end: 2025 },
+                valueRange: { min: 1000, max: 1000000 }
+            },
+            sortConfig: {
+                field: 'date',
+                direction: 'asc'
+            }
+        } as GrantSearchParams,
+        results: 3210,
+        timestamp: new Date('2025-01-03 12:00:00')
+    },
+    {
+        id: 4,
+        search_params: {
+            searchTerms: {
+                recipient: 'research',
+                institute: 'institute',
+                grant: 'grant'
+            },
+            filters: {
+                agencies: ['CIHR'],
+                countries: ['Canada'],
+                provinces: ['AB'],
+                cities: ['Calgary'],
+                yearRange: { start: 2020, end: 2025 },
+                valueRange: { min: 1000, max: 1000000 }
+            },
+            sortConfig: {
+                field: 'date',
+                direction: 'asc'
+            }
+        } as GrantSearchParams,
+        results: 7890,
+        timestamp: new Date('2025-01-04 12:00:00')
+    },
+    {
+        id: 5,
+        search_params: {
+            searchTerms: {
+                recipient: 'non-profit',
+                institute: 'research',
+                grant: 'grant'
+            },
+            filters: {
+                agencies: ['NSERC'],
+                countries: ['Canada'],
+                provinces: ['MB'],
+                cities: ['Winnipeg'],
+                yearRange: { start: 2020, end: 2025 },
+                valueRange: { min: 1000, max: 1000000 }
+            },
+            sortConfig: {
+                field: 'date',
+                direction: 'asc'
+            }
+        } as GrantSearchParams,
+        results: 4567,
+        timestamp: new Date('2025-01-05 12:00:00')
+    }
+]

@@ -1,340 +1,343 @@
+// src/pages/AccountPage.tsx
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   User,
-  Settings,
-  Bell,
   Save,
   History,
   LogOut,
   Eye,
   EyeOff,
   Shield,
-  BookMarked,
-  ArrowRight,
-  Building2,
-  GraduationCap,
-  AlertCircle
+  Calendar,
+  ArrowUpDown,
+  CalendarDays,
+  Search,
 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Card } from '@/components/common/ui/Card'
+import { Button } from '@/components/common/ui/Button'
+import { SearchHistoryCard } from '@/components/features/account/SearchHistoryCard'
+import { cn } from '@/utils/cn'
 import MockupMessage from '../components/common/messages/mockup'
 
-const AccountPage = () => {
+import { mock_searches } from '@/test-data/mockdata'
+const searches = [...mock_searches]
+
+type SortField = 'date' | 'results'
+type SortDirection = 'asc' | 'desc'
+
+const TABS = [
+  { id: 'profile', label: 'Profile', icon: User },
+  { id: 'security', label: 'Security', icon: Shield },
+  { id: 'history', label: 'History', icon: History },
+  { id: 'logout', label: 'Sign Out', icon: LogOut },
+] as const
+
+export default function AccountPage() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('profile')
+  const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('profile')
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
-  
-  // Mock user data - in real app would come from auth context/state
+  const [selectedSearch, setSelectedSearch] = useState<number | null>(null)
+  const [sortConfig, setSortConfig] = useState<{field: SortField, direction: SortDirection}>({
+    field: 'date',
+    direction: 'desc'
+  })
+
   const userData = {
     name: 'Demo User',
     email: 'demo@example.com',
     created_at: '2025-01-15',
-    savedSearches: 12,
-    savedGrants: 8,
-    savedRecipients: 5,
-    savedInstitutes: 3,
-    notifications: {
-      emailAlerts: true,
-      grantUpdates: true,
-      recipientUpdates: false
+    searches
+  }
+
+  const sortedSearches = [...userData.searches].sort((a, b) => {
+    if (sortConfig.field === 'date') {
+      const dateA = new Date(a.timestamp).getTime()
+      const dateB = new Date(b.timestamp).getTime()
+      return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA
+    } else {
+      return sortConfig.direction === 'asc' 
+        ? a.results - b.results 
+        : b.results - a.results
     }
+  })
+
+  const toggleSort = (field: SortField) => {
+    setSortConfig(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'desc' ? 'asc' : 'desc'
+    }))
+  }
+
+  const handleRerunSearch = (searchParams: any) => {
+    navigate('/search', { state: { searchParams } })
   }
 
   const handleLogout = () => {
-    // Handle logout logic here
-    navigate('/auth')
+    navigate('/')
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Sidebar */}
-        <div className="w-full lg:w-64 space-y-2">
-          <h2 className="text-lg font-semibold mb-4">Account Settings</h2>
+    <div className="max-w-7xl mx-auto p-4 lg:p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Account Settings</h1>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex space-x-2 lg:space-x-4">
+        {TABS.map(({ id, label, icon: Icon }) => {
+          const isActive = activeTab === id
+          const isLogout = id === 'logout'
           
-          {[
-            { id: 'profile', label: 'Profile', icon: User },
-            { id: 'security', label: 'Security', icon: Shield },
-            { id: 'notifications', label: 'Notifications', icon: Bell },
-            { id: 'saved', label: 'Saved Items', icon: BookMarked },
-            { id: 'history', label: 'Search History', icon: History },
-          ].map(({ id, label, icon: Icon }) => (
+          return (
             <button
               key={id}
               onClick={() => setActiveTab(id)}
-              className={`flex items-center w-full px-4 py-2 text-left rounded-lg transition-colors ${
-                activeTab === id
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
+              className={cn(
+                'w-full flex items-center py-3 rounded-lg transition-all duration-200 gap-0.5 lg:gap-2',
+                isActive
+                  ? isLogout 
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-gray-900 text-white hover:bg-gray-800'
+                  : isLogout
+                    ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+                'flex-col lg:flex-row',
+                'px-2 lg:px-4',
+                'text-sm lg:text-base',
+              )}
             >
-              <Icon className="h-5 w-5 mr-3" />
-              {label}
+              <Icon className="h-6 w-6 mb-1 sm:mb-0" />
+              <span>{label}</span>
             </button>
-          ))}
+          )
+        })}
+      </div>
 
-          <button
-            onClick={handleLogout}
-            className="flex items-center w-full px-4 py-2 mt-4 text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            <LogOut className="h-5 w-5 mr-3" />
-            Sign Out
-          </button>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1">
+      {/* Content */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.2 }}
+        >
           {/* Profile Settings */}
           {activeTab === 'profile' && (
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-lg border space-y-6">
-                <h3 className="text-lg font-medium">Profile Information</h3>
-                <MockupMessage />
-                <div className="grid grid-cols-1 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      defaultValue={userData.name}
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      defaultValue={userData.email}
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                    />
-                  </div>
+            <Card className="p-6 space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-medium">Profile Information</h2>
+                <Button variant="outline" icon={Save}>Save Changes</Button>
+              </div>
+              <MockupMessage />
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    defaultValue={userData.name}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                  />
                 </div>
-                <div className="flex justify-end">
-                  <button className="flex items-center px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800">
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Changes
-                  </button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    defaultValue={userData.email}
+                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                  />
                 </div>
               </div>
-            </div>
+            </Card>
           )}
 
           {/* Security Settings */}
           {activeTab === 'security' && (
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-lg border space-y-6">
-                <h3 className="text-lg font-medium">Change Password</h3>
-                <MockupMessage />
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Current Password
-                    </label>
-                    <div className="mt-1 relative">
-                      <input
-                        type={showCurrentPassword ? 'text' : 'password'}
-                        className="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3"
-                      >
-                        {showCurrentPassword ? (
-                          <EyeOff className="h-4 w-4 text-gray-400" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-gray-400" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      New Password
-                    </label>
-                    <div className="mt-1 relative">
-                      <input
-                        type={showNewPassword ? 'text' : 'password'}
-                        className="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute inset-y-0 right-0 flex items-center pr-3"
-                      >
-                        {showNewPassword ? (
-                          <EyeOff className="h-4 w-4 text-gray-400" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-gray-400" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                  <button className="flex items-center px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800">
-                    <Save className="h-4 w-4 mr-2" />
-                    Update Password
-                  </button>
-                </div>
+            <Card className="p-6 space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-medium">Security Settings</h2>
+                <Button variant="outline" icon={Save}>Update Password</Button>
               </div>
-            </div>
-          )}
-
-          {/* Notification Settings */}
-          {activeTab === 'notifications' && (
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-lg border space-y-6">
-                <h3 className="text-lg font-medium">Notification Preferences</h3>
-                <MockupMessage />
-                <div className="space-y-4">
-                  <label className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      defaultChecked={userData.notifications.emailAlerts}
-                      className="h-4 w-4 rounded border-gray-300"
-                    />
-                    <span className="text-sm">Email Alerts</span>
-                  </label>
-                  
-                  <label className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      defaultChecked={userData.notifications.grantUpdates}
-                      className="h-4 w-4 rounded border-gray-300"
-                    />
-                    <span className="text-sm">Grant Updates</span>
-                  </label>
-                  
-                  <label className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      defaultChecked={userData.notifications.recipientUpdates}
-                      className="h-4 w-4 rounded border-gray-300"
-                    />
-                    <span className="text-sm">Recipient Updates</span>
-                  </label>
-                </div>
-                <div className="flex justify-end">
-                  <button className="flex items-center px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800">
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Preferences
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Saved Items */}
-          {activeTab === 'saved' && (
-            <div className="space-y-6">
               <MockupMessage />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Saved Grants */}
-                <div className="bg-white p-6 rounded-lg border">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium">Saved Grants</h3>
-                    <span className="text-sm text-gray-500">{userData.savedGrants} items</span>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Current Password
+                  </label>
+                  <div className="mt-1 relative">
+                    <input
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    >
+                      {showCurrentPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </button>
                   </div>
-                  <button
-                    onClick={() => navigate('/bookmarks')}
-                    className="flex items-center w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 rounded-md"
-                  >
-                    <BookMarked className="h-4 w-4 mr-2" />
-                    View All Grants
-                    <ArrowRight className="h-4 w-4 ml-auto" />
-                  </button>
                 </div>
 
-                {/* Saved Recipients */}
-                <div className="bg-white p-6 rounded-lg border">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium">Saved Recipients</h3>
-                    <span className="text-sm text-gray-500">{userData.savedRecipients} items</span>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    New Password
+                  </label>
+                  <div className="mt-1 relative">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </button>
                   </div>
-                  <button
-                    onClick={() => navigate('/bookmarks')}
-                    className="flex items-center w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 rounded-md"
-                  >
-                    <GraduationCap className="h-4 w-4 mr-2" />
-                    View All Recipients
-                    <ArrowRight className="h-4 w-4 ml-auto" />
-                  </button>
                 </div>
 
-                {/* Saved Institutes */}
-                <div className="bg-white p-6 rounded-lg border">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium">Saved Institutes</h3>
-                    <span className="text-sm text-gray-500">{userData.savedInstitutes} items</span>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Confirm New Password
+                  </label>
+                  <div className="mt-1 relative">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      className="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </button>
                   </div>
-                  <button
-                    onClick={() => navigate('/bookmarks')}
-                    className="flex items-center w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 rounded-md"
-                  >
-                    <Building2 className="h-4 w-4 mr-2" />
-                    View All Institutes
-                    <ArrowRight className="h-4 w-4 ml-auto" />
-                  </button>
-                </div>
-
-                {/* Saved Searches */}
-                <div className="bg-white p-6 rounded-lg border">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium">Saved Searches</h3>
-                    <span className="text-sm text-gray-500">{userData.savedSearches} items</span>
-                  </div>
-                  <button
-                    onClick={() => navigate('/bookmarks')}
-                    className="flex items-center w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 rounded-md"
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    View All Searches
-                    <ArrowRight className="h-4 w-4 ml-auto" />
-                  </button>
                 </div>
               </div>
-            </div>
+            </Card>
           )}
 
           {/* Search History */}
           {activeTab === 'history' && (
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-medium mb-4">Recent Searches</h3>
-                <MockupMessage />
-                <div className="space-y-4">
-                  {/* This would be populated with actual search history data */}
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <div className="space-y-1">
-                      <p className="font-medium">NSERC Grants in Ontario</p>
-                      <p className="text-sm text-gray-500">12 results • 2 days ago</p>
-                    </div>
-                    <button className="text-blue-600 hover:text-blue-700">
-                      <Save className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <div className="space-y-1">
-                      <p className="font-medium">Medical Research Grants</p>
-                      <p className="text-sm text-gray-500">45 results • 5 days ago</p>
-                    </div>
-                    <button className="text-blue-600 hover:text-blue-700">
-                      <Save className="h-4 w-4" />
-                    </button>
+            <Card className="p-6">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-medium">Recent Searches</h2>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleSort('date')}
+                      className={cn(
+                        sortConfig.field === 'date' && 'border-gray-900'
+                      )}
+                    >
+                      <CalendarDays className="h-4 w-4 mr-1" />
+                      Date
+                      <ArrowUpDown className={cn(
+                        "h-3 w-3 ml-1",
+                        sortConfig.field === 'date' && 'text-gray-900'
+                      )} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleSort('results')}
+                      className={cn(
+                        sortConfig.field === 'results' && 'border-gray-900'
+                      )}
+                    >
+                      <Search className="h-4 w-4 mr-1" />
+                      Results
+                      <ArrowUpDown className={cn(
+                        "h-3 w-3 ml-1",
+                        sortConfig.field === 'results' && 'text-gray-900'
+                      )} />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setSelectedSearch(null)}
+                    >
+                      Collapse All
+                    </Button>
                   </div>
                 </div>
+
+                <motion.div 
+                  layout
+                  className="grid grid-cols-1 gap-4"
+                >
+                  {sortedSearches.map(search => (
+                    <motion.div
+                      key={search.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <SearchHistoryCard
+                        search={search}
+                        onRerun={handleRerunSearch}
+                        isSelected={selectedSearch === search.id}
+                        onToggleSelect={() => setSelectedSearch(
+                          selectedSearch === search.id ? null : search.id
+                        )}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
               </div>
-            </div>
+            </Card>
           )}
-        </div>
-      </div>
+
+          {/* Logout Confirmation */}
+          {activeTab === 'logout' && (
+            <Card className="p-6 border-red-200 bg-red-50">
+              <div className="space-y-4">
+                <h2 className="text-2xl font-medium text-gray-900">You're about to sign out!</h2>
+                <p className="text-gray-700">Are you sure you want to sign out?</p>
+                <div className="flex justify-end">
+                  <Button
+                    variant="primary"
+                    onClick={handleLogout}
+                    className="bg-red-600 hover:bg-red-700"
+                    icon={LogOut}
+                  >
+                    Sign Out
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   )
 }
-
-export default AccountPage

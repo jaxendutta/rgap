@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { BookmarkPlus, BookmarkCheck, MapPin, University, Users, FileText } from 'lucide-react'
 import { clsx } from 'clsx'
-import { formatCurrency } from '../utils/NumberDisplayFormat'
+import { formatCurrency } from '../utils/format'
 
 // Data
 // Make a copy of the mock data for now

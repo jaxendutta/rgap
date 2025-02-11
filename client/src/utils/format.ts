@@ -4,8 +4,8 @@ export const formatCurrency = (value: number): string => {
     currency: 'CAD',
     maximumFractionDigits: 0
   }).format(value)
-  }
-  
+}
+
 export const formatDate = (dateString: string): string => {
   return new Date(dateString).toLocaleDateString()
-  }
+}

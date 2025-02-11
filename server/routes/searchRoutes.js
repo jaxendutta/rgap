@@ -1,15 +1,9 @@
-
+// server/routes/searchRoutes.js
 const express = require('express');
 const router = express.Router();
+const { searchGrants, getFilterOptions } = require('../controllers/searchController');
 
-const { getAllGrants, searchGrants } = require('../controllers/searchController'); 
-
-
-router.get('/all', getAllGrants);
 router.post('/', searchGrants);
-//router.get('/grant', searchController.getAllGrants);
-//router.get('/institute', searchController.getAllGrants);
-//router.get('/recipient', searchController.getAllGrants);
-//router.get('/combine', searchController.getAllGrants);
+router.get('/filter-options', getFilterOptions);
 
 module.exports = router;

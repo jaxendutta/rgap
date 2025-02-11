@@ -12,7 +12,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       <Header />
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-auto p-2 pb-20 lg:p-6 lg:pb-6"> {/* Added pb-20 for mobile */}
+        <main className="flex-1 overflow-auto p-4 pb-20 lg:p-6 lg:pb-6"> {/* Added pb-20 for mobile */}
           {children}
         </main>
       </div>

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { clsx } from 'clsx'
-import { formatCurrency, formatDate } from '../utils/NumberDisplayFormat'
+import { formatCurrency, formatDate } from '../utils/format'
 import { Recipient, ResearchGrant } from '../types/models'
 
 // Data
