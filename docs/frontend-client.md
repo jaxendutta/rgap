@@ -34,27 +34,56 @@
 ## Directory Structure
 Created the following directory structure:
 ```
-src/
-├── components/
-│   ├── ui/
-│   ├── layout/
-│   ├── common/
-│   ├── grants/
-│   ├── recipients/
-│   ├── search/
-│   └── analytics/
-├── features/
-│   ├── auth/
-│   ├── grants/
-│   ├── recipients/
-│   ├── search/
-│   └── analytics/
-├── hooks/
-├── lib/
-├── pages/
-├── services/
-├── types/
-└── utils/
+client/
+├── Dockerfile
+├── eslint.config.js
+├── index.html
+├── package.json
+├── package-lock.json
+├── postcss.config.js
+├── public
+│   └── rgap.svg
+├── README.md
+├── src
+│   ├── api
+│   │   └── index.ts
+│   ├── App.css
+│   ├── App.tsx
+│   ├── components
+│   │   ├── filter
+│   │   │   ├── constants.ts
+│   │   │   └── FilterComponents.tsx
+│   │   └── layout
+│   │       ├── Header.tsx
+│   │       ├── MainLayout.tsx
+│   │       └── Sidebar.tsx
+│   ├── hooks
+│   │   └── useGrantSearch.ts
+│   ├── index.css
+│   ├── main.tsx
+│   ├── pages
+│   │   ├── AuthPage.tsx
+│   │   ├── BookmarksPage.tsx
+│   │   ├── DocsPage.tsx
+│   │   ├── HomePage.tsx
+│   │   ├── InstituteProfilePage.tsx
+│   │   ├── InstitutesPage.tsx
+│   │   ├── PageNotFound.tsx
+│   │   ├── RecipientProfilePage.tsx
+│   │   ├── RecipientsPage.tsx
+│   │   └── SearchPage.tsx
+│   ├── test-data
+│   │   └── mockdata.ts
+│   ├── types
+│   │   └── models.ts
+│   ├── utils
+│   │   └── NumberDisplayFormat.ts
+│   └── vite-env.d.ts
+├── tailwind.config.js
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
 ```
 
 ## Configuration Files
@@ -82,13 +111,11 @@ src/
    - Combines Header, Sidebar, and main content area
 
 2. `Header.tsx`:
-   - Sleek top navigation with:
-     - RGAP branding with subtitle
-     - Enhanced search bar with:
-       - Save search button (BookmarkPlus)
-       - Sort button (SortDesc)
-       - Filter button with dropdown
-     - Profile and notification icons
+   - Top navigation bar with:
+     - Logo
+     - User profile dropdown
+     - Notifications
+     - Settings
 
 3. `Sidebar.tsx`:
    - Collapsible navigation sidebar
@@ -96,44 +123,31 @@ src/
    - Navigation items:
      - Home
      - Search
-     - Grants
      - Institutes
      - Recipients
-     - Analytics
      - Bookmarks
+     - Docs
 
 ### Pages (`src/pages/`)
 
 1. Core Pages:
-   - `HomePage.tsx` - Welcome page
    - `SearchPage.tsx` - Advanced search interface
-   - `GrantsPage.tsx` - Grant browsing/listing
    - `InstitutesPage.tsx` - Research institutes overview
+   - `InstituteProfilePage.tsx` - Institute profile page
    - `RecipientsPage.tsx` - Recipients listing
+   - `RecipientProfilePage.tsx` - Recipient profile page
    - `AnalyticsPage.tsx` - Analytics dashboard
    - `BookmarksPage.tsx` - Tabbed bookmarks interface with:
      - Grants tab
      - Research Institutes tab
      - Recipients tab
      - Searches tab
-
-## Key UI Improvements
-
-1. Sidebar Enhancements:
-   - Smooth collapse/expand on hover
-   - Fixed icon positioning
-   - Black background for active page (improved contrast)
-   - Clear visual hierarchy
-
-2. Header Refinements:
-   - Integrated search actions (save, sort, filter)
-   - Clean alignment and spacing
-   - Consistent icon usage
-
-3. Bookmarks Interface:
-   - Tab-based navigation
-   - Icon + text labels for each category
-   - Clean transitions between sections
+  
+2. Additional Pages:
+   - `HomePage.tsx` - Landing page
+   - `AuthPage.tsx` - Authentication page
+   - `DocsPage.tsx` - Documentation page
+   - `PageNotFound.tsx` - 404 error page
 
 ## Component Features
 
