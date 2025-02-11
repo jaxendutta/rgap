@@ -13,32 +13,24 @@
     source setup.sh
     ```
 
-2. Install MySQL
+2. Setup MySQL
     ```bash
     cd scripts
     # Run mysql-rgap-stop if there is a MySQL Server running
     ./mysql_setup.sh
     ```
 
-3. Access the MySQL Server Shell and Create a User
-    ```bash
-    # In the virtual environment
-    mysql-rgap -u root rgap
-    ```
+    This script will:
+    - Install MySQL Server for Ubuntu 20.04 LTS
+    - Start the MySQL Server
+    - Create a database named `rgap`
+    - Create tables in the `rgap` database
+    - Populate the tables with data
+    - Create a user named `rgap_user` with all privileges on the `rgap` database
+    - Create a user named `rgap_user` with all privileges on the `rgap` database for all hosts
+    - Flush privileges
 
-    ```sql
-    # In the MySQL Shell
-    CREATE USER 'rgap_user'@'localhost' IDENTIFIED BY '12345';
-    GRANT ALL PRIVILEGES ON rgap.* TO 'rgap_user'@'localhost';
-
-    CREATE USER 'rgap_user'@'%' IDENTIFIED BY '12345';
-    GRANT ALL PRIVILEGES ON rgap.* TO 'rgap_user'@'%';
-
-    FLUSH PRIVILEGES;
-    exit;
-    ```
-
-4. Environment Variables
+3. Environment Variables
     Create a `.env` file in `ROOT` folder with the following content:
     ```bash
     DB_HOST=localhost
@@ -49,13 +41,13 @@
     PORT=3030
     ```
 
-5. Populate the Tables
+4. Populate the Tables
     ```bash
     # In the virtual environment
     python populate_tables.py
     ```
 
-6. Run MySQL Server
+5. Run MySQL Server
     ```bash
     # Install dependencies
     cd ../server
@@ -68,7 +60,7 @@
     curl http://localhost:3030
     ```
 
-7. Run the Client
+6. Run the Client
     ```bash
     # Install dependencies
     cd ../client
@@ -81,12 +73,26 @@
     curl http://localhost:3000
     ```
 
-> [!TIP]  
-> You can also test out our MySQL Server through API calls when it is running! Try running the following command in your terminal:
-> ```bash
-> # Make sure the server is running by following the steps 1-6 above!
-> curl -X POST http://localhost:3030/search \ 
-> -H "Content-Type: application/json" \
-> -d '{"searchTerms":{"institute":"waterloo"},"filters":{},"sortConfig":{"field":"date","direction":"desc"}}'
-> ```
-> This will return a list of grants that have the word "waterloo" in their institute name, sorted by date in descending order.
+7. You can now search for grants. For the purposes of this milestone, go through the following steps:
+    - Click on the seach page
+    - Type in "waterloo" in the institutes search bar
+    - Prss the `Enter` key
+    - Click the `Search` button
+    - You should see a list of grants that have the word "waterloo" in their research organization/institute name
+  
+    > [!CAUTION]
+    > You must press Enter before clicking the search button!
+
+## Alternative Accesses to Database Server
+
+> [!TIP] 
+> Please use this if you are unable to access the application through the frontend.
+
+You can also test out our MySQL Server through API calls when it is running! Try running the following command in your terminal:
+```bash
+# Make sure the server is running by following the steps 1-6 above!
+curl -X POST http://localhost:3030/search \ 
+-H "Content-Type: application/json" \
+-d '{"searchTerms":{"institute":"waterloo"},"filters":{},"sortConfig":{"field":"date","direction":"desc"}}'
+```
+This will return a list of grants that have the word "waterloo" in their institute name, sorted by date in descending order.

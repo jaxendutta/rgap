@@ -95,7 +95,7 @@ const SortButton = ({
     )}
   >
     {Icon && <Icon className="h-4 w-4" />}
-    <span>{label}</span>
+    <span className="hidden lg:flex">{label}</span>
     {currentField === field && (
       <span className="text-gray-900">
         {direction === 'asc' ? '↑' : '↓'}
@@ -133,11 +133,11 @@ export const RecipientProfilePage = () => {
   )
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-4 lg:p-6 space-y-6">
       {/* Profile and Stats Section */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Profile Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 lg:col-span-1">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 lg:p-6 lg:col-span-1">
           <div className="flex justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">{recipient.legal_name}</h1>
@@ -188,7 +188,7 @@ export const RecipientProfilePage = () => {
       </div>
 
       {/* Funding History Chart */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200">
+      <div className="bg-white p-4 lg:p-6 rounded-lg border border-gray-200">
         <h2 className="text-lg font-semibold mb-4">Funding History</h2>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
@@ -242,8 +242,8 @@ export const RecipientProfilePage = () => {
 
       {/* Grants List */}
       <div className="bg-white rounded-lg border border-gray-200">
-        <div className="px-6 py-4 border-b flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Research Grants</h2>
+        <div className="flex items-center justify-between px-4 lg:px-6 py-2 border-b ">
+          <h2 className="text-md font-semibold text-gray-500 px-2">Grants</h2>
           <div className="flex gap-2">
             <SortButton
               label="Date"
@@ -282,8 +282,8 @@ export const RecipientProfilePage = () => {
                   <div className="text-sm text-gray-500">
                     <div className="flex items-end">
                       <span>{formatDate(grant.agreement_start_date)}</span>
-                      <span className="text-gray-400 mx-1">│</span>
-                      <span>{formatDate(grant.agreement_end_date)}</span>
+                      <span className="text-gray-400 mx-1 hidden lg:flex">│</span>
+                      <span className="hidden lg:flex">{formatDate(grant.agreement_end_date)}</span>
                     </div>
                   </div>
                 </div>

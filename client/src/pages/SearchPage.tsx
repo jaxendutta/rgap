@@ -18,13 +18,14 @@ import { clsx } from 'clsx'
 import { Link } from 'react-router-dom'
 import { RangeFilter, MultiSelect, FilterTags } from '../components/filter/FilterComponents'
 import { DEFAULT_FILTER_STATE, FilterValues } from '../components/filter/constants'
-import { ResearchGrant, Recipient } from '../types/models'
+import { ResearchGrant } from '../types/models'
 
 import { useGrantSearch } from '../hooks/useGrantSearch'
 
 // Data
 // Make a copy of the mock data for now
 /*
+import { Recipient } from '../types/models'
 import { mock_data, mockInstitutes, filterOptions } from '../test-data/mockdata'
 const recipients: Recipient[] = [...mock_data.Recipient]
 const results: ResearchGrant[] = [...mock_data.ResearchGrant]

@@ -9,6 +9,7 @@ import { RecipientsPage } from './pages/RecipientsPage'
 import { RecipientProfilePage } from './pages/RecipientProfilePage'
 import { BookmarksPage } from './pages/BookmarksPage'
 import DocsPage from './pages/DocsPage'
+import AuthPage from './pages/AuthPage'
 import PageNotFound from './pages/PageNotFound'
 
 // Create a client
@@ -35,6 +36,7 @@ function App() {
             <Route path="/recipients/:id" element={<RecipientProfilePage />} />
             <Route path="/bookmarks" element={<BookmarksPage />} />
             <Route path="/docs" element={<DocsPage />} />
+            <Route path="/auth" element={<AuthPage />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </MainLayout>

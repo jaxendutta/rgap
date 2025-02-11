@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BookOpen, Search, Filter, LineChart, Database, ArrowRight } from 'lucide-react'
+import { BookOpen, Search, Filter, LineChart, Database, ArrowRight, Menu } from 'lucide-react'
 
 const sections = [
   {
@@ -149,14 +149,14 @@ function ContentRenderer({ content }: { content: any[] }) {
                 {item.text}
               </p>
             )
-          
+
           case 'title':
             return (
               <h3 key={index} className="text-lg font-medium text-gray-900 mt-8 first:mt-0">
                 {item.text}
               </h3>
             )
-          
+
           case 'list':
             return (
               <ul key={index} className="space-y-1 text-gray-600">
@@ -168,7 +168,7 @@ function ContentRenderer({ content }: { content: any[] }) {
                 ))}
               </ul>
             )
-          
+
           case 'grid':
             return (
               <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -180,7 +180,7 @@ function ContentRenderer({ content }: { content: any[] }) {
                 ))}
               </div>
             )
-          
+
           case 'stats':
             return (
               <div key={index} className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -192,7 +192,7 @@ function ContentRenderer({ content }: { content: any[] }) {
                 ))}
               </div>
             )
-          
+
           default:
             return null
         }
@@ -203,26 +203,39 @@ function ContentRenderer({ content }: { content: any[] }) {
 
 export default function DocsPage() {
   const [activeSection, setActiveSection] = useState('Getting Started')
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
     <div className="h-[calc(100vh-4rem)] overflow-hidden">
-      <div className="h-full flex">
-        {/* Sidebar Navigation */}
-        <div className="w-64 border-r bg-white overflow-y-auto">
-          <div className="p-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Documentation</h2>
-            <nav className="space-y-1">
+      <div className="h-full flex flex-col md:flex-row">
+
+        {/* Mobile Navigation Bar */}
+        <div className="md:hidden bg-white border-b">
+          <div className="flex items-center justify-between p-4">
+            <h2 className="text-2xl font-semibold text-gray-900">Documentation + Support</h2>
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)}>
+              <Menu className="h-6 w-6 text-gray-900" />
+            </button>
+          </div>
+          <div
+            className={`transition-max-height duration-700 ease-in-out overflow-hidden ${isMenuOpen ? 'max-h-screen' : 'max-h-0'
+              }`}
+          >
+            <nav className="p-2 border-t bg-white">
               {sections.map(({ title, icon: Icon }) => (
                 <button
                   key={title}
-                  onClick={() => setActiveSection(title)}
+                  onClick={() => {
+                    setActiveSection(title)
+                    setIsMenuOpen(false)
+                  }}
                   className={`
-                    flex items-center px-3 py-2 text-sm font-medium rounded-md w-full
-                    ${activeSection === title
+              flex items-center px-3 py-2 text-md font-medium rounded-md w-full
+              ${activeSection === title
                       ? 'bg-gray-900 text-white'
                       : 'text-gray-700 hover:bg-gray-50'
                     }
-                  `}
+            `}
                 >
                   <Icon className="h-4 w-4 mr-3 flex-shrink-0" />
                   <span className="truncate">{title}</span>
@@ -232,9 +245,34 @@ export default function DocsPage() {
           </div>
         </div>
 
+        {/* Sidebar Navigation */}
+        <div className="hidden md:block w-64 border-r bg-white overflow-y-auto">
+          <div className="p-2">
+            <h2 className="text-2xl font-semibold text-gray-900 mt-2 mb-2">Documentation</h2>
+          </div>
+          <nav className="space-y-1 pr-2 lg:pr-4">
+            {sections.map(({ title, icon: Icon }) => (
+              <button
+                key={title}
+                onClick={() => setActiveSection(title)}
+                className={`
+                    flex items-center px-2 py-2 text-md font-medium rounded-md w-full
+                    ${activeSection === title
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-700 hover:bg-gray-50'
+                  }
+                  `}
+              >
+                <Icon className="h-4 w-4 mr-3 flex-shrink-0" />
+                <span className="truncate">{title}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-4xl mx-auto py-8 px-8">
+          <div className="max-w-4xl mx-auto p-4 lg:p-8">
             {sections.map(({ title, content, icon: Icon }) => (
               <div
                 key={title}

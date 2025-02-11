@@ -9,8 +9,16 @@ export default function HomePage() {
         <div className="bg-white rounded-lg border hover:border-gray-300 transition-all duration-200">
           <div className="px-6 lg:px-8 py-16">
             <div className="text-center">
-              <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl md:text-6xl">
-                [ Research Grant Analytics Platform ]
+              <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl md:text-6xl leading-tight flex justify-center items-center">
+                <span style={{ fontSize: 'inherit', fontWeight: 'inherit', display: 'inline-block', padding: '0 0.5rem' }}> {/* Adjust padding */}
+                  [
+                </span>
+                <span className="inline-block"> {/* Content span */}
+                  Research Grant Analytics Platform
+                </span>
+                <span style={{ fontSize: 'inherit', fontWeight: 'inherit', display: 'inline-block', padding: '0 0.5rem' }}> {/* Adjust padding */}
+                  ]
+                </span>
               </h1>
               <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
                 Explore and analyze research funding data from Canada's three major research funding agencies: NSERC, CIHR, and SSHRC.
@@ -25,11 +33,11 @@ export default function HomePage() {
                     Start Exploring
                   </Link>
                   <Link
-                    to="/login"
+                    to="/auth"
                     className="inline-flex items-center justify-center pl-6 pr-8 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 md:text-lg"
                   >
                     <LogIn className="h-5 w-5 mr-2" />
-                    Log In
+                    Your Account
                   </Link>
                 </div>
               </div>
@@ -68,7 +76,7 @@ export default function HomePage() {
             </div>
             <h3 className="text-lg font-medium text-gray-900">
               <Link
-                to="/register"
+                to="/auth"
                 className="hover:text-gray-700"
               >
                 Create Account

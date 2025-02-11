@@ -23,7 +23,7 @@ export const RecipientsPage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-4 lg:p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -40,7 +40,7 @@ export const RecipientsPage = () => {
             className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 hover:shadow-sm"
           >
             {/* Card Header */}
-            <div className="p-6 space-y-4">
+            <div className="p-4 lg:p-6 space-y-4">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
                   <Link
@@ -49,18 +49,18 @@ export const RecipientsPage = () => {
                   >
                     {recipient.legal_name}
                   </Link>
-                    <div className="flex items-center text-gray-600">
+                  <div className="flex items-center text-gray-600">
                     {/* TODO: Link to the recipient's research organization */}
                     <Link
                       to={`/institutes/1`}
-                      className="flex items-center hover:text-blue-600 transition-colors"
+                      className="flex items-start hover:text-blue-600 transition-colors"
                     >
-                      <University className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <University className="h-4 w-4 mr-1 flex-shrink-0 mt-1 mr-1.5" />
                       <span>{recipient.research_organization_name}</span>
                     </Link>
-                    </div>
-                  <div className="flex items-center text-gray-600">
-                    <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                  </div>
+                  <div className="flex items-start text-gray-600">
+                    <MapPin className="h-4 w-4 mr-1 flex-shrink-0 mt-1 mr-1.5" />
                     <span>{recipient.city}, {recipient.province}</span>
                   </div>
                 </div>
@@ -87,7 +87,7 @@ export const RecipientsPage = () => {
                   <div className="text-gray-600">Total Funding</div>
                   <div className="text-gray-600">Latest Grant</div>
                 </div>
-                <div className="grid grid-cols-3 items-center">
+                <div className="grid grid-cols-3 items-center text-sm">
                   <div className="font-medium flex items-center">
                     <FileText className="h-4 w-4 mr-1" />
                     {grants.filter(grant => grant.recipient_id === recipient.recipient_id).length}

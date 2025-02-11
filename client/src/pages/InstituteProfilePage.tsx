@@ -19,8 +19,10 @@ import { formatCurrency, formatDate } from '../utils/NumberDisplayFormat'
 
 // Data
 // Make a copy of the mock data for now
-import { mockInstitutes } from '../test-data/mockdata'
+import { mock_data, mockInstitutes } from '../test-data/mockdata'
+import { ResearchGrant } from '../types/models'
 const institutes = [ ...mockInstitutes ]
+const mock_grants = [ ...mock_data.ResearchGrant ]
 
 // Types
 type SortField = 'date' | 'value' | 'grants_count'
@@ -33,9 +35,9 @@ interface SortConfig {
 }
 
 // Sort functions
-const sortByDate = (a: { start_date: string }, b: { start_date: string }, direction: SortDirection): number => {
+const sortByDate = (a: any, b: any, direction: SortDirection, valueKey: string = 'agreement_start_date'): number => {
   const multiplier = direction === 'asc' ? 1 : -1
-  return multiplier * (new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
+  return multiplier * (new Date(a[valueKey]).getTime() - new Date(b[valueKey]).getTime())
 }
 
 const sortByValue = (a: any, b: any, direction: SortDirection, valueKey: string = 'value'): number => {
@@ -43,9 +45,9 @@ const sortByValue = (a: any, b: any, direction: SortDirection, valueKey: string 
   return multiplier * (a[valueKey] - b[valueKey])
 }
 
-const sortByGrantsCount = (a: { grants: number }, b: { grants: number }, direction: SortDirection): number => {
+const sortByGrantsCount = (a: any, b: any, direction: SortDirection): number => {
   const multiplier = direction === 'asc' ? 1 : -1
-  return multiplier * (a.grants - b.grants)
+  return multiplier * (a.grants.legth - b.grants.length)
 }
 
 // Components
@@ -94,7 +96,7 @@ const SortButton = ({
     )}
   >
     {Icon && <Icon className="h-4 w-4" />}
-    <span>{label}</span>
+    <span className="hidden lg:flex">{label}</span>
     {currentField === field && (
       <span className="text-gray-900">
         {direction === 'asc' ? '↑' : '↓'}
@@ -110,6 +112,16 @@ const InstituteProfilePage = () => {
   if (!institute) {
     return <Navigate to="/pageNotFound" />
   }
+
+  // TODO: Fetch grants and recipients from the API
+  const grants = institute.grants.map(grantId => mock_data.ResearchGrant.find(grant => grant.grant_id === grantId))
+  const recipients = institute.recipients.map(recipientId => {
+    const recipient = mock_data.Recipient.find(recipient => recipient.recipient_id === recipientId)
+    return recipient ? {
+      ...recipient,
+      grants: grants.filter(grant => grant && grant.recipient_id === recipient.recipient_id)
+    } : recipient
+  })
 
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [recipientBookmarks, setRecipientBookmarks] = useState<number[]>([])
@@ -131,24 +143,24 @@ const InstituteProfilePage = () => {
   }
 
   // Sort data based on current configuration
-  const sortedGrants = [...institute.grants].sort((a, b) => 
+  const sortedGrants = [...grants].sort((a, b) => 
     sortConfig.field === 'value' 
-      ? sortByValue(a, b, sortConfig.direction)
-      : sortByDate(a, b, sortConfig.direction)
+      ? sortByValue(a, b, sortConfig.direction, 'agreement_value')
+      : sortByDate(a, b, sortConfig.direction, 'agreement_start_date')
   )
 
-  const sortedRecipients = [...institute.recipients].sort((a, b) => 
+  const sortedRecipients = [...recipients].sort((a, b) => 
     sortConfig.field === 'value'
       ? sortByValue(a, b, sortConfig.direction, 'total_funding')
       : sortByGrantsCount(a, b, sortConfig.direction)
   )
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-4 lg:p-6 space-y-6">
       {/* Profile and Stats Section */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Profile Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 lg:col-span-1">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 lg:p-6 lg:col-span-1">
           <div className="flex justify-between">
             <div className="space-y-1">
               <h1 className="text-2xl font-semibold">{institute.name}</h1>
@@ -246,12 +258,12 @@ const InstituteProfilePage = () => {
       {/* Tabs for Grants and Recipients */}
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="border-b border-gray-200">
-          <div className="flex items-center justify-between px-6">
+          <div className="flex items-center justify-between px-4 lg:px-6">
             <div className="flex">
               <button
                 onClick={() => setActiveTab('grants')}
                 className={clsx(
-                  'px-6 py-3 text-sm font-medium border-b-2 transition-colors',
+                  'px-6 py-3 text-md font-medium border-b-2 transition-colors',
                   activeTab === 'grants'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -262,7 +274,7 @@ const InstituteProfilePage = () => {
               <button
                 onClick={() => setActiveTab('recipients')}
                 className={clsx(
-                  'px-6 py-3 text-sm font-medium border-b-2 transition-colors',
+                  'px-6 py-3 text-md font-medium border-b-2 transition-colors',
                   activeTab === 'recipients'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -310,61 +322,65 @@ const InstituteProfilePage = () => {
         <div className="divide-y">
           {activeTab === 'grants' ? (
             // Grants List
-            sortedGrants.map(grant => (
-              <div key={grant.id} className="p-6 hover:bg-gray-50 transition-colors">
+            sortedGrants.map(grant => grant && (
+              <div key={grant.grant_id} className="p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <div className="text-lg font-medium">{grant.title}</div>
+                    <div className="text-lg font-medium">{grant.agreement_title_en}</div>
                     <div className="text-sm text-gray-500 flex items-center">
                       <GraduationCap className="h-4 w-4 mr-1" />
-                      {grant.recipient}
+                      {recipients[grant.recipient_id]?.legal_name}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {grant.ref_number} • {grant.agency}
+                      {grant.ref_number} • {grant.org}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-medium">
-                      {formatCurrency(grant.value)}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {formatDate(grant.start_date)} - {formatDate(grant.end_date)}
+                  <div className="font-medium">
+                    {formatCurrency(grant.agreement_value)}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    <div className="flex items-end">
+                      <span>{formatDate(grant.agreement_start_date)}</span>
+                      <span className="text-gray-400 mx-1 hidden lg:flex">│</span>
+                      <span className="hidden lg:flex">{formatDate(grant.agreement_end_date)}</span>
                     </div>
                   </div>
+                </div>
                 </div>
               </div>
             ))
           ) : (
             // Recipients List
-            sortedRecipients.map(recipient => (
-              <div key={recipient.id} className="p-6 hover:bg-gray-50 transition-colors">
+            sortedRecipients.map(recipient => recipient && (
+              <div key={recipient.recipient_id} className="p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
                     <Link 
-                      to={`/recipients/${recipient.id}`}
+                      to={`/recipients/${recipient.recipient_id}`}
                       className="text-lg font-medium hover:text-blue-600 transition-colors flex items-center"
                     >
                       <GraduationCap className="h-4 w-4 mr-1" />
-                      {recipient.name}
+                      {recipient.legal_name}
                     </Link>
                     <div className="text-sm text-gray-500">
-                      {recipient.grants} Grants
+                      {recipient.grants.length} Grants
                     </div>
                   </div>
                   <div className="flex items-start space-x-4">
                     <div className="font-medium text-right">
-                      {formatCurrency(recipient.total_funding)}
+                      {formatCurrency(recipient.grants.reduce((acc, grant) => grant ? acc + grant.agreement_value : acc, 0))}
                     </div>
                     <button
-                      onClick={() => toggleRecipientBookmark(recipient.id)}
+                      onClick={() => toggleRecipientBookmark(recipient.recipient_id)}
                       className={clsx(
                         "p-1 rounded-full transition-colors hover:bg-gray-100",
-                        recipientBookmarks.includes(recipient.id)
+                        recipientBookmarks.includes(recipient.recipient_id)
                           ? "text-blue-600 hover:text-blue-700"
                           : "text-gray-400 hover:text-gray-600"
                       )}
                     >
-                      {recipientBookmarks.includes(recipient.id)
+                      {recipientBookmarks.includes(recipient.recipient_id)
                         ? <BookmarkCheck className="h-5 w-5" />
                         : <BookmarkPlus className="h-5 w-5" />
                       }
