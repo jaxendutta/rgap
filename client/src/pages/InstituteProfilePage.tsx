@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useParams, Link, Navigate } from 'react-router-dom'
-import { 
-  BookmarkPlus, 
-  BookmarkCheck, 
-  MapPin, 
- University, 
-  FileText,
+import {
+  BookmarkPlus,
+  BookmarkCheck,
+  MapPin,
+  University,
+  BookMarked,
   DollarSign,
   Users,
   TrendingUp,
@@ -15,14 +15,12 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { clsx } from 'clsx'
-import { formatCurrency, formatDate } from '../utils/NumberDisplayFormat'
+import { formatCurrency, formatDate } from '../utils/format'
 
 // Data
 // Make a copy of the mock data for now
 import { mock_data, mockInstitutes } from '../test-data/mockdata'
-import { ResearchGrant } from '../types/models'
-const institutes = [ ...mockInstitutes ]
-const mock_grants = [ ...mock_data.ResearchGrant ]
+const institutes = [...mockInstitutes]
 
 // Types
 type SortField = 'date' | 'value' | 'grants_count'
@@ -51,11 +49,11 @@ const sortByGrantsCount = (a: any, b: any, direction: SortDirection): number => 
 }
 
 // Components
-const StatCard = ({ icon: Icon, label, value, trend }: { 
+const StatCard = ({ icon: Icon, label, value, trend }: {
   icon: React.ElementType
   label: string
   value: string | number
-  trend?: 'up' | 'down' 
+  trend?: 'up' | 'down'
 }) => (
   <div className="bg-white rounded-lg border border-gray-200 p-6 lg:col-span-1">
     <div className="flex items-center text-gray-600 mb-2">
@@ -65,7 +63,7 @@ const StatCard = ({ icon: Icon, label, value, trend }: {
     <div className="flex items-center">
       <span className="text-2xl font-semibold">{value}</span>
       {trend && (
-        trend === 'up' 
+        trend === 'up'
           ? <TrendingUp className="h-5 w-5 ml-2 text-green-500" />
           : <TrendingDown className="h-5 w-5 ml-2 text-red-500" />
       )}
@@ -73,13 +71,13 @@ const StatCard = ({ icon: Icon, label, value, trend }: {
   </div>
 )
 
-const SortButton = ({ 
-  label, 
+const SortButton = ({
+  label,
   icon: Icon,
-  field, 
-  currentField, 
-  direction, 
-  onClick 
+  field,
+  currentField,
+  direction,
+  onClick
 }: {
   label: string
   icon?: React.ElementType
@@ -143,13 +141,13 @@ const InstituteProfilePage = () => {
   }
 
   // Sort data based on current configuration
-  const sortedGrants = [...grants].sort((a, b) => 
-    sortConfig.field === 'value' 
+  const sortedGrants = [...grants].sort((a, b) =>
+    sortConfig.field === 'value'
       ? sortByValue(a, b, sortConfig.direction, 'agreement_value')
       : sortByDate(a, b, sortConfig.direction, 'agreement_start_date')
   )
 
-  const sortedRecipients = [...recipients].sort((a, b) => 
+  const sortedRecipients = [...recipients].sort((a, b) =>
     sortConfig.field === 'value'
       ? sortByValue(a, b, sortConfig.direction, 'total_funding')
       : sortByGrantsCount(a, b, sortConfig.direction)
@@ -173,7 +171,7 @@ const InstituteProfilePage = () => {
                 <span>{institute.city}, {institute.province}</span>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => setIsBookmarked(!isBookmarked)}
               className={clsx(
                 "p-2 h-fit rounded-full transition-colors hover:bg-gray-50",
@@ -182,7 +180,7 @@ const InstituteProfilePage = () => {
                   : "text-gray-400 hover:text-gray-600"
               )}
             >
-              {isBookmarked 
+              {isBookmarked
                 ? <BookmarkCheck className="h-5 w-5" />
                 : <BookmarkPlus className="h-5 w-5" />
               }
@@ -191,19 +189,19 @@ const InstituteProfilePage = () => {
         </div>
 
         {/* Stats Cards */}
-        <StatCard 
-          icon={FileText}
+        <StatCard
+          icon={BookMarked}
           label="Grants"
           value={institute.stats.total_grants.value}
           trend={institute.stats.total_grants.trend}
         />
-        <StatCard 
+        <StatCard
           icon={DollarSign}
           label="Total Funding"
           value={formatCurrency(institute.stats.total_value.value)}
           trend={institute.stats.total_value.trend}
         />
-        <StatCard 
+        <StatCard
           icon={Users}
           label="Recipients"
           value={institute.stats.recipients.value}
@@ -216,25 +214,25 @@ const InstituteProfilePage = () => {
         <h2 className="text-lg font-semibold mb-4">Funding History</h2>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart 
+            <LineChart
               data={institute.funding_history}
               margin={{ top: 10, right: 30, left: 50, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="year" 
+              <XAxis
+                dataKey="year"
                 tickLine={false}
                 axisLine={{ stroke: '#e5e7eb' }}
               />
-              <YAxis 
-                tickFormatter={(value) => `${value/1000000}M`}
+              <YAxis
+                tickFormatter={(value) => `${value / 1000000}M`}
                 tickLine={false}
                 axisLine={{ stroke: '#e5e7eb' }}
                 tick={{ fontSize: 12 }}
                 tickMargin={8}
               />
-              <Tooltip 
-                formatter={(value: number) => [`$${(value/1000000).toFixed(1)}M`, 'Funding']}
+              <Tooltip
+                formatter={(value: number) => [`$${(value / 1000000).toFixed(1)}M`, 'Funding']}
                 contentStyle={{
                   backgroundColor: 'white',
                   border: '1px solid #e5e7eb',
@@ -242,10 +240,10 @@ const InstituteProfilePage = () => {
                   padding: '8px 12px'
                 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#2563eb" 
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="#2563eb"
                 strokeWidth={2}
                 dot={{ fill: '#2563eb', strokeWidth: 2 }}
                 activeDot={{ r: 6 }}
@@ -283,7 +281,7 @@ const InstituteProfilePage = () => {
                 Recipients
               </button>
             </div>
-            
+
             {/* Sort Controls */}
             <div className="flex gap-2">
               {activeTab === 'grants' && (
@@ -299,7 +297,7 @@ const InstituteProfilePage = () => {
               {activeTab === 'recipients' && (
                 <SortButton
                   label="Grants"
-                  icon={FileText}
+                  icon={BookMarked}
                   field="grants_count"
                   currentField={sortConfig.field}
                   direction={sortConfig.direction}
@@ -336,17 +334,17 @@ const InstituteProfilePage = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                  <div className="font-medium">
-                    {formatCurrency(grant.agreement_value)}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    <div className="flex items-end">
-                      <span>{formatDate(grant.agreement_start_date)}</span>
-                      <span className="text-gray-400 mx-1 hidden lg:flex">│</span>
-                      <span className="hidden lg:flex">{formatDate(grant.agreement_end_date)}</span>
+                    <div className="font-medium">
+                      {formatCurrency(grant.agreement_value)}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      <div className="flex items-end">
+                        <span>{formatDate(grant.agreement_start_date)}</span>
+                        <span className="text-gray-400 mx-1 hidden lg:flex">│</span>
+                        <span className="hidden lg:flex">{formatDate(grant.agreement_end_date)}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
                 </div>
               </div>
             ))
@@ -356,7 +354,7 @@ const InstituteProfilePage = () => {
               <div key={recipient.recipient_id} className="p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <Link 
+                    <Link
                       to={`/recipients/${recipient.recipient_id}`}
                       className="text-lg font-medium hover:text-blue-600 transition-colors flex items-center"
                     >

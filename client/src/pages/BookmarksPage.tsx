@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { FileText, University, GraduationCap, Search } from 'lucide-react'
+import { BookMarked, University, GraduationCap, Search } from 'lucide-react'
 import { clsx } from 'clsx'
 
 const tabs = [
-  { name: 'Grants', icon: FileText },
+  { name: 'Grants', icon: BookMarked },
   { name: 'Institutes', icon: University },
   { name: 'Recipients', icon: GraduationCap },
   { name: 'Searches', icon: Search },
