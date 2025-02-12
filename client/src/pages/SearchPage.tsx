@@ -47,7 +47,7 @@ export const SearchPage = () => {
     ...searchParams,
     sortConfig: {
       ...searchParams.sortConfig,
-      field: searchParams.sortConfig.field === 'results' ? 'date' : searchParams.sortConfig.field
+      field: searchParams.sortConfig.field === 'results' ? (() => { throw new Error('Invalid sort field: results') })() : searchParams.sortConfig.field
     }
   })
 
@@ -190,11 +190,16 @@ export const SearchPage = () => {
 
       {/* Results Header with Sort Controls */}
       <div className="flex items-center justify-between border-b pb-2">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center">
-          <h2 className="text-lg font-medium">Search Results</h2>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-0 lg:space-y-1">
+          <h2 className="flex text-lg font-medium">
+            <span className="hidden lg:flex mr-1">Search</span>
+            <span>Results</span>
+          </h2>
           {!isInitialState && !isLoading && (
-            <span className="text-sm text-gray-500 ml-1">
-              ({data?.length || 0} results)
+            <span className="flex text-sm text-gray-500 lg:ml-2">
+              <span className="hidden lg:flex">(</span>
+              <span>{data?.length || 0} results</span>
+              <span className="hidden lg:flex">)</span>
             </span>
           )}
         </div>

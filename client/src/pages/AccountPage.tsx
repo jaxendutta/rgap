@@ -130,7 +130,7 @@ export default function AccountPage() {
             <Card className="p-6 space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-medium">Profile Information</h2>
-                <Button variant="outline" icon={Save}>Save Changes</Button>
+                <Button variant="outline" icon={Save}>Save</Button>
               </div>
               <MockupMessage />
               <div className="grid grid-cols-1 gap-6">
@@ -163,7 +163,7 @@ export default function AccountPage() {
             <Card className="p-6 space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-medium">Security Settings</h2>
-                <Button variant="outline" icon={Save}>Update Password</Button>
+                <Button variant="outline" icon={Save}>Update</Button>
               </div>
               <MockupMessage />
               <div className="space-y-4">
