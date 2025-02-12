@@ -1,6 +1,6 @@
 // src/components/features/grants/SearchForm.tsx
 import React, { useState } from 'react';
-import { Search as SearchIcon, BookmarkPlus, SlidersHorizontal, GraduationCap, University, FileText } from 'lucide-react';
+import { Search as SearchIcon, BookmarkPlus, SlidersHorizontal, GraduationCap, University, BookMarked } from 'lucide-react';
 import { Button } from '@/components/common/ui/Button';
 import { Card } from '@/components/common/ui/Card';
 import { FilterTags } from '@/components/common/ui/FilterTags';
@@ -22,7 +22,7 @@ interface SearchField {
 const searchFields: SearchField[] = [
   { key: 'recipient', icon: GraduationCap, placeholder: 'Search by recipient...' },
   { key: 'institute', icon: University, placeholder: 'Search by institute...' },
-  { key: 'grant', icon: FileText, placeholder: 'Search by grant title...' },
+  { key: 'grant', icon: BookMarked, placeholder: 'Search by grant title...' },
 ];
 
 export const SearchForm = ({ initialValues, onSearch }: SearchFormProps) => {

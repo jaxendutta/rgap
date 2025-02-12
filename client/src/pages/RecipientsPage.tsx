@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookmarkPlus, BookmarkCheck, MapPin, University, FileText, Calendar } from 'lucide-react'
+import { BookmarkPlus, BookmarkCheck, MapPin, University, BookMarked, Calendar } from 'lucide-react'
 import { clsx } from 'clsx'
 import { formatCurrency, formatDate } from '../utils/format'
 import { Recipient, ResearchGrant } from '../types/models'
@@ -89,7 +89,7 @@ export const RecipientsPage = () => {
                 </div>
                 <div className="grid grid-cols-3 items-center text-sm">
                   <div className="font-medium flex items-center">
-                    <FileText className="h-4 w-4 mr-1" />
+                    <BookMarked className="h-4 w-4 mr-1" />
                     {grants.filter(grant => grant.recipient_id === recipient.recipient_id).length}
                   </div>
                   <div className="font-medium">

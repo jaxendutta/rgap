@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { 
-  BookmarkPlus, 
-  BookmarkCheck, 
-  MapPin, 
-  University, 
-  FileText,
+import {
+  BookmarkPlus,
+  BookmarkCheck,
+  MapPin,
+  University,
+  BookMarked,
   DollarSign,
   BarChart2,
   TrendingUp,
@@ -45,16 +45,16 @@ const sortByValue = (a: ResearchGrant, b: ResearchGrant, direction: SortDirectio
 }
 
 // Components
-const StatCard = ({ 
-  icon: Icon, 
-  label, 
-  value, 
-  trend 
-}: { 
+const StatCard = ({
+  icon: Icon,
+  label,
+  value,
+  trend
+}: {
   icon: React.ElementType
   label: string
   value: string | number
-  trend?: 'up' | 'down' 
+  trend?: 'up' | 'down'
 }) => (
   <div className="bg-white rounded-lg border border-gray-200 p-6 lg:col-span-1">
     <div className="flex items-center text-gray-600 mb-2">
@@ -64,7 +64,7 @@ const StatCard = ({
     <div className="flex items-center">
       <span className="text-2xl font-semibold">{value}</span>
       {trend && (
-        trend === 'up' 
+        trend === 'up'
           ? <TrendingUp className="h-5 w-5 ml-2 text-green-500" />
           : <TrendingDown className="h-5 w-5 ml-2 text-red-500" />
       )}
@@ -72,13 +72,13 @@ const StatCard = ({
   </div>
 )
 
-const SortButton = ({ 
-  label, 
+const SortButton = ({
+  label,
   icon: Icon,
-  field, 
-  currentField, 
-  direction, 
-  onClick 
+  field,
+  currentField,
+  direction,
+  onClick
 }: {
   label: string
   icon?: React.ElementType
@@ -139,49 +139,49 @@ export const RecipientProfilePage = () => {
         {/* Profile Card */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 lg:p-6 lg:col-span-1">
           <div className="flex justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">{recipient.legal_name}</h1>
-          <div className="flex items-center text-gray-600">
-            <University className="h-4 w-4 mr-2 flex-shrink-0" />
-            <span>{recipient.research_organization_name}</span>
-          </div>
-          <div className="flex items-center text-gray-600">
-            <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-            <span>{recipient.city}, {recipient.province}</span>
-          </div>
-        </div>
-        <button 
-          onClick={() => setIsBookmarked(!isBookmarked)}
-          className={clsx(
-            "p-2 h-fit rounded-full transition-colors hover:bg-gray-50",
-            isBookmarked
-          ? "text-blue-600 hover:text-blue-700"
-          : "text-gray-400 hover:text-gray-600"
-          )}
-        >
-          {isBookmarked 
-            ? <BookmarkCheck className="h-5 w-5" />
-            : <BookmarkPlus className="h-5 w-5" />
-          }
-        </button>
+            <div className="space-y-1">
+              <h1 className="text-2xl font-semibold">{recipient.legal_name}</h1>
+              <div className="flex items-center text-gray-600">
+                <University className="h-4 w-4 mr-2 flex-shrink-0" />
+                <span>{recipient.research_organization_name}</span>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                <span>{recipient.city}, {recipient.province}</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsBookmarked(!isBookmarked)}
+              className={clsx(
+                "p-2 h-fit rounded-full transition-colors hover:bg-gray-50",
+                isBookmarked
+                  ? "text-blue-600 hover:text-blue-700"
+                  : "text-gray-400 hover:text-gray-600"
+              )}
+            >
+              {isBookmarked
+                ? <BookmarkCheck className="h-5 w-5" />
+                : <BookmarkPlus className="h-5 w-5" />
+              }
+            </button>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <StatCard 
-          icon={FileText}
+        <StatCard
+          icon={BookMarked}
           label="Grants"
           value={filteredGrants(Number(id)).length}
         />
-        <StatCard 
+        <StatCard
           icon={DollarSign}
           label="Total Funding"
           value={formatCurrency(filteredGrants(Number(id)).reduce((acc, g) => acc + g.agreement_value, 0)) || 'N/A'}
         />
-        <StatCard 
+        <StatCard
           icon={BarChart2}
           label="Average Funding"
-          value={filteredGrants(Number(id)).length 
+          value={filteredGrants(Number(id)).length
             ? formatCurrency(filteredGrants(Number(id)).reduce((acc, g) => acc + g.agreement_value, 0) / filteredGrants(Number(id)).length)
             : 'N/A'}
         />
@@ -206,19 +206,19 @@ export const RecipientProfilePage = () => {
               margin={{ top: 10, right: 30, left: 50, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="year" 
+              <XAxis
+                dataKey="year"
                 tickLine={false}
                 axisLine={{ stroke: '#e5e7eb' }}
               />
-              <YAxis 
-                tickFormatter={(value) => `${value/1000}k`}
+              <YAxis
+                tickFormatter={(value) => `${value / 1000}k`}
                 tickLine={false}
                 axisLine={{ stroke: '#e5e7eb' }}
                 tick={{ fontSize: 12 }}
                 tickMargin={8}
               />
-              <Tooltip 
+              <Tooltip
                 formatter={(value: number) => [`$${value.toLocaleString()}`, 'Funding']}
                 contentStyle={{
                   backgroundColor: 'white',
@@ -227,10 +227,10 @@ export const RecipientProfilePage = () => {
                   padding: '8px 12px'
                 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#2563eb" 
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="#2563eb"
                 strokeWidth={2}
                 dot={{ fill: '#2563eb', strokeWidth: 2 }}
                 activeDot={{ r: 6 }}
@@ -271,7 +271,7 @@ export const RecipientProfilePage = () => {
                 <div className="space-y-1">
                   <div className="text-lg font-medium">{grant.agreement_title_en}</div>
                   <div className="text-sm text-gray-500 flex items-center">
-                    <FileText className="h-4 w-4 mr-2 inline-flex-shrink-0" />
+                    <BookMarked className="h-4 w-4 mr-2 inline-flex-shrink-0" />
                     {grant.ref_number} • {grant.org}
                   </div>
                 </div>

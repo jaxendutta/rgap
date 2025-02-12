@@ -2,7 +2,7 @@ import { ResearchGrant } from '@/types/models';
 import { Card } from '@/components/common/ui/Card';
 import { formatCurrency, formatDate } from '@/utils/format';
 import { Link } from 'react-router-dom';
-import { BookmarkPlus, University, FileText, Database, ArrowUpRight, MapPin, Calendar } from 'lucide-react';
+import { BookmarkPlus, University, BookMarked, Database, ArrowUpRight, MapPin, Calendar } from 'lucide-react';
 import { formatSentenceCase } from '@/utils/format';
 
 interface GrantCardProps {
@@ -59,7 +59,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => (
 
           {/* Grant Title */}
           <p className="text-gray-600 flex items-start">
-            <FileText className="flex-shrink-0 h-4 w-4 mt-1 mr-1.5" />
+            <BookMarked className="flex-shrink-0 h-4 w-4 mt-1 mr-1.5" />
             <span className="flex-1">{formatSentenceCase(grant.agreement_title_en)}</span>
           </p>
 

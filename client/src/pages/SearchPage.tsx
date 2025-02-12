@@ -1,6 +1,18 @@
 // src/pages/SearchPage.tsx
 import { useState, useCallback, useEffect } from 'react'
-import { Search as SearchIcon, BookmarkPlus, BookmarkCheck, Calendar, DollarSign, LineChart as ChartIcon, SlidersHorizontal, X } from 'lucide-react'
+import { 
+  Search as SearchIcon, 
+  BookmarkPlus, 
+  BookmarkCheck, 
+  Calendar, 
+  DollarSign, 
+  LineChart as ChartIcon, 
+  SlidersHorizontal, 
+  University,
+  UserRoundSearch,
+  X,
+  FileSearch2
+ } from 'lucide-react'
 import { useGrantSearch } from '@/hooks/api/useGrants'
 import { FilterPanel } from '@/components/features/grants/FilterPanel'
 import { FilterTags } from '@/components/common/ui/FilterTags'
@@ -111,12 +123,12 @@ export const SearchPage = () => {
       {/* Search Fields */}
       <div className="grid gap-4">
         {[
-          { field: 'recipient', placeholder: 'Search by recipient...' },
-          { field: 'institute', placeholder: 'Search by institute...' },
-          { field: 'grant', placeholder: 'Search by grant...' }
-        ].map(({ field, placeholder }) => (
+          { field: 'recipient', icon: UserRoundSearch, placeholder: 'Search by recipient...' },
+          { field: 'institute', icon: University, placeholder: 'Search by institute...' },
+          { field: 'grant', icon: FileSearch2, placeholder: 'Search by grant...' }
+        ].map(({ field, icon: Icon, placeholder }) => (
           <div key={field} className="relative">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="search"
               placeholder={placeholder}

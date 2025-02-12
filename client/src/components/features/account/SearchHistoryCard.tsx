@@ -1,5 +1,5 @@
 // src/components/features/account/SearchHistoryCard.tsx
-import { Search, Calendar, DollarSign, Filter, FileText, GraduationCap, University } from 'lucide-react'
+import { Search, Calendar, DollarSign, Filter, BookMarked, GraduationCap, University } from 'lucide-react'
 import { Button } from '@/components/common/ui/Button'
 import { Card } from '@/components/common/ui/Card'
 import { FilterTag } from '@/components/common/ui/FilterTag'
@@ -30,7 +30,7 @@ export const SearchHistoryCard = ({ search, onRerun }: SearchHistoryCardProps) =
         ? GraduationCap 
         : key === 'institute' 
           ? University 
-          : FileText
+          : BookMarked
     }))
 
   // Filter out empty filter values
@@ -59,7 +59,7 @@ export const SearchHistoryCard = ({ search, onRerun }: SearchHistoryCardProps) =
           <span>{new Date(search.timestamp).toLocaleTimeString()}</span>
         </div>
         <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4" />
+          <BookMarked className="h-4 w-4" />
           <span>{search.results} results</span>
         </div>
       </div>
