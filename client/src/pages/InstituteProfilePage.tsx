@@ -20,9 +20,7 @@ import { formatCurrency, formatDate } from '../utils/format'
 // Data
 // Make a copy of the mock data for now
 import { mock_data, mockInstitutes } from '../test-data/mockdata'
-import { ResearchGrant } from '../types/models'
 const institutes = [...mockInstitutes]
-const mock_grants = [...mock_data.ResearchGrant]
 
 // Types
 type SortField = 'date' | 'value' | 'grants_count'
