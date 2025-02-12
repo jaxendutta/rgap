@@ -25,11 +25,32 @@ export default function AuthPage() {
     setLoading(true)
     
     try {
-      // TODO: Implement actual auth logic
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
-      navigate('/')
-    } catch (err) {
-      setError('Authentication failed. Please try again.')
+      // Implement auth logic
+      if (!isLogin) {
+        // Sign Up mode
+        const response = await fetch('/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name, password })
+        });
+        // Log raw response text for debugging.
+        const rawText = await response.text();
+        console.log('Raw response text:', rawText);
+
+        // If the response text is empty, that explains the hang.
+        if (!rawText) {
+          throw new Error('Empty response from server');
+        }
+        const data = JSON.parse(rawText);
+        console.log('Signup successful:', data);
+        navigate('/');
+      } else {
+        // Sign In mode (logic not shown here)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        navigate('/');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -89,14 +110,8 @@ export default function AuthPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6 relative">
-              {/* Name Field - Animated */}
-              <div 
-                className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                  isLogin 
-                    ? 'opacity-0 translate-y-4 h-0 mb-0' 
-                    : 'opacity-100 translate-y-0 h-[66px] mb-6'
-                }`}
-              >
+              {!isLogin && (
+                <div className="transition-all duration-300 ease-in-out overflow-hidden opacity-100 h-[66px] mb-6">
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   Full Name
                 </label>
@@ -108,12 +123,11 @@ export default function AuthPage() {
                     required={!isLogin}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="block w-full appearance-none rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm"
-                    tabIndex={isLogin ? -1 : 0}
+                    className="block w-full rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm"
                   />
                 </div>
               </div>
-
+              )}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Email address
@@ -127,7 +141,7 @@ export default function AuthPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full appearance-none rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm"
+                    className="block w-full rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm"
                   />
                 </div>
               </div>
@@ -145,7 +159,7 @@ export default function AuthPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full appearance-none rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm pr-10 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden [-webkit-credentials-auto-fill-button:none]"
+                    className="block w-full rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm pr-10"
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3">
                     <button

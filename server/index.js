@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors')
-
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -14,12 +13,12 @@ app.use(cors({
     allowedHeaders: ['Content-Type']
   }))
 
-const PORT = process.env.PORT || 3030;
+const PORT = process.env.PORT || 3031;
 const db = require('./config/db');
 
 // Routes
+app.use('/auth', require('./routes/authRoutes'));
 app.use('/search', require('./routes/searchRoutes'));
-
 app.use('/grant', require('./routes/grantRoutes'));
 app.use('/recepient', require('./routes/recepientRoutes'));
 
