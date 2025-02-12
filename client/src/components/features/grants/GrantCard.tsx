@@ -2,7 +2,8 @@ import { ResearchGrant } from '@/types/models';
 import { Card } from '@/components/common/ui/Card';
 import { formatCurrency, formatDate } from '@/utils/format';
 import { Link } from 'react-router-dom';
-import { BookmarkPlus, University, FileText, Database } from 'lucide-react';
+import { BookmarkPlus, University, FileText, Database, ArrowUpRight, MapPin, Calendar } from 'lucide-react';
+import { formatSentenceCase } from '@/utils/format';
 
 interface GrantCardProps {
   grant: ResearchGrant;
@@ -21,45 +22,85 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => (
     )}
 
     <div className="pr-8">
-      <div className="flex justify-between">
-        <div className="space-y-1 max-w-[63%]">
-          <Link
-            to={`/recipients/${grant.recipient_id}`}
-            className="text-lg font-medium hover:text-blue-600 transition-colors"
-          >
-            {grant.legal_name}
-          </Link>
+      {/* Mobile: Stack vertically, Desktop: Side by side */}
+      <div className="flex flex-col lg:flex-row lg:justify-between gap-2 lg:gap-6">
+        {/* Left Column - Grant Details */}
+        <div className="space-y-1 flex-1 lg:max-w-[80%]">
+          {/* Recipient Name */}
+          <div className="flex items-start justify-between lg:justify-start gap-2">
+            <Link
+              to={`/recipients/${grant.recipient_id}`}
+              className="inline-flex items-start text-lg font-medium hover:text-blue-600 transition-colors gap-1.5 group"
+            >
+              <span className="inline-block">
+                {grant.legal_name}
+                <ArrowUpRight className="inline-block h-4 w-4 ml-1 mb-0.5 opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all" />
+              </span>
+            </Link>
+
+            {/* Show amount on mobile, hidden on desktop */}
+            <div className="lg:hidden">
+              <span className="font-medium text-lg">
+                {formatCurrency(grant.agreement_value)}
+              </span>
+            </div>
+          </div>
+
+          {/* Institution */}
           <Link
             to={`/institutes/${grant.research_organization_name}`}
-            className="flex items-start text-gray-600 hover:text-blue-600 transition-colors"
+            className="inline-flex items-start text-gray-600 hover:text-blue-600 transition-colors group"
           >
-            <University className="flex-shrink-0 h-4 w-4 mt-1 mr-1.5" />
-            {grant.research_organization_name}
+            <University className="inline-block flex-shrink-0 h-4 w-4 mr-1.5 mt-1" />
+            <span className="inline-block">{grant.research_organization_name}
+              <ArrowUpRight className="inline-block h-4 w-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </span>
           </Link>
+
+          {/* Grant Title */}
           <p className="text-gray-600 flex items-start">
             <FileText className="flex-shrink-0 h-4 w-4 mt-1 mr-1.5" />
-            {grant.agreement_title_en}
+            <span className="flex-1">{formatSentenceCase(grant.agreement_title_en)}</span>
           </p>
-          <p className="text-sm text-gray-500 flex items-start">
-            <Database className="flex-shrink-0 h-3 w-3 mt-1 ml-0.5 mr-2" />
-            {grant.ref_number}
-          </p>
+
+          {/* Reference Number & Location - Mobile Only */}
+          <div className="flex flex-col lg:hidden text-sm text-gray-500 pt-1">
+            <div className="flex items-center">
+              <Database className="flex-shrink-0 h-3 w-3 mr-1.5" />
+              {grant.ref_number} • {grant.org}
+            </div>
+            <div className="flex items-center mt-1">
+              <MapPin className="flex-shrink-0 h-3 w-3 mr-1.5" />
+              <span>{formatSentenceCase(grant.city)}, {grant.province}</span>
+              <span className="mx-2">•</span>
+              <Calendar className="flex-shrink-0 h-3 w-3 mr-1.5" />
+              <span>{formatDate(grant.agreement_start_date)}</span>
+            </div>
+          </div>
+
+          {/* Reference Number - Desktop Only */}
+          <div className="hidden lg:block">
+            <p className="text-sm text-gray-500">
+              <Database className="inline-block h-3 w-3 ml-0.5 mr-1.5 mb-1" />
+              {grant.ref_number}
+            </p>
+          </div>
         </div>
-        <div className="text-right max-w-[30%]">
-          <p className="font-medium text-lg">
+
+        {/* Right Column - Hidden on mobile */}
+        <div className="hidden lg:block text-right">
+          <p className="font-medium text-lg mb-1">
             {formatCurrency(grant.agreement_value)}
           </p>
           <p className="text-gray-600">{grant.org}</p>
           <p className="text-sm text-gray-500">
-            {grant.city.charAt(0).toUpperCase() + grant.city.slice(1).toLowerCase()}, {grant.province}
+            <span>{formatSentenceCase(grant.city)}, {grant.province}</span>
           </p>
-          <p className="text-sm text-gray-500">
-            <div className="flex items-end justify-end space-x-2">
-              <span>{formatDate(grant.agreement_start_date)}</span>
-              <span className="hidden lg:flex w-0.5 h-5 bg-gray-300 inline-block"></span>
-              <span className="hidden lg:flex">{formatDate(grant.agreement_end_date)}</span>
-            </div>
-          </p>
+          <div className="text-sm text-gray-500 flex items-center justify-end gap-2">
+            <span>{formatDate(grant.agreement_start_date)}</span>
+            <span className="w-0.5 h-3 bg-gray-200"></span>
+            <span>{formatDate(grant.agreement_end_date)}</span>
+          </div>
         </div>
       </div>
     </div>
