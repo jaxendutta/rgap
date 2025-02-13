@@ -20,6 +20,8 @@ import { cn } from '@/utils/cn'
 import MockupMessage from '../components/common/messages/mockup'
 
 import { mock_searches } from '@/test-data/mockdata'
+import { useAuth } from '@/contexts/AuthContext';
+
 const searches = [...mock_searches]
 
 type SortField = 'date' | 'results'
@@ -34,6 +36,7 @@ const TABS = [
 
 export default function AccountPage() {
   const navigate = useNavigate()
+
   const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('profile')
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -42,14 +45,14 @@ export default function AccountPage() {
     direction: 'desc'
   })
 
-  const userData = {
-    name: 'Demo User',
-    email: 'demo@example.com',
-    created_at: '2025-01-15',
-    searches
+  const { user, logout } = useAuth();
+  // If no user is logged in, redirect to the login page:
+  if (!user) {
+    navigate('/auth');
+    return null;
   }
 
-  const sortedSearches = [...userData.searches].sort((a, b) => {
+  const sortedSearches = [...user.searches].sort((a, b) => {
     if (sortConfig.field === 'date') {
       const dateA = new Date(a.timestamp).getTime()
       const dateB = new Date(b.timestamp).getTime()
@@ -73,8 +76,9 @@ export default function AccountPage() {
   }
 
   const handleLogout = () => {
-    navigate('/')
-  }
+    logout(); // Clear current user data
+    navigate('/');
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-4 lg:p-6 space-y-6">
@@ -140,7 +144,7 @@ export default function AccountPage() {
                   </label>
                   <input
                     type="text"
-                    defaultValue={userData.name}
+                    defaultValue={user.name}
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                   />
                 </div>
@@ -150,7 +154,7 @@ export default function AccountPage() {
                   </label>
                   <input
                     type="email"
-                    defaultValue={userData.email}
+                    defaultValue={user.email}
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                   />
                 </div>

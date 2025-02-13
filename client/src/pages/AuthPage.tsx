@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AuthFormProps {
   email: string
@@ -19,6 +20,7 @@ export default function AuthPage() {
   
   const navigate = useNavigate()
 
+  const { login } = useAuth();
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
@@ -28,21 +30,22 @@ export default function AuthPage() {
       // Implement auth logic
       if (!isLogin) {
         // Sign Up mode
-        const response = await fetch('/auth/signup', {
+        const response = await fetch('http://localhost:3030/auth/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, name, password })
         });
-        // Log raw response text for debugging.
-        const rawText = await response.text();
-        console.log('Raw response text:', rawText);
-
-        // If the response text is empty, that explains the hang.
-        if (!rawText) {
-          throw new Error('Empty response from server');
+        
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.message || 'Signup failed');
         }
-        const data = JSON.parse(rawText);
+        const data = await response.json();
         console.log('Signup successful:', data);
+        
+        // Update AuthContext with new user data
+        login({ user_id: data.user_id, email: data.email, name: data.name, searches: [] });
+
         navigate('/');
       } else {
         // Sign In mode (logic not shown here)
