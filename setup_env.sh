@@ -133,7 +133,7 @@ setup_node() {
         # Only try to upgrade if we got a valid version
         if [ "$current_version" != "unknown" ]; then
             # Use curl to get the latest version number
-            latest_version=$(curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+            latest_version=$(curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
             
             if [ "$current_version" != "$latest_version" ]; then
                 print "  ${BLUE}Upgrading nvm $current_version -> $latest_version${NC}"
