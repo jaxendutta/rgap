@@ -1,9 +1,10 @@
 import axios from 'axios';
+import portConfig from '../../../../config/ports.json';
 
-const url = 'http://localhost:3000';
+const url = process.env.VITE_API_URL || `http://localhost:${portConfig.defaults.server}`;
 const API = axios.create({
-  baseURL: url,
-  timeout: 5000,
+    baseURL: url,
+    timeout: 5000,
 });
 
 // Error interceptor

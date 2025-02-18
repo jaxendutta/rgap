@@ -4,110 +4,247 @@
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 RED='\033[0;31m'
+YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Check if virtual environment is activated
-if [[ -z "${VIRTUAL_ENV}" ]]; then
-    echo -e "${RED}Error: Virtual environment not activated!${NC}"
-    echo -e "${BLUE}Please run 'source setup_env.sh' first.${NC}"
-    exit 1
-fi
-
-# Get script directory
+# Get script directory (project root)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Function to wait for MySQL to be ready
-wait_for_mysql() {
-    echo -e "${BLUE}Waiting for MySQL to be ready...${NC}"
-    for i in {1..30}; do
-        if [ -S "$SCRIPT_DIR/mysql/run/mysql.sock" ] &&
-            mysql -u rgap_user -p12345 --socket="$SCRIPT_DIR/mysql/run/mysql.sock" -e "SELECT 1" >/dev/null 2>&1; then
-            echo -e "${GREEN}MySQL is ready!${NC}"
-            return 0
-        fi
-        echo -n "."
-        sleep 1
-    done
-    echo -e "\n${RED}MySQL failed to start!${NC}"
-    return 1
-}
-
-# Clean up function
+# Function to clean up processes and files
 cleanup() {
-    echo -e "\n${BLUE}Checking for old processes...${NC}"
-    if pgrep -f "$SCRIPT_DIR/mysql" >/dev/null || pgrep -f "$SCRIPT_DIR/server" >/dev/null || pgrep -f "$SCRIPT_DIR/client" >/dev/null; then
-        echo -e "${RED}Warning: There are existing server processes running:${NC}"
-        pgrep -af "$SCRIPT_DIR/mysql"
-        pgrep -af "$SCRIPT_DIR/server"
-        pgrep -af "$SCRIPT_DIR/client"
-        echo -e "${BLUE}To kill a process, use the following command:${NC}"
-        echo -e "${GREEN}kill -9 <PID>${NC}\n"
-        echo -e "${BLUE}We will try cleaning these up for you, but incase we fail, please help us out by killing them yourself!${NC}"
-        echo -e "${RED}If you are using VS Code, navigate to the PORTS Tab and manage your currently running ports.${NC}\n"
-        return 1
-    else
-        echo -e "${GREEN}No old processes found. You're good to go!${NC}"
-        return 0
+    local force=$1
+    echo -e "\n${BLUE}Cleaning up...${NC}"
+    
+    # Kill processes using PID files
+    if [ -f "$SCRIPT_DIR/.client.pid" ]; then
+        kill -9 $(cat "$SCRIPT_DIR/.client.pid") 2>/dev/null
+        rm "$SCRIPT_DIR/.client.pid"
     fi
+    if [ -f "$SCRIPT_DIR/.server.pid" ]; then
+        kill -9 $(cat "$SCRIPT_DIR/.server.pid") 2>/dev/null
+        rm "$SCRIPT_DIR/.server.pid"
+    fi
+    
+    # Stop MySQL if it's running
+    if [ -f "$USER_MYSQL_DIR/stop.sh" ]; then
+        "$USER_MYSQL_DIR/stop.sh"
+    fi
+    
+    # Force kill any remaining processes if requested
+    if [ "$force" = "force" ]; then
+        echo -e "${YELLOW}Force killing any remaining processes...${NC}"
+        pkill -f "node.*$SCRIPT_DIR" 2>/dev/null
+        pkill -f "$USER_MYSQL_DIR" 2>/dev/null
+    fi
+    
+    # Clean up socket and pid files
+    rm -f "$MYSQL_SOCKET" "$USER_MYSQL_DIR/run/mysql.pid" 2>/dev/null
+    
+    # Clean up port config file
+    rm -f "$SCRIPT_DIR/config/.port-config.json" 2>/dev/null
+    
+    echo -e "${GREEN}Cleanup complete${NC}"
 }
 
-# Start MySQL
-echo -e "${BLUE}Starting MySQL...${NC}"
-cleanup
-cd "$SCRIPT_DIR/mysql"
-rm -f run/mysql.sock run/mysql.pid
-mkdir -p run
-chmod 777 run data
-./start.sh
-if ! wait_for_mysql; then
-    cleanup
+# Handle script exit
+trap 'cleanup force' SIGINT SIGTERM ERR
+
+# Check if environment is set up
+if [[ -z "${MYSQL_DIR}" ]]; then
+    echo -e "${RED}Error: Environment not set up. Please run 'source setup_env.sh' first.${NC}"
     exit 1
 fi
 
-# Export MySQL socket path for the server
-export MYSQL_SOCKET="$SCRIPT_DIR/mysql/run/mysql.sock"
+# Get user-specific MySQL directory
+USER=$(whoami)
+USER_MYSQL_DIR="$MYSQL_DIR/users/$USER"
+MYSQL_SOCKET="$USER_MYSQL_DIR/run/mysql.sock"
 
-# Start server in background
+# Cleanup any existing processes and files
+cleanup force
+
+# Check if MySQL is set up
+if [ ! -d "$USER_MYSQL_DIR" ]; then
+    echo -e "${YELLOW}MySQL not set up. Running setup_mysql.sh...${NC}"
+    ./setup_mysql.sh
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}MySQL setup failed. Please check the errors and try again.${NC}"
+        cleanup force
+        exit 1
+    fi
+fi
+
+# Install dependencies
+echo -e "${BLUE}Installing dependencies...${NC}"
+
+# Server dependencies
+echo -e "${BLUE}Installing server dependencies...${NC}"
+cd "$SCRIPT_DIR/server"
+npm install
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed to install server dependencies${NC}"
+    cleanup force
+    exit 1
+fi
+
+# Client dependencies
+echo -e "${BLUE}Installing client dependencies...${NC}"
+cd "$SCRIPT_DIR/client"
+npm install
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed to install client dependencies${NC}"
+    cleanup force
+    exit 1
+fi
+
+cd "$SCRIPT_DIR"
+
+# Get available ports
+echo -e "${BLUE}Finding available ports...${NC}"
+
+# Create temporary port finding script
+cat > temp_port_script.js << 'EOF'
+const { findAvailablePorts } = require('./config/ports');
+findAvailablePorts()
+  .then(ports => {
+    console.log(JSON.stringify(ports));
+  })
+  .catch(err => {
+    console.error('Error finding ports:', err);
+    process.exit(1);
+  });
+EOF
+
+PORT_CONFIG=$(node temp_port_script.js)
+rm temp_port_script.js
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed to find available ports!${NC}"
+    cleanup force
+    exit 1
+fi
+
+# Parse ports from JSON
+CLIENT_PORT=$(echo "$PORT_CONFIG" | jq -r '.client')
+SERVER_PORT=$(echo "$PORT_CONFIG" | jq -r '.server')
+MYSQL_PORT=$(echo "$PORT_CONFIG" | jq -r '.database')
+
+# Validate ports
+if [[ -z "$CLIENT_PORT" || -z "$SERVER_PORT" || -z "$MYSQL_PORT" ]]; then
+    echo -e "${RED}Failed to get valid ports!${NC}"
+    cleanup force
+    exit 1
+fi
+
+# Display port information
+echo -e "\n${YELLOW}=== RGAP Service Ports ===${NC}"
+echo -e "${YELLOW}⚠️  NOTE: These ports may be different from previous runs!${NC}"
+echo -e "📝 Port configuration saved at: ${BLUE}$SCRIPT_DIR/config/.port-config.json${NC}\n"
+echo -e "🗄️ SQL_DB: ${GREEN}localhost:$MYSQL_PORT${NC}"
+echo -e "🚀 Server: ${GREEN}http://localhost:$SERVER_PORT${NC}"
+echo -e "🌐 Client: ${GREEN}http://localhost:$CLIENT_PORT${NC}\n"
+
+# Start MySQL with specific port
+echo -e "${BLUE}Starting MySQL for user $USER on port $MYSQL_PORT...${NC}"
+sed -i "s/^port = .*/port = $MYSQL_PORT/" "$USER_MYSQL_DIR/my.cnf"
+"$USER_MYSQL_DIR/start.sh"
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed to start MySQL. Check the logs for details.${NC}"
+    cleanup force
+    exit 1
+fi
+
+# Wait for MySQL to be ready
+echo -e "${BLUE}Waiting for MySQL to be ready...${NC}"
+max_attempts=30
+attempt=0
+while [ $attempt -lt $max_attempts ]; do
+    if [ -S "$MYSQL_SOCKET" ]; then
+        # First try root connection
+        if mysql -u root --socket="$MYSQL_SOCKET" -e "SELECT 1" &>/dev/null; then
+            echo -e "${GREEN}MySQL is ready for initial setup!${NC}"
+            break
+        fi
+        # Then try rgap_user connection
+        if mysql -u rgap_user -p12345 --socket="$MYSQL_SOCKET" -e "SELECT 1" &>/dev/null; then
+            echo -e "${GREEN}MySQL is ready with rgap_user!${NC}"
+            break
+        fi
+    fi
+    attempt=$((attempt + 1))
+    if [ $attempt -eq $max_attempts ]; then
+        echo -e "${RED}\nMySQL failed to start! Checking error log:${NC}"
+        cat "$USER_MYSQL_DIR/log/error.log"
+        cleanup force
+        exit 1
+    fi
+    echo -n "."
+    sleep 1
+done
+
+# Set up database
+echo -e "${BLUE}Setting up database...${NC}"
+./setup_db.sh
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Database setup failed. Check the errors and try again.${NC}"
+    cleanup force
+    exit 1
+fi
+
+# Export environment variables
+export MYSQL_SOCKET
+export CLIENT_PORT
+export SERVER_PORT
+export MYSQL_PORT
+
+# Start server
 echo -e "${BLUE}Starting server...${NC}"
 cd "$SCRIPT_DIR/server"
-if [ ! -d "node_modules" ]; then
-    npm install
-fi
-
-# Start server with explicit environment variables
-MYSQL_SOCKET="$SCRIPT_DIR/mysql/run/mysql.sock" \
-    DB_HOST="127.0.0.1" \
-    DB_PORT="7272" \
-    DB_USER="rgap_user" \
-    DB_PASSWORD="12345" \
-    DB_NAME="rgap" \
-    PORT="3030" \
-    npm run dev &
+PORT="$SERVER_PORT" \
+DB_PORT="$MYSQL_PORT" \
+DB_HOST="127.0.0.1" \
+DB_USER="rgap_user" \
+DB_PASSWORD="12345" \
+DB_NAME="rgap" \
+MYSQL_SOCKET="$MYSQL_SOCKET" \
+npm run dev &
 SERVER_PID=$!
-sleep 5 # Wait for server to start
+echo $SERVER_PID > "$SCRIPT_DIR/.server.pid"
 
-# Start client in background
+# Wait for server to start
+echo -e "${BLUE}Waiting for server to start...${NC}"
+attempt=0
+while [ $attempt -lt 30 ]; do
+    if curl -s http://localhost:$SERVER_PORT/health >/dev/null; then
+        echo -e "${GREEN}Server is ready!${NC}"
+        break
+    fi
+    attempt=$((attempt + 1))
+    if [ $attempt -eq 30 ]; then
+        echo -e "${RED}\nServer failed to start!${NC}"
+        cleanup force
+        exit 1
+    fi
+    sleep 1
+done
+
+# Start client
 echo -e "${BLUE}Starting client...${NC}"
 cd "$SCRIPT_DIR/client"
-if [ ! -d "node_modules" ]; then
-    npm install
-fi
-PORT="3000" npm run dev &
+VITE_API_URL="http://localhost:$SERVER_PORT" \
+PORT="$CLIENT_PORT" npm run dev &
 CLIENT_PID=$!
+echo $CLIENT_PID > "$SCRIPT_DIR/.client.pid"
 
 echo -e "${GREEN}Application started successfully!${NC}"
-echo -e "${BLUE}Access the application at:${NC}"
-echo -e "  MySQL: localhost:7272"
-echo -e "  Backend API: http://localhost:3030"
-echo -e "  Frontend Client: http://localhost:3000"
+echo -e "${BLUE}Opening client in your default browser...${NC}"
+sleep 3
+xdg-open "http://localhost:$CLIENT_PORT" 2>/dev/null || open "http://localhost:$CLIENT_PORT" 2>/dev/null || echo -e "${YELLOW}Couldn't open browser automatically. Please open http://localhost:$CLIENT_PORT manually.${NC}"
 
 echo
 echo -e "${BLUE}To stop the application:${NC}"
 echo -e "  1. Press Ctrl+C"
-echo -e "  2. Run '$SCRIPT_DIR/mysql/stop.sh'"
+echo -e "  2. Run cleanup script (will be done automatically on Ctrl+C)"
 
-# Handle cleanup on script termination
-trap 'cleanup' SIGINT SIGTERM
-
-# Keep script running
+# Keep script running and handle cleanup on exit
 wait

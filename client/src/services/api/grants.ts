@@ -1,10 +1,11 @@
 import axios from 'axios';
 import { ResearchGrant } from '@/types/models';
 import { DEFAULT_FILTER_STATE } from '@/constants/filters';
+import portConfig from '../../../../config/ports.json';
 
 const API = axios.create({
-  baseURL: 'http://localhost:3030',
-  timeout: 15000,
+    baseURL: process.env.VITE_API_URL || `http://localhost:${portConfig.defaults.server}`,
+    timeout: 15000,
 });
 
 export interface GrantSearchParams {

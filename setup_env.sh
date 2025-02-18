@@ -107,28 +107,28 @@ log_with_no_color() {
 
 # Function to upgrade pip if needed
 upgrade_pip() {
-    print "${BLUE}Checking for pip upgrades...${NC}"
+    print "${BLUE}=> Checking for pip upgrades...${NC}"
     current_version=$(pip --version | awk '{print $2}')
     pip install --upgrade pip --quiet
     new_version=$(pip --version | awk '{print $2}')
     if [ "$current_version" != "$new_version" ]; then
-        print "  ${GREEN}Successfully upgraded pip $current_version -> $new_version${NC}"
+        print "   ${GREEN}Successfully upgraded pip $current_version -> $new_version${NC}"
     else
-        print "  ${BLUE}No upgrades pushed to pip. Current version: $current_version${NC}"
+        print "   ${GREEN}pip is up to date ($current_version)${NC}"
     fi
 }
 
 # Function to set up Node.js
 setup_node() {
-    print "${BLUE}Setting up Node.js toolchain...${NC}"
+    print "${BLUE}=> Setting up Node.js toolchain...${NC}"
     
     # Check if nvm is installed
     if [ -d "$HOME/.nvm" ]; then
-        print "  ${BLUE}Found existing nvm installation${NC}"
+        print "   ${GREEN}Found existing nvm installation${NC}"
         
         # Upgrade nvm itself
-        print "  ${BLUE}Checking for nvm updates...${NC}"
-        current_version=$(nvm --version 2>/dev/null || echo "unknown")
+        print "   ${BLUE}=> Checking for nvm updates...${NC}"
+        current_version=$(nvm --version 2>/dev/null || echo "Unknown!")
         
         # Only try to upgrade if we got a valid version
         if [ "$current_version" != "unknown" ]; then
@@ -136,14 +136,17 @@ setup_node() {
             latest_version=$(curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
             
             if [ "$current_version" != "$latest_version" ]; then
-                print "  ${BLUE}Upgrading nvm $current_version -> $latest_version${NC}"
+                print "      ${BLUE}Upgrading nvm $current_version -> $latest_version${NC}"
                 curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/$latest_version/install.sh" | bash
             else
-                print "  ${BLUE}nvm is up to date ($current_version)${NC}"
+                print "      ${GREEN}nvm is up to date ($current_version)${NC}"
             fi
+        else
+            print "      ${RED}Unexpected outcome. Current nvm version: $current_version${NC}"
+            return 1
         fi
     else
-        print "  ${BLUE}Installing nvm...${NC}"
+        print "${BLUE}=> Installing nvm...${NC}"
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
     fi
     
@@ -154,7 +157,7 @@ setup_node() {
     # Check Node.js and upgrade if needed
     if command -v node > /dev/null; then
         current_version=$(node -v)
-        print "  ${BLUE}Checking for Node.js updates...${NC}"
+        print "   ${BLUE}=> Checking for Node.js updates...${NC}"
         
         # Get the latest LTS version without the 'v' prefix
         latest_version=$(nvm version-remote --lts | sed 's/v//')
@@ -162,15 +165,15 @@ setup_node() {
         
         # Version comparison
         if [ "$current_version" != "$latest_version" ]; then
-            print "  ${BLUE}Upgrading Node.js v$current_version -> v$latest_version${NC}"
+            print "      ${BLUE}Upgrading Node.js v$current_version -> v$latest_version${NC}"
             nvm install --lts --reinstall-packages-from=current --latest-npm
             nvm use --lts
             nvm alias default "lts/*"
         else
-            print "  ${BLUE}Node.js is up to date (v$current_version)${NC}"
+            print "      ${GREEN}Node.js is up to date (v$current_version)${NC}"
         fi
     else
-        print "  ${BLUE}Installing Node.js LTS...${NC}"
+        print "   => ${BLUE}Installing Node.js LTS...${NC}"
         nvm install --lts --latest-npm
         nvm use --lts
         nvm alias default "lts/*"
@@ -179,30 +182,30 @@ setup_node() {
     # Check npm and upgrade if needed
     if command -v npm > /dev/null; then
         current_version=$(npm -v)
-        print "  ${BLUE}Checking for npm updates...${NC}"
+        print "   ${BLUE}=> Checking for npm updates...${NC}"
         latest_version=$(npm view npm version 2>/dev/null)
         
         if [ "$current_version" != "$latest_version" ]; then
-            print "  ${BLUE}Upgrading npm $current_version -> $latest_version${NC}"
+            print "      ${BLUE}Upgrading npm $current_version -> $latest_version${NC}"
             npm install -g npm@latest
         else
-            print "  ${BLUE}npm is up to date ($current_version)${NC}"
+            print "      ${GREEN}npm is up to date ($current_version)${NC}"
         fi
     else
-        print "  ${RED}npm not found after Node.js installation${NC}"
+        print "      ${RED}npm not found after Node.js installation${NC}"
         return 1
     fi
     
-    print "${GREEN}Node.js toolchain setup complete!${NC}"
+    print "${GREEN}   Node.js toolchain setup complete!${NC}"
 }
 
 # Setup portion with both terminal output and logging
 {
-    print "${BLUE}\nChecking RGAP development environment...${NC}"
+    print "${BLUE}\n=> Checking RGAP development environment...${NC}"
 
     # Create virtual environment if it doesn't exist
     if ! check_venv; then
-        print "${BLUE}Creating new virtual environment...${NC}"
+        print "${BLUE}   => Creating new virtual environment...${NC}"
         python -m venv "$VENV_PATH"
         
         if [ $? -ne 0 ]; then
@@ -211,11 +214,16 @@ setup_node() {
         fi
     fi
 
-    print "${GREEN}Environment check completed successfully!${NC}"
+    print "${GREEN}   Environment check completed successfully!${NC}"
 } 2>&1 | tee >(log_with_no_color >> $LOG_FILE)
 
-# Setup MySQL path
-export PATH="$SCRIPT_DIR/mysql/mysql-8.0.36-linux-glibc2.28-x86_64/bin:$PATH"
+# Export MySQL related paths
+export MYSQL_DIR="$SCRIPT_DIR/mysql"
+export MYSQL_VERSION="mysql-8.0.36-linux-glibc2.28-x86_64"
+export MYSQL_BIN="$MYSQL_DIR/$MYSQL_VERSION/bin"
+
+# Source port configuration
+source "$SCRIPT_DIR/config/get_port_config.sh"
 
 # Now execute activation
 if ! check_venv; then
@@ -223,7 +231,7 @@ if ! check_venv; then
     return 1
 fi
 
-print "${BLUE}  Activating RGAP Virtual Environment...${NC}"
+print "${BLUE}=> Activating RGAP Virtual Environment...${NC}"
 source "$VENV_PATH/bin/activate"
 
 # Add environment info to PS1 if not already there
@@ -232,7 +240,7 @@ if [[ $PS1 != *"RGAP"* ]]; then
     export PS1="(RGAP) $PS1"
 fi
 
-print "${GREEN}  Activated. You're now in the RGAP Virtual Environment!${NC}"
+print "${GREEN}   Activated. You're now in the RGAP Virtual Environment!${NC}"
 
 # Upgrade pip
 upgrade_pip
@@ -247,21 +255,29 @@ fi
 
 # Install RGAP package in development mode
 {
-    print "${BLUE}Installing RGAP package in development mode...${NC}"
-    pip install -e . 2>&1
+    print "${BLUE}=> Installing RGAP package in development mode...${NC}"
+    pip install -e . --quiet 2>&1
     pip_exit_code=$?
+    
+    if [ $pip_exit_code -ne 0 ]; then
+        print "${RED}Error occurred while installing RGAP package.${NC}"
+    fi
     
     if [ $pip_exit_code -ne 0 ]; then
         cleanup_on_error
         return 1
     fi
-    print "${GREEN}  RGAP project package installed successfully!${NC}"
+    print "${GREEN}   RGAP project package installed successfully!${NC}"
 } 2>&1 | tee >(log_with_no_color >> $LOG_FILE)
 
 print "${BLUE}\nTo set-up the RGAP Virtual Environment in any terminal, run this script again:${NC}"
 print "  source $(basename "${BASH_SOURCE[0]}")\n"
 
-print "${BLUE}Run './setup_app.sh' to start the application${NC}"
+print "${GREEN}Environment setup complete!${NC}"
+print "${BLUE}You can now run:"
+print "  1.${NC} source setup_env.sh ${BLUE}(to activate the virtual environment on the terminal)"
+print "  2.${NC} ./setup_mysql.sh    ${BLUE}(to install and setup MySQL 8.0.36 for Linux -> first time only)"
+print "  3.${NC} ./setup_app.sh      ${BLUE}(to start the application)\n"
 
 # Calculate and display execution time
 print_time_taken

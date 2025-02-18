@@ -1,12 +1,18 @@
 // server/controllers/searchController.js
-const pool = require('../config/db');
+const pool = require("../config/db");
 
 const searchGrants = async (req, res) => {
-  try {
-    const { searchTerms = {}, filters = {}, sortConfig = {} } = req.body;
-    const params = [];
-    
-    let query = `
+    console.log("Received search request:", {
+        searchTerms: req.body.searchTerms,
+        filters: req.body.filters,
+        sortConfig: req.body.sortConfig,
+    });
+
+    try {
+        const { searchTerms = {}, filters = {}, sortConfig = {} } = req.body;
+        const params = [];
+
+        let query = `
       SELECT DISTINCT
         rg.grant_id,
         rg.ref_number,
@@ -26,82 +32,90 @@ const searchGrants = async (req, res) => {
       WHERE 1=1
     `;
 
-    // Search terms
-    if (searchTerms.recipient) {
-      query += ` AND r.legal_name LIKE ?`;
-      params.push(`%${searchTerms.recipient}%`);
-    }
-    if (searchTerms.institute) {
-      query += ` AND r.research_organization_name LIKE ?`;
-      params.push(`%${searchTerms.institute}%`);
-    }
-    if (searchTerms.grant) {
-      query += ` AND rg.agreement_title_en LIKE ?`;
-      params.push(`%${searchTerms.grant}%`);
-    }
+        // Search terms
+        if (searchTerms.recipient) {
+            query += ` AND r.legal_name LIKE ?`;
+            params.push(`%${searchTerms.recipient}%`);
+        }
+        if (searchTerms.institute) {
+            query += ` AND r.research_organization_name LIKE ?`;
+            params.push(`%${searchTerms.institute}%`);
+        }
+        if (searchTerms.grant) {
+            query += ` AND rg.agreement_title_en LIKE ?`;
+            params.push(`%${searchTerms.grant}%`);
+        }
 
-    // Year range filter
-    if (filters.yearRange?.start && filters.yearRange?.end) {
-      query += ` AND YEAR(rg.agreement_start_date) BETWEEN ? AND ?`;
-      params.push(filters.yearRange.start, filters.yearRange.end);
-    }
+        // Year range filter (with defaults)
+        query += ` AND YEAR(rg.agreement_start_date) BETWEEN ? AND ?`;
+        params.push(
+            filters.yearRange?.start || 1900,
+            filters.yearRange?.end || 2025
+        );
 
-    // Value range filter
-    if (filters.valueRange?.min || filters.valueRange?.max) {
-      if (filters.valueRange.min) {
-        query += ` AND rg.agreement_value >= ?`;
-        params.push(filters.valueRange.min);
-      }
-      if (filters.valueRange.max) {
+        // Value range filter (with default max)
         query += ` AND rg.agreement_value <= ?`;
-        params.push(filters.valueRange.max);
-      }
-    }
+        params.push(filters.valueRange?.max || 200000000);
 
-    // Array filters
-    if (filters.agencies?.length) {
-      query += ` AND o.abbreviation IN (?)`;
-      params.push(filters.agencies);
-    }
-    if (filters.countries?.length) {
-      query += ` AND r.country IN (?)`;
-      params.push(filters.countries);
-    }
-    if (filters.provinces?.length) {
-      query += ` AND r.province IN (?)`;
-      params.push(filters.provinces);
-    }
-    if (filters.cities?.length) {
-      query += ` AND r.city IN (?)`;
-      params.push(filters.cities);
-    }
+        // Array filters
+        if (filters.agencies?.length) {
+            query += ` AND o.abbreviation IN (?)`;
+            params.push(filters.agencies);
+        }
+        if (filters.countries?.length) {
+            query += ` AND r.country IN (?)`;
+            params.push(filters.countries);
+        }
+        if (filters.provinces?.length) {
+            query += ` AND r.province IN (?)`;
+            params.push(filters.provinces);
+        }
+        if (filters.cities?.length) {
+            query += ` AND r.city IN (?)`;
+            params.push(filters.cities);
+        }
 
-    // Sorting
-    const validSortFields = {
-      date: 'rg.agreement_start_date',
-      value: 'rg.agreement_value'
-    };
+        // Sorting (with default)
+        const sortField =
+            sortConfig.field === "value"
+                ? "rg.agreement_value"
+                : "rg.agreement_start_date";
+        const sortDir = sortConfig.direction === "asc" ? "ASC" : "DESC";
+        query += ` ORDER BY ${sortField} ${sortDir}`;
 
-    if (sortConfig.field && validSortFields[sortConfig.field]) {
-      query += ` ORDER BY ${validSortFields[sortConfig.field]} ${sortConfig.direction === 'asc' ? 'ASC' : 'DESC'}`;
+        console.log("\nExecuting query:", query);
+        console.log("With parameters:", params);
+
+        const [results] = await pool.query(query, params);
+        console.log(`Query returned ${results.length} results`);
+
+        if (results.length === 0) {
+            console.log("No results found with these parameters");
+        } else {
+            console.log("First result:", results[0]);
+        }
+
+        res.json({
+            message: "Success",
+            data: results,
+            metadata: {
+                count: results.length,
+                filters: filters,
+                searchTerms: searchTerms,
+            },
+        });
+    } catch (error) {
+        console.error("Search error:", error);
+        res.status(500).json({
+            error: error.message,
+            query: req.body,
+        });
     }
-
-    console.log('Query:', query);
-    console.log('Params:', params);
-
-    const [results] = await pool.query(query, params);
-    res.json({ message: "Success", data: results });
-
-  } catch (error) {
-    console.error('Search error:', error);
-    res.status(500).json({ error: error.message });
-  }
 };
 
-// Get unique values for filter options
 const getFilterOptions = async (req, res) => {
-  try {
-    const [results] = await pool.query(`
+    try {
+        const [results] = await pool.query(`
       SELECT 
       JSON_OBJECT(
         'agencies', (SELECT JSON_ARRAYAGG(DISTINCT abbreviation) FROM Organization),
@@ -110,12 +124,13 @@ const getFilterOptions = async (req, res) => {
         'cities', (SELECT JSON_ARRAYAGG(DISTINCT city) FROM Recipient WHERE city IS NOT NULL)
       ) as options
     `);
-    
-    res.json(results[0].options);
-  } catch (error) {
-    console.error('Error fetching filter options:', error);
-    res.status(500).json({ error: error.message });
-  }
+
+        console.log("Filter options:", results[0].options);
+        res.json(results[0].options);
+    } catch (error) {
+        console.error("Error fetching filter options:", error);
+        res.status(500).json({ error: error.message });
+    }
 };
 
 module.exports = { searchGrants, getFilterOptions };

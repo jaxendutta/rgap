@@ -18,9 +18,13 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "config/*": ["../config/*"]
     }
   },
-  "include": ["src"],
+  "include": [
+    "src",
+    "../config/ports.d.ts"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

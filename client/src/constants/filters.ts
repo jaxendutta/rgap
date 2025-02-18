@@ -5,7 +5,7 @@ export const FILTER_LIMITS = {
         DEFAULT_STEP: 1000,
     },
     YEAR: {
-        MIN: 1900,
+        MIN: 1990,
         MAX: new Date().getFullYear(),
         DEFAULT_STEP: 1,
     },

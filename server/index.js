@@ -1,65 +1,81 @@
-const express = require('express');
-const cors = require('cors')
-
-const dotenv = require('dotenv');
-dotenv.config();
+const express = require("express");
+const cors = require("cors");
+const { config } = require("../config/ports");
+const pool = require("./config/db");
 
 const app = express();
 
-// Middleware
-app.use(express.json());
-app.use(cors({
-    origin: 'http://localhost:3000',
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type']
-  }))
+// Enhanced CORS configuration
+app.use(
+    cors({
+        origin: [
+            `http://localhost:${
+                process.env.CLIENT_PORT || config.defaults.client
+            }`,
+            "http://localhost:3000", // Default React port
+            "http://127.0.0.1:3000", // Alternative localhost
+        ],
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        credentials: true,
+    })
+);
 
-const PORT = process.env.PORT || 3030;
-const db = require('./config/db');
+// Body parsing middleware
+app.use(express.json());
+
+// Basic health check endpoint
+app.get("/health", (req, res) => {
+    res.json({ status: "ok" });
+});
 
 // Routes
-app.use('/search', require('./routes/searchRoutes'));
+app.use("/search", require("./routes/searchRoutes"));
+app.use("/grants", require("./routes/grantRoutes"));
+app.use("/recipients", require("./routes/recepientRoutes"));
 
-app.use('/grant', require('./routes/grantRoutes'));
-app.use('/recepient', require('./routes/recepientRoutes'));
-
-
-app.get('/', (req, res) => {
-  res.send(`
-    <h1>Welcome to the RGAP Server</h1>
-    <p>This server provides the following endpoints:</p>
-    <ul>
-      <li><strong>GET /search</strong> - Search for grants and recepients</li>
-      <li> ... more coming soon!</li>
-    </ul>
-    <p>Use the above endpoints to interact with the RGAP application.</p>
-    <h2>Example Usage:</h2>
-    <h3>1. Get all grants</h3>
-    This fetches all grants from the database:
-    <pre><code>
-    curl -X GET http://localhost:3030/search/all
-    </code></pre>
-
-    <h3>2. Search for filtered grants </h3>
-    This fetches grats where the reserach prganization / institution associated had "waterloo" in its name:
-    <pre><code>
-    curl -X POST http://localhost:3030/search \\
-    -H "Content-Type: application/json" \\
-    -d '{"searchTerms":{"institute":"waterloo"},"filters":{},"sortConfig":{"field":"date","direction":"desc"}}'
-    </code></pre>
-  `);
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({
+        error: "Something went wrong!",
+        message: err.message,
+    });
 });
+
+const PORT = process.env.PORT || config.defaults.server;
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
+    console.log(
+        `Client expected at http://localhost:${
+            process.env.CLIENT_PORT || config.defaults.client
+        }`
+    );
 });
 
-// Debugging
-app.use((req, res, next) => {
-    console.log('Received request:', {
-      method: req.method,
-      path: req.path,
-      body: req.body
-    });
-    next();
+app.get("/", (req, res) => {
+    const serverPort = process.env.PORT || DEFAULTS.server;
+    res.send(`
+        <h1>Welcome to the RGAP Server</h1>
+        <p>This server provides the following endpoints:</p>
+        <ul>
+            <li><strong>GET /search</strong> - Search for grants and recepients</li>
+            <li> ... more coming soon!</li>
+        </ul>
+        <p>Use the above endpoints to interact with the RGAP application.</p>
+        <h2>Example Usage:</h2>
+        <h3>1. Get all grants</h3>
+        This fetches all grants from the database:
+        <pre><code>
+        curl -X GET http://localhost:${serverPort}/search/all
+        </code></pre>
+
+        <h3>2. Search for filtered grants </h3>
+        This fetches grants where the research organization / institution associated had "waterloo" in its name:
+        <pre><code>
+        curl -X POST http://localhost:${serverPort}/search \\
+        -H "Content-Type: application/json" \\
+        -d '{"searchTerms":{"institute":"waterloo"},"filters":{},"sortConfig":{"field":"date","direction":"desc"}}'
+        </code></pre>
+    `);
 });

@@ -38,8 +38,6 @@ class RGAPEnvironmentSetup:
             "data/sample",
             "notebooks/exploratory",
             "notebooks/reports",
-            "scripts/data",
-            "scripts/utils",
             "tests",
             "client",
             "server",
@@ -250,8 +248,6 @@ class RGAPEnvironmentSetup:
             print("✗")
             print(f"Error installing project: {e.stderr.decode()}")
             return False
-
-
 
     def run_setup(self):
         """Run the complete setup process"""

@@ -21,6 +21,7 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+.port-config.json
 
 # IDE
 .idea/
@@ -33,7 +34,7 @@ data/raw/*
 data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
-scripts/data/*.csv
+data/**/*.csv
 
 # Logs
 *.log
@@ -46,3 +47,7 @@ rgap.egg-info/
 
 # MySQL
 mysql/
+mysql-rgap-start
+mysql-rgap-stop
+mysql-rgap
+*.pid

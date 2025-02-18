@@ -1,34 +1,58 @@
 // server/config/db.js
-const mysql = require('mysql2/promise');
-const fs = require('fs');
-const path = require('path');
+const mysql = require("mysql2/promise");
 
-// Debug connection info
-console.log('Database Configuration:');
-console.log({
-    host: process.env.DB_HOST || '127.0.0.1',
-    user: process.env.DB_USER || 'rgap_user',
-    password: process.env.DB_PASSWORD || '12345',
-    database: process.env.DB_NAME || 'rgap',
-    port: parseInt(process.env.DB_PORT || '7272'),
-    socketPath: process.env.MYSQL_SOCKET || path.join(process.env.HOME, 'cs348/rgap/mysql/run/mysql.sock')
-});
-
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || '127.0.0.1',
-    user: process.env.DB_USER || 'rgap_user',
-    password: process.env.DB_PASSWORD || '12345',
-    database: process.env.DB_NAME || 'rgap',
-    port: parseInt(process.env.DB_PORT || '7272'),
-    socketPath: process.env.MYSQL_SOCKET || path.join(process.env.HOME, 'cs348/rgap/mysql/run/mysql.sock'),
+// Database configuration
+const dbConfig = {
+    socketPath: process.env.MYSQL_SOCKET, // From setup_app.sh
+    user: "rgap_user",
+    password: "12345",
+    database: "rgap",
+    // Enable multiple statements for filter options query
+    multipleStatements: true,
+    // Better connection handling
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    maxIdle: 10,
+    idleTimeout: 60000,
+    queueLimit: 0,
+};
+
+console.log("Database config:", {
+    ...dbConfig,
+    password: "[REDACTED]",
 });
 
-// Test the connection
-pool.query('SELECT 1')
-    .then(() => console.log('Database connection successful!'))
-    .catch(err => console.error('Database connection failed:', err));
+const pool = mysql.createPool(dbConfig);
 
+// Test query to verify connection and data
+async function verifyDatabaseSetup() {
+    try {
+        const [rows] = await pool.query(
+            "SELECT COUNT(*) as count FROM ResearchGrant"
+        );
+        console.log(
+            `Database connection verified: ${rows[0].count} grants found`
+        );
+
+        // Test a join query
+        const [testJoin] = await pool.query(`
+            SELECT COUNT(*) as count 
+            FROM ResearchGrant rg 
+            JOIN Recipient r ON rg.recipient_id = r.recipient_id 
+            JOIN Organization o ON rg.owner_org = o.owner_org 
+            LIMIT 1
+        `);
+        console.log("Join query test successful");
+
+        return true;
+    } catch (err) {
+        console.error("Database verification failed:", err);
+        process.exit(1);
+    }
+}
+
+// This will verify the database is properly set up on server start
+verifyDatabaseSetup();
+
+// Export configured pool
 module.exports = pool;

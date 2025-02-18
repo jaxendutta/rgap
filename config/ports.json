@@ -1,0 +1,21 @@
+{
+    "ranges": {
+        "client": {
+            "start": 3000,
+            "end": 3999
+        },
+        "server": {
+            "start": 4000,
+            "end": 4999
+        },
+        "database": {
+            "start": 5000,
+            "end": 5999
+        }
+    },
+    "defaults": {
+        "client": 3000,
+        "server": 4000,
+        "database": 5000
+    }
+}
