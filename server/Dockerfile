@@ -1,13 +1,20 @@
-FROM node:16-alpine
+FROM node:18-alpine
 
 WORKDIR /app
 
+# Install dependencies first (better caching)
 COPY package*.json ./
+RUN npm ci
 
-RUN npm install
-
+# Copy source code
 COPY . .
 
-EXPOSE 3000
+# Expose the port the server runs on
+EXPOSE 3030
 
-CMD ["npm", "run", "dev"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3030/health || exit 1
+
+# Start the server
+CMD ["npm", "run", "start"]
