@@ -101,6 +101,14 @@ if ! check_error "Failed to create schema"; then
     exit 1
 fi
 
+# Add create_user stored procedure
+print_status "Adding stored procedures..."
+mysql --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap <"${SCRIPT_DIR}/sql/sp_create_user.sql" 2>>"$LOG_FILE"
+
+if ! check_error "Failed to add stored procedures"; then
+    exit 1
+fi
+
 # Create data loading SQL
 SAMPLE_DATA="${SCRIPT_DIR}/data/sample/data_2019.csv"
 if [ ! -f "$SAMPLE_DATA" ]; then

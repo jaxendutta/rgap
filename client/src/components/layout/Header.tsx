@@ -1,10 +1,11 @@
-// src/components/layout/Header.tsx
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { CircleArrowUp, User } from 'lucide-react'
+import axios from 'axios'
 
 const Header = () => {
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,6 +25,20 @@ const Header = () => {
     return () => {
       mainContent?.removeEventListener('scroll', handleScroll)
     }
+  }, [])
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await axios.get('/api/auth/check', { withCredentials: true })
+        setIsLoggedIn(response.data.loggedIn)
+      } catch (error) {
+        console.error('Error checking authentication', error)
+        setIsLoggedIn(false)
+      }
+    }
+
+    checkAuth()
   }, [])
 
   const scrollToTop = () => {
@@ -65,7 +80,7 @@ const Header = () => {
           >
             <CircleArrowUp className="h-6 w-6" />
           </button>
-          <Link to="/account" className="p-1 text-gray-600 hover:text-gray-800">
+          <Link to={isLoggedIn ? "/account" : "/auth"} className="p-1 text-gray-600 hover:text-gray-800">
             <User className="h-6 w-6" />
           </Link>
         </div>
