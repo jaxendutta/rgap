@@ -1,6 +1,40 @@
 // server/controllers/searchController.js
 const pool = require("../config/db");
 
+// Helper function to get distinct values from a column
+const getDistinctValues = async (column, table) => {
+    try {
+        const [results] = await pool.query(
+            `SELECT DISTINCT ${column} FROM ${table} WHERE ${column} IS NOT NULL AND ${column} != '' ORDER BY ${column}`
+        );
+        return results.map((row) => row[column]);
+    } catch (error) {
+        console.error(`Error fetching distinct ${column}:`, error);
+        return [];
+    }
+};
+
+const getFilterOptions = async (req, res) => {
+    try {
+        const agencies = await getDistinctValues("org", "ResearchGrant");
+        const countries = await getDistinctValues("country", "Recipient");
+        const provinces = await getDistinctValues("province", "Recipient");
+        const cities = await getDistinctValues("city", "Recipient");
+
+        const filterOptions = {
+            agencies,
+            countries,
+            provinces,
+            cities,
+        };
+
+        res.json(filterOptions);
+    } catch (error) {
+        console.error("Error fetching filter options:", error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 const searchGrants = async (req, res) => {
     console.log("Received search request:", {
         searchTerms: req.body.searchTerms,
@@ -54,8 +88,11 @@ const searchGrants = async (req, res) => {
         );
 
         // Value range filter (with default max)
-        query += ` AND rg.agreement_value <= ?`;
-        params.push(filters.valueRange?.max || 200000000);
+        query += ` AND rg.agreement_value BETWEEN ? AND ?`;
+        params.push(
+            filters.valueRange?.min || 0,
+            filters.valueRange?.max || 200000000
+        );
 
         // Array filters
         if (filters.agencies?.length) {
@@ -89,12 +126,6 @@ const searchGrants = async (req, res) => {
         const [results] = await pool.query(query, params);
         console.log(`Query returned ${results.length} results`);
 
-        if (results.length === 0) {
-            console.log("No results found with these parameters");
-        } else {
-            console.log("First result:", results[0]);
-        }
-
         res.json({
             message: "Success",
             data: results,
@@ -110,26 +141,6 @@ const searchGrants = async (req, res) => {
             error: error.message,
             query: req.body,
         });
-    }
-};
-
-const getFilterOptions = async (req, res) => {
-    try {
-        const [results] = await pool.query(`
-      SELECT 
-      JSON_OBJECT(
-        'agencies', (SELECT JSON_ARRAYAGG(DISTINCT abbreviation) FROM Organization),
-        'countries', (SELECT JSON_ARRAYAGG(DISTINCT country) FROM Recipient WHERE country IS NOT NULL),
-        'provinces', (SELECT JSON_ARRAYAGG(DISTINCT province) FROM Recipient WHERE province IS NOT NULL),
-        'cities', (SELECT JSON_ARRAYAGG(DISTINCT city) FROM Recipient WHERE city IS NOT NULL)
-      ) as options
-    `);
-
-        console.log("Filter options:", results[0].options);
-        res.json(results[0].options);
-    } catch (error) {
-        console.error("Error fetching filter options:", error);
-        res.status(500).json({ error: error.message });
     }
 };
 

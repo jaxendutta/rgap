@@ -50,7 +50,7 @@ export const SearchPage = () => {
 
     // Create the full search params for the API
     const searchParams: GrantSearchParams = {
-        searchTerms: lastSearchedTerms, // Use last searched terms
+        searchTerms: lastSearchedTerms,
         filters,
         sortConfig,
     };
@@ -69,17 +69,28 @@ export const SearchPage = () => {
     });
 
     const handleSearch = useCallback(() => {
-        if (
-            searchTerms.recipient === "" &&
-            searchTerms.institute === "" &&
-            searchTerms.grant === ""
-        ) {
+        // Check if any search terms or filters are active
+        const hasSearchTerms = Object.values(searchTerms).some(
+            (term) => term.trim() !== ""
+        );
+        const hasActiveFilters =
+            filters.agencies.length > 0 ||
+            filters.countries.length > 0 ||
+            filters.provinces.length > 0 ||
+            filters.cities.length > 0 ||
+            filters.yearRange.start !== DEFAULT_FILTER_STATE.yearRange.start ||
+            filters.yearRange.end !== DEFAULT_FILTER_STATE.yearRange.end ||
+            filters.valueRange.min !== DEFAULT_FILTER_STATE.valueRange.min ||
+            filters.valueRange.max !== DEFAULT_FILTER_STATE.valueRange.max;
+
+        // Allow search if either search terms or filters are active
+        if (hasSearchTerms || hasActiveFilters) {
+            setIsInitialState(false);
+            setLastSearchedTerms(searchTerms);
+        } else {
             setIsInitialState(true);
-            return;
         }
-        setIsInitialState(false);
-        setLastSearchedTerms(searchTerms); // Update last searched terms
-    }, [searchTerms]);
+    }, [searchTerms, filters]);
 
     useEffect(() => {
         if (!isInitialState) {
@@ -108,11 +119,12 @@ export const SearchPage = () => {
             };
             return newConfig;
         });
-        // TODO: Make it so that it doesn't search everytime the sort changes!
-        handleSearch();
+        if (!isInitialState) {
+            refetch();
+        }
     };
 
-    const handleFilterChange = (newFilters: GrantSearchParams["filters"]) => {
+    const handleFilterChange = (newFilters: typeof DEFAULT_FILTER_STATE) => {
         setFilters(newFilters);
         handleSearch();
     };
@@ -169,10 +181,6 @@ export const SearchPage = () => {
                                 )
                             }
                             onKeyDown={(e) => {
-                                handleInputChange(
-                                    field as keyof typeof searchTerms,
-                                    (e.target as HTMLInputElement).value
-                                );
                                 if (e.key === "Enter") {
                                     handleSearch();
                                 }
@@ -199,7 +207,6 @@ export const SearchPage = () => {
             <FilterTags
                 filters={filters}
                 onRemove={(type, value) => {
-                    // Handle filter removal
                     const newFilters = { ...filters };
                     if (
                         Array.isArray(newFilters[type as keyof typeof filters])
@@ -216,11 +223,15 @@ export const SearchPage = () => {
                         newFilters.valueRange = DEFAULT_FILTER_STATE.valueRange;
                     }
                     setFilters(newFilters);
-                    handleSearch();
+                    if (!isInitialState) {
+                        handleSearch();
+                    }
                 }}
                 onClearAll={() => {
                     setFilters(DEFAULT_FILTER_STATE);
-                    handleSearch();
+                    if (!isInitialState) {
+                        handleSearch();
+                    }
                 }}
             />
 
