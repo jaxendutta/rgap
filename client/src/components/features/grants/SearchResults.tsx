@@ -1,4 +1,5 @@
 // src/components/features/grants/SearchResults.tsx
+import { useState } from "react";
 import { ResearchGrant } from "@/types/models";
 import { GrantCard } from "./GrantCard";
 import { FileSearch, FileWarning } from "lucide-react";
@@ -15,6 +16,8 @@ import {
     Legend,
 } from "recharts";
 
+type GroupByOption = "org" | "province" | "country" | "city";
+
 interface SearchResultsProps {
     data?: ResearchGrant[];
     isLoading: boolean;
@@ -24,14 +27,95 @@ interface SearchResultsProps {
     isEmptyState?: boolean;
 }
 
+const groupByOptions: { value: GroupByOption; label: string }[] = [
+    { value: "org", label: "Funding Agency" },
+    { value: "province", label: "Province/State" },
+    { value: "country", label: "Country" },
+    { value: "city", label: "City" },
+];
+
+const colors: { [key: string]: string | string[] } = {
+    // Default colors for agencies
+    NSERC: "#2563eb",
+    SSHRC: "#7c3aed",
+    CIHR: "#059669",
+    // Colors for other categories
+    defaultColors: [
+        "#2563eb", // blue
+        "#7c3aed", // purple
+        "#059669", // green
+        "#dc2626", // red
+        "#ea580c", // orange
+        "#0891b2", // cyan
+        "#4f46e5", // indigo
+        "#be185d", // pink
+    ],
+};
+
 export const SearchResults = ({
     data,
     isLoading,
     error,
     onBookmark,
     showVisualization,
-    isEmptyState: isEmptyState = true,
+    isEmptyState = true,
 }: SearchResultsProps) => {
+    const [groupBy, setGroupBy] = useState<GroupByOption>("org");
+
+    const transformDataForVisualization = (data: ResearchGrant[]) => {
+        const yearMap = new Map<
+            number,
+            { year: number; [key: string]: number }
+        >();
+        const uniqueCategories = new Set<string>();
+
+        // First pass: collect all unique categories
+        data.forEach((result) => {
+            if (result[groupBy]) {
+                uniqueCategories.add(result[groupBy]);
+            }
+        });
+
+        // Second pass: aggregate data
+        data.forEach((result) => {
+            const year = new Date(result.agreement_start_date).getFullYear();
+            const value = parseFloat(result.agreement_value.toString()) || 0;
+            const category = result[groupBy] || "Unknown";
+
+            if (!yearMap.has(year)) {
+                yearMap.set(year, {
+                    year,
+                    ...Array.from(uniqueCategories).reduce(
+                        (acc, cat) => ({
+                            ...acc,
+                            [cat]: 0,
+                        }),
+                        {}
+                    ),
+                });
+            }
+
+            const yearData = yearMap.get(year);
+            if (yearData && category) {
+                yearData[category] = (yearData[category] || 0) + value;
+            }
+        });
+
+        return Array.from(yearMap.values())
+            .sort((a, b) => a.year - b.year)
+            .map((entry) => {
+                const roundedEntry: { year: number; [key: string]: number } = {
+                    year: entry.year,
+                };
+                Object.keys(entry).forEach((key) => {
+                    if (key !== "year") {
+                        roundedEntry[key] = Number(entry[key].toFixed(2)) || 0;
+                    }
+                });
+                return roundedEntry;
+            });
+    };
+
     if (isEmptyState) {
         return (
             <div className="flex flex-col items-center justify-center py-16 text-gray-500">
@@ -84,49 +168,37 @@ export const SearchResults = ({
         );
     }
 
-    const transformDataForVisualization = (data: ResearchGrant[]) => {
-        const yearMap = new Map();
-
-        data.forEach((result) => {
-            const year = new Date(result.agreement_start_date).getFullYear();
-            const value = parseFloat(result.agreement_value.toString()) || 0; // Convert to number and handle NaN
-
-            if (!yearMap.has(year)) {
-                yearMap.set(year, {
-                    year,
-                    NSERC: 0,
-                    SSHRC: 0,
-                    CIHR: 0,
-                });
-            }
-
-            const yearData = yearMap.get(year);
-            if (result.org && typeof yearData[result.org] === "number") {
-                yearData[result.org] += value;
-            }
-        });
-
-        return Array.from(yearMap.values())
-            .sort((a, b) => a.year - b.year)
-            .map((entry) => ({
-                ...entry,
-                NSERC: Number(entry.NSERC.toFixed(2)) || 0, // Round to 2 decimal places and handle NaN
-                SSHRC: Number(entry.SSHRC.toFixed(2)) || 0,
-                CIHR: Number(entry.CIHR.toFixed(2)) || 0,
-            }));
-    };
+    const visualizationData = transformDataForVisualization(data);
+    const categories = Object.keys(visualizationData[0] || {}).filter(
+        (key) => key !== "year"
+    );
 
     return (
         <div className="space-y-4">
             {showVisualization && (
                 <Card className="p-4 lg:p-6">
-                    <h3 className="text-lg font-medium mb-4">
-                        Funding Trends by Agency
-                    </h3>
+                    <div className="flex items-center gap-2 mb-4">
+                        <h3 className="text-lg font-medium">
+                            Funding Trends by
+                        </h3>
+                        <select
+                            value={groupBy}
+                            onChange={(e) =>
+                                setGroupBy(e.target.value as GroupByOption)
+                            }
+                            className="px-2 py-1.5 border rounded-md text-sm"
+                        >
+                            {groupByOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart
-                                data={transformDataForVisualization(data)}
+                                data={visualizationData}
                                 margin={{
                                     top: 10,
                                     right: 30,
@@ -152,13 +224,16 @@ export const SearchResults = ({
                                     axisLine={{ stroke: "#e5e7eb" }}
                                 />
                                 <Tooltip
-                                    formatter={(value: number) => [
+                                    formatter={(
+                                        value: number,
+                                        name: string
+                                    ) => [
                                         new Intl.NumberFormat("en-CA", {
                                             style: "currency",
                                             currency: "CAD",
                                             maximumFractionDigits: 0,
                                         }).format(value),
-                                        "Funding",
+                                        name,
                                     ]}
                                     contentStyle={{
                                         backgroundColor: "white",
@@ -168,27 +243,37 @@ export const SearchResults = ({
                                     }}
                                 />
                                 <Legend />
-                                <Line
-                                    type="monotone"
-                                    dataKey="NSERC"
-                                    stroke="#2563eb"
-                                    strokeWidth={2}
-                                    dot={{ fill: "#2563eb", strokeWidth: 2 }}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="SSHRC"
-                                    stroke="#7c3aed"
-                                    strokeWidth={2}
-                                    dot={{ fill: "#7c3aed", strokeWidth: 2 }}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="CIHR"
-                                    stroke="#059669"
-                                    strokeWidth={2}
-                                    dot={{ fill: "#059669", strokeWidth: 2 }}
-                                />
+                                {categories.map((category, index) => (
+                                    <Line
+                                        key={category}
+                                        type="monotone"
+                                        dataKey={category}
+                                        name={category}
+                                        stroke={
+                                            typeof colors[category] === "string"
+                                                ? colors[category]
+                                                : colors.defaultColors[
+                                                      index %
+                                                          colors.defaultColors
+                                                              .length
+                                                  ]
+                                        }
+                                        strokeWidth={2}
+                                        dot={{
+                                            fill:
+                                                typeof colors[category] ===
+                                                "string"
+                                                    ? colors[category]
+                                                    : colors.defaultColors[
+                                                          index %
+                                                              colors
+                                                                  .defaultColors
+                                                                  .length
+                                                      ],
+                                            strokeWidth: 2,
+                                        }}
+                                    />
+                                ))}
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
