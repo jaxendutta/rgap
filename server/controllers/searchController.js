@@ -1,7 +1,6 @@
 // server/controllers/searchController.js
 const pool = require("../config/db");
 
-// Helper function to get distinct values from a column
 const getDistinctValues = async (column, table) => {
     try {
         const [results] = await pool.query(
@@ -16,16 +15,24 @@ const getDistinctValues = async (column, table) => {
 
 const getFilterOptions = async (req, res) => {
     try {
-        const agencies = await getDistinctValues("org", "ResearchGrant");
-        const countries = await getDistinctValues("country", "Recipient");
-        const provinces = await getDistinctValues("province", "Recipient");
-        const cities = await getDistinctValues("city", "Recipient");
+        const [countries] = await pool.query(
+            'SELECT DISTINCT country FROM Recipient WHERE country IS NOT NULL AND country != "" ORDER BY country'
+        );
+        const [provinces] = await pool.query(
+            'SELECT DISTINCT province FROM Recipient WHERE province IS NOT NULL AND province != "" ORDER BY province'
+        );
+        const [cities] = await pool.query(
+            'SELECT DISTINCT city FROM Recipient WHERE city IS NOT NULL AND city != "" ORDER BY city'
+        );
+        const [agencies] = await pool.query(
+            'SELECT DISTINCT abbreviation FROM Organization WHERE abbreviation IS NOT NULL AND abbreviation != "" ORDER BY abbreviation'
+        );
 
         const filterOptions = {
-            agencies,
-            countries,
-            provinces,
-            cities,
+            countries: countries.map((row) => row.country),
+            provinces: provinces.map((row) => row.province),
+            cities: cities.map((row) => row.city),
+            agencies: agencies.map((row) => row.abbreviation),
         };
 
         res.json(filterOptions);
@@ -36,35 +43,31 @@ const getFilterOptions = async (req, res) => {
 };
 
 const searchGrants = async (req, res) => {
-    console.log("Received search request:", {
-        searchTerms: req.body.searchTerms,
-        filters: req.body.filters,
-        sortConfig: req.body.sortConfig,
-    });
-
     try {
         const { searchTerms = {}, filters = {}, sortConfig = {} } = req.body;
-        const params = [];
+        console.log("Received request:", { searchTerms, filters, sortConfig });
 
         let query = `
-      SELECT DISTINCT
-        rg.grant_id,
-        rg.ref_number,
-        r.legal_name,
-        r.research_organization_name,
-        rg.agreement_title_en,
-        rg.agreement_value,
-        rg.agreement_start_date,
-        rg.agreement_end_date,
-        r.city,
-        r.province,
-        r.country,
-        o.abbreviation AS org
-      FROM ResearchGrant rg
-      JOIN Recipient r ON rg.recipient_id = r.recipient_id
-      JOIN Organization o ON rg.owner_org = o.owner_org
-      WHERE 1=1
-    `;
+            SELECT DISTINCT
+                rg.grant_id,
+                rg.ref_number,
+                r.legal_name,
+                r.research_organization_name,
+                rg.agreement_title_en,
+                rg.agreement_value,
+                rg.agreement_start_date,
+                rg.agreement_end_date,
+                r.city,
+                r.province,
+                r.country,
+                o.abbreviation AS org
+            FROM ResearchGrant rg
+            JOIN Recipient r ON rg.recipient_id = r.recipient_id
+            JOIN Organization o ON rg.owner_org = o.owner_org
+            WHERE 1=1
+        `;
+
+        const params = [];
 
         // Search terms
         if (searchTerms.recipient) {
@@ -80,39 +83,59 @@ const searchGrants = async (req, res) => {
             params.push(`%${searchTerms.grant}%`);
         }
 
-        // Year range filter (with defaults)
+        // Year range filter
         query += ` AND YEAR(rg.agreement_start_date) BETWEEN ? AND ?`;
         params.push(
             filters.yearRange?.start || 1900,
             filters.yearRange?.end || 2025
         );
 
-        // Value range filter (with default max)
+        // Value range filter
         query += ` AND rg.agreement_value BETWEEN ? AND ?`;
         params.push(
             filters.valueRange?.min || 0,
             filters.valueRange?.max || 200000000
         );
 
-        // Array filters
-        if (filters.agencies?.length) {
-            query += ` AND o.abbreviation IN (?)`;
-            params.push(filters.agencies);
-        }
-        if (filters.countries?.length) {
-            query += ` AND r.country IN (?)`;
-            params.push(filters.countries);
-        }
-        if (filters.provinces?.length) {
-            query += ` AND r.province IN (?)`;
-            params.push(filters.provinces);
-        }
-        if (filters.cities?.length) {
-            query += ` AND r.city IN (?)`;
-            params.push(filters.cities);
+        // Handle array filters using OR conditions within each filter type
+        if (Array.isArray(filters.agencies) && filters.agencies.length > 0) {
+            query += ` AND o.abbreviation IN (${filters.agencies
+                .map(() => "?")
+                .join(",")})`;
+            params.push(...filters.agencies);
         }
 
-        // Sorting (with default)
+        if (Array.isArray(filters.countries) && filters.countries.length > 0) {
+            const placeholders = filters.countries
+                .map((country) => {
+                    params.push(country);
+                    return "?";
+                })
+                .join(",");
+            query += ` AND r.country IN (${placeholders})`;
+        }
+
+        if (Array.isArray(filters.provinces) && filters.provinces.length > 0) {
+            const placeholders = filters.provinces
+                .map((province) => {
+                    params.push(province);
+                    return "?";
+                })
+                .join(",");
+            query += ` AND r.province IN (${placeholders})`;
+        }
+
+        if (Array.isArray(filters.cities) && filters.cities.length > 0) {
+            const placeholders = filters.cities
+                .map((city) => {
+                    params.push(city);
+                    return "?";
+                })
+                .join(",");
+            query += ` AND r.city IN (${placeholders})`;
+        }
+
+        // Add sorting
         const sortField =
             sortConfig.field === "value"
                 ? "rg.agreement_value"
@@ -120,15 +143,18 @@ const searchGrants = async (req, res) => {
         const sortDir = sortConfig.direction === "asc" ? "ASC" : "DESC";
         query += ` ORDER BY ${sortField} ${sortDir}`;
 
-        console.log("\nExecuting query:", query);
-        console.log("With parameters:", params);
+        console.log("Executing query:", query);
+        console.log("Parameters:", params);
 
         const [results] = await pool.query(query, params);
         console.log(`Query returned ${results.length} results`);
 
         res.json({
             message: "Success",
-            data: results,
+            data: results.map((row) => ({
+                ...row,
+                agreement_value: parseFloat(row.agreement_value) || 0,
+            })),
             metadata: {
                 count: results.length,
                 filters: filters,

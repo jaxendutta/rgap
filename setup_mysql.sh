@@ -1,36 +1,10 @@
 #!/bin/bash
 
-# Colors for output
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# Import setup_utils.sh
+source "setup_utils.sh"
 
-# Print with color
-print_status() {
-    echo -e "${BLUE}==>${NC} $1"
-}
-
-print_success() {
-    echo -e "${GREEN}==>${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}==>${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}==>${NC} $1"
-}
-
-# Function to check for errors
-check_error() {
-    if [ $? -ne 0 ]; then
-        print_error "$1"
-        exit 1
-    fi
-}
+# Start timing
+start_timer
 
 # Get current user and directories
 MYSQL_DIR="$(pwd)/mysql"
@@ -311,3 +285,9 @@ print_status "You can now use:"
 echo "• mysql-rgap-start  - Start your MySQL server"
 echo "• mysql-rgap        - Connect to MySQL"
 echo "• mysql-rgap-stop   - Stop your MySQL server"
+
+# Return to original directory
+cd "${SCRIPT_DIR}"
+
+# Print time taken
+print_time_taken

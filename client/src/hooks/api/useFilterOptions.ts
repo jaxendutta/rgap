@@ -21,22 +21,12 @@ export function useFilterOptions() {
     return useQuery<FilterOptions>({
         queryKey: ["filterOptions"],
         queryFn: async () => {
-            try {
-                const { data } = await API.get<FilterOptions>(
-                    "/search/filter-options"
-                );
-                return data;
-            } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    throw new Error(
-                        error.response?.data?.message ||
-                            "Failed to fetch filter options"
-                    );
-                }
-                throw error;
-            }
+            const { data } = await API.get<FilterOptions>(
+                "/search/filter-options"
+            );
+            return data;
         },
         staleTime: 1000 * 60 * 30, // Consider data fresh for 30 minutes
-        retry: 2,
+        gcTime: 1000 * 60 * 60, // Keep in garbage collection for 1 hour
     });
 }

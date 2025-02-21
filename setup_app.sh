@@ -1,11 +1,7 @@
 #!/bin/bash
 
-# Colors for output
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# Import setup_utils.sh
+source "setup_utils.sh"
 
 # Get script directory (project root)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -245,6 +241,9 @@ echo
 echo -e "${BLUE}To stop the application:${NC}"
 echo -e "  1. Press Ctrl+C"
 echo -e "  2. Run cleanup script (will be done automatically on Ctrl+C)"
+
+# Print time taken
+print_time_taken
 
 # Keep script running and handle cleanup on exit
 wait

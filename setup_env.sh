@@ -1,44 +1,15 @@
 #!/bin/bash
 
+# Import setup_utils.sh
+source "setup_utils.sh"
+
 # Start timing
-start_time=$(date +%s)
-
-# Set the default behavior for printf to include a newline
-printf_with_newline() {
-    printf "$@" && echo
-}
-
-# Alias printf to the new function
-alias print=printf_with_newline
-
-# print colored text
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
+start_timer
 
 # Get the directory where the script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 VENV_PATH="$SCRIPT_DIR/venv"
 LOG_FILE="$SCRIPT_DIR/setup.log"
-
-# Function to format time duration
-format_duration() {
-    local duration=$1
-    local minutes=$((duration / 60))
-    local seconds=$((duration % 60))
-    if [ $minutes -gt 0 ]; then
-        echo "${minutes}min ${seconds}s"
-    else
-        echo "${seconds}s"
-    fi
-}
-
-print_time_taken() {
-    end_time=$(date +%s)
-    duration=$(( end_time - start_time ))
-    print "${BLUE}Script completed in $(format_duration $duration)${NC}\n"
-}
 
 # Function to handle cleanup on error
 cleanup_on_error() {

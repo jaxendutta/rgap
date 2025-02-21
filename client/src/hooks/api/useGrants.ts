@@ -1,24 +1,113 @@
-import { useQuery } from '@tanstack/react-query';
-import { grantsApi, GrantSearchParams } from '@/services/api/grants';
+// src/hooks/api/useGrants.ts
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import portConfig from "../../../../config/ports.json";
+import { ResearchGrant } from "@/types/models";
+import { DEFAULT_FILTER_STATE } from "@/constants/filters";
+
+const API = axios.create({
+    baseURL:
+        process.env.VITE_API_URL ||
+        `http://localhost:${portConfig.defaults.server}`,
+    timeout: 15000,
+});
+
+export interface GrantSearchParams {
+    searchTerms: {
+        recipient: string;
+        institute: string;
+        grant: string;
+    };
+    filters: typeof DEFAULT_FILTER_STATE;
+    sortConfig: {
+        field: "date" | "value";
+        direction: "asc" | "desc";
+    };
+}
 
 export const grantKeys = {
-  all: ['grants'] as const,
-  search: (params: GrantSearchParams) => [...grantKeys.all, 'search', params] as const,
+    all: ["grants"] as const,
+    search: (params: GrantSearchParams) =>
+        [...grantKeys.all, "search", params] as const,
+};
+
+// Helper to create a clean copy of filters
+const cleanFilters = (filters: typeof DEFAULT_FILTER_STATE) => {
+    // Handle array filters by ensuring they are arrays and contain only strings
+    const cleanArrayFilter = (arr: any[]): string[] => {
+        if (!Array.isArray(arr)) return [];
+        return arr
+            .filter((item) => item !== null && item !== undefined)
+            .map((item) => String(item));
+    };
+
+    return {
+        yearRange: {
+            start:
+                filters.yearRange?.start ??
+                DEFAULT_FILTER_STATE.yearRange.start,
+            end: filters.yearRange?.end ?? DEFAULT_FILTER_STATE.yearRange.end,
+        },
+        valueRange: {
+            min: filters.valueRange?.min ?? DEFAULT_FILTER_STATE.valueRange.min,
+            max: filters.valueRange?.max ?? DEFAULT_FILTER_STATE.valueRange.max,
+        },
+        agencies: cleanArrayFilter(filters.agencies),
+        countries: cleanArrayFilter(filters.countries),
+        provinces: cleanArrayFilter(filters.provinces),
+        cities: cleanArrayFilter(filters.cities),
+    };
 };
 
 export function useGrantSearch(params: GrantSearchParams) {
-  return useQuery({
-    queryKey: grantKeys.search(params),
-    queryFn: () => grantsApi.search(params),
-    enabled: false, // Only search when button is clicked
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-  });
+    return useQuery({
+        queryKey: grantKeys.search(params),
+        queryFn: async () => {
+            try {
+                const cleanParams = {
+                    ...params,
+                    filters: cleanFilters(params.filters),
+                };
+
+                console.log("Sending search request with params:", cleanParams);
+
+                const response = await API.post<{ data: ResearchGrant[] }>(
+                    "/search",
+                    cleanParams
+                );
+
+                if (!response.data?.data) {
+                    console.warn("No data received from server");
+                    return [];
+                }
+
+                return response.data.data;
+            } catch (error) {
+                console.error("Search request failed:", error);
+                if (axios.isAxiosError(error)) {
+                    throw new Error(
+                        error.response?.data?.error || "Failed to search grants"
+                    );
+                }
+                throw error;
+            }
+        },
+        enabled: false,
+        staleTime: 30000, // Data considered fresh for 30 seconds
+        gcTime: 5 * 60 * 1000, // Keep in garbage collection for 5 minutes
+        retry: 1, // Only retry once on failure
+        retryDelay: 1000, // Wait 1 second before retrying
+    });
 }
 
 export function useAllGrants() {
-  return useQuery({
-    queryKey: grantKeys.all,
-    queryFn: grantsApi.getAll,
-    staleTime: 5 * 60 * 1000,
-  });
+    return useQuery({
+        queryKey: grantKeys.all,
+        queryFn: async () => {
+            const response = await API.get<ResearchGrant[]>("/search/all");
+            return response.data;
+        },
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
+    });
 }

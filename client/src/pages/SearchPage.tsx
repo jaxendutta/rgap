@@ -69,7 +69,6 @@ export const SearchPage = () => {
     });
 
     const handleSearch = useCallback(() => {
-        // Check if any search terms or filters are active
         const hasSearchTerms = Object.values(searchTerms).some(
             (term) => term.trim() !== ""
         );
@@ -83,20 +82,28 @@ export const SearchPage = () => {
             filters.valueRange.min !== DEFAULT_FILTER_STATE.valueRange.min ||
             filters.valueRange.max !== DEFAULT_FILTER_STATE.valueRange.max;
 
-        // Allow search if either search terms or filters are active
+        console.log("Search triggered:", {
+            hasSearchTerms,
+            hasActiveFilters,
+            filters,
+        });
+
         if (hasSearchTerms || hasActiveFilters) {
             setIsInitialState(false);
             setLastSearchedTerms(searchTerms);
+            refetch();
         } else {
             setIsInitialState(true);
         }
-    }, [searchTerms, filters]);
+    }, [searchTerms, filters, refetch]);
 
+    // Add effect to trigger search when filters change
     useEffect(() => {
         if (!isInitialState) {
-            refetch();
+            console.log("Filter changed, triggering search");
+            handleSearch();
         }
-    }, [lastSearchedTerms, refetch, isInitialState]);
+    }, [filters, handleSearch, isInitialState]);
 
     const handleInputChange = (
         field: keyof typeof searchTerms,
@@ -124,10 +131,14 @@ export const SearchPage = () => {
         }
     };
 
-    const handleFilterChange = (newFilters: typeof DEFAULT_FILTER_STATE) => {
-        setFilters(newFilters);
-        handleSearch();
-    };
+    const handleFilterChange = useCallback(
+        (newFilters: typeof DEFAULT_FILTER_STATE) => {
+            console.log("Filter change:", newFilters);
+            setFilters(newFilters);
+            setIsInitialState(false);
+        },
+        []
+    );
 
     const handleBookmark = useCallback((grantId: string) => {
         console.log("Bookmarking grant:", grantId);
@@ -197,7 +208,10 @@ export const SearchPage = () => {
                     <Card className="p-4">
                         <FilterPanel
                             filters={filters}
-                            onChange={handleFilterChange}
+                            onChange={(newFilters) => {
+                                console.log("Filter panel change:", newFilters);
+                                handleFilterChange(newFilters);
+                            }}
                         />
                     </Card>
                 </div>
@@ -294,6 +308,7 @@ export const SearchPage = () => {
                         size="sm"
                         icon={showVisualization ? X : ChartIcon}
                         onClick={() => setShowVisualization(!showVisualization)}
+                        disabled={!data || data.length === 0}
                     >
                         {showVisualization ? "Hide Trends" : "Show Trends"}
                     </Button>
