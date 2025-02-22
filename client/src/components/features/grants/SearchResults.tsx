@@ -3,18 +3,8 @@ import { useState } from "react";
 import { ResearchGrant } from "@/types/models";
 import { GrantCard } from "./GrantCard";
 import { FileSearch, FileWarning } from "lucide-react";
-import { Card } from "@/components/common/ui/Card";
+import { TrendVisualizer } from "@/components/features/visualizations/TrendVisualizer";
 import { LoadingSpinner } from "@/components/common/ui/LoadingSpinner";
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    Legend,
-} from "recharts";
 
 type GroupByOption = "org" | "province" | "country" | "city";
 
@@ -27,30 +17,12 @@ interface SearchResultsProps {
     isEmptyState?: boolean;
 }
 
-const groupByOptions: { value: GroupByOption; label: string }[] = [
+const groupByOptions = [
     { value: "org", label: "Funding Agency" },
     { value: "province", label: "Province/State" },
     { value: "country", label: "Country" },
     { value: "city", label: "City" },
 ];
-
-const colors: { [key: string]: string | string[] } = {
-    // Default colors for agencies
-    NSERC: "#2563eb",
-    SSHRC: "#7c3aed",
-    CIHR: "#059669",
-    // Colors for other categories
-    defaultColors: [
-        "#2563eb", // blue
-        "#7c3aed", // purple
-        "#059669", // green
-        "#dc2626", // red
-        "#ea580c", // orange
-        "#0891b2", // cyan
-        "#4f46e5", // indigo
-        "#be185d", // pink
-    ],
-};
 
 export const SearchResults = ({
     data,
@@ -169,115 +141,18 @@ export const SearchResults = ({
     }
 
     const visualizationData = transformDataForVisualization(data);
-    const categories = Object.keys(visualizationData[0] || {}).filter(
-        (key) => key !== "year"
-    );
 
     return (
         <div className="space-y-4">
             {showVisualization && (
-                <Card className="p-4 lg:p-6">
-                    <div className="flex items-center gap-2 mb-4">
-                        <h3 className="text-lg font-medium">
-                            Funding Trends by
-                        </h3>
-                        <select
-                            value={groupBy}
-                            onChange={(e) =>
-                                setGroupBy(e.target.value as GroupByOption)
-                            }
-                            className="px-2 py-1.5 border rounded-md text-sm"
-                        >
-                            {groupByOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart
-                                data={visualizationData}
-                                margin={{
-                                    top: 10,
-                                    right: 30,
-                                    left: 50,
-                                    bottom: 5,
-                                }}
-                            >
-                                <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    stroke="#f0f0f0"
-                                />
-                                <XAxis
-                                    dataKey="year"
-                                    tickLine={false}
-                                    axisLine={{ stroke: "#e5e7eb" }}
-                                />
-                                <YAxis
-                                    tickFormatter={(value) => {
-                                        const millions = value / 1000000;
-                                        return `$${millions.toFixed(1)}M`;
-                                    }}
-                                    tickLine={false}
-                                    axisLine={{ stroke: "#e5e7eb" }}
-                                />
-                                <Tooltip
-                                    formatter={(
-                                        value: number,
-                                        name: string
-                                    ) => [
-                                        new Intl.NumberFormat("en-CA", {
-                                            style: "currency",
-                                            currency: "CAD",
-                                            maximumFractionDigits: 0,
-                                        }).format(value),
-                                        name,
-                                    ]}
-                                    contentStyle={{
-                                        backgroundColor: "white",
-                                        border: "1px solid #e5e7eb",
-                                        borderRadius: "6px",
-                                        padding: "8px 12px",
-                                    }}
-                                />
-                                <Legend />
-                                {categories.map((category, index) => (
-                                    <Line
-                                        key={category}
-                                        type="monotone"
-                                        dataKey={category}
-                                        name={category}
-                                        stroke={
-                                            typeof colors[category] === "string"
-                                                ? colors[category]
-                                                : colors.defaultColors[
-                                                      index %
-                                                          colors.defaultColors
-                                                              .length
-                                                  ]
-                                        }
-                                        strokeWidth={2}
-                                        dot={{
-                                            fill:
-                                                typeof colors[category] ===
-                                                "string"
-                                                    ? colors[category]
-                                                    : colors.defaultColors[
-                                                          index %
-                                                              colors
-                                                                  .defaultColors
-                                                                  .length
-                                                      ],
-                                            strokeWidth: 2,
-                                        }}
-                                    />
-                                ))}
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </Card>
+                <TrendVisualizer
+                    data={visualizationData}
+                    groupBy={groupBy}
+                    onGroupByChange={(value) =>
+                        setGroupBy(value as GroupByOption)
+                    }
+                    groupByOptions={groupByOptions}
+                />
             )}
 
             {data.map((grant) => (

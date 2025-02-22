@@ -1,7 +1,10 @@
 #!/bin/bash
 
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Import setup_utils.sh
-source "setup_utils.sh"
+. "$SCRIPT_DIR/setup_utils.sh"
 
 # Start timing
 start_timer
@@ -10,7 +13,6 @@ start_timer
 MYSQL_DIR="$(pwd)/mysql"
 USER=$(whoami)
 USER_MYSQL_DIR="${MYSQL_DIR}/users/${USER}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Function to check if MySQL is running
 check_mysql_running() {

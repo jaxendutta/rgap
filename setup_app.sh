@@ -1,10 +1,18 @@
 #!/bin/bash
 
-# Import setup_utils.sh
-source "setup_utils.sh"
-
-# Get script directory (project root)
+# Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Import setup_utils.sh
+. "$SCRIPT_DIR/setup_utils.sh"
+
+# Start timing
+start_timer
+
+# Get user-specific MySQL directory
+USER=$(whoami)
+USER_MYSQL_DIR="${MYSQL_DIR}/users/${USER}"
+MYSQL_SOCKET="$USER_MYSQL_DIR/run/mysql.sock"
 
 # Function to clean up processes and files
 cleanup() {
@@ -50,11 +58,6 @@ if [[ -z "${MYSQL_DIR}" ]]; then
     echo -e "${RED}Error: Environment not set up. Please run 'source setup_env.sh' first.${NC}"
     exit 1
 fi
-
-# Get user-specific MySQL directory
-USER=$(whoami)
-USER_MYSQL_DIR="$MYSQL_DIR/users/$USER"
-MYSQL_SOCKET="$USER_MYSQL_DIR/run/mysql.sock"
 
 # Cleanup any existing processes and files
 cleanup force
