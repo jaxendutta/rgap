@@ -10,6 +10,8 @@ import {
     EyeOff,
     Shield,
     Calendar,
+    Search,
+    PackageOpen,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/common/ui/Card";
@@ -314,27 +316,42 @@ export default function AccountPage() {
                                     </div>
                                 </div>
 
-                                {/* Search History Cards */}
-                                <motion.div
-                                    layout
-                                    className="grid grid-cols-1 gap-4"
-                                >
-                                    {sortedSearches.map((search) => (
-                                        <motion.div
-                                            key={search.id}
-                                            layout
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -20 }}
-                                            transition={{ duration: 0.2 }}
+                                {sortedSearches.length > 0 ? (
+                                    <motion.div
+                                        layout
+                                        className="grid grid-cols-1 gap-4"
+                                    >
+                                        {sortedSearches.map((search) => (
+                                            <motion.div
+                                                key={search.id}
+                                                layout
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -20 }}
+                                                transition={{ duration: 0.2 }}
+                                            >
+                                                <SearchHistoryCard
+                                                    search={search}
+                                                    onRerun={handleRerunSearch}
+                                                />
+                                            </motion.div>
+                                        ))}
+                                    </motion.div>
+                                ) : (
+                                    <div className="flex flex-col justify-center items-center space-y-4 h-64 bg-gray-100 p-8 rounded-lg text-center w-full">
+                                        <PackageOpen className="h-16 w-16 text-gray-400" />
+                                        <p className="text-gray-700 text-md">
+                                            You have no recorded search history.
+                                        </p>
+                                        <Button
+                                            variant="primary"
+                                            onClick={() => navigate("/search")}
+                                            icon={Search}
                                         >
-                                            <SearchHistoryCard
-                                                search={search}
-                                                onRerun={handleRerunSearch}
-                                            />
-                                        </motion.div>
-                                    ))}
-                                </motion.div>
+                                            Start exploring
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         </Card>
                     )}

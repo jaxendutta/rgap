@@ -68,3 +68,30 @@ print_time_taken() {
     fi
 }
 export -f print_time_taken
+
+# Function to clear progress bar line
+clear_progress_line() {
+    printf "\r%*s\r" "$(tput cols)" ""
+}
+export -f clear_progress_line
+
+# Updated progress function with clearing
+setup_progress() {
+    local current=$1
+    local total=$2
+    local description=$3
+    local width=50
+    local percentage=$((current * 100 / total))
+    local filled=$((width * current / total))
+    local empty=$((width - filled))
+    
+    # Clear the line first
+    printf "\r%*s\r" "$(tput cols)" ""
+    
+    # Print progress bar
+    printf "  Progress: ["
+    printf "%${filled}s" '' | tr ' ' '#'
+    printf "%${empty}s" '' | tr ' ' '-'
+    printf "] %3d%% - %s" "$percentage" "$description"
+}
+export -f setup_progress

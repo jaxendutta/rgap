@@ -139,7 +139,7 @@ fi
 echo -e "\n${YELLOW}=== RGAP Service Ports ===${NC}"
 echo -e "${YELLOW}⚠️  NOTE: These ports may be different from previous runs!${NC}"
 echo -e "📝 Port configuration saved at: ${BLUE}$SCRIPT_DIR/config/.port-config.json${NC}\n"
-echo -e "🗄️ SQL_DB: ${GREEN}localhost:$MYSQL_PORT${NC}"
+echo -e "🗃️ SQL DB: ${GREEN}localhost:$MYSQL_PORT${NC}"
 echo -e "🚀 Server: ${GREEN}http://localhost:$SERVER_PORT${NC}"
 echo -e "🌐 Client: ${GREEN}http://localhost:$CLIENT_PORT${NC}\n"
 
