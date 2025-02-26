@@ -128,13 +128,35 @@ print_status "Loading data preparation scripts..."
 }
 
 print_status "Loading sample data..."
-SAMPLE_DATA="${SCRIPT_DIR}/data/sample/data_2019.csv"
+# Define the sample data file and its compressed version
+SAMPLE_DATA_DIR="${SCRIPT_DIR}/data/sample"
+SAMPLE_DATA_7Z="${SAMPLE_DATA_DIR}/data_2019.7z"
+SAMPLE_DATA="${SAMPLE_DATA_DIR}/data_2019.csv"
+
+# Check if the compressed file exists
+if [ ! -f "$SAMPLE_DATA_7Z" ]; then
+    print_error "Compressed sample data file not found at ${SAMPLE_DATA_7Z}"
+    exit 1
+fi
+
+# Uncompress the 7z file to get the CSV file
+7z e "$SAMPLE_DATA_7Z" -o"$SAMPLE_DATA_DIR"
+if [ $? -ne 0 ]; then
+    print_error "Failed to uncompress ${SAMPLE_DATA_7Z}"
+    exit 1
+fi
+
+# Check if the CSV file was successfully extracted
+if [ ! -f "$SAMPLE_DATA" ]; then
+    print_error "Sample data file not found at ${SAMPLE_DATA} after extraction"
+    exit 1
+fi
 if [ ! -f "$SAMPLE_DATA" ]; then
     print_error "Sample data file not found at ${SAMPLE_DATA}"
     exit 1
 fi
 
-setup_progress 1 3 "Loading CSV data"
+setup_progress 1 3 "Loading CSV data "
 mysql --local-infile=1 --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap <<EOF
 LOAD DATA LOCAL INFILE '${SAMPLE_DATA}'
 INTO TABLE temp_grants
@@ -149,7 +171,7 @@ if ! check_error "Failed to load CSV data"; then
     exit 1
 fi
 
-setup_progress 2 3 "Transforming data"
+setup_progress 2 3 "Transforming data "
 mysql --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap <"${SQL_ROOT}/data/import_data.sql" 2>>"$LOG_FILE"
 
 if ! check_error "Failed to transform data"; then

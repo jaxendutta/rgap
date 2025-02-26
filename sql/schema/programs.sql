@@ -2,7 +2,7 @@
 USE rgap;
 
 CREATE TABLE Program (
-    prog_id VARCHAR(50) PRIMARY KEY,
+    prog_id INT PRIMARY KEY AUTO_INCREMENT,
     name_en VARCHAR(255),
     name_fr VARCHAR(255),
     purpose_en TEXT,

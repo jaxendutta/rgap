@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import sys
 import subprocess
@@ -19,10 +21,10 @@ class RGAPEnvironmentSetup:
             "Visualization": ["matplotlib", "seaborn", "plotly"],
             "Jupyter": ["jupyter", "notebook", "ipykernel"],
             "Web": ["requests", "aiohttp", "urllib3"],
-            "Data Formats": ["python-dotenv", "mysql-connector-python"],
+            "Data Formats": ["python-dotenv", "openpyxl", "PyYAML"],
             "Testing": ["pytest", "pytest-cov"],
-            "Database": ["mysqlclient"],
-            "Utilities": ["tqdm", "python-dateutil", "pytz"],
+            "Database": ["mysqlclient", "SQLAlchemy"],
+            "Utilities": ["tqdm", "python-dateutil", "pytz", "py7zr"],
             "Optional": ["jupyterlab"]
         }
         self.total_packages = sum(len(packages) for packages in self.package_groups.values())
@@ -30,7 +32,7 @@ class RGAPEnvironmentSetup:
 
     def create_directory_structure(self):
         """Create the basic project directory structure"""
-        print("  Creating directory structure...", end=' ', flush=True)
+        print(f"{" "*4}==> Creating directory structure...", end=' ', flush=True)
         
         directories = [
             "data/raw",
@@ -135,10 +137,10 @@ class RGAPEnvironmentSetup:
     def setup_virtualenv(self):
         """Create a Python virtual environment and update pip if needed"""
         if self.env_dir.exists():
-            print("  Virtual environment already exists")
+            print(f"{" "*4}Virtual environment already exists")
             return
 
-        print("  Setting up virtual environment...", end=' ', flush=True)
+        print(f"{" "*4}==> Setting up virtual environment...", end=' ', flush=True)
         try:
             # Update pip first
             subprocess.run([
@@ -170,7 +172,7 @@ class RGAPEnvironmentSetup:
     def install_package(self, package: str, count: int):
         """Install a single package"""
         pip_path = self.get_pip_path()
-        print(f"      [{count}/{self.total_packages}] Installing {package}...", end=' ', flush=True)
+        print(f"{" "*8}--> [{count}/{self.total_packages}] Installing {package}...", end=' ', flush=True)
         try:
             subprocess.run(
                 [pip_path, "install", "-q", package],
@@ -196,58 +198,17 @@ class RGAPEnvironmentSetup:
             return False
 
     def install_packages(self):
-        """Install required packages that aren't already installed"""
-        print("  Checking package status...")
-        
-        installed_packages = self.get_installed_packages()
-        required_packages = self.get_all_required_packages()
-        missing_packages = required_packages - installed_packages
-        
-        if not missing_packages:
-            print("    All required packages are already installed!")
-            return True
-        
-        print(f"  Installing {len(missing_packages)} missing packages...")
+        """Install all required packages with progress tracking"""
+        print(f"{" "*4}==> Installing packages...")
         current_count = 0
         
         for group_name, packages in self.package_groups.items():
-            missing_in_group = [p for p in packages if p in missing_packages]
-            if missing_in_group:
-                print(f"    {group_name} packages:")
-                for package in missing_in_group:
-                    current_count += 1
-                    if not self.install_package(package, current_count):
-                        return False
+            print(f"{" "*6}==> {group_name} packages:")
+            for package in packages:
+                current_count += 1
+                if not self.install_package(package, current_count):
+                    return False
         return True
-
-    def install_project(self):
-        """Install the project package if changed"""
-        print("  Checking project status...")
-        
-        current_hash = self.calculate_project_hash()
-        cache = self.load_cache()
-        
-        if cache.get('project_hash') == current_hash:
-            print("    No changes detected in project files")
-            return True
-        
-        print("    Installing project in development mode...", end=' ', flush=True)
-        pip_path = self.get_pip_path()
-        
-        try:
-            subprocess.run(
-                [pip_path, "install", "-e", "."],
-                check=True,
-                capture_output=True
-            )
-            cache['project_hash'] = current_hash
-            self.save_cache(cache)
-            print("✓")
-            return True
-        except subprocess.CalledProcessError as e:
-            print("✗")
-            print(f"Error installing project: {e.stderr.decode()}")
-            return False
 
     def run_setup(self):
         """Run the complete setup process"""
@@ -257,10 +218,6 @@ class RGAPEnvironmentSetup:
             if not self.install_packages():
                 print("Error: Failed to install some packages!")
                 sys.exit(1)
-            if not self.install_project():
-                print("Error: Failed to install project!")
-                sys.exit(1)
-
             
         except Exception as e:
             print(f"Error during setup: {str(e)}")
