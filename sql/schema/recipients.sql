@@ -1,10 +1,11 @@
 -- File: sql/schema/recipients.sql
 USE rgap;
 
+DROP TABLE IF EXISTS Recipient;
 CREATE TABLE Recipient (
     recipient_id INT PRIMARY KEY AUTO_INCREMENT,
     legal_name VARCHAR(255) NOT NULL,
-    research_organization_name VARCHAR(255) NOT NULL,
+    institute_id INT,
     type VARCHAR(50),
     recipient_type ENUM(
          'Indigenous recipients',                      
@@ -22,5 +23,6 @@ CREATE TABLE Recipient (
     riding_name_en VARCHAR(100),
     riding_name_fr VARCHAR(100),
     riding_number VARCHAR(10),
-    UNIQUE (legal_name, research_organization_name, country, city)
+    UNIQUE (legal_name, country, city),
+    FOREIGN KEY (institute_id) REFERENCES Institute(institute_id) ON DELETE SET NULL
 );

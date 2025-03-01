@@ -1,5 +1,6 @@
 -- File: sql/sp/sp_get_filter_options.sql
 DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_get_filter_options$$
 CREATE PROCEDURE sp_get_filter_options()
 BEGIN
     -- Get distinct agencies
@@ -25,5 +26,11 @@ BEGIN
     FROM Recipient
     WHERE city IS NOT NULL AND city != ''
     ORDER BY city;
+    
+    -- Get distinct institutes
+    SELECT DISTINCT name
+    FROM Institute
+    WHERE name IS NOT NULL AND name != ''
+    ORDER BY name;
 END $$
 DELIMITER ;
