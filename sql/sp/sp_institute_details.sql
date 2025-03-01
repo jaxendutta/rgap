@@ -1,39 +1,50 @@
--- File: sql/sp/sp_recipient_details.sql
+-- File: sql/sp/sp_institute_details.sql
 DELIMITER $$
-DROP PROCEDURE IF EXISTS sp_recipient_details$$
-CREATE PROCEDURE sp_recipient_details(
-    IN p_recipient_id INT
+DROP PROCEDURE IF EXISTS sp_institute_details$$
+CREATE PROCEDURE sp_institute_details(
+    IN p_institute_id INT
 )
 BEGIN
-    -- Get recipient basic info with aggregated stats
+    -- Get institute basic info with aggregated stats
     SELECT 
-        r.*,
-        i.name AS research_organization_name,
-        i.type AS institute_type,
+        i.*,
+        COUNT(DISTINCT r.recipient_id) as total_recipients,
         COUNT(DISTINCT rg.grant_id) as total_grants,
         COALESCE(SUM(rg.agreement_value), 0) as total_funding,
         COALESCE(AVG(rg.agreement_value), 0) as avg_funding,
         MIN(rg.agreement_start_date) as first_grant_date,
         MAX(rg.agreement_start_date) as latest_grant_date,
         COUNT(DISTINCT o.abbreviation) as funding_agencies_count
-    FROM Recipient r
-    LEFT JOIN Institute i ON r.institute_id = i.institute_id
+    FROM Institute i
+    LEFT JOIN Recipient r ON i.institute_id = r.institute_id
     LEFT JOIN ResearchGrant rg ON r.recipient_id = rg.recipient_id
     LEFT JOIN Organization o ON rg.owner_org = o.owner_org
-    WHERE r.recipient_id = p_recipient_id
-    GROUP BY r.recipient_id, i.name, i.type;
+    WHERE i.institute_id = p_institute_id
+    GROUP BY i.institute_id;
 
-    -- Get recipient's grants
+    -- Get institute's recipients
+    SELECT
+        r.*,
+        COUNT(DISTINCT rg.grant_id) as grants_count,
+        COALESCE(SUM(rg.agreement_value), 0) as total_funding
+    FROM Recipient r
+    LEFT JOIN ResearchGrant rg ON r.recipient_id = rg.recipient_id
+    WHERE r.institute_id = p_institute_id
+    GROUP BY r.recipient_id
+    ORDER BY total_funding DESC;
+
+    -- Get institute's grants
     SELECT
         rg.*,
+        r.legal_name as recipient_name,
         o.abbreviation as org,
         o.org_title,
-        p.name_en as program_name,
-        p.purpose_en as program_purpose
+        p.name_en as program_name
     FROM ResearchGrant rg
+    JOIN Recipient r ON rg.recipient_id = r.recipient_id
     JOIN Organization o ON rg.owner_org = o.owner_org
     LEFT JOIN Program p ON rg.prog_id = p.prog_id
-    WHERE rg.recipient_id = p_recipient_id
+    WHERE r.institute_id = p_institute_id
     ORDER BY rg.agreement_start_date DESC;
 
     -- Get funding history by year and agency
@@ -44,8 +55,9 @@ BEGIN
         SUM(rg.agreement_value) as total_value,
         AVG(rg.agreement_value) as avg_value
     FROM ResearchGrant rg
+    JOIN Recipient r ON rg.recipient_id = r.recipient_id
     JOIN Organization o ON rg.owner_org = o.owner_org
-    WHERE rg.recipient_id = p_recipient_id
+    WHERE r.institute_id = p_institute_id
     GROUP BY YEAR(rg.agreement_start_date), o.abbreviation
     ORDER BY year, agency;
 END $$

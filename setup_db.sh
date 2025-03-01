@@ -20,10 +20,11 @@ echo "Database setup started at $(date)" >"$LOG_FILE"
 # Define schema file execution order
 SCHEMA_FILES=(
     "users"
-    "recipients"
-    "programs"
-    "organizations"
-    "grants"
+    "institute"
+    "programs"      # Programs must be created before grants
+    "organizations" # Organizations must be created before grants
+    "recipients"    # Recipients must be created before grants
+    "grants"        # Grants has foreign keys to the above tables
     "bookmarks"
     "search_history"
 )
@@ -117,6 +118,13 @@ for dir in "${DIRS[@]}"; do
     fi
 done
 
+print_status "Fixing schema compatibility..."
+mysql --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap < "${SQL_ROOT}/data/fix_schema.sql" 2>>"$LOG_FILE"
+if [ $? -ne 0 ]; then
+    print_error "Failed to fix schema compatibility"
+    exit 1
+fi
+
 # Special handling for data loading
 print_status "Loading data preparation scripts..."
 {
@@ -126,6 +134,15 @@ print_status "Loading data preparation scripts..."
     print_error "Failed to prepare data tables"
     exit 1
 }
+
+# After the schema files are run and before the data import
+print_status "Fixing database collations..."
+mysql --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap <"${SQL_ROOT}/data/fix_collations.sql" 2>>"$LOG_FILE"
+if [ $? -ne 0 ]; then
+    print_error "Failed to fix collations. Check the logs for details."
+    cat "$LOG_FILE" | tail -n 20
+    exit 1
+fi
 
 print_status "Loading sample data..."
 # Define the sample data file and its compressed version

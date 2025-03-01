@@ -1,8 +1,9 @@
 -- File: sql/schema/programs.sql
 USE rgap;
 
+DROP TABLE IF EXISTS Program;
 CREATE TABLE Program (
-    prog_id INT PRIMARY KEY AUTO_INCREMENT,
+    prog_id VARCHAR(50) PRIMARY KEY,
     name_en VARCHAR(255),
     name_fr VARCHAR(255),
     purpose_en TEXT,

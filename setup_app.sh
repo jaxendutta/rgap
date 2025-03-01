@@ -1,23 +1,18 @@
 #!/bin/bash
 
-# Get script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 # Import setup_utils.sh
-. "$SCRIPT_DIR/setup_utils.sh"
+source "setup_utils.sh"
 
 # Start timing
 start_timer
 
-# Get user-specific MySQL directory
-USER=$(whoami)
-USER_MYSQL_DIR="${MYSQL_DIR}/users/${USER}"
-MYSQL_SOCKET="$USER_MYSQL_DIR/run/mysql.sock"
+# Get script directory (project root)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Function to clean up processes and files
 cleanup() {
     local force=$1
-    echo -e "\n${BLUE}Cleaning up...${NC}"
+    print_status "Cleaning up..."
     
     # Kill processes using PID files
     if [ -f "$SCRIPT_DIR/.client.pid" ]; then
@@ -36,7 +31,7 @@ cleanup() {
     
     # Force kill any remaining processes if requested
     if [ "$force" = "force" ]; then
-        echo -e "${YELLOW}Force killing any remaining processes...${NC}"
+        print_warning "Force killing any remaining processes..."
         pkill -f "node.*$SCRIPT_DIR" 2>/dev/null
         pkill -f "$USER_MYSQL_DIR" 2>/dev/null
     fi
@@ -47,7 +42,7 @@ cleanup() {
     # Clean up port config file
     rm -f "$SCRIPT_DIR/config/.port-config.json" 2>/dev/null
     
-    echo -e "${GREEN}Cleanup complete${NC}"
+    print_success "Cleanup complete"
 }
 
 # Handle script exit
@@ -55,51 +50,58 @@ trap 'cleanup force' SIGINT SIGTERM ERR
 
 # Check if environment is set up
 if [[ -z "${MYSQL_DIR}" ]]; then
-    echo -e "${RED}Error: Environment not set up. Please run 'source setup_env.sh' first.${NC}"
+    print_error "Environment not set up. Please run 'source setup_env.sh' first."
     exit 1
 fi
+
+# Get user-specific MySQL directory
+USER=$(whoami)
+USER_MYSQL_DIR="$MYSQL_DIR/users/$USER"
+MYSQL_SOCKET="$USER_MYSQL_DIR/run/mysql.sock"
 
 # Cleanup any existing processes and files
 cleanup force
 
 # Check if MySQL is set up
 if [ ! -d "$USER_MYSQL_DIR" ]; then
-    echo -e "${YELLOW}MySQL not set up. Running setup_mysql.sh...${NC}"
+    print_warning "MySQL not set up. Running setup_mysql.sh..."
     ./setup_mysql.sh
     if [ $? -ne 0 ]; then
-        echo -e "${RED}MySQL setup failed. Please check the errors and try again.${NC}"
+        print_error "MySQL setup failed. Please check the errors and try again."
         cleanup force
         exit 1
     fi
 fi
 
 # Install dependencies
-echo -e "${BLUE}Installing dependencies...${NC}"
+print_status "Installing dependencies..."
 
 # Server dependencies
-echo -e "${BLUE}Installing server dependencies...${NC}"
+print_status "Installing server dependencies..."
 cd "$SCRIPT_DIR/server"
 npm install
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to install server dependencies${NC}"
+    print_error "Failed to install server dependencies"
     cleanup force
     exit 1
 fi
+print_success "Server dependencies installed successfully"
 
 # Client dependencies
-echo -e "${BLUE}Installing client dependencies...${NC}"
+print_status "Installing client dependencies..."
 cd "$SCRIPT_DIR/client"
 npm install
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to install client dependencies${NC}"
+    print_error "Failed to install client dependencies"
     cleanup force
     exit 1
 fi
+print_success "Client dependencies installed successfully"
 
 cd "$SCRIPT_DIR"
 
 # Get available ports
-echo -e "${BLUE}Finding available ports...${NC}"
+print_status "Finding available ports..."
 
 # Create temporary port finding script
 cat > temp_port_script.js << 'EOF'
@@ -118,7 +120,7 @@ PORT_CONFIG=$(node temp_port_script.js)
 rm temp_port_script.js
 
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to find available ports!${NC}"
+    print_error "Failed to find available ports!"
     cleanup force
     exit 1
 fi
@@ -130,49 +132,49 @@ MYSQL_PORT=$(echo "$PORT_CONFIG" | jq -r '.database')
 
 # Validate ports
 if [[ -z "$CLIENT_PORT" || -z "$SERVER_PORT" || -z "$MYSQL_PORT" ]]; then
-    echo -e "${RED}Failed to get valid ports!${NC}"
+    print_error "Failed to get valid ports!"
     cleanup force
     exit 1
 fi
 
 # Display port information
-echo -e "\n${YELLOW}=== RGAP Service Ports ===${NC}"
-echo -e "${YELLOW}⚠️  NOTE: These ports may be different from previous runs!${NC}"
-echo -e "📝 Port configuration saved at: ${BLUE}$SCRIPT_DIR/config/.port-config.json${NC}\n"
-echo -e "🗃️ SQL DB: ${GREEN}localhost:$MYSQL_PORT${NC}"
-echo -e "🚀 Server: ${GREEN}http://localhost:$SERVER_PORT${NC}"
-echo -e "🌐 Client: ${GREEN}http://localhost:$CLIENT_PORT${NC}\n"
+print "\n${YELLOW}=== RGAP Service Ports ===${NC}"
+print "${YELLOW}⚠️  NOTE: These ports may be different from previous runs!${NC}"
+print "📝 Port configuration saved at: ${BLUE}$SCRIPT_DIR/config/.port-config.json${NC}\n"
+print "🗄️ SQL_DB: ${GREEN}localhost:$MYSQL_PORT${NC}"
+print "🚀 Server: ${GREEN}http://localhost:$SERVER_PORT${NC}"
+print "🌐 Client: ${GREEN}http://localhost:$CLIENT_PORT${NC}\n"
 
 # Start MySQL with specific port
-echo -e "${BLUE}Starting MySQL for user $USER on port $MYSQL_PORT...${NC}"
+print_status "Starting MySQL for user $USER on port $MYSQL_PORT..."
 sed -i "s/^port = .*/port = $MYSQL_PORT/" "$USER_MYSQL_DIR/my.cnf"
 "$USER_MYSQL_DIR/start.sh"
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to start MySQL. Check the logs for details.${NC}"
+    print_error "Failed to start MySQL. Check the logs for details."
     cleanup force
     exit 1
 fi
 
 # Wait for MySQL to be ready
-echo -e "${BLUE}Waiting for MySQL to be ready...${NC}"
+print_status "Waiting for MySQL to be ready..."
 max_attempts=30
 attempt=0
 while [ $attempt -lt $max_attempts ]; do
     if [ -S "$MYSQL_SOCKET" ]; then
         # First try root connection
         if mysql -u root --socket="$MYSQL_SOCKET" -e "SELECT 1" &>/dev/null; then
-            echo -e "${GREEN}MySQL is ready for initial setup!${NC}"
+            print_success "MySQL is ready for initial setup!"
             break
         fi
         # Then try rgap_user connection
         if mysql -u rgap_user -p12345 --socket="$MYSQL_SOCKET" -e "SELECT 1" &>/dev/null; then
-            echo -e "${GREEN}MySQL is ready with rgap_user!${NC}"
+            print_success "MySQL is ready with rgap_user!"
             break
         fi
     fi
     attempt=$((attempt + 1))
     if [ $attempt -eq $max_attempts ]; then
-        echo -e "${RED}\nMySQL failed to start! Checking error log:${NC}"
+        print_error "\nMySQL failed to start! Checking error log:"
         cat "$USER_MYSQL_DIR/log/error.log"
         cleanup force
         exit 1
@@ -182,13 +184,14 @@ while [ $attempt -lt $max_attempts ]; do
 done
 
 # Set up database
-echo -e "${BLUE}Setting up database...${NC}"
+print_status "Setting up database..."
 ./setup_db.sh
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Database setup failed. Check the errors and try again.${NC}"
+    print_error "Database setup failed. Check the errors and try again."
     cleanup force
     exit 1
 fi
+print_success "Database setup completed successfully"
 
 # Export environment variables
 export MYSQL_SOCKET
@@ -197,7 +200,7 @@ export SERVER_PORT
 export MYSQL_PORT
 
 # Start server
-echo -e "${BLUE}Starting server...${NC}"
+print_status "Starting server..."
 cd "$SCRIPT_DIR/server"
 PORT="$SERVER_PORT" \
 DB_PORT="$MYSQL_PORT" \
@@ -211,16 +214,16 @@ SERVER_PID=$!
 echo $SERVER_PID > "$SCRIPT_DIR/.server.pid"
 
 # Wait for server to start
-echo -e "${BLUE}Waiting for server to start...${NC}"
+print_status "Waiting for server to start..."
 attempt=0
 while [ $attempt -lt 30 ]; do
     if curl -s http://localhost:$SERVER_PORT/health >/dev/null; then
-        echo -e "${GREEN}Server is ready!${NC}"
+        print_success "Server is ready!"
         break
     fi
     attempt=$((attempt + 1))
     if [ $attempt -eq 30 ]; then
-        echo -e "${RED}\nServer failed to start!${NC}"
+        print_error "\nServer failed to start!"
         cleanup force
         exit 1
     fi
@@ -228,22 +231,22 @@ while [ $attempt -lt 30 ]; do
 done
 
 # Start client
-echo -e "${BLUE}Starting client...${NC}"
+print_status "Starting client..."
 cd "$SCRIPT_DIR/client"
 VITE_API_URL="http://localhost:$SERVER_PORT" \
 PORT="$CLIENT_PORT" npm run dev &
 CLIENT_PID=$!
 echo $CLIENT_PID > "$SCRIPT_DIR/.client.pid"
 
-echo -e "${GREEN}Application started successfully!${NC}"
-echo -e "${BLUE}Opening client in your default browser...${NC}"
+print_success "Application started successfully!"
+print_status "Opening client in your default browser..."
 sleep 3
-xdg-open "http://localhost:$CLIENT_PORT" 2>/dev/null || open "http://localhost:$CLIENT_PORT" 2>/dev/null || echo -e "${YELLOW}Couldn't open browser automatically. Please open http://localhost:$CLIENT_PORT manually.${NC}"
+xdg-open "http://localhost:$CLIENT_PORT" 2>/dev/null || open "http://localhost:$CLIENT_PORT" 2>/dev/null || print_warning "Couldn't open browser automatically. Please open http://localhost:$CLIENT_PORT manually."
 
-echo
-echo -e "${BLUE}To stop the application:${NC}"
-echo -e "  1. Press Ctrl+C"
-echo -e "  2. Run cleanup script (will be done automatically on Ctrl+C)"
+print
+print_status "To stop the application:"
+print "  1. Press Ctrl+C"
+print "  2. Run cleanup script (will be done automatically on Ctrl+C)"
 
 # Print time taken
 print_time_taken
