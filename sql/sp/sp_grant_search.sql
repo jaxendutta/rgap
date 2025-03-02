@@ -28,13 +28,13 @@ BEGIN
             rg.agreement_start_date,
             rg.agreement_end_date,
             r.recipient_id,
-            r.city,
-            r.province,
-            r.country,
+            i.city,
+            i.province,
+            i.country,
             o.abbreviation AS org
         FROM ResearchGrant rg
         JOIN Recipient r ON rg.recipient_id = r.recipient_id
-        LEFT JOIN Institute i ON r.institute_id = i.institute_id
+        JOIN Institute i ON r.institute_id = i.institute_id
         JOIN Organization o ON rg.owner_org = o.owner_org
         WHERE 1=1 ',
         IF(p_recipient_term IS NOT NULL, 
@@ -49,13 +49,13 @@ BEGIN
            CONCAT(' AND o.abbreviation IN (SELECT value FROM JSON_TABLE(''', p_agencies, ''', ''$[*]'' COLUMNS(value VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PATH ''$'')) as jt)'),
            ''),
         IF(JSON_LENGTH(p_countries) > 0,
-           CONCAT(' AND r.country IN (SELECT value FROM JSON_TABLE(''', p_countries, ''', ''$[*]'' COLUMNS(value VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PATH ''$'')) as jt)'),
+           CONCAT(' AND i.country IN (SELECT value FROM JSON_TABLE(''', p_countries, ''', ''$[*]'' COLUMNS(value VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PATH ''$'')) as jt)'),
            ''),
         IF(JSON_LENGTH(p_provinces) > 0,
-           CONCAT(' AND r.province IN (SELECT value FROM JSON_TABLE(''', p_provinces, ''', ''$[*]'' COLUMNS(value VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PATH ''$'')) as jt)'),
+           CONCAT(' AND i.province IN (SELECT value FROM JSON_TABLE(''', p_provinces, ''', ''$[*]'' COLUMNS(value VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PATH ''$'')) as jt)'),
            ''),
         IF(JSON_LENGTH(p_cities) > 0,
-           CONCAT(' AND r.city IN (SELECT value FROM JSON_TABLE(''', p_cities, ''', ''$[*]'' COLUMNS(value VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PATH ''$'')) as jt)'),
+           CONCAT(' AND i.city IN (SELECT value FROM JSON_TABLE(''', p_cities, ''', ''$[*]'' COLUMNS(value VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci PATH ''$'')) as jt)'),
            ''),
         ' ORDER BY ',
         CASE p_sort_field

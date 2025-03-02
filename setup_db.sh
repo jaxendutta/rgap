@@ -6,6 +6,9 @@
 # Import utility functions
 source "setup_utils.sh"
 
+# Start timing
+start_timer
+
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_FILE="${SCRIPT_DIR}/database_import.log"
@@ -13,6 +16,27 @@ LOG_FILE="${SCRIPT_DIR}/database_import.log"
 # Get current user and directories
 USER=$(whoami)
 USER_MYSQL_DIR="${MYSQL_DIR}/users/${USER}"
+
+# Parse command line arguments
+DATA_SOURCE="sample"  # Default to sample data
+
+while [[ $# -gt 0 ]]; do
+  key="$1"
+  case $key in
+    --full)
+      DATA_SOURCE="full"
+      shift
+      ;;
+    --sample)
+      DATA_SOURCE="sample"
+      shift
+      ;;
+    *)
+      # Unknown option
+      shift
+      ;;
+  esac
+done
 
 # Initialize log file
 echo "Database setup started at $(date)" >"$LOG_FILE"
@@ -67,6 +91,12 @@ run_sql_files() {
         for sql_file in "${files[@]}"; do
             ((current++))
             local file_name=$(basename "$sql_file")
+            
+            # Skip temporary SQL files
+            if [[ "$file_name" == *"runtime"* ]] || [[ "$file_name" == *"custom"* ]]; then
+                continue
+            fi
+            
             setup_progress "$current" "$total" "$file_name"
 
             if [[ $dir == *"/init"* ]]; then
@@ -97,7 +127,6 @@ SQL_ROOT="${SCRIPT_DIR}/sql"
 DIRS=(
     "init"
     "schema"
-    "data"
     "sp"
     "indexes"
 )
@@ -144,62 +173,214 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-print_status "Loading sample data..."
-# Define the sample data file and its compressed version
-SAMPLE_DATA_DIR="${SCRIPT_DIR}/data/sample"
-SAMPLE_DATA_7Z="${SAMPLE_DATA_DIR}/data_2019.7z"
-SAMPLE_DATA="${SAMPLE_DATA_DIR}/data_2019.csv"
+print_status "Loading ${DATA_SOURCE} data..."
 
-# Check if the compressed file exists
-if [ ! -f "$SAMPLE_DATA_7Z" ]; then
-    print_error "Compressed sample data file not found at ${SAMPLE_DATA_7Z}"
+# Determine which data file to use
+if [ "$DATA_SOURCE" = "full" ]; then
+    # Find the most recent data file in the processed directory
+    PROCESSED_DIR="${SCRIPT_DIR}/data/processed"
+    
+    # Check if processed directory exists
+    if [ ! -d "$PROCESSED_DIR" ]; then
+        print_error "Processed data directory not found at ${PROCESSED_DIR}"
+        exit 1
+    fi
+    
+    # Find the most recent 7z file
+    SAMPLE_DATA_7Z=$(find "$PROCESSED_DIR" -name "data_*.7z" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
+    
+    # If no 7z file, try to find a csv.gz file
+    if [ -z "$SAMPLE_DATA_7Z" ]; then
+        SAMPLE_DATA_7Z=$(find "$PROCESSED_DIR" -name "data_*.csv.gz" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
+    fi
+    
+    # If still no file, try to find a plain csv file
+    if [ -z "$SAMPLE_DATA_7Z" ]; then
+        SAMPLE_DATA_7Z=$(find "$PROCESSED_DIR" -name "data_*.csv" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
+    fi
+    
+    if [ -z "$SAMPLE_DATA_7Z" ]; then
+        print_error "No full dataset found in ${PROCESSED_DIR}"
+        print_status "Falling back to sample dataset..."
+        DATA_SOURCE="sample"
+    else
+        print_status "Using full dataset: $(basename "$SAMPLE_DATA_7Z")"
+    fi
+else
+    # Use the sample data file
+    SAMPLE_DATA_7Z="${SCRIPT_DIR}/data/sample/data_2019.7z"
+    
+    # If the 7z file doesn't exist, check for csv or csv.gz
+    if [ ! -f "$SAMPLE_DATA_7Z" ]; then
+        SAMPLE_DATA_CSV="${SCRIPT_DIR}/data/sample/data_2019.csv"
+        SAMPLE_DATA_CSV_GZ="${SCRIPT_DIR}/data/sample/data_2019.csv.gz"
+        
+        if [ -f "$SAMPLE_DATA_CSV" ]; then
+            SAMPLE_DATA_7Z="$SAMPLE_DATA_CSV"
+        elif [ -f "$SAMPLE_DATA_CSV_GZ" ]; then
+            SAMPLE_DATA_7Z="$SAMPLE_DATA_CSV_GZ"
+        else
+            print_error "Sample data file not found. Checked for:"
+            print_error "  - ${SAMPLE_DATA_7Z}"
+            print_error "  - ${SAMPLE_DATA_CSV}"
+            print_error "  - ${SAMPLE_DATA_CSV_GZ}"
+            exit 1
+        fi
+    fi
+    
+    print_status "Using sample dataset: $(basename "$SAMPLE_DATA_7Z")"
+fi
+
+# Create temporary directory for extraction
+TMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+# Handle different file types
+if [[ "$SAMPLE_DATA_7Z" == *.7z ]]; then
+    # Extract 7z file
+    print_status "Extracting 7z data file..."
+    7z e "$SAMPLE_DATA_7Z" -o"$TMP_DIR" > /dev/null
+    
+    if [ $? -ne 0 ]; then
+        print_error "Failed to extract ${SAMPLE_DATA_7Z}"
+        exit 1
+    fi
+    
+    # Find the extracted CSV file
+    SAMPLE_DATA=$(find "$TMP_DIR" -name "*.csv" -type f | head -n 1)
+elif [[ "$SAMPLE_DATA_7Z" == *.csv.gz ]]; then
+    # Extract gzip file
+    print_status "Extracting gzipped CSV file..."
+    gunzip -c "$SAMPLE_DATA_7Z" > "$TMP_DIR/data.csv"
+    SAMPLE_DATA="$TMP_DIR/data.csv"
+elif [[ "$SAMPLE_DATA_7Z" == *.csv ]]; then
+    # Just copy the CSV file
+    print_status "Copying CSV file..."
+    cp "$SAMPLE_DATA_7Z" "$TMP_DIR/data.csv"
+    SAMPLE_DATA="$TMP_DIR/data.csv"
+else
+    print_error "Unsupported file format: $(basename "$SAMPLE_DATA_7Z")"
     exit 1
 fi
 
-# Uncompress the 7z file to get the CSV file
-7z e "$SAMPLE_DATA_7Z" -o"$SAMPLE_DATA_DIR"
-if [ $? -ne 0 ]; then
-    print_error "Failed to uncompress ${SAMPLE_DATA_7Z}"
+if [ -z "$SAMPLE_DATA" ] || [ ! -f "$SAMPLE_DATA" ]; then
+    print_error "No CSV file found in extracted archive or specified path"
     exit 1
 fi
 
-# Check if the CSV file was successfully extracted
-if [ ! -f "$SAMPLE_DATA" ]; then
-    print_error "Sample data file not found at ${SAMPLE_DATA} after extraction"
-    exit 1
+# Fix encoding issues
+print_status "Fixing encoding issues in the CSV file..."
+iconv -f UTF-8 -t UTF-8 -c "$SAMPLE_DATA" > "${SAMPLE_DATA}.fixed"
+if [ $? -ne 0 ] || [ ! -s "${SAMPLE_DATA}.fixed" ]; then
+    print_warning "iconv failed, trying alternative method..."
+    sed 's/[^[:print:]\t]/?/g' "$SAMPLE_DATA" > "${SAMPLE_DATA}.fixed"
+    if [ $? -ne 0 ] || [ ! -s "${SAMPLE_DATA}.fixed" ]; then
+        print_error "Failed to fix encoding issues"
+        exit 1
+    fi
 fi
-if [ ! -f "$SAMPLE_DATA" ]; then
-    print_error "Sample data file not found at ${SAMPLE_DATA}"
-    exit 1
-fi
+mv "${SAMPLE_DATA}.fixed" "$SAMPLE_DATA"
 
-setup_progress 1 3 "Loading CSV data "
-mysql --local-infile=1 --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap <<EOF
+# Count total rows for progress reporting
+TOTAL_ROWS=$(wc -l < "$SAMPLE_DATA" | awk '{print $1-1}')  # Subtract 1 for header
+print_status "Preparing to load ${TOTAL_ROWS} records..."
+
+# Create a load file with special handling for embedded newlines
+LOAD_SQL="${TMP_DIR}/load_data_runtime.sql"
+cat >"$LOAD_SQL" <<EOF
+SET SESSION character_set_client = utf8mb4;
+SET SESSION character_set_connection = utf8mb4;
+SET SESSION character_set_results = utf8mb4;
+SET SESSION collation_connection = utf8mb4_unicode_ci;
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Important: Using FIELDS ENCLOSED BY '"' to properly handle embedded newlines
 LOAD DATA LOCAL INFILE '${SAMPLE_DATA}'
 INTO TABLE temp_grants
 CHARACTER SET utf8mb4
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
+ESCAPED BY '\\\\'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS;
+
+SET FOREIGN_KEY_CHECKS = 1;
 EOF
 
-if ! check_error "Failed to load CSV data"; then
+# Enhanced progress indication for data loading
+print_status "Data Import Process (3 phases)"
+print_status "Phase 1/3: Loading CSV data into temporary table..."
+
+# Start a spinner animation for the loading phase
+spin() {
+  local i=0
+  local sp='/-\|'
+  while true; do
+    printf "\r  %s Processing... %s " "$(tput bold)" "${sp:i++%${#sp}:1}"
+    sleep 0.2
+  done
+}
+
+# Start spinner in background
+spin &
+SPIN_PID=$!
+
+# Make sure to kill the spinner when the script exits
+trap 'kill $SPIN_PID 2>/dev/null; rm -rf "$TMP_DIR"' EXIT
+
+# Load the data
+mysql --local-infile=1 --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap <"$LOAD_SQL" 2>>"$LOG_FILE"
+
+# Check if data loading succeeded
+if [ $? -ne 0 ]; then
+    # Kill spinner and show error
+    kill $SPIN_PID 2>/dev/null
+    wait $SPIN_PID 2>/dev/null
+    printf "\r%s                                      \r" "$(tput sgr0)"
+    print_error "Failed to load CSV data. Check $LOG_FILE for details."
     exit 1
 fi
 
-setup_progress 2 3 "Transforming data "
+# Kill spinner
+kill $SPIN_PID 2>/dev/null
+wait $SPIN_PID 2>/dev/null
+printf "\r%s                                      \r" "$(tput sgr0)"
+print_success "CSV data loaded successfully!"
+
+# Phase 2: Transforming data
+print_status "Phase 2/3: Transforming temporary data into normalized schema..."
+print_status "This may take a while for large datasets. Please be patient."
+
+# Start spinner for transformation phase
+spin &
+SPIN_PID=$!
+
+# Perform the data transformation
 mysql --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap <"${SQL_ROOT}/data/import_data.sql" 2>>"$LOG_FILE"
 
-if ! check_error "Failed to transform data"; then
+# Kill spinner
+kill $SPIN_PID 2>/dev/null
+wait $SPIN_PID 2>/dev/null
+printf "\r%s                                      \r" "$(tput sgr0)"
+
+if [ $? -ne 0 ]; then
+    print_error "Failed to transform data. Check $LOG_FILE for details."
     exit 1
 fi
+
+print_success "Data transformation complete!"
+print_status "Phase 3/3: Creating database indexes and finalizing..."
+
+# Run any final optimization or cleanup SQL here
+mysql --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap -e "ANALYZE TABLE ResearchGrant, Recipient, Institute, Program, Organization;" >>"$LOG_FILE" 2>&1
 
 # Clear progress line before printing status
 clear_progress_line
-print_status "Data import summary"
+print_success "Data import process completed successfully!"
 
-# Run SQL with error redirection
+# Run SQL with error redirection to gather database statistics
 {
     mysql --skip-column-names --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap >temp_stats.txt 2>/dev/null <<EOF
 -- Table statistics
@@ -209,6 +390,9 @@ SELECT '---------------', '---------------'
 UNION ALL
 SELECT 'Recipients', CAST(COUNT(*) AS CHAR)
 FROM Recipient
+UNION ALL
+SELECT 'Institutes', CAST(COUNT(*) AS CHAR)
+FROM Institute
 UNION ALL
 SELECT 'Programs', CAST(COUNT(*) AS CHAR)
 FROM Program
@@ -226,9 +410,10 @@ SELECT '---------------', '---------------', '---------------'
 UNION ALL
 SELECT 
     LEFT(legal_name, 30),
-    LEFT(research_organization_name, 35),
+    LEFT(i.name, 35),
     recipient_type
-FROM Recipient 
+FROM Recipient r 
+LEFT JOIN Institute i ON r.institute_id = i.institute_id
 LIMIT 3;
 
 -- Sample Grants
@@ -247,8 +432,8 @@ EOF
 
 # Format and display the output with proper spacing
 {
-    print "\n${BLUE}Table Statistics:${NC}"
-    sed -n '1,6p' temp_stats.txt | column -t -s $'\t' | grep -v "^-" | while IFS= read -r line; do
+    print "\n${BLUE}Database Statistics:${NC}"
+    sed -n '1,7p' temp_stats.txt | column -t -s $'\t' | grep -v "^-" | while IFS= read -r line; do
         print "  $line"
     done
 
@@ -272,8 +457,10 @@ EOF
 rm -f temp_stats.txt
 
 print_success "Database setup completed successfully!"
+print_time_taken
 print_status "Database Info:"
 print "• Database Name: rgap"
 print "• Username: rgap_user"
 print "• Password: 12345"
 print "• Socket: ${USER_MYSQL_DIR}/run/mysql.sock"
+print "• Data Source: ${DATA_SOURCE} (${TOTAL_ROWS} records)"
