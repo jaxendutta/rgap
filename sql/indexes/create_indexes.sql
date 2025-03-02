@@ -12,7 +12,6 @@ CREATE INDEX idx_grant_program ON ResearchGrant(prog_id);
 -- Indexes for Recipient
 CREATE INDEX idx_recipient_name ON Recipient(legal_name);
 CREATE INDEX idx_recipient_institute ON Recipient(institute_id);
-CREATE INDEX idx_recipient_location ON Recipient(country, province, city);
 
 -- Indexes for Institute
 CREATE INDEX idx_institute_name ON Institute(name);

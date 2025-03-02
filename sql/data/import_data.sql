@@ -7,7 +7,7 @@ SELECT DISTINCT
     owner_org_title,
     org
 FROM temp_grants
-WHERE owner_org IS NOT NULL;
+WHERE owner_org IS NOT NULL AND org IS NOT NULL;
 
 -- Insert Programs with a simpler ID format for safety
 INSERT IGNORE INTO Program (prog_id, name_en, name_fr, purpose_en, purpose_fr, naics_identifier)
@@ -21,23 +21,10 @@ SELECT DISTINCT
 FROM temp_grants
 WHERE prog_name_en IS NOT NULL OR prog_name_fr IS NOT NULL;
 
--- Insert Institutes first
-INSERT IGNORE INTO Institute (name, type, country, province, city)
-SELECT DISTINCT
-    COALESCE(NULLIF(TRIM(research_organization_name), ''), 'Unknown Institution'),
-    'Research Institution',
-    recipient_country,
-    recipient_province,
-    recipient_city
-FROM temp_grants
-WHERE research_organization_name IS NOT NULL;
-
--- Insert Recipients with proper handling of type and references to Institute
-INSERT IGNORE INTO Recipient (
-    legal_name,
-    institute_id,
+-- Insert Institutes with all location data
+INSERT IGNORE INTO Institute (
+    name,
     type,
-    recipient_type,
     country,
     province,
     city,
@@ -47,14 +34,14 @@ INSERT IGNORE INTO Recipient (
     riding_number
 )
 SELECT DISTINCT
-    COALESCE(NULLIF(TRIM(recipient_legal_name), ''), 'Unknown'),
-    i.institute_id,
-    'Academia', -- Default type based on data 
-    CASE recipient_type
-        WHEN 'P' THEN 'Individual or sole proprietorships'
-        WHEN 'G' THEN 'Government'
-        WHEN 'A' THEN 'Academia'
-        ELSE 'Other'
+    COALESCE(NULLIF(TRIM(research_organization_name), ''), 'Unknown Institution'),
+    CASE 
+        WHEN research_organization_name LIKE '%University%' OR research_organization_name LIKE '%Université%' THEN 'University'
+        WHEN research_organization_name LIKE '%College%' THEN 'College'
+        WHEN research_organization_name LIKE '%Hospital%' OR research_organization_name LIKE '%Health%' THEN 'Hospital/Healthcare'
+        WHEN research_organization_name LIKE '%Institute%' THEN 'Research Institute'
+        WHEN research_organization_name LIKE '%Center%' OR research_organization_name LIKE '%Centre%' THEN 'Research Center'
+        ELSE 'Academic Institution'
     END,
     recipient_country,
     recipient_province,
@@ -63,14 +50,35 @@ SELECT DISTINCT
     federal_riding_name_en,
     federal_riding_name_fr,
     federal_riding_number
+FROM temp_grants
+WHERE research_organization_name IS NOT NULL;
+
+-- Insert Recipients with institute references but without location duplicates
+INSERT IGNORE INTO Recipient (
+    legal_name,
+    institute_id,
+    type,
+    recipient_type
+)
+SELECT DISTINCT
+    COALESCE(NULLIF(TRIM(recipient_legal_name), ''), 'Unknown'),
+    i.institute_id,
+    CASE
+        WHEN recipient_type = 'P' THEN 'Individual'
+        WHEN recipient_type = 'G' THEN 'Government'
+        WHEN recipient_type = 'A' THEN 'Academia'
+        ELSE 'Other'
+    END, 
+    CASE recipient_type
+        WHEN 'P' THEN 'Individual or sole proprietorships'
+        WHEN 'G' THEN 'Government'
+        WHEN 'A' THEN 'Academia'
+        ELSE 'Other'
+    END
 FROM temp_grants tg
 LEFT JOIN Institute i ON 
     i.name = COALESCE(NULLIF(TRIM(tg.research_organization_name), ''), 'Unknown Institution')
-    AND i.country = tg.recipient_country
-    AND i.province = tg.recipient_province
-    AND i.city = tg.recipient_city
-WHERE tg.recipient_legal_name IS NOT NULL 
-   OR tg.research_organization_name IS NOT NULL;
+WHERE recipient_legal_name IS NOT NULL;
 
 -- Insert Grants with proper relationships
 INSERT INTO ResearchGrant (
@@ -123,15 +131,21 @@ SELECT
     tg.expected_results_fr,
     tg.owner_org,
     tg.org,
-    r.recipient_id,
-    -- Use the same format for prog_id as in the Program table insertion
-    CONCAT('PROG_', SUBSTRING(MD5(COALESCE(tg.prog_name_en, 'Unknown')), 1, 8))
+    -- Fix the recipient matching based on legal name only
+    (SELECT r.recipient_id 
+     FROM Recipient r 
+     WHERE r.legal_name = COALESCE(NULLIF(TRIM(tg.recipient_legal_name), ''), 'Unknown')
+     LIMIT 1),
+    -- Handle potential missing programs
+    (SELECT p.prog_id
+     FROM Program p 
+     WHERE p.prog_id = CONCAT('PROG_', SUBSTRING(MD5(COALESCE(tg.prog_name_en, 'Unknown')), 1, 8))
+     LIMIT 1)
 FROM temp_grants tg
-LEFT JOIN Recipient r ON 
-    r.legal_name = COALESCE(NULLIF(TRIM(tg.recipient_legal_name), ''), 'Unknown')
-    AND r.country = tg.recipient_country
-    AND r.city = tg.recipient_city
 WHERE tg.ref_number IS NOT NULL;
+
+-- Debug info - print count of grants loaded
+SELECT COUNT(*) AS 'Grants Loaded' FROM ResearchGrant;
 
 -- Clean up
 DROP TABLE temp_grants;

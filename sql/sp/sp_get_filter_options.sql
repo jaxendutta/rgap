@@ -3,31 +3,31 @@ DELIMITER $$
 DROP PROCEDURE IF EXISTS sp_get_filter_options$$
 CREATE PROCEDURE sp_get_filter_options()
 BEGIN
-    -- Get distinct agencies
+    -- Get distinct agencies (from Organization table)
     SELECT DISTINCT abbreviation
     FROM Organization
     WHERE abbreviation IS NOT NULL AND abbreviation != ''
     ORDER BY abbreviation;
 
-    -- Get distinct countries
+    -- Get distinct countries (from Institute table)
     SELECT DISTINCT country
-    FROM Recipient
+    FROM Institute
     WHERE country IS NOT NULL AND country != ''
     ORDER BY country;
 
-    -- Get distinct provinces
+    -- Get distinct provinces (from Institute table)
     SELECT DISTINCT province
-    FROM Recipient
+    FROM Institute
     WHERE province IS NOT NULL AND province != ''
     ORDER BY province;
 
-    -- Get distinct cities 
+    -- Get distinct cities (from Institute table)
     SELECT DISTINCT city
-    FROM Recipient
+    FROM Institute
     WHERE city IS NOT NULL AND city != ''
     ORDER BY city;
     
-    -- Get distinct institutes
+    -- Get distinct institutes (from Institute table)
     SELECT DISTINCT name
     FROM Institute
     WHERE name IS NOT NULL AND name != ''

@@ -273,7 +273,7 @@ print_status "Creating convenience commands..."
 mkdir -p "${HOME}/bin"
 ln -sf "${USER_MYSQL_DIR}/start.sh" "${HOME}/bin/mysql-rgap-start"
 ln -sf "${USER_MYSQL_DIR}/stop.sh" "${HOME}/bin/mysql-rgap-stop"
-echo 'mysql -u root --socket=${USER_MYSQL_DIR}/run/mysql.sock' > "${HOME}/bin/mysql-rgap"
+echo "mysql -u root --socket=${USER_MYSQL_DIR}/run/mysql.sock" > "${HOME}/bin/mysql-rgap"
 chmod +x "${HOME}/bin/mysql-rgap"
 
 # Ensure ${HOME}/bin is in PATH

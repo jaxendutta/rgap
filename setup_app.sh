@@ -9,6 +9,28 @@ start_timer
 # Get script directory (project root)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Parse command line arguments
+INTERACTIVE=true
+DATA_SIZE="sample"
+
+while [[ $# -gt 0 ]]; do
+  key="$1"
+  case $key in
+    --full)
+      DATA_SIZE="full"
+      shift
+      ;;
+    --non-interactive)
+      INTERACTIVE=false
+      shift
+      ;;
+    *)
+      # Unknown option
+      shift
+      ;;
+  esac
+done
+
 # Function to clean up processes and files
 cleanup() {
     local force=$1
@@ -185,7 +207,31 @@ done
 
 # Set up database
 print_status "Setting up database..."
-./setup_db.sh
+
+# Prompt for data size if in interactive mode
+if [ "$INTERACTIVE" = true ]; then
+    echo
+    echo "Database setup options:"
+    echo "1) Use sample data (~35K records, faster setup)"
+    echo "2) Use full dataset (~170K records, comprehensive but slower)"
+    echo
+    read -p "Choose an option [1/2] (default: 1): " data_choice
+    
+    if [ "$data_choice" = "2" ]; then
+        DATA_SIZE="full"
+        print_status "Using full dataset. This may take several minutes to load."
+    else
+        print_status "Using sample dataset for faster setup."
+    fi
+fi
+
+# Pass the data size parameter to setup_db.sh
+if [ "$DATA_SIZE" = "full" ]; then
+    ./setup_db.sh --full
+else
+    ./setup_db.sh --sample
+fi
+
 if [ $? -ne 0 ]; then
     print_error "Database setup failed. Check the errors and try again."
     cleanup force
