@@ -64,6 +64,7 @@ export function useGrantSearch(params: GrantSearchParams) {
         queryKey: grantKeys.search(params),
         queryFn: async () => {
             try {
+                // Create a clean copy of the params to ensure we're using the most current values
                 const cleanParams = {
                     ...params,
                     filters: cleanFilters(params.filters),
@@ -92,11 +93,12 @@ export function useGrantSearch(params: GrantSearchParams) {
                 throw error;
             }
         },
-        enabled: false,
+        enabled: false, // IMPORTANT: Set to false to prevent auto-fetching
         staleTime: 30000, // Data considered fresh for 30 seconds
         gcTime: 5 * 60 * 1000, // Keep in garbage collection for 5 minutes
         retry: 1, // Only retry once on failure
-        retryDelay: 1000, // Wait 1 second before retrying
+        retryDelay: 1000, // Wait 1 second before retrying,
+        refetchOnWindowFocus: false, // Prevent refetching when window regains focus
     });
 }
 

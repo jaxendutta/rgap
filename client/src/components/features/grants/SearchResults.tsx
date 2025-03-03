@@ -14,7 +14,7 @@ interface SearchResultsProps {
     error?: Error | null;
     onBookmark?: (grantId: string) => void;
     showVisualization?: boolean;
-    isEmptyState?: boolean;
+    isInitialState?: boolean;
 }
 
 const groupByOptions = [
@@ -30,7 +30,7 @@ export const SearchResults = ({
     error,
     onBookmark,
     showVisualization,
-    isEmptyState = true,
+    isInitialState = true,
 }: SearchResultsProps) => {
     const [groupBy, setGroupBy] = useState<GroupByOption>("org");
 
@@ -88,7 +88,7 @@ export const SearchResults = ({
             });
     };
 
-    if (isEmptyState) {
+    if (isInitialState) {
         return (
             <div className="flex flex-col items-center justify-center py-16 text-gray-500">
                 <FileSearch className="h-16 w-16 mb-4" />
@@ -140,13 +140,11 @@ export const SearchResults = ({
         );
     }
 
-    const visualizationData = transformDataForVisualization(data);
-
     return (
         <div className="space-y-4">
             {showVisualization && (
                 <TrendVisualizer
-                    data={visualizationData}
+                    data={transformDataForVisualization(data)}
                     groupBy={groupBy}
                     onGroupByChange={(value) =>
                         setGroupBy(value as GroupByOption)
