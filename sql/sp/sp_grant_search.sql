@@ -21,17 +21,27 @@ BEGIN
         SELECT DISTINCT
             rg.grant_id,
             rg.ref_number,
-            r.legal_name,
-            i.name AS research_organization_name,
-            rg.agreement_title_en,
+            rg.amendment_number,
+            rg.amendment_date,
+            rg.agreement_type,
+            rg.agreement_number,
             rg.agreement_value,
+            rg.foreign_currency_type,
+            rg.foreign_currency_value,
             rg.agreement_start_date,
             rg.agreement_end_date,
+            rg.agreement_title_en,
+            rg.description_en,
+            rg.expected_results_en,
+            r.legal_name,
+            i.name AS research_organization_name,
             r.recipient_id,
             i.city,
             i.province,
             i.country,
-            o.abbreviation AS org
+            o.abbreviation AS org,
+            rg.owner_org,
+            o.org_title AS owner_org_title
         FROM ResearchGrant rg
         JOIN Recipient r ON rg.recipient_id = r.recipient_id
         JOIN Institute i ON r.institute_id = i.institute_id
