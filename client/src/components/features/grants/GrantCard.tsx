@@ -76,10 +76,10 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
         
         return (
             <span className={cn(
-                "inline-flex items-center ml-2 px-2 py-0.5 rounded text-xs font-medium",
+                "inline-flex items-start ml-2 px-2 py-0.5 rounded text-xs font-medium",
                 diff > 0 ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"
             )}>
-                {diff > 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                {diff > 0 ? <TrendingUp className="h-3 w-3 mr-1 mt-0.5 shrink-0" /> : <TrendingDown className="h-3 w-3 mr-1 mt-1 shrink-0" />}
                 {diff > 0 ? '+' : ''}{formatCurrency(diff)}
             </span>
         );
@@ -206,20 +206,6 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                             <p className="text-sm text-gray-500 flex items-center">
                                 <Database className="inline-block h-3 w-3 ml-0.5 mr-1.5" />
                                 <span>{grant.ref_number}</span>
-                                {amendmentNumber > 0 && (
-                                    <span className="text-amber-600 ml-2">Amendment {amendmentNumber}</span>
-                                )}
-                                {hasAmendments && (
-                                    <span 
-                                        className="text-blue-600 ml-2 cursor-pointer hover:underline" 
-                                        onClick={() => {
-                                            setIsExpanded(true);
-                                            setActiveTab('versions');
-                                        }}
-                                    >
-                                        ({sortedAmendments.length} Versions)
-                                    </span>
-                                )}
                             </p>
                         </div>
                     </div>
@@ -355,7 +341,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                 <div className={cn(
                     "overflow-hidden transition-all duration-300 ease-in-out",
                     isExpanded 
-                        ? "opacity-100 max-h-[2000px] mt-2 lg:mt-4 pt-2 lg:pt-4 border-t" 
+                        ? "opacity-100 max-h-[2000px] mt-2 lg:mt-4 pt-2 border-t" 
                         : "opacity-0 max-h-0"
                 )}>
                     {/* Tabs */}
@@ -615,20 +601,20 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                                         <Layers className="h-4 w-4 mr-1.5" />
                                         Version Timeline
                                     </h3>
-                                    <div className="grid grid-cols-3 gap-2 lg:gap-4">
-                                        <div className="bg-white p-2 lg:p-4 rounded-lg shadow-sm">
-                                            <h4 className="text-xs lg:text-sm font-medium text-gray-700 mb-1">Total Versions</h4>
-                                            <p className="text-xs lg:text-md font-semibold text-gray-900">{sortedAmendments.length}</p>
+                                    <div className="grid grid-cols-3 gap-2 lg:gap-4 text-center">
+                                        <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
+                                            <h4 className="text-xs lg:text-sm font-medium text-gray-500 mb-1">Total Versions</h4>
+                                            <p className="text-sm lg:text-md font-semibold text-gray-900">{sortedAmendments.length}</p>
                                         </div>
                                         {sortedAmendments.length > 1 && (
                                             <>
-                                                <div className="bg-white p-2 lg:p-4 rounded-lg shadow-sm">
-                                                    <h4 className="text-xs lg:text-sm font-medium text-gray-700 mb-1">First Version</h4>
-                                                    <p className="text-xs lg:text-md font-semibold text-gray-900">{formatDate(sortedAmendments[sortedAmendments.length-1].agreement_start_date)}</p>
+                                                <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
+                                                    <h4 className="text-xs lg:text-sm font-medium text-gray-500 mb-1">First Version</h4>
+                                                    <p className="text-sm lg:text-md font-semibold text-gray-900">{formatDate(sortedAmendments[sortedAmendments.length-1].agreement_start_date)}</p>
                                                 </div>
-                                                <div className="bg-white p-2 lg:p-4 rounded-lg shadow-sm">
-                                                    <h4 className="text-xs lg:text-sm font-medium text-gray-700 mb-1">Latest Version</h4>
-                                                    <p className="text-xs lg:text-md font-semibold text-gray-900">{formatDate(sortedAmendments[0].amendment_date || sortedAmendments[0].agreement_start_date)}</p>
+                                                <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
+                                                    <h4 className="text-xs lg:text-sm font-medium text-gray-500 mb-1">Latest Version</h4>
+                                                    <p className="text-sm lg:text-md font-semibold text-gray-900">{formatDate(sortedAmendments[0].amendment_date || sortedAmendments[0].agreement_start_date)}</p>
                                                 </div>
                                             </>
                                         )}
@@ -636,14 +622,14 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                                 </div>
                                 
                                 {/* Visualization of amendment timeline */}
-                                <div className="relative pt-8 pb-4">
+                                <div className="relative pt-4 lg:pt-6 pb-4">
                                     {/* Timeline line */}
                                     <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
                                     
                                     {/* Amendment entries */}
-                                    <div className="space-y-8">
+                                    <div className="space-y-6 lg:space-y-8">
                                         {sortedAmendments.map((amendment, index) => (
-                                            <div key={amendment.amendment_number} className="relative pl-16">
+                                            <div key={amendment.amendment_number} className="relative pl-12 lg:pl-16">
                                                 {/* Timeline dot */}
                                                 <div className={cn(
                                                     "absolute left-2 w-5 h-5 rounded-full border-2 flex items-center justify-center",
@@ -661,7 +647,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                                                 
                                                 {/* Amendment card */}
                                                 <div className="bg-white border rounded-lg shadow-sm">
-                                                    <div className="p-4">
+                                                    <div className="p-3 lg:p-4">
                                                         <div className="flex justify-between items-start">
                                                             <div>
                                                                 <h4 className={cn(
@@ -692,7 +678,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                                                     {index < sortedAmendments.length - 1 && (
                                                         <div className="border-t px-4 py-3 bg-gray-50 rounded-b-lg">
                                                             <p className="text-xs font-medium text-gray-600 mb-2">
-                                                                Changes from previous version:
+                                                                Registered changes from previous version:
                                                             </p>
                                                             <div className="space-y-2 text-sm">
                                                                 {/* Amount change */}
@@ -752,30 +738,30 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                         {activeTab === 'funding' && (
                             <div>
                                 {/* Funding summary header */}
-                                <div className="mb-6 bg-gray-50 p-4 rounded-lg">
-                                    <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                                        <LineChart className="h-4 w-4 mr-1.5" />
+                                <div className="mb-6 bg-gray-50 p-3 lg:p-4 rounded-lg">
+                                    <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-start">
+                                        <LineChart className="h-4 w-4 mr-1.5 mt-0.5 shrink-0" />
                                         Funding Overview
                                     </h3>
                                     
                                     {hasAmendments && sortedAmendments.length > 1 ? (
-                                        <div className="grid grid-cols-3 gap-4 text-sm">
-                                            <div>
-                                                <p className="text-gray-500">Original Value</p>
-                                                <p className="text-gray-900 font-medium text-lg">
+                                        <div className="grid grid-cols-3 gap-2 lg:gap-4 lg:text-sm text-center">
+                                            <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
+                                                <p className="text-gray-500 text-xs">Original Value</p>
+                                                <p className="text-gray-900 font-medium text-md lg:text-lg">
                                                     {formatCurrency(sortedAmendments[sortedAmendments.length - 1].agreement_value)}
                                                 </p>
                                             </div>
-                                            <div>
-                                                <p className="text-gray-500">Current Value</p>
-                                                <p className="text-gray-900 font-medium text-lg">
+                                            <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
+                                                <p className="text-gray-500 text-xs">Current Value</p>
+                                                <p className="text-gray-900 font-medium text-md lg:text-lg">
                                                     {formatCurrency(grant.agreement_value)}
                                                 </p>
                                             </div>
-                                            <div>
-                                                <p className="text-gray-500">Total Change</p>
+                                            <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
+                                                <p className="text-gray-500 text-xs">Total Change</p>
                                                 <p className={cn(
-                                                    "font-medium text-lg",
+                                                    "font-medium text-md lg:text-lg",
                                                     grant.agreement_value > sortedAmendments[sortedAmendments.length - 1].agreement_value
                                                         ? "text-green-600" 
                                                         : grant.agreement_value < sortedAmendments[sortedAmendments.length - 1].agreement_value
