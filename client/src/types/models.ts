@@ -1,5 +1,14 @@
 // src/types/models.ts
 
+// Amendment type for grant amendments
+export interface GrantAmendment {
+    amendment_number: string;
+    amendment_date: string;
+    agreement_value: number;
+    agreement_start_date: string;
+    agreement_end_date: string;
+}
+
 // Recipient
 export interface Recipient {
     recipient_id: number;
@@ -18,7 +27,7 @@ export interface Recipient {
 
 // Grant
 export interface ResearchGrant {
-    grant_id: number;
+    grant_id?: number;
     ref_number: string;
     amendment_number?: string;
     amendment_date?: string;
@@ -41,8 +50,11 @@ export interface ResearchGrant {
     city: string;
     province: string;
     country: string;
-    org: string; // abbreviation from Organization table
+    org: string;  // abbreviation from Organization table
     owner_org?: string;
     owner_org_title?: string; // Full name of the organization
     prog_id?: string;
+    
+    // New field for amendment history
+    amendments_history?: GrantAmendment[];
 }
