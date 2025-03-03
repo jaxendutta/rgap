@@ -210,7 +210,7 @@ export const SearchPage = () => {
                     "transition-all duration-300 ease-in-out",
                     searchTermsChanged && showBanner
                         ? "opacity-100 transform translate-y-0 scale-100"
-                        : "opacity-0 transform -translate-y-4 scale-95 pointer-events-none"
+                        : "opacity-0 transform -translate-y-4 scale-95 pointer-events-none hidden"
                 )}
             >
                 <div className="flex items-start">

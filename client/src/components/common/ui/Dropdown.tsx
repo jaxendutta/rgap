@@ -33,7 +33,7 @@ export const Dropdown = ({
     onChange,
     multiple = false,
     className,
-    placeholder = "Select...",
+    placeholder = "Select",
     renderOption,
 }: DropdownProps) => {
     const [isOpen, setIsOpen] = useState(false);
