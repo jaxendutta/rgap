@@ -14,9 +14,21 @@ CREATE PROCEDURE sp_consolidated_grant_search(
     IN p_provinces JSON,
     IN p_cities JSON,
     IN p_sort_field VARCHAR(20),
-    IN p_sort_direction VARCHAR(4)
+    IN p_sort_direction VARCHAR(4),
+    IN p_page_size INT,
+    IN p_page INT
 )
 BEGIN
+    DECLARE v_offset INT;
+    DECLARE v_total_count INT;
+    
+    -- Calculate offset
+    SET v_offset = (p_page - 1) * p_page_size;
+    
+    -- Set default page size if not provided
+    SET p_page_size = IFNULL(p_page_size, 20);
+    SET p_page = IFNULL(p_page, 1);
+    
     -- Set up dynamic SQL variables
     SET @where_clause = CONCAT(
         " WHERE 1=1",
@@ -104,6 +116,20 @@ BEGIN
         AND rg.agreement_value BETWEEN p_value_min AND p_value_max
     GROUP BY rg.ref_number;
     
+    -- Get total count
+    SET @count_query = CONCAT("
+        SELECT COUNT(*) INTO @total_count
+        FROM ResearchGrant rg
+        JOIN Recipient r ON rg.recipient_id = r.recipient_id
+        JOIN Institute i ON r.institute_id = i.institute_id
+        JOIN Organization o ON rg.owner_org = o.owner_org
+        JOIN temp_latest_amendments tla ON rg.ref_number = tla.ref_number AND rg.amendment_number = tla.latest_amendment
+        ", @where_clause);
+    
+    PREPARE stmt FROM @count_query;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+    
     -- Define the sorting clause
     SET @order_clause = IF(
         p_sort_field = 'value',
@@ -119,7 +145,7 @@ BEGIN
         )
     );
     
-    -- Create the base query to get all fields
+    -- Create the base query to get all fields with pagination
     SET @query = CONCAT("
         SELECT 
             rg.ref_number,
@@ -163,8 +189,14 @@ BEGIN
         JOIN Institute i ON r.institute_id = i.institute_id
         JOIN Organization o ON rg.owner_org = o.owner_org
         JOIN temp_latest_amendments tla ON rg.ref_number = tla.ref_number AND rg.amendment_number = tla.latest_amendment
-        ", @order_clause);
+        ", @where_clause, @order_clause, 
+        " LIMIT ", p_page_size, 
+        " OFFSET ", v_offset);
     
+    -- First return the total count
+    SELECT IFNULL(@total_count, 0) AS total_count;
+    
+    -- Then return the paginated data
     PREPARE stmt FROM @query;
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
