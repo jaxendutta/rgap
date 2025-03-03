@@ -1,9 +1,10 @@
 // src/hooks/api/useGrants.ts
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, InfiniteData } from "@tanstack/react-query";
 import axios from "axios";
 import portConfig from "../../../../config/ports.json";
 import { ResearchGrant } from "@/types/models";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
+import { GrantSearchParams, SearchResponse } from "@/types/search";
 
 const API = axios.create({
     baseURL:
@@ -12,23 +13,12 @@ const API = axios.create({
     timeout: 15000,
 });
 
-export interface GrantSearchParams {
-    searchTerms: {
-        recipient: string;
-        institute: string;
-        grant: string;
-    };
-    filters: typeof DEFAULT_FILTER_STATE;
-    sortConfig: {
-        field: "date" | "value";
-        direction: "asc" | "desc";
-    };
-}
-
 export const grantKeys = {
     all: ["grants"] as const,
-    search: (params: GrantSearchParams) =>
+    search: (params: Omit<GrantSearchParams, "pagination">) =>
         [...grantKeys.all, "search", params] as const,
+    infiniteSearch: (params: Omit<GrantSearchParams, "pagination">) =>
+        [...grantKeys.all, "infiniteSearch", params] as const,
 };
 
 // Helper to create a clean copy of filters
@@ -72,7 +62,7 @@ export function useGrantSearch(params: GrantSearchParams) {
 
                 console.log("Sending search request with params:", cleanParams);
 
-                const response = await API.post<{ data: ResearchGrant[] }>(
+                const response = await API.post<SearchResponse>(
                     "/search",
                     cleanParams
                 );
@@ -99,6 +89,65 @@ export function useGrantSearch(params: GrantSearchParams) {
         retry: 1, // Only retry once on failure
         retryDelay: 1000, // Wait 1 second before retrying,
         refetchOnWindowFocus: false, // Prevent refetching when window regains focus
+    });
+}
+
+export function useInfiniteGrantSearch(
+    params: Omit<GrantSearchParams, "pagination">
+) {
+    return useInfiniteQuery<SearchResponse, Error, InfiniteData<SearchResponse>>({
+        queryKey: grantKeys.infiniteSearch(params),
+        queryFn: async ({ pageParam }) => {
+            try {
+                // Create a clean copy of the params
+                const cleanParams = {
+                    ...params,
+                    filters: cleanFilters(params.filters),
+                    pagination: {
+                        page: pageParam as number,
+                        pageSize: 10, // Load 10 items per page
+                    },
+                };
+
+                console.log("Sending infinite search request:", {
+                    ...cleanParams,
+                    pagination: cleanParams.pagination,
+                });
+
+                const response = await API.post<SearchResponse>(
+                    "/search",
+                    cleanParams
+                );
+
+                return response.data;
+            } catch (error) {
+                console.error("Infinite search request failed:", error);
+                if (axios.isAxiosError(error)) {
+                    throw new Error(
+                        error.response?.data?.error || "Failed to search grants"
+                    );
+                }
+                throw error;
+            }
+        },
+        initialPageParam: 1, // This is required in React Query v5+
+        getNextPageParam: (lastPage: SearchResponse) => {
+            // If we've reached the last page, return undefined to signal that there are no more pages
+            if (
+                lastPage.metadata.page >= lastPage.metadata.totalPages ||
+                lastPage.data.length === 0
+            ) {
+                return undefined;
+            }
+            // Otherwise, return the next page number
+            return lastPage.metadata.page + 1;
+        },
+        enabled: true, // Allow auto-fetching but control with refetch
+        staleTime: 30000,
+        gcTime: 5 * 60 * 1000,
+        retry: 1,
+        retryDelay: 1000,
+        refetchOnWindowFocus: false,
     });
 }
 

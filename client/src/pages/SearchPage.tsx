@@ -14,7 +14,7 @@ import {
     FileSearch2,
     AlertCircle,
 } from "lucide-react";
-import { useGrantSearch } from "@/hooks/api/useGrants";
+import { useInfiniteGrantSearch } from "@/hooks/api/useGrants";
 import { FilterPanel } from "@/components/features/grants/FilterPanel";
 import { FilterTags } from "@/components/common/ui/FilterTags";
 import { SearchResults } from "@/components/features/grants/SearchResults";
@@ -22,7 +22,7 @@ import { Card } from "@/components/common/ui/Card";
 import { Button } from "@/components/common/ui/Button";
 import { SortButton } from "@/components/common/ui/SortButton";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import type { SortConfig, GrantSearchParams } from "@/types/search";
+import type { GrantSortConfig, GrantSearchParams } from "@/types/search";
 import { cn } from "@/utils/cn";
 
 export const SearchPage = () => {
@@ -43,7 +43,7 @@ export const SearchPage = () => {
     const [showVisualization, setShowVisualization] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [isBookmarked, setIsBookmarked] = useState(false);
-    const [sortConfig, setSortConfig] = useState<SortConfig>({
+    const [sortConfig, setSortConfig] = useState<GrantSortConfig>({
         field: "date",
         direction: "desc",
     });
@@ -61,26 +61,14 @@ export const SearchPage = () => {
     const [showBanner, setShowBanner] = useState(false);
 
     // Create search params using the LAST SEARCHED terms (not current input values)
-    // Using a ref here ensures we have the most up-to-date values when the search is executed
-    const searchParams: GrantSearchParams = {
+    const searchParams: Omit<GrantSearchParams, "pagination"> = {
         searchTerms: lastSearchedTerms,
         filters,
         sortConfig,
     };
 
-    // Initialize search query with enabled: false in useGrantSearch
-    const { data, isLoading, error, refetch } = useGrantSearch({
-        ...searchParams,
-        sortConfig: {
-            ...searchParams.sortConfig,
-            field:
-                searchParams.sortConfig.field === "results"
-                    ? (() => {
-                          throw new Error("Invalid sort field: results");
-                      })()
-                    : searchParams.sortConfig.field,
-        },
-    });
+    // Initialize infinite query with enabled: true since we control when to execute it with refetch
+    const infiniteQueryResult = useInfiniteGrantSearch(searchParams);
 
     // Check if search terms have changed from last search
     useEffect(() => {
@@ -140,19 +128,12 @@ export const SearchPage = () => {
             setSearchTermsChanged(false);
             setIsInitialState(false);
 
-            // Delay the refetch to ensure state updates have propagated
-            // This is the key fix for the "need to click twice" issue
-            setTimeout(() => {
-                console.log(
-                    "Executing delayed search with terms:",
-                    searchTerms
-                );
-                refetch();
-            }, 0);
+            // Reset to first page when performing a new search
+            await infiniteQueryResult.refetch();
         } else {
             setIsInitialState(true);
         }
-    }, [searchTerms, filters, refetch]);
+    }, [searchTerms, filters, infiniteQueryResult]);
 
     // Filter changes should still trigger immediate search (keeping this behavior)
     const handleFilterChange = useCallback(
@@ -170,15 +151,15 @@ export const SearchPage = () => {
             console.log("Triggering search based on filter change");
             // Use a timeout to ensure state updates are processed
             setTimeout(() => {
-                refetch();
+                infiniteQueryResult.refetch();
             }, 0);
             setShouldTriggerFilterSearch(false);
         }
-    }, [filters, shouldTriggerFilterSearch, isInitialState, refetch]);
+    }, [filters, shouldTriggerFilterSearch, isInitialState, infiniteQueryResult]);
 
-    const handleSort = (field: SortConfig["field"]) => {
+    const handleSort = (field: "date" | "value") => {
         setSortConfig((prev) => {
-            const newConfig: SortConfig = {
+            const newConfig: GrantSortConfig = {
                 field,
                 direction:
                     prev.field === field && prev.direction === "desc"
@@ -190,7 +171,9 @@ export const SearchPage = () => {
 
         // Only trigger search if we've already done a search before
         if (!isInitialState) {
-            refetch();
+            setTimeout(() => {
+                infiniteQueryResult.refetch();
+            }, 0);
         }
     };
 
@@ -210,11 +193,11 @@ export const SearchPage = () => {
                     "transition-all duration-300 ease-in-out",
                     searchTermsChanged && showBanner
                         ? "opacity-100 transform translate-y-0 scale-100"
-                        : "opacity-0 transform -translate-y-4 scale-95 pointer-events-none hidden"
+                        : "opacity-0 transform -translate-y-4 scale-95 pointer-events-none"
                 )}
             >
                 <div className="flex items-start">
-                    <AlertCircle className="h-4 w-4 text-amber-500 mr-2 mt-1 flex-shrink-0" />
+                    <AlertCircle className="h-5 w-5 text-amber-500 mr-2 mt-1 flex-shrink-0" />
                     <span className="text-amber-700">
                         Search terms have changed. Search again to see updated
                         results.
@@ -362,17 +345,23 @@ export const SearchPage = () => {
             <div className="flex items-center justify-between border-b pb-2">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-0 lg:space-y-1">
                     <h2 className="flex text-lg font-medium">
-                        <span className="mr-1">Search</span>
-                        <span className="mr-2">Results</span>
+                        <span className="hidden lg:flex mr-1">Search</span>
+                        <span>Results</span>
                     </h2>
                     {!isInitialState &&
-                        !isLoading &&
-                        data &&
-                        data.length > 0 && (
+                        !infiniteQueryResult.isLoading &&
+                        infiniteQueryResult.data &&
+                        infiniteQueryResult.data.pages[0]?.data.length > 0 && (
                             <span className="flex text-sm text-gray-500 lg:ml-2">
-                                <span>(</span>
-                                <span>{data.length} results</span>
-                                <span>)</span>
+                                <span className="hidden lg:flex">(</span>
+                                <span>
+                                    {
+                                        infiniteQueryResult.data.pages[0]
+                                            .metadata.totalCount
+                                    }{" "}
+                                    results
+                                </span>
+                                <span className="hidden lg:flex">)</span>
                             </span>
                         )}
                 </div>
@@ -398,7 +387,10 @@ export const SearchPage = () => {
                         size="sm"
                         icon={showVisualization ? X : ChartIcon}
                         onClick={() => setShowVisualization(!showVisualization)}
-                        disabled={!data || data.length === 0}
+                        disabled={
+                            !infiniteQueryResult.data ||
+                            infiniteQueryResult.data.pages[0]?.data.length === 0
+                        }
                     >
                         {showVisualization ? "Hide Trends" : "Show Trends"}
                     </Button>
@@ -410,10 +402,9 @@ export const SearchPage = () => {
                 {/* Search Terms Changed Banner */}
                 <SearchTermsChangedBanner />
 
+                {/* Search Results with infinite scroll */}
                 <SearchResults
-                    data={data}
-                    isLoading={isLoading}
-                    error={error}
+                    infiniteQuery={infiniteQueryResult}
                     onBookmark={handleBookmark}
                     showVisualization={showVisualization}
                     isInitialState={isInitialState}

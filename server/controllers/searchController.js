@@ -23,8 +23,23 @@ const getFilterOptions = async (req, res) => {
 
 const searchGrants = async (req, res) => {
     try {
-        const { searchTerms = {}, filters = {}, sortConfig = {} } = req.body;
-        console.log("Received request:", { searchTerms, filters, sortConfig });
+        const { 
+            searchTerms = {}, 
+            filters = {}, 
+            sortConfig = {}, 
+            pagination = { page: 1, pageSize: 20 } 
+        } = req.body;
+        
+        console.log("Received request:", { 
+            searchTerms, 
+            filters, 
+            sortConfig, 
+            pagination 
+        });
+
+        // Default pagination values if not provided
+        const page = pagination.page || 1;
+        const pageSize = pagination.pageSize || 20;
 
         // Convert filter arrays to JSON strings for the stored procedure
         const agenciesJson = JSON.stringify(filters.agencies || []);
@@ -32,9 +47,9 @@ const searchGrants = async (req, res) => {
         const provincesJson = JSON.stringify(filters.provinces || []);
         const citiesJson = JSON.stringify(filters.cities || []);
 
-        // Call the consolidated grant search procedure
+        // Call the consolidated grant search procedure with pagination
         const [results] = await pool.query(
-            'CALL sp_consolidated_grant_search(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'CALL sp_consolidated_grant_search(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 searchTerms.recipient || null,
                 searchTerms.institute || null,
@@ -48,12 +63,20 @@ const searchGrants = async (req, res) => {
                 provincesJson,
                 citiesJson,
                 sortConfig.field || 'date',
-                sortConfig.direction || 'desc'
+                sortConfig.direction || 'desc',
+                pageSize,
+                page
             ]
         );
 
+        // The first result set is the total count
+        const totalCount = results[0][0]?.total_count || 0;
+        
+        // The second result set contains the actual data
+        const grantsData = results[1] || [];
+
         // Process the results to convert amendment_history from JSON string to actual array
-        const processedResults = results[0].map(row => ({
+        const processedResults = grantsData.map(row => ({
             ...row,
             agreement_value: parseFloat(row.latest_value) || 0,
             amendment_number: row.latest_amendment_number,
@@ -63,13 +86,17 @@ const searchGrants = async (req, res) => {
                 : (row.amendments_history || [])
         }));
 
-        console.log(`Query returned ${processedResults.length} consolidated grants`);
+        console.log(`Query returned ${processedResults.length} grants (page ${page} of ${Math.ceil(totalCount/pageSize)})`);
 
         res.json({
             message: "Success",
             data: processedResults,
             metadata: {
                 count: processedResults.length,
+                totalCount: totalCount,
+                page: page,
+                pageSize: pageSize,
+                totalPages: Math.ceil(totalCount / pageSize),
                 filters: filters,
                 searchTerms: searchTerms,
             },
