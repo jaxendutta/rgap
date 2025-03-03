@@ -13,17 +13,20 @@ import {
     X,
     FileSearch2,
     AlertCircle,
+    Sparkles,
 } from "lucide-react";
 import { useInfiniteGrantSearch } from "@/hooks/api/useGrants";
 import { FilterPanel } from "@/components/features/grants/FilterPanel";
 import { FilterTags } from "@/components/common/ui/FilterTags";
 import { SearchResults } from "@/components/features/grants/SearchResults";
+import { PopularSearchesPanel } from "@/components/features/search/PopularSearchesPanel";
 import { Card } from "@/components/common/ui/Card";
 import { Button } from "@/components/common/ui/Button";
 import { SortButton } from "@/components/common/ui/SortButton";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import type { GrantSortConfig, GrantSearchParams } from "@/types/search";
 import { cn } from "@/utils/cn";
+import type { SearchCategory } from "@/components/features/search/PopularSearchesPanel";
 
 export const SearchPage = () => {
     // Current search terms (what's shown in the input fields)
@@ -40,8 +43,11 @@ export const SearchPage = () => {
         grant: "",
     });
 
+    // UI state controls
     const [showVisualization, setShowVisualization] = useState(false);
-    const [showFilters, setShowFilters] = useState(false);
+    const [activePanelType, setActivePanelType] = useState<
+        "none" | "filters" | "popular"
+    >("none");
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [sortConfig, setSortConfig] = useState<GrantSortConfig>({
         field: "date",
@@ -101,6 +107,29 @@ export const SearchPage = () => {
         }));
     };
 
+    // Handle selecting popular search term
+    const handlePopularSearchSelect = (
+        category: SearchCategory,
+        term: string
+    ) => {
+        // Update the specific search term field
+        setSearchTerms((prev) => ({
+            ...prev,
+            [category]: term,
+        }));
+
+        // Close the popular searches panel
+        setActivePanelType("none");
+
+        // Focus on the search button to encourage user to execute the search
+        document.getElementById("search-button")?.focus();
+    };
+
+    // Toggle panel visibility
+    const togglePanel = (panelType: "filters" | "popular") => {
+        setActivePanelType((prev) => (prev === panelType ? "none" : panelType));
+    };
+
     // This is the main search function that actually performs the search
     const handleSearch = useCallback(async () => {
         const hasSearchTerms = Object.values(searchTerms).some(
@@ -123,6 +152,9 @@ export const SearchPage = () => {
         });
 
         if (hasSearchTerms || hasActiveFilters) {
+            // Close any open panels when searching
+            setActivePanelType("none");
+
             // Update last searched terms first
             setLastSearchedTerms(searchTerms);
             setSearchTermsChanged(false);
@@ -155,7 +187,12 @@ export const SearchPage = () => {
             }, 0);
             setShouldTriggerFilterSearch(false);
         }
-    }, [filters, shouldTriggerFilterSearch, isInitialState, infiniteQueryResult]);
+    }, [
+        filters,
+        shouldTriggerFilterSearch,
+        isInitialState,
+        infiniteQueryResult,
+    ]);
 
     const handleSort = (field: "date" | "value") => {
         setSortConfig((prev) => {
@@ -221,13 +258,6 @@ export const SearchPage = () => {
             {/* Search Header */}
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-semibold">Advanced Search</h1>
-                <Button
-                    variant="outline"
-                    icon={SlidersHorizontal}
-                    onClick={() => setShowFilters(!showFilters)}
-                >
-                    {showFilters ? "Hide Filters" : "Show Filters"}
-                </Button>
             </div>
 
             {/* Search Fields */}
@@ -274,17 +304,82 @@ export const SearchPage = () => {
                 ))}
             </div>
 
-            {/* Filters Panel */}
-            {showFilters && (
-                <div className="transition-all duration-300 ease-in-out">
+            {/* Action Buttons Tab-like Interface */}
+            <div className="flex flex-wrap gap-2 sm:gap-3 border-b pb-3">
+                {/* Left side - Panel Controls */}
+                <div className="flex gap-2">
+                    <Button
+                        variant={
+                            activePanelType === "popular"
+                                ? "primary"
+                                : "outline"
+                        }
+                        icon={Sparkles}
+                        onClick={() => togglePanel("popular")}
+                        className={
+                            activePanelType === "popular"
+                                ? "bg-blue-600 hover:bg-blue-700"
+                                : ""
+                        }
+                    >
+                        <span>Popular<span className="hidden lg:inline"> Searches</span></span>
+                    </Button>
+                    <Button
+                        variant={
+                            activePanelType === "filters"
+                                ? "primary"
+                                : "outline"
+                        }
+                        icon={SlidersHorizontal}
+                        onClick={() => togglePanel("filters")}
+                        className={
+                            activePanelType === "filters"
+                                ? "bg-blue-600 hover:bg-blue-700"
+                                : ""
+                        }
+                    >
+                        <span className="hidden lg:inline">Filters</span>
+                    </Button>
+                </div>
+
+                {/* Right side - Actions */}
+                <div className="flex gap-2 ml-auto">
+                    <Button
+                        variant="outline"
+                        icon={isBookmarked ? BookmarkCheck : BookmarkPlus}
+                        onClick={() => setIsBookmarked(!isBookmarked)}
+                    >
+                        <span className="hidden lg:inline">Bookmark</span>
+                    </Button>
+                    <Button
+                        id="search-button"
+                        variant="primary"
+                        icon={SearchIcon}
+                        onClick={handleSearch}
+                        className="bg-gray-900 hover:bg-gray-800"
+                    >
+                        Search
+                    </Button>
+                </div>
+            </div>
+
+            {/* Panels Area - Only one visible at a time */}
+            <div className="transition-all duration-300 ease-in-out">
+                {activePanelType === "filters" && (
                     <Card className="p-4">
                         <FilterPanel
                             filters={filters}
                             onChange={handleFilterChange}
                         />
                     </Card>
-                </div>
-            )}
+                )}
+
+                {activePanelType === "popular" && (
+                    <PopularSearchesPanel
+                        onSelect={handlePopularSearchSelect}
+                    />
+                )}
+            </div>
 
             {/* Filter Tags */}
             <FilterTags
@@ -321,25 +416,6 @@ export const SearchPage = () => {
                     }
                 }}
             />
-
-            {/* Search Actions */}
-            <div className="flex items-center justify-between">
-                <Button
-                    variant="outline"
-                    icon={isBookmarked ? BookmarkCheck : BookmarkPlus}
-                    onClick={() => setIsBookmarked(!isBookmarked)}
-                >
-                    Bookmark Search
-                </Button>
-
-                <Button
-                    variant="primary"
-                    icon={SearchIcon}
-                    onClick={handleSearch}
-                >
-                    Search
-                </Button>
-            </div>
 
             {/* Results Header with Sort Controls */}
             <div className="flex items-center justify-between border-b pb-2">

@@ -29,30 +29,30 @@ export const Button = ({
 
   const sizes = {
     sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2',
+    md: 'px-4 py-1.5 text-md',
     lg: 'px-6 py-3 text-lg'
   }
 
   return (
     <button
       className={cn(
-        'flex items-center justify-center font-medium rounded-md transition-colors',
-        variants[variant],
-        sizes[size],
-        (disabled || isLoading) && 'opacity-50 cursor-not-allowed',
-        className
+      'flex items-center justify-center font-medium rounded-md transition-colors gap-2',
+      variants[variant],
+      sizes[size],
+      (disabled || isLoading) && 'opacity-50 cursor-not-allowed',
+      className
       )}
       disabled={disabled || isLoading}
       {...props}
     >
       {isLoading ? (
-        <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+      <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
       ) : (
-        <>
-          {Icon && iconPosition === 'left' && <Icon className="w-4 h-4 mr-2" />}
-          {children}
-          {Icon && iconPosition === 'right' && <Icon className="w-4 h-4 ml-2" />}
-        </>
+      <>
+        {Icon && iconPosition === 'left' && <Icon className="w-4 h-4" />}
+        {children}
+        {Icon && iconPosition === 'right' && <Icon className="w-4 h-4" />}
+      </>
       )}
     </button>
   )
