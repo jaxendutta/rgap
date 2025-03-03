@@ -32,9 +32,9 @@ const searchGrants = async (req, res) => {
         const provincesJson = JSON.stringify(filters.provinces || []);
         const citiesJson = JSON.stringify(filters.cities || []);
 
-        // Call the stored procedure with all the parameters
+        // Call the consolidated grant search procedure
         const [results] = await pool.query(
-            'CALL sp_grant_search(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'CALL sp_consolidated_grant_search(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 searchTerms.recipient || null,
                 searchTerms.institute || null,
@@ -52,16 +52,24 @@ const searchGrants = async (req, res) => {
             ]
         );
 
-        console.log(`Query returned ${results[0].length} results`);
+        // Process the results to convert amendment_history from JSON string to actual array
+        const processedResults = results[0].map(row => ({
+            ...row,
+            agreement_value: parseFloat(row.latest_value) || 0,
+            amendment_number: row.latest_amendment_number,
+            amendment_date: row.latest_amendment_date,
+            amendments_history: typeof row.amendments_history === 'string' 
+                ? JSON.parse(row.amendments_history) 
+                : (row.amendments_history || [])
+        }));
+
+        console.log(`Query returned ${processedResults.length} consolidated grants`);
 
         res.json({
             message: "Success",
-            data: results[0].map((row) => ({
-                ...row,
-                agreement_value: parseFloat(row.agreement_value) || 0,
-            })),
+            data: processedResults,
             metadata: {
-                count: results[0].length,
+                count: processedResults.length,
                 filters: filters,
                 searchTerms: searchTerms,
             },
