@@ -32,7 +32,7 @@ app.get("/health", (req, res) => {
 app.use("/auth", require("./routes/authRoutes"));
 app.use("/search", require("./routes/searchRoutes"));
 app.use("/grants", require("./routes/grantRoutes"));
-app.use("/recipients", require("./routes/recepientRoutes"));
+app.use("/recipients", require("./routes/recipientRoutes"));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

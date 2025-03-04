@@ -206,6 +206,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                             <Link
                                 to={`/recipients/${grant.recipient_id}`}
                                 className="inline-flex items-start text-lg font-medium hover:text-blue-600 transition-colors gap-1.5 group"
+                                aria-label={`View profile for recipient ${grant.legal_name}`}
                             >
                                 <span className="inline-block">
                                     {grant.legal_name}
@@ -319,7 +320,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
 
                         {/* Reference Number - Desktop Only */}
                         <div className="hidden lg:block">
-                            <p className="text-sm text-gray-500 flex items-center">
+                            <p className="text-sm text-gray-500 flex items-center mt-0.5">
                                 <Database className="inline-block h-3 w-3 ml-0.5 mr-1.5" />
                                 <span>{grant.ref_number}</span>
                             </p>

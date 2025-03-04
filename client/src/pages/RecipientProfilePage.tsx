@@ -1,299 +1,269 @@
-import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+// src/pages/RecipientProfilePage.tsx
+import { useState, useMemo } from "react";
+import { useParams, Navigate } from "react-router-dom";
+import { BookMarked, AlertCircle, LineChart } from "lucide-react";
+import { Button } from "@/components/common/ui/Button";
+import { LoadingSpinner } from "@/components/common/ui/LoadingSpinner";
+import { useRecipientDetails } from "@/hooks/api/useRecipients";
 import {
-  BookmarkPlus,
-  BookmarkCheck,
-  MapPin,
-  University,
-  BookMarked,
-  DollarSign,
-  BarChart2,
-  TrendingUp,
-  TrendingDown,
-  Calendar
-} from 'lucide-react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { clsx } from 'clsx'
-import { formatCurrency, formatDate } from '../utils/format'
-import { Recipient, ResearchGrant } from '../types/models'
-
-// Data
-// Make a copy of the mock data for now
-import { mock_data } from '../test-data/mockdata'
-const recipients: Recipient[] = [...mock_data.Recipient]
-const grants: ResearchGrant[] = [...mock_data.ResearchGrant]
-const filteredGrants = (recipient_id: number) => grants.filter(g => g.recipient_id === recipient_id)
-
-// Types
-type SortField = 'date' | 'value'
-type SortDirection = 'asc' | 'desc'
-
-interface SortConfig {
-  field: SortField
-  direction: SortDirection
-}
-
-// Sort functions
-const sortByDate = (a: ResearchGrant, b: ResearchGrant, direction: SortDirection): number => {
-  const multiplier = direction === 'asc' ? 1 : -1
-  return multiplier * (new Date(a.agreement_start_date).getTime() - new Date(b.agreement_start_date).getTime())
-}
-
-const sortByValue = (a: ResearchGrant, b: ResearchGrant, direction: SortDirection): number => {
-  const multiplier = direction === 'asc' ? 1 : -1
-  return multiplier * (a.agreement_value - b.agreement_value)
-}
-
-// Components
-const StatCard = ({
-  icon: Icon,
-  label,
-  value,
-  trend
-}: {
-  icon: React.ElementType
-  label: string
-  value: string | number
-  trend?: 'up' | 'down'
-}) => (
-  <div className="bg-white rounded-lg border border-gray-200 p-6 lg:col-span-1">
-    <div className="flex items-center text-gray-600 mb-2">
-      <Icon className="h-4 w-4 mr-2" />
-      {label}
-    </div>
-    <div className="flex items-center">
-      <span className="text-2xl font-semibold">{value}</span>
-      {trend && (
-        trend === 'up'
-          ? <TrendingUp className="h-5 w-5 ml-2 text-green-500" />
-          : <TrendingDown className="h-5 w-5 ml-2 text-red-500" />
-      )}
-    </div>
-  </div>
-)
-
-const SortButton = ({
-  label,
-  icon: Icon,
-  field,
-  currentField,
-  direction,
-  onClick
-}: {
-  label: string
-  icon?: React.ElementType
-  field: SortField
-  currentField: SortField
-  direction: SortDirection
-  onClick: () => void
-}) => (
-  <button
-    onClick={onClick}
-    className={clsx(
-      'flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-md hover:bg-gray-50',
-      currentField === field ? 'text-gray-900' : 'text-gray-600 hover:text-gray-900'
-    )}
-  >
-    {Icon && <Icon className="h-4 w-4" />}
-    <span className="hidden lg:flex">{label}</span>
-    {currentField === field && (
-      <span className="text-gray-900">
-        {direction === 'asc' ? '↑' : '↓'}
-      </span>
-    )}
-  </button>
-)
+    GrantSortConfig,
+    ChartType,
+    ProfileTab,
+    ChartMetric,
+} from "@/types/search";
+import { TabNavigation } from "@/components/common/ui/TabNavigation";
+import { ResearchGrant } from "@/types/models";
+import RecipientHeader from "@/components/features/recipients/RecipientHeader";
+import RecipientStats from "@/components/features/recipients/RecipientStats";
+import GrantsList from "@/components/features/grants/GrantsList";
+import RecipientAnalytics from "@/components/features/recipients/RecipientAnalytics";
 
 export const RecipientProfilePage = () => {
-  const { id } = useParams()
-  const recipient = recipients.find(r => r.recipient_id === Number(id))
+    const { id } = useParams();
 
-  if (!recipient) {
-    return <div>Recipient not found</div>
-  }
+    // Use the API hook to fetch recipient details
+    const {
+        data: recipientData,
+        isLoading,
+        isError,
+        error,
+    } = useRecipientDetails(id || "");
 
-  const [isBookmarked, setIsBookmarked] = useState(false)
-  const [sortConfig, setSortConfig] = useState<SortConfig>({
-    field: 'date',
-    direction: 'desc'
-  })
+    const recipient = recipientData?.data;
 
-  const toggleSort = (field: SortField) => {
-    setSortConfig(prev => ({
-      field,
-      direction: prev.field === field && prev.direction === 'desc' ? 'asc' : 'desc'
-    }))
-  }
+    // Component state
+    const [isBookmarked, setIsBookmarked] = useState(false);
+    const [sortConfig, setSortConfig] = useState<GrantSortConfig>({
+        field: "date",
+        direction: "desc",
+    });
+    const [chartType, setChartType] = useState<ChartType>("bar");
+    const [chartMetric, setChartMetric] = useState<ChartMetric>("funding");
+    const [activeTab, setActiveTab] = useState<ProfileTab>("grants");
+    const [expandedStats, setExpandedStats] = useState(false);
 
-  // Sort grants based on current configuration
-  const sortedGrants = [...filteredGrants(Number(id))].sort((a, b) =>
-    sortConfig.field === 'value'
-      ? sortByValue(a, b, sortConfig.direction)
-      : sortByDate(a, b, sortConfig.direction)
-  )
-
-  return (
-    <div className="max-w-7xl mx-auto p-4 lg:p-6 space-y-6">
-      {/* Profile and Stats Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Profile Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 lg:p-6 lg:col-span-1">
-          <div className="flex justify-between">
-            <div className="space-y-1">
-              <h1 className="text-2xl font-semibold">{recipient.legal_name}</h1>
-              <div className="flex items-center text-gray-600">
-                <University className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span>{recipient.research_organization_name}</span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span>{recipient.city}, {recipient.province}</span>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsBookmarked(!isBookmarked)}
-              className={clsx(
-                "p-2 h-fit rounded-full transition-colors hover:bg-gray-50",
-                isBookmarked
-                  ? "text-blue-600 hover:text-blue-700"
-                  : "text-gray-400 hover:text-gray-600"
-              )}
-            >
-              {isBookmarked
-                ? <BookmarkCheck className="h-5 w-5" />
-                : <BookmarkPlus className="h-5 w-5" />
-              }
-            </button>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <StatCard
-          icon={BookMarked}
-          label="Grants"
-          value={filteredGrants(Number(id)).length}
-        />
-        <StatCard
-          icon={DollarSign}
-          label="Total Funding"
-          value={formatCurrency(filteredGrants(Number(id)).reduce((acc, g) => acc + g.agreement_value, 0)) || 'N/A'}
-        />
-        <StatCard
-          icon={BarChart2}
-          label="Average Funding"
-          value={filteredGrants(Number(id)).length
-            ? formatCurrency(filteredGrants(Number(id)).reduce((acc, g) => acc + g.agreement_value, 0) / filteredGrants(Number(id)).length)
-            : 'N/A'}
-        />
-      </div>
-
-      {/* Funding History Chart */}
-      <div className="bg-white p-4 lg:p-6 rounded-lg border border-gray-200">
-        <h2 className="text-lg font-semibold mb-4">Funding History</h2>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={filteredGrants(Number(id)).reduce((acc: { year: number, value: number }[], g) => {
-                const year = new Date(g.agreement_start_date).getFullYear()
-                const existing = acc.find(item => item.year === year)
-                if (existing) {
-                  existing.value += g.agreement_value
-                } else {
-                  acc.push({ year, value: g.agreement_value })
-                }
-                return acc
-              }, [])}
-              margin={{ top: 10, right: 30, left: 50, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis
-                dataKey="year"
-                tickLine={false}
-                axisLine={{ stroke: '#e5e7eb' }}
-              />
-              <YAxis
-                tickFormatter={(value) => `${value / 1000}k`}
-                tickLine={false}
-                axisLine={{ stroke: '#e5e7eb' }}
-                tick={{ fontSize: 12 }}
-                tickMargin={8}
-              />
-              <Tooltip
-                formatter={(value: number) => [`$${value.toLocaleString()}`, 'Funding']}
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '6px',
-                  padding: '8px 12px'
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke="#2563eb"
-                strokeWidth={2}
-                dot={{ fill: '#2563eb', strokeWidth: 2 }}
-                activeDot={{ r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Grants List */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="flex items-center justify-between px-4 lg:px-6 py-2 border-b ">
-          <h2 className="text-md font-semibold text-gray-500 px-2">Grants</h2>
-          <div className="flex gap-2">
-            <SortButton
-              label="Date"
-              icon={Calendar}
-              field="date"
-              currentField={sortConfig.field}
-              direction={sortConfig.direction}
-              onClick={() => toggleSort('date')}
-            />
-            <SortButton
-              label="Value"
-              icon={DollarSign}
-              field="value"
-              currentField={sortConfig.field}
-              direction={sortConfig.direction}
-              onClick={() => toggleSort('value')}
-            />
-          </div>
-        </div>
-
-        <div className="divide-y">
-          {sortedGrants.map(grant => (
-            <div key={grant.ref_number} className="p-6 hover:bg-gray-50 transition-colors">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <div className="text-lg font-medium">{grant.agreement_title_en}</div>
-                  <div className="text-sm text-gray-500 flex items-center">
-                    <BookMarked className="h-4 w-4 mr-2 inline-flex-shrink-0" />
-                    {grant.ref_number} • {grant.org}
-                  </div>
+    // Handle the error state
+    if (isError) {
+        return (
+            <div className="max-w-7xl mx-auto p-4 lg:p-6">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                    <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+                    <h2 className="text-lg font-medium text-red-800 mb-2">
+                        Error Loading Recipient
+                    </h2>
+                    <p className="text-red-700 mb-4">
+                        {error instanceof Error
+                            ? error.message
+                            : "Failed to load recipient details. Please try again."}
+                    </p>
+                    <Button
+                        variant="outline"
+                        onClick={() => window.history.back()}
+                    >
+                        Go Back
+                    </Button>
                 </div>
-                <div className="text-right">
-                  <div className="font-medium">
-                    {formatCurrency(grant.agreement_value)}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    <div className="flex items-end">
-                      <span>{formatDate(grant.agreement_start_date)}</span>
-                      <span className="text-gray-400 mx-1 hidden lg:flex">│</span>
-                      <span className="hidden lg:flex">{formatDate(grant.agreement_end_date)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
+        );
+    }
 
-export default RecipientProfilePage
+    // Handle the loading state
+    if (isLoading || !recipient) {
+        return (
+            <div className="max-w-7xl mx-auto p-4 lg:p-6 flex flex-col justify-center items-center h-64">
+                <LoadingSpinner size="lg" className="mb-4" />
+                <p className="text-gray-600">Loading recipient details...</p>
+            </div>
+        );
+    }
+
+    // If recipient not found
+    if (!recipient) {
+        return <Navigate to="/pageNotFound" />;
+    }
+
+    // Process grants to group by reference number and keep only the latest amendment
+    const processedGrants = useMemo(() => {
+        // Group grants by reference number
+        const grantsByRef = recipient.grants.reduce((acc, grant) => {
+            if (!acc[grant.ref_number]) {
+                acc[grant.ref_number] = [];
+            }
+            acc[grant.ref_number].push(grant);
+            return acc;
+        }, {} as Record<string, ResearchGrant[]>);
+
+        // For each reference number, get the grant with the highest amendment number
+        return Object.values(grantsByRef).map((grants) => {
+            // Sort by amendment number (descending)
+            const sortedGrants = [...grants].sort((a, b) => {
+                const aNum = Number(a.amendment_number || "0");
+                const bNum = Number(b.amendment_number || "0");
+                return bNum - aNum;
+            });
+
+            // Take the highest amendment (first after sorting)
+            const latestGrant = sortedGrants[0];
+
+            // Add amendment history to the grant
+            return {
+                ...latestGrant,
+                legal_name: recipient.legal_name,
+                research_organization_name:
+                    recipient.research_organization_name,
+                city: recipient.city || "",
+                province: recipient.province || "",
+                country: recipient.country || "",
+                amendments_history: sortedGrants as any,
+            };
+        });
+    }, [recipient.grants]);
+
+    // Create corrected analytics data that only counts final amendment values
+    const correctedAnalyticsData = useMemo(() => {
+        // For funding by year
+        const fundingByYear = processedGrants.reduce((acc, grant) => {
+            const year = new Date(grant.agreement_start_date).getFullYear();
+            if (!acc[year]) {
+                acc[year] = { year };
+            }
+            acc[year][grant.org] =
+                (acc[year][grant.org] || 0) + grant.agreement_value;
+            return acc;
+        }, {} as Record<number, any>);
+
+        // For grant counts by year
+        const grantsByYear = processedGrants.reduce((acc, grant) => {
+            const year = new Date(grant.agreement_start_date).getFullYear();
+            if (!acc[year]) {
+                acc[year] = { year };
+            }
+            acc[year][grant.org] = (acc[year][grant.org] || 0) + 1;
+            return acc;
+        }, {} as Record<number, any>);
+
+        return {
+            fundingByYear: Object.values(fundingByYear).sort(
+                (a, b) => a.year - b.year
+            ),
+            grantsByYear: Object.values(grantsByYear).sort(
+                (a, b) => a.year - b.year
+            ),
+        };
+    }, [processedGrants]);
+
+    const toggleSort = (field: GrantSortConfig["field"]) => {
+        setSortConfig((prev) => ({
+            field,
+            direction:
+                prev.field === field && prev.direction === "desc"
+                    ? "asc"
+                    : "desc",
+        }));
+    };
+
+    // Get all agencies from funding history for legend
+    const agencies = Array.from(
+        new Set(
+            recipient.funding_history.flatMap((entry) =>
+                Object.keys(entry).filter((key) => key !== "year")
+            )
+        )
+    );
+
+    // Calculate more advanced stats for the profile overview using processed grants
+    const uniqueGrantCount = processedGrants.length;
+    const totalFunding = processedGrants.reduce(
+        (sum, grant) => sum + grant.agreement_value,
+        0
+    );
+    const totalYears =
+        recipient.latest_grant_date && recipient.first_grant_date
+            ? new Date(recipient.latest_grant_date).getFullYear() -
+              new Date(recipient.first_grant_date).getFullYear() +
+              1
+            : 0;
+    const averagePerYear = totalYears > 0 ? totalFunding / totalYears : 0;
+    const averageGrantValue =
+        uniqueGrantCount > 0 ? totalFunding / uniqueGrantCount : 0;
+
+    // Define tabs for the TabNavigation component
+    const tabs = [
+        {
+            id: "grants",
+            label: "Grants",
+            icon: BookMarked,
+            count: uniqueGrantCount,
+        },
+        { id: "analytics", label: "Analytics", icon: LineChart },
+    ];
+
+    return (
+        <div className="max-w-7xl mx-auto p-1 lg:p-6 space-y-6">
+            {/* Header with profile and quick stats */}
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+                {/* Top section with name, org, location */}
+                <RecipientHeader
+                    recipient={recipient}
+                    isBookmarked={isBookmarked}
+                    toggleBookmark={() => setIsBookmarked(!isBookmarked)}
+                />
+
+                {/* Key stats highlight */}
+                <RecipientStats
+                    recipient={recipient}
+                    processedGrants={processedGrants}
+                    agencies={agencies}
+                    expandedStats={expandedStats}
+                    setExpandedStats={setExpandedStats}
+                />
+            </div>
+
+            {/* Tabs for page content */}
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                {/* Tab navigation */}
+                <div className="border-b border-gray-200">
+                    <TabNavigation
+                        tabs={tabs}
+                        activeTab={activeTab}
+                        onTabChange={(tabId) =>
+                            setActiveTab(tabId as ProfileTab)
+                        }
+                    />
+                </div>
+
+                {/* Tab content */}
+                <div className="p-6">
+                    {/* Grants Tab */}
+                    {activeTab === "grants" && (
+                        <GrantsList
+                            grants={processedGrants}
+                            sortConfig={sortConfig}
+                            toggleSort={toggleSort}
+                        />
+                    )}
+
+                    {/* Analytics Tab */}
+                    {activeTab === "analytics" && (
+                        <RecipientAnalytics
+                            analyticsData={correctedAnalyticsData}
+                            chartType={chartType}
+                            setChartType={setChartType}
+                            chartMetric={chartMetric}
+                            setChartMetric={setChartMetric}
+                            processedGrants={processedGrants}
+                            agencies={agencies}
+                            totalFunding={totalFunding}
+                            totalYears={totalYears}
+                            averagePerYear={averagePerYear}
+                            uniqueGrantCount={uniqueGrantCount}
+                            averageGrantValue={averageGrantValue}
+                        />
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default RecipientProfilePage;
