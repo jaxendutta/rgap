@@ -109,16 +109,14 @@ const RecipientStats = ({
     ];
 
     return (
-        <div className="px-3 lg:px-6 py-4 bg-gray-50 rounded-b-lg">
-            <StatDisplay
-                items={statItems}
-                columns={4}
-                layout="grid"
-                expandable={true}
-                expanded={expandedStats}
-                onToggleExpand={() => setExpandedStats(!expandedStats)}
-            />
-        </div>
+        <StatDisplay
+            items={statItems}
+            columns={4}
+            layout="grid"
+            expandable={true}
+            expanded={expandedStats}
+            onToggleExpand={() => setExpandedStats(!expandedStats)}
+        />
     );
 };
 

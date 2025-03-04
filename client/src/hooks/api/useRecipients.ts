@@ -28,6 +28,7 @@ interface RecipientDetailsResponse {
     data: {
         recipient_id: number;
         legal_name: string;
+        institute_id: number;
         research_organization_name: string; // This contains the institute name
         institute_type?: string;
         type?: string;

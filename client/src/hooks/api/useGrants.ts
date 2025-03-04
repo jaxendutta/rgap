@@ -13,6 +13,26 @@ const API = axios.create({
     timeout: 15000,
 });
 
+// Configure retry logic for specific error codes
+API.interceptors.response.use(
+    response => response,
+    async (error) => {
+        // If we get a 409 Conflict from the server (temporary table issue)
+        if (error.response?.status === 409 && error.response?.data?.retryable) {
+            console.log("Received retryable error, attempting to retry the request...");
+            
+            // Wait a short delay before retrying
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Retry the request
+            return API(error.config);
+        }
+        
+        // For all other errors, just reject the promise
+        return Promise.reject(error);
+    }
+);
+
 export const grantKeys = {
     all: ["grants"] as const,
     search: (params: Omit<GrantSearchParams, "pagination">) =>
@@ -142,11 +162,10 @@ export function useInfiniteGrantSearch(
             // Otherwise, return the next page number
             return lastPage.metadata.page + 1;
         },
-        enabled: true, // Allow auto-fetching but control with refetch
+        retry: 3,  // Retry up to 3 times
+        retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000), // Exponential backoff
         staleTime: 30000,
         gcTime: 5 * 60 * 1000,
-        retry: 1,
-        retryDelay: 1000,
         refetchOnWindowFocus: false,
     });
 }

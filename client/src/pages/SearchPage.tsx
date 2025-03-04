@@ -1,20 +1,12 @@
 // src/pages/SearchPage.tsx
 import { useState } from "react";
-import {
-    Calendar,
-    DollarSign,
-    LineChart as ChartIcon,
-    X,
-    GraduationCap,
-    University,
-    FileSearch2,
-} from "lucide-react";
+import { FileSearch2, University, UserSearch } from "lucide-react";
 import { useInfiniteGrantSearch } from "@/hooks/api/useGrants";
-import { Button } from "@/components/common/ui/Button";
-import { SearchResults } from "@/components/features/grants/SearchResults";
-import { SortButton } from "@/components/common/ui/SortButton";
+import GrantsList, {
+    SortConfig,
+} from "@/components/features/grants/GrantsList";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import type { GrantSortConfig, GrantSearchParams } from "@/types/search";
+import type { GrantSearchParams } from "@/types/search";
 import SearchInterface from "@/components/features/search/SearchInterface";
 import PageHeader from "@/components/common/layout/PageHeader";
 import PageContainer from "@/components/common/layout/PageContainer";
@@ -28,9 +20,8 @@ export const SearchPage = () => {
     });
 
     // UI state controls
-    const [showVisualization, setShowVisualization] = useState(false);
     const [isBookmarked, setIsBookmarked] = useState(false);
-    const [sortConfig, setSortConfig] = useState<GrantSortConfig>({
+    const [sortConfig, setSortConfig] = useState<SortConfig>({
         field: "date",
         direction: "desc",
     });
@@ -67,14 +58,8 @@ export const SearchPage = () => {
         }, 0);
     };
 
-    const handleSort = (field: "date" | "value") => {
-        setSortConfig((prev) => ({
-            field,
-            direction:
-                prev.field === field && prev.direction === "desc"
-                    ? "asc"
-                    : "desc",
-        }));
+    const handleSortChange = (newSortConfig: SortConfig) => {
+        setSortConfig(newSortConfig);
 
         // Only trigger search if we've already done a search before
         if (!isInitialState) {
@@ -104,7 +89,7 @@ export const SearchPage = () => {
                 fields={[
                     {
                         key: "recipient",
-                        icon: GraduationCap,
+                        icon: UserSearch,
                         placeholder: "Search by recipient...",
                     },
                     {
@@ -127,73 +112,24 @@ export const SearchPage = () => {
                 showPopularSearches={true}
             />
 
-            {/* Results Header with Sort Controls */}
-            <div className="flex items-center justify-between border-b pb-2">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-0 lg:space-y-1">
-                    <h2 className="flex text-lg font-medium">
-                        <span className="hidden lg:flex mr-1">Search</span>
-                        <span>Results</span>
-                    </h2>
-                    {!isInitialState &&
-                        !infiniteQueryResult.isLoading &&
-                        infiniteQueryResult.data &&
-                        infiniteQueryResult.data.pages[0]?.data.length > 0 && (
-                            <span className="flex text-sm text-gray-500 lg:ml-2">
-                                <span className="hidden lg:flex">(</span>
-                                <span>
-                                    {
-                                        infiniteQueryResult.data.pages[0]
-                                            .metadata.totalCount
-                                    }{" "}
-                                    results
-                                </span>
-                                <span className="hidden lg:flex">)</span>
-                            </span>
-                        )}
-                </div>
-                <div className="flex items-center space-x-2">
-                    <SortButton
-                        label="Date"
-                        icon={Calendar}
-                        field="date"
-                        currentField={sortConfig.field}
-                        direction={sortConfig.direction}
-                        onClick={() => handleSort("date")}
-                    />
-                    <SortButton
-                        label="Value"
-                        icon={DollarSign}
-                        field="value"
-                        currentField={sortConfig.field}
-                        direction={sortConfig.direction}
-                        onClick={() => handleSort("value")}
-                    />
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        icon={showVisualization ? X : ChartIcon}
-                        onClick={() => setShowVisualization(!showVisualization)}
-                        disabled={
-                            isInitialState ||
-                            !infiniteQueryResult.data ||
-                            infiniteQueryResult.data.pages[0]?.data.length === 0
-                        }
-                    >
-                        {showVisualization ? "Hide Trends" : "Show Trends"}
-                    </Button>
-                </div>
-            </div>
-
-            {/* Results */}
-            <div className="space-y-4">
-                {/* Search Results with infinite scroll */}
-                <SearchResults
+            {/* Search Results */}
+            <div className="mt-4">
+                <GrantsList
                     infiniteQuery={infiniteQueryResult}
+                    title="Grants"
+                    initialSortConfig={sortConfig}
                     onBookmark={handleBookmarkGrant}
-                    showVisualization={showVisualization}
-                    isInitialState={isInitialState}
+                    emptyMessage={
+                        isInitialState
+                            ? "Enter search terms above to begin exploring grants."
+                            : "No grants match your search criteria."
+                    }
+                    showVisualization={true}
+                    visualizationInitiallyVisible={false}
                 />
             </div>
         </PageContainer>
     );
 };
+
+export default SearchPage;

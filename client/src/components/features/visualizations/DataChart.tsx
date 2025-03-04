@@ -12,11 +12,8 @@ import {
     Legend,
     ResponsiveContainer,
 } from "recharts";
-import {
-    ChartDataPoint,
-    formatChartValue,
-} from "@/utils/chartDataTransforms";
-import { getCategoryColor } from "../../../utils/chartColors";
+import { ChartDataPoint, formatChartValue } from "@/utils/chartDataTransforms";
+import { getCategoryColor } from "@/utils/chartColors";
 
 export interface DataChartProps {
     data: ChartDataPoint[];
@@ -87,7 +84,7 @@ export const DataChart: React.FC<DataChartProps> = ({
     categories,
     height = 400,
     stacked = false,
-    showLegend = true,
+    showLegend = false,
     showGrid = true,
     title,
     className,
@@ -100,7 +97,7 @@ export const DataChart: React.FC<DataChartProps> = ({
                     {chartType === "line" ? (
                         <LineChart
                             data={data}
-                            margin={{ top: 10, right: 30, left: 0, bottom: 5 }}
+                            margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
                         >
                             {showGrid && (
                                 <CartesianGrid
@@ -112,6 +109,7 @@ export const DataChart: React.FC<DataChartProps> = ({
                                 dataKey="year"
                                 tickLine={false}
                                 axisLine={{ stroke: "#e5e7eb" }}
+                                tick={{ fontSize: 11 }}
                             />
                             <YAxis
                                 tickFormatter={(value) =>
@@ -119,6 +117,7 @@ export const DataChart: React.FC<DataChartProps> = ({
                                 }
                                 tickLine={false}
                                 axisLine={{ stroke: "#e5e7eb" }}
+                                tick={{ fontSize: 11 }}
                             />
                             <Tooltip
                                 content={<CustomTooltip dataType={dataType} />}
@@ -153,7 +152,10 @@ export const DataChart: React.FC<DataChartProps> = ({
                     ) : (
                         <BarChart
                             data={data}
-                            margin={{ top: 10, right: 30, left: 0, bottom: 5 }}
+                            margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
+                            // Only use multi-bar layout for grouped bars
+                            barCategoryGap={stacked ? "10%" : "20%"}
+                            barGap={stacked ? 0 : 4}
                         >
                             {showGrid && (
                                 <CartesianGrid
@@ -165,6 +167,7 @@ export const DataChart: React.FC<DataChartProps> = ({
                                 dataKey="year"
                                 tickLine={false}
                                 axisLine={{ stroke: "#e5e7eb" }}
+                                tick={{ fontSize: 11 }}
                             />
                             <YAxis
                                 tickFormatter={(value) =>
@@ -172,6 +175,7 @@ export const DataChart: React.FC<DataChartProps> = ({
                                 }
                                 tickLine={false}
                                 axisLine={{ stroke: "#e5e7eb" }}
+                                tick={{ fontSize: 11 }}
                             />
                             <Tooltip
                                 content={<CustomTooltip dataType={dataType} />}
@@ -185,6 +189,12 @@ export const DataChart: React.FC<DataChartProps> = ({
                                     name={category}
                                     stackId={stacked ? "a" : undefined}
                                     fill={getCategoryColor(category, index)}
+                                    // Add rounded corners for bars
+                                    radius={
+                                        stacked ? [0, 0, 0, 0] : [4, 4, 0, 0]
+                                    }
+                                    // Make bars slightly transparent in grouped mode for better visual distinction
+                                    fillOpacity={stacked ? 1 : 0.9}
                                 />
                             ))}
                         </BarChart>

@@ -2,7 +2,7 @@
 import { Search, Calendar, DollarSign, Filter, BookMarked, GraduationCap, University } from 'lucide-react'
 import { Button } from '@/components/common/ui/Button'
 import { Card } from '@/components/common/ui/Card'
-import { FilterTag } from '@/components/common/ui/FilterTag'
+import { FilterTag } from '@/components/features/filter/FilterTag'
 import { formatCurrency } from '@/utils/format'
 import type { GrantSearchParams } from '@/types/search'
 import { FILTER_LIMITS } from '@/constants/filters'

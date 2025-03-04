@@ -56,8 +56,8 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                 className
             )}
         >
-            <div className="flex flex-wrap justify-between">
-                <div className="space-y-2 max-w-full lg:max-w-3xl">
+            <div className="flex flex-row justify-between">
+                <div className="space-y-2 w-full">
                     <div className="flex flex-col lg:flex-row items-start gap-3">
                         <div className="flex flex-row items-start justify-between w-full lg:w-auto">
                             {IconComponent && (
@@ -98,21 +98,32 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                                         key={index}
                                         className="flex items-center gap-1.5"
                                     >
-                                        {React.createElement(item.icon, {
-                                            className: "h-4 w-4 flex-shrink-0",
-                                        })}
-                                        <span>
-                                            {item.href ? (
-                                                <a
-                                                    href={item.href}
-                                                    className="hover:text-blue-600 transition-colors"
-                                                >
-                                                    {item.text}
-                                                </a>
-                                            ) : (
-                                                item.text
-                                            )}
-                                        </span>
+                                        {item.href ? (
+                                            <a
+                                                href={item.href}
+                                                className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
+                                            >
+                                                {React.createElement(
+                                                    item.icon,
+                                                    {
+                                                        className:
+                                                            "h-4 w-4 flex-shrink-0",
+                                                    }
+                                                )}
+                                                <span>{item.text}</span>
+                                            </a>
+                                        ) : (
+                                            <>
+                                                {React.createElement(
+                                                    item.icon,
+                                                    {
+                                                        className:
+                                                            "h-4 w-4 flex-shrink-0",
+                                                    }
+                                                )}
+                                                <span>{item.text}</span>
+                                            </>
+                                        )}
                                     </div>
                                 ))}
                             </div>

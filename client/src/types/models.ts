@@ -13,6 +13,7 @@ export interface GrantAmendment {
 export interface Recipient {
     recipient_id: number;
     legal_name: string;
+    institute_id: number;
     research_organization_name: string;
     type: string;
     recipient_type: string;
@@ -46,6 +47,7 @@ export interface ResearchGrant {
     expected_results_fr?: string;
     recipient_id: number;
     legal_name: string;
+    institute_id: number;
     research_organization_name: string;
     city: string;
     province: string;
@@ -53,7 +55,8 @@ export interface ResearchGrant {
     org: string;  // abbreviation from Organization table
     owner_org?: string;
     owner_org_title?: string; // Full name of the organization
-    prog_id?: string;
+    prog_id?: number;
+    prog_title_en?: string;
     
     // New field for amendment history
     amendments_history?: GrantAmendment[];

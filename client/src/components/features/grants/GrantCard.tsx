@@ -1,3 +1,4 @@
+// src/components/grants/GrantCard.tsx
 import { useState } from "react";
 import { ResearchGrant } from "@/types/models";
 import { Card } from "@/components/common/ui/Card";
@@ -232,7 +233,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
 
                         {/* Institution */}
                         <Link
-                            to={`/institutes/${grant.research_organization_name}`}
+                            to={`/institutes/${grant.institute_id}`}
                             className="inline-flex items-start text-gray-600 hover:text-blue-600 transition-colors group"
                         >
                             <University className="inline-block flex-shrink-0 h-4 w-4 mr-1.5 mt-1" />
