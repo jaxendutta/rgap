@@ -10,6 +10,10 @@ BEGIN
         r.*,
         i.name AS research_organization_name,
         i.type AS institute_type,
+        i.city,
+        i.province,
+        i.country,
+        i.postal_code,
         COUNT(DISTINCT rg.grant_id) as total_grants,
         COALESCE(SUM(rg.agreement_value), 0) as total_funding,
         COALESCE(AVG(rg.agreement_value), 0) as avg_funding,
@@ -21,7 +25,7 @@ BEGIN
     LEFT JOIN ResearchGrant rg ON r.recipient_id = rg.recipient_id
     LEFT JOIN Organization o ON rg.owner_org = o.owner_org
     WHERE r.recipient_id = p_recipient_id
-    GROUP BY r.recipient_id, i.name, i.type;
+    GROUP BY r.recipient_id, i.name, i.type, i.city, i.province, i.country, i.postal_code;
 
     -- Get recipient's grants
     SELECT

@@ -1,13 +1,16 @@
+// src/components/common/ui/Card.tsx
 import { cn } from '@/utils/cn';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   isHoverable?: boolean;
+  header?: React.ReactNode;
 }
 
 export const Card = ({
   children,
   className,
   isHoverable = false,
+  header,
   ...props
 }: CardProps) => (
   <div
@@ -18,6 +21,7 @@ export const Card = ({
     )}
     {...props}
   >
+    {header && <div className="border-b border-gray-200">{header}</div>}
     {children}
   </div>
 );

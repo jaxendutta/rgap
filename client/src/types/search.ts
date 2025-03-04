@@ -64,3 +64,7 @@ export interface SearchResponse {
     data: ResearchGrant[];
     metadata: SearchResponseMetadata;
 }
+
+export type ChartType = "line" | "bar";
+export type ProfileTab = "grants" | "analytics";
+export type ChartMetric = "funding" | "grants";
