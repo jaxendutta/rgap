@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { BookmarkPlus, BookmarkCheck, MapPin, University, Users, BookMarked } from 'lucide-react'
 import { clsx } from 'clsx'
 import { formatCurrency } from '../utils/format'
+import PageHeader from '@/components/common/layout/PageHeader'
+import PageContainer from '@/components/common/layout/PageContainer'
 
 // Data
 // Make a copy of the mock data for now
@@ -21,14 +23,12 @@ export const InstitutesPage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 lg:p-6 space-y-6">
+    <PageContainer>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Research Institutes</h1>
-          <p className="text-gray-600 mt-1">Browse research institutes here.</p>
-        </div>
-      </div>
+      <PageHeader 
+        title="Research Institutes"
+        subtitle="Browse research institutes here."
+      />
 
       {/* Grid of Institutes */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -97,8 +97,6 @@ export const InstitutesPage = () => {
           </div>
         ))}
       </div>
-    </div>
+    </PageContainer>
   )
 }
-
-export default InstitutesPage

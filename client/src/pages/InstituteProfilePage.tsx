@@ -1,397 +1,520 @@
-import { useState } from 'react'
-import { useParams, Link, Navigate } from 'react-router-dom'
+// src/pages/InstituteProfilePage.tsx
+import { useState, useMemo } from "react";
+import { useParams, Link, Navigate } from "react-router-dom";
 import {
-  BookmarkPlus,
-  BookmarkCheck,
-  MapPin,
-  University,
-  BookMarked,
-  DollarSign,
-  Users,
-  TrendingUp,
-  TrendingDown,
-  GraduationCap,
-  Calendar
-} from 'lucide-react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { clsx } from 'clsx'
-import { formatCurrency, formatDate } from '../utils/format'
+    BookmarkPlus,
+    BookmarkCheck,
+    MapPin,
+    University,
+    BookMarked,
+    DollarSign,
+    Users,
+    GraduationCap,
+    Calendar,
+    LineChart,
+} from "lucide-react";
+import { EntityProfilePage } from "@/components/common/pages/EntityProfilePage";
+import { formatCurrency, formatDate } from "@/utils/format";
+import { cn } from "@/utils/cn";
+import { ChartType, ProfileTab } from "@/types/search";
 
-// Data
-// Make a copy of the mock data for now
-import { mock_data, mockInstitutes } from '../test-data/mockdata'
-const institutes = [...mockInstitutes]
-
-// Types
-type SortField = 'date' | 'value' | 'grants_count'
-type SortDirection = 'asc' | 'desc'
-type ActiveTab = 'grants' | 'recipients'
-
-interface SortConfig {
-  field: SortField
-  direction: SortDirection
-}
-
-// Sort functions
-const sortByDate = (a: any, b: any, direction: SortDirection, valueKey: string = 'agreement_start_date'): number => {
-  const multiplier = direction === 'asc' ? 1 : -1
-  return multiplier * (new Date(a[valueKey]).getTime() - new Date(b[valueKey]).getTime())
-}
-
-const sortByValue = (a: any, b: any, direction: SortDirection, valueKey: string = 'value'): number => {
-  const multiplier = direction === 'asc' ? 1 : -1
-  return multiplier * (a[valueKey] - b[valueKey])
-}
-
-const sortByGrantsCount = (a: any, b: any, direction: SortDirection): number => {
-  const multiplier = direction === 'asc' ? 1 : -1
-  return multiplier * (a.grants.legth - b.grants.length)
-}
-
-// Components
-const StatCard = ({ icon: Icon, label, value, trend }: {
-  icon: React.ElementType
-  label: string
-  value: string | number
-  trend?: 'up' | 'down'
-}) => (
-  <div className="bg-white rounded-lg border border-gray-200 p-6 lg:col-span-1">
-    <div className="flex items-center text-gray-600 mb-2">
-      <Icon className="h-4 w-4 mr-2" />
-      {label}
-    </div>
-    <div className="flex items-center">
-      <span className="text-2xl font-semibold">{value}</span>
-      {trend && (
-        trend === 'up'
-          ? <TrendingUp className="h-5 w-5 ml-2 text-green-500" />
-          : <TrendingDown className="h-5 w-5 ml-2 text-red-500" />
-      )}
-    </div>
-  </div>
-)
-
-const SortButton = ({
-  label,
-  icon: Icon,
-  field,
-  currentField,
-  direction,
-  onClick
-}: {
-  label: string
-  icon?: React.ElementType
-  field: SortField
-  currentField: SortField
-  direction: SortDirection
-  onClick: () => void
-}) => (
-  <button
-    onClick={onClick}
-    className={clsx(
-      'flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-md hover:bg-gray-50',
-      currentField === field ? 'text-gray-900' : 'text-gray-600 hover:text-gray-900'
-    )}
-  >
-    {Icon && <Icon className="h-4 w-4" />}
-    <span className="hidden lg:flex">{label}</span>
-    {currentField === field && (
-      <span className="text-gray-900">
-        {direction === 'asc' ? '↑' : '↓'}
-      </span>
-    )}
-  </button>
-)
+// Import for demo purposes - in a real implementation, you would use an API hook
+import { mock_data, mockInstitutes } from "../test-data/mockdata";
 
 const InstituteProfilePage = () => {
-  const { id } = useParams()
-  const institute = institutes.find(institute => institute.id === Number(id))
+    const { id } = useParams();
 
-  if (!institute) {
-    return <Navigate to="/pageNotFound" />
-  }
+    // In a real implementation, this would be a data fetching hook similar to useRecipientDetails
+    const institute = useMemo(() => {
+        return mockInstitutes.find((institute) => institute.id === Number(id));
+    }, [id]);
 
-  // TODO: Fetch grants and recipients from the API
-  const grants = institute.grants.map(grantId => mock_data.ResearchGrant.find(grant => grant.grant_id === grantId))
-  const recipients = institute.recipients.map(recipientId => {
-    const recipient = mock_data.Recipient.find(recipient => recipient.recipient_id === recipientId)
-    return recipient ? {
-      ...recipient,
-      grants: grants.filter(grant => grant && grant.recipient_id === recipient.recipient_id)
-    } : recipient
-  })
+    // Simulate loading and error states for demo purposes
+    const isLoading = false;
+    const isError = false;
+    const error = null;
 
-  const [isBookmarked, setIsBookmarked] = useState(false)
-  const [recipientBookmarks, setRecipientBookmarks] = useState<number[]>([])
-  const [activeTab, setActiveTab] = useState<ActiveTab>('grants')
-  const [sortConfig, setSortConfig] = useState<SortConfig>({
-    field: 'date',
-    direction: 'desc'
-  })
+    // Mock data fetching for grants and recipients
+    const grants = useMemo(() => {
+        if (!institute) return [];
+        return institute.grants
+            .map((grantId) =>
+                mock_data.ResearchGrant.find(
+                    (grant) => grant.grant_id === grantId
+                )
+            )
+            .filter(Boolean);
+    }, [institute]);
 
-  const toggleRecipientBookmark = (id: number) => {
-    setRecipientBookmarks(prev => prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id])
-  }
+    const recipients = useMemo(() => {
+        if (!institute) return [];
+        return institute.recipients
+            .map((recipientId) => {
+                const recipient = mock_data.Recipient.find(
+                    (recipient) => recipient.recipient_id === recipientId
+                );
+                return recipient
+                    ? {
+                          ...recipient,
+                          grants: grants.filter(
+                              (grant) =>
+                                  grant &&
+                                  grant.recipient_id === recipient.recipient_id
+                          ),
+                      }
+                    : null;
+            })
+            .filter(Boolean);
+    }, [institute, grants]);
 
-  const toggleSort = (field: SortField) => {
-    setSortConfig(prev => ({
-      field,
-      direction: prev.field === field && prev.direction === 'desc' ? 'asc' : 'desc'
-    }))
-  }
+    // Component state
+    const [activeTab, setActiveTab] = useState<ProfileTab>("grants");
+    const [sortConfig, setSortConfig] = useState({
+        field: "date" as "date" | "value" | "grants_count",
+        direction: "desc" as "asc" | "desc",
+    });
+    const [chartType, setChartType] = useState<ChartType>("line");
 
-  // Sort data based on current configuration
-  const sortedGrants = [...grants].sort((a, b) =>
-    sortConfig.field === 'value'
-      ? sortByValue(a, b, sortConfig.direction, 'agreement_value')
-      : sortByDate(a, b, sortConfig.direction, 'agreement_start_date')
-  )
+    // If institute not found and not loading
+    if (!isLoading && !institute && !isError) {
+        return <Navigate to="/pageNotFound" />;
+    }
 
-  const sortedRecipients = [...recipients].sort((a, b) =>
-    sortConfig.field === 'value'
-      ? sortByValue(a, b, sortConfig.direction, 'total_funding')
-      : sortByGrantsCount(a, b, sortConfig.direction)
-  )
+    const toggleSort = (field: "date" | "value" | "grants_count") => {
+        setSortConfig((prev) => ({
+            field,
+            direction:
+                prev.field === field && prev.direction === "desc"
+                    ? "asc"
+                    : "desc",
+        }));
+    };
 
-  return (
-    <div className="max-w-7xl mx-auto p-4 lg:p-6 space-y-6">
-      {/* Profile and Stats Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Profile Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 lg:p-6 lg:col-span-1">
-          <div className="flex justify-between">
-            <div className="space-y-1">
-              <h1 className="text-2xl font-semibold">{institute.name}</h1>
-              <div className="flex items-center text-gray-600">
-                <University className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span>{institute.type}</span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span>{institute.city}, {institute.province}</span>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsBookmarked(!isBookmarked)}
-              className={clsx(
-                "p-2 h-fit rounded-full transition-colors hover:bg-gray-50",
-                isBookmarked
-                  ? "text-blue-600 hover:text-blue-700"
-                  : "text-gray-400 hover:text-gray-600"
-              )}
-            >
-              {isBookmarked
-                ? <BookmarkCheck className="h-5 w-5" />
-                : <BookmarkPlus className="h-5 w-5" />
-              }
-            </button>
-          </div>
-        </div>
+    // Sort data based on current configuration
+    const sortedGrants = useMemo(() => {
+        if (!grants.length) return [];
 
-        {/* Stats Cards */}
-        <StatCard
-          icon={BookMarked}
-          label="Grants"
-          value={institute.stats.total_grants.value}
-          trend={institute.stats.total_grants.trend}
-        />
-        <StatCard
-          icon={DollarSign}
-          label="Total Funding"
-          value={formatCurrency(institute.stats.total_value.value)}
-          trend={institute.stats.total_value.trend}
-        />
-        <StatCard
-          icon={Users}
-          label="Recipients"
-          value={institute.stats.recipients.value}
-          trend={institute.stats.recipients.trend}
-        />
-      </div>
+        return [...grants].sort((a, b) =>
+            sortConfig.field === "value"
+                ? sortConfig.direction === "asc"
+                    ? (a?.agreement_value ?? 0) - (b?.agreement_value ?? 0)
+                    : (b?.agreement_value ?? 0) - (a?.agreement_value ?? 0)
+                : sortConfig.direction === "asc"
+                ? (new Date(a?.agreement_start_date ?? 0).getTime()) -
+                  (new Date(b?.agreement_start_date ?? 0).getTime())
+                : (new Date(b?.agreement_start_date ?? 0).getTime()) -
+                  (new Date(a?.agreement_start_date ?? 0).getTime())
+        );
+    }, [grants, sortConfig]);
 
-      {/* Funding History Chart */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200">
-        <h2 className="text-lg font-semibold mb-4">Funding History</h2>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={institute.funding_history}
-              margin={{ top: 10, right: 30, left: 50, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis
-                dataKey="year"
-                tickLine={false}
-                axisLine={{ stroke: '#e5e7eb' }}
-              />
-              <YAxis
-                tickFormatter={(value) => `${value / 1000000}M`}
-                tickLine={false}
-                axisLine={{ stroke: '#e5e7eb' }}
-                tick={{ fontSize: 12 }}
-                tickMargin={8}
-              />
-              <Tooltip
-                formatter={(value: number) => [`$${(value / 1000000).toFixed(1)}M`, 'Funding']}
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '6px',
-                  padding: '8px 12px'
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke="#2563eb"
-                strokeWidth={2}
-                dot={{ fill: '#2563eb', strokeWidth: 2 }}
-                activeDot={{ r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+    const sortedRecipients = useMemo(() => {
+        if (!recipients.length) return [];
 
-      {/* Tabs for Grants and Recipients */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="border-b border-gray-200">
-          <div className="flex items-center justify-between px-4 lg:px-6">
-            <div className="flex">
-              <button
-                onClick={() => setActiveTab('grants')}
-                className={clsx(
-                  'px-6 py-3 text-md font-medium border-b-2 transition-colors',
-                  activeTab === 'grants'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                )}
-              >
-                Grants
-              </button>
-              <button
-                onClick={() => setActiveTab('recipients')}
-                className={clsx(
-                  'px-6 py-3 text-md font-medium border-b-2 transition-colors',
-                  activeTab === 'recipients'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                )}
-              >
-                Recipients
-              </button>
-            </div>
+        return [...recipients].sort((a, b) =>
+            sortConfig.field === "value"
+                ? sortConfig.direction === "asc"
+                    ? (a?.grants.reduce((sum, g) => sum + (g?.agreement_value ?? 0), 0) ?? 0) -
+                      (b?.grants.reduce((sum, g) => sum + (g?.agreement_value ?? 0), 0) ?? 0)
+                    : (b?.grants.reduce((sum, g) => sum + (g?.agreement_value ?? 0), 0) ?? 0) -
+                      (a?.grants.reduce((sum, g) => sum + (g?.agreement_value ?? 0), 0) ?? 0)
+                : sortConfig.field === "grants_count"
+                ? sortConfig.direction === "asc"
+                    ? (a?.grants.length ?? 0) - (b?.grants.length ?? 0)
+                    : (b?.grants.length ?? 0) - (a?.grants.length ?? 0)
+                : 0
+        );
+    }, [recipients, sortConfig]);
 
-            {/* Sort Controls */}
-            <div className="flex gap-2">
-              {activeTab === 'grants' && (
-                <SortButton
-                  label="Date"
-                  icon={Calendar}
-                  field="date"
-                  currentField={sortConfig.field}
-                  direction={sortConfig.direction}
-                  onClick={() => toggleSort('date')}
-                />
-              )}
-              {activeTab === 'recipients' && (
-                <SortButton
-                  label="Grants"
-                  icon={BookMarked}
-                  field="grants_count"
-                  currentField={sortConfig.field}
-                  direction={sortConfig.direction}
-                  onClick={() => toggleSort('grants_count')}
-                />
-              )}
-              <SortButton
-                label="Value"
-                icon={DollarSign}
-                field="value"
-                currentField={sortConfig.field}
-                direction={sortConfig.direction}
-                onClick={() => toggleSort('value')}
-              />
-            </div>
-          </div>
-        </div>
+    // Define tabs for the institute profile
+    const tabs = [
+        { id: "grants", label: "Grants", icon: BookMarked },
+        { id: "recipients", label: "Recipients", icon: GraduationCap },
+        { id: "analytics", label: "Analytics", icon: LineChart },
+    ];
 
-        {/* Tab Content */}
-        <div className="divide-y">
-          {activeTab === 'grants' ? (
-            // Grants List
-            sortedGrants.map(grant => grant && (
-              <div key={grant.grant_id} className="p-6 hover:bg-gray-50 transition-colors">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <div className="text-lg font-medium">{grant.agreement_title_en}</div>
-                    <div className="text-sm text-gray-500 flex items-center">
-                      <GraduationCap className="h-4 w-4 mr-1" />
-                      {recipients[grant.recipient_id]?.legal_name}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {grant.ref_number} • {grant.org}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium">
-                      {formatCurrency(grant.agreement_value)}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      <div className="flex items-end">
-                        <span>{formatDate(grant.agreement_start_date)}</span>
-                        <span className="text-gray-400 mx-1 hidden lg:flex">│</span>
-                        <span className="hidden lg:flex">{formatDate(grant.agreement_end_date)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            // Recipients List
-            sortedRecipients.map(recipient => recipient && (
-              <div key={recipient.recipient_id} className="p-6 hover:bg-gray-50 transition-colors">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <Link
-                      to={`/recipients/${recipient.recipient_id}`}
-                      className="text-lg font-medium hover:text-blue-600 transition-colors flex items-center"
-                    >
-                      <GraduationCap className="h-4 w-4 mr-1" />
-                      {recipient.legal_name}
-                    </Link>
-                    <div className="text-sm text-gray-500">
-                      {recipient.grants.length} Grants
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-4">
-                    <div className="font-medium text-right">
-                      {formatCurrency(recipient.grants.reduce((acc, grant) => grant ? acc + grant.agreement_value : acc, 0))}
+    // Render functions for EntityProfilePage
+    const renderHeader = (
+        isBookmarked: boolean,
+        toggleBookmark: () => void
+    ) => {
+        if (!institute) return null;
+
+        return (
+            <div className="p-4 lg:p-6 pb-4 border-b border-gray-100">
+                <div className="flex justify-between">
+                    <div className="space-y-1">
+                        <h1 className="text-2xl font-semibold">
+                            {institute.name}
+                        </h1>
+                        <div className="flex items-center text-gray-600">
+                            <University className="h-4 w-4 mr-2 flex-shrink-0" />
+                            <span>{institute.type}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600">
+                            <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                            <span>
+                                {institute.city}, {institute.province}
+                            </span>
+                        </div>
                     </div>
                     <button
-                      onClick={() => toggleRecipientBookmark(recipient.recipient_id)}
-                      className={clsx(
-                        "p-1 rounded-full transition-colors hover:bg-gray-100",
-                        recipientBookmarks.includes(recipient.recipient_id)
-                          ? "text-blue-600 hover:text-blue-700"
-                          : "text-gray-400 hover:text-gray-600"
-                      )}
+                        onClick={toggleBookmark}
+                        className={cn(
+                            "p-2 h-fit rounded-full transition-colors hover:bg-gray-50",
+                            isBookmarked
+                                ? "text-blue-600 hover:text-blue-700"
+                                : "text-gray-400 hover:text-gray-600"
+                        )}
                     >
-                      {recipientBookmarks.includes(recipient.recipient_id)
-                        ? <BookmarkCheck className="h-5 w-5" />
-                        : <BookmarkPlus className="h-5 w-5" />
-                      }
+                        {isBookmarked ? (
+                            <BookmarkCheck className="h-5 w-5" />
+                        ) : (
+                            <BookmarkPlus className="h-5 w-5" />
+                        )}
                     </button>
-                  </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
+            </div>
+        );
+    };
 
-export default InstituteProfilePage
+    const renderStats = () => {
+        if (!institute) return null;
+
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 lg:p-6 pt-2 bg-gray-50">
+                <div className="bg-white p-3 lg:p-4 rounded-lg border border-gray-100 shadow-sm">
+                    <div className="flex items-center text-gray-600 mb-2">
+                        <BookMarked className="h-4 w-4 mr-2" />
+                        <span>Grants</span>
+                    </div>
+                    <div className="flex items-center">
+                        <span className="text-2xl font-semibold">
+                            {institute.stats.total_grants.value}
+                        </span>
+                        {institute.stats.total_grants.trend && (
+                            <span className="ml-2 text-sm text-green-500">
+                                {institute.stats.total_grants.trend === "up"
+                                    ? "↑"
+                                    : "↓"}
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                <div className="bg-white p-3 lg:p-4 rounded-lg border border-gray-100 shadow-sm">
+                    <div className="flex items-center text-gray-600 mb-2">
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        <span>Total Funding</span>
+                    </div>
+                    <div className="flex items-center">
+                        <span className="text-2xl font-semibold">
+                            {formatCurrency(institute.stats.total_value.value)}
+                        </span>
+                        {institute.stats.total_value.trend && (
+                            <span className="ml-2 text-sm text-green-500">
+                                {institute.stats.total_value.trend === "up"
+                                    ? "↑"
+                                    : "↓"}
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                <div className="bg-white p-3 lg:p-4 rounded-lg border border-gray-100 shadow-sm">
+                    <div className="flex items-center text-gray-600 mb-2">
+                        <Users className="h-4 w-4 mr-2" />
+                        <span>Recipients</span>
+                    </div>
+                    <div className="flex items-center">
+                        <span className="text-2xl font-semibold">
+                            {institute.stats.recipients.value}
+                        </span>
+                        {institute.stats.recipients.trend && (
+                            <span className="ml-2 text-sm text-green-500">
+                                {institute.stats.recipients.trend === "up"
+                                    ? "↑"
+                                    : "↓"}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const renderTabContent = (activeTabId: string) => {
+        if (!institute) return null;
+
+        switch (activeTabId) {
+            case "grants":
+                return (
+                    <div>
+                        <div className="flex justify-between items-start mb-4">
+                            <h3 className="font-medium text-gray-900">
+                                All Grants
+                            </h3>
+                            <div className="flex">
+                                <button
+                                    onClick={() => toggleSort("date")}
+                                    className={`px-3 py-1.5 text-sm ${
+                                        sortConfig.field === "date"
+                                            ? "bg-gray-100 font-medium"
+                                            : "bg-white"
+                                    } rounded-l-md border`}
+                                >
+                                    Date{" "}
+                                    {sortConfig.field === "date" &&
+                                        (sortConfig.direction === "asc"
+                                            ? "↑"
+                                            : "↓")}
+                                </button>
+                                <button
+                                    onClick={() => toggleSort("value")}
+                                    className={`px-3 py-1.5 text-sm ${
+                                        sortConfig.field === "value"
+                                            ? "bg-gray-100 font-medium"
+                                            : "bg-white"
+                                    } rounded-r-md border-t border-r border-b`}
+                                >
+                                    Value{" "}
+                                    {sortConfig.field === "value" &&
+                                        (sortConfig.direction === "asc"
+                                            ? "↑"
+                                            : "↓")}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="divide-y">
+                            {sortedGrants.map(
+                                (grant) =>
+                                    grant && (
+                                        <div
+                                            key={grant.grant_id}
+                                            className="p-4 hover:bg-gray-50 transition-colors"
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <div className="space-y-1">
+                                                    <div className="text-lg font-medium">
+                                                        {
+                                                            grant.agreement_title_en
+                                                        }
+                                                    </div>
+                                                    <div className="text-sm text-gray-600 flex items-center">
+                                                        <GraduationCap className="h-4 w-4 mr-1" />
+                                                        {recipients.find(
+                                                            (r) =>
+                                                                r?.recipient_id ===
+                                                                grant.recipient_id
+                                                        )?.legal_name ||
+                                                            "Unknown Recipient"}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500">
+                                                        {grant.ref_number} •{" "}
+                                                        {grant.org}
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-medium">
+                                                        {formatCurrency(
+                                                            grant.agreement_value
+                                                        )}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500">
+                                                        <div className="flex items-center justify-end">
+                                                            <Calendar className="h-4 w-4 mr-1" />
+                                                            <span>
+                                                                {formatDate(
+                                                                    grant.agreement_start_date
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                            )}
+                        </div>
+                    </div>
+                );
+
+            case "recipients":
+                return (
+                    <div>
+                        <div className="flex justify-between items-start mb-4">
+                            <h3 className="font-medium text-gray-900">
+                                All Recipients
+                            </h3>
+                            <div className="flex">
+                                <button
+                                    onClick={() => toggleSort("grants_count")}
+                                    className={`px-3 py-1.5 text-sm ${
+                                        sortConfig.field === "grants_count"
+                                            ? "bg-gray-100 font-medium"
+                                            : "bg-white"
+                                    } rounded-l-md border`}
+                                >
+                                    Grants{" "}
+                                    {sortConfig.field === "grants_count" &&
+                                        (sortConfig.direction === "asc"
+                                            ? "↑"
+                                            : "↓")}
+                                </button>
+                                <button
+                                    onClick={() => toggleSort("value")}
+                                    className={`px-3 py-1.5 text-sm ${
+                                        sortConfig.field === "value"
+                                            ? "bg-gray-100 font-medium"
+                                            : "bg-white"
+                                    } rounded-r-md border-t border-r border-b`}
+                                >
+                                    Value{" "}
+                                    {sortConfig.field === "value" &&
+                                        (sortConfig.direction === "asc"
+                                            ? "↑"
+                                            : "↓")}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="divide-y">
+                            {sortedRecipients.map(
+                                (recipient) =>
+                                    recipient && (
+                                        <div
+                                            key={recipient.recipient_id}
+                                            className="p-4 hover:bg-gray-50 transition-colors"
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <div className="space-y-1">
+                                                    <Link
+                                                        to={`/recipients/${recipient.recipient_id}`}
+                                                        className="text-lg font-medium hover:text-blue-600 transition-colors flex items-center"
+                                                    >
+                                                        <GraduationCap className="h-4 w-4 mr-1" />
+                                                        {recipient.legal_name}
+                                                    </Link>
+                                                    <div className="text-sm text-gray-500">
+                                                        {
+                                                            recipient.grants
+                                                                .length
+                                                        }{" "}
+                                                        Grants
+                                                    </div>
+                                                </div>
+                                                <div className="font-medium text-right">
+                                                    {formatCurrency(
+                                                        recipient.grants.reduce(
+                                                            (acc, grant) =>
+                                                                grant
+                                                                    ? acc +
+                                                                      grant.agreement_value
+                                                                    : acc,
+                                                            0
+                                                        )
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                            )}
+                        </div>
+                    </div>
+                );
+
+            case "analytics":
+                return (
+                    <div>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-medium text-gray-900">
+                                Funding History
+                            </h3>
+                            <div className="flex">
+                                <button
+                                    onClick={() => setChartType("line")}
+                                    className={`px-3 py-1.5 text-sm ${
+                                        chartType === "line"
+                                            ? "bg-gray-100 font-medium"
+                                            : "bg-white"
+                                    } rounded-l-md border`}
+                                >
+                                    Line Chart
+                                </button>
+                                <button
+                                    onClick={() => setChartType("bar")}
+                                    className={`px-3 py-1.5 text-sm ${
+                                        chartType === "bar"
+                                            ? "bg-gray-100 font-medium"
+                                            : "bg-white"
+                                    } rounded-r-md border-t border-r border-b`}
+                                >
+                                    Bar Chart
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="bg-white border rounded-lg p-4 h-64 flex items-center justify-center">
+                            <p className="text-gray-500">
+                                {chartType === "line" ? "Line" : "Bar"} chart
+                                visualization would appear here
+                            </p>
+                            {/* In a real implementation, you would render a LineChart or BarChart component here */}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                            {/* Sample analytics cards */}
+                            <div className="bg-white p-4 rounded-lg border">
+                                <h4 className="font-medium mb-2">
+                                    Funding by Agency
+                                </h4>
+                                <p className="text-gray-500 text-sm">
+                                    Funding breakdown visualization
+                                </p>
+                            </div>
+                            <div className="bg-white p-4 rounded-lg border">
+                                <h4 className="font-medium mb-2">
+                                    Top Recipients
+                                </h4>
+                                <p className="text-gray-500 text-sm">
+                                    List of top grant recipients
+                                </p>
+                            </div>
+                            <div className="bg-white p-4 rounded-lg border">
+                                <h4 className="font-medium mb-2">
+                                    Annual Trends
+                                </h4>
+                                <p className="text-gray-500 text-sm">
+                                    Year-over-year funding trends
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <EntityProfilePage
+            entity={institute}
+            entityType="institute"
+            entityTypeLabel="Institute"
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            renderHeader={renderHeader}
+            renderStats={renderStats}
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={(tabId) => setActiveTab(tabId as ProfileTab)}
+            renderTabContent={renderTabContent}
+            chartType={chartType}
+            setChartType={setChartType}
+        />
+    );
+};
+
+export default InstituteProfilePage;

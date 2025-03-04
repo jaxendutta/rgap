@@ -98,7 +98,7 @@ export const PopularSearchesPanel = ({
                     <button
                         key={index}
                         onClick={() => onSelect(activeCategory, term.text)}
-                        className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded-md transition-colors text-left"
+                        className="flex items-center justify-between w-full p-1 lg:p-2 hover:bg-gray-50 rounded-md transition-colors text-left"
                     >
                         <span className="text-gray-800">{term.text}</span>
                         <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
