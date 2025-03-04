@@ -22,6 +22,8 @@ import { cn } from "@/utils/cn";
 import MockupMessage from "../components/common/messages/mockup";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
+import PageContainer from "@/components/common/layout/PageContainer";
+import PageHeader from "@/components/common/layout/PageHeader";
 
 type SortField = "date" | "results";
 type SortDirection = "asc" | "desc";
@@ -91,13 +93,9 @@ export default function AccountPage() {
     };
 
     return (
-        <div className="max-w-7xl mx-auto p-4 lg:p-6 space-y-6">
+        <PageContainer>
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-semibold">Account Settings</h1>
-                </div>
-            </div>
+            <PageHeader title="Account Settings" subtitle="Manage your account settings here." />
 
             {/* Tabs */}
             <div className="flex space-x-2 lg:space-x-4">
@@ -381,6 +379,6 @@ export default function AccountPage() {
                     )}
                 </motion.div>
             </AnimatePresence>
-        </div>
+        </PageContainer>
     );
 }

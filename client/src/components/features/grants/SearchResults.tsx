@@ -3,12 +3,14 @@ import { useState, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { ResearchGrant } from "@/types/models";
 import { GrantCard } from "./GrantCard";
-import { FileSearch, FileWarning, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { TrendVisualizer } from "@/components/features/visualizations/TrendVisualizer";
-import { LoadingSpinner } from "@/components/common/ui/LoadingSpinner";
 import { Button } from "@/components/common/ui/Button";
 import { SearchResponse } from "@/types/search";
 import { UseInfiniteQueryResult, InfiniteData } from "@tanstack/react-query";
+import LoadingState from "@/components/common/ui/LoadingState";
+import EmptyState from "@/components/common/ui/EmptyState";
+import ErrorState from "@/components/common/ui/ErrorState";
 
 type GroupByOption = "org" | "province" | "country" | "city";
 
@@ -133,53 +135,49 @@ export const SearchResults = ({
 
     if (isInitialState) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-                <FileSearch className="h-16 w-16 mb-4" />
-                <h3 className="text-xl font-medium mb-2">Ready to Explore?</h3>
-                <p className="text-center max-w-md">
-                    Type a query above or use filters to begin your exploration.
-                </p>
-            </div>
+            <EmptyState
+                title="Ready to Explore?"
+                message="Type a query above or use filters to begin your exploration."
+                variant="card"
+                size="lg"
+            />
         );
     }
 
     if (isLoading && !data) {
         return (
-            <div className="flex flex-col items-center justify-center py-16">
-                <LoadingSpinner size="lg" className="mb-4" />
-                <h3 className="text-lg font-medium text-gray-700 mb-2">
-                    Searching Grants...
-                </h3>
-                <p className="text-gray-500">This might take a moment</p>
-            </div>
+            <LoadingState
+                title="Searching Grants..."
+                message="This might take a moment"
+                fullHeight
+                size="lg"
+            />
         );
     }
 
     if (isError && error) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 text-red-500">
-                <FileWarning className="h-16 w-16 mb-4" />
-                <h3 className="text-lg font-medium mb-2">
-                    Oops! Something went wrong
-                </h3>
-                <p className="text-center">{error.message}</p>
-                <p className="text-sm mt-2">
-                    Please try again or contact support if the problem persists.
-                </p>
-            </div>
+            <ErrorState
+                title="Oops! Something went wrong"
+                message={
+                    error.message ||
+                    "Failed to search grants. Please try again later."
+                }
+                variant="default"
+                size="lg"
+                onRetry={() => infiniteQuery.refetch()}
+            />
         );
     }
 
     if (!allGrants.length) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-                <FileWarning className="h-16 w-16 mb-4" />
-                <h3 className="text-lg font-medium mb-2">No Results Found</h3>
-                <p className="text-center max-w-md">
-                    Try adjusting your search terms or filters to find what
-                    you're looking for.
-                </p>
-            </div>
+            <EmptyState
+                title="No Results Found"
+                message="Try adjusting your search terms or filters to find what you're looking for."
+                variant="card"
+                size="lg"
+            />
         );
     }
 
@@ -205,7 +203,6 @@ export const SearchResults = ({
             <div className="space-y-4">
                 {allGrants.map((grant, index) => (
                     <GrantCard
-                        // Create a guaranteed unique key using a combination of values and the index
                         key={`grant-${grant.ref_number}-${
                             grant.amendment_number || "0"
                         }-page${Math.floor(index / 10)}-item${index}`}
@@ -225,12 +222,11 @@ export const SearchResults = ({
                 className="flex justify-center items-center py-4 h-20"
             >
                 {isFetchingNextPage ? (
-                    <div className="flex flex-col items-center">
-                        <LoadingSpinner size="md" className="mb-2" />
-                        <p className="text-sm text-gray-600">
-                            Loading more results...
-                        </p>
-                    </div>
+                    <LoadingState
+                        title=""
+                        message="Loading more results..."
+                        size="sm"
+                    />
                 ) : hasNextPage ? (
                     <Button
                         variant="outline"

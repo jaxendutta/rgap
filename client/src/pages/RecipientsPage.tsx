@@ -4,6 +4,8 @@ import { BookmarkPlus, BookmarkCheck, MapPin, University, BookMarked, Calendar }
 import { clsx } from 'clsx'
 import { formatCurrency, formatDate } from '../utils/format'
 import { Recipient, ResearchGrant } from '../types/models'
+import PageHeader from '@/components/common/layout/PageHeader'
+import PageContainer from '@/components/common/layout/PageContainer'
 
 // Data
 // Make a copy of the mock data for now
@@ -23,14 +25,12 @@ export const RecipientsPage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 lg:p-6 space-y-6">
+    <PageContainer>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Research Grant Recipients</h1>
-          <p className="text-gray-600 mt-1">Browse research grant recipients here.</p>
-        </div>
-      </div>
+      <PageHeader 
+        title="Research Grant Recipients"
+        subtitle="Browse research grant recipients here."
+      />
 
       {/* Grid of Recipients */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -112,8 +112,6 @@ export const RecipientsPage = () => {
           </div>
         ))}
       </div>
-    </div>
+    </PageContainer>
   )
 }
-
-export default RecipientsPage

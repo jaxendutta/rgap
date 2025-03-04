@@ -67,4 +67,4 @@ export interface SearchResponse {
 
 export type ChartType = "line" | "bar";
 export type ProfileTab = "grants" | "analytics";
-export type ChartMetric = "funding" | "grants";
+export type ChartMetric = "funding" | "grants" | "counts";
