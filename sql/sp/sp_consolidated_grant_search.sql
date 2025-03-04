@@ -29,9 +29,9 @@ BEGIN
     SET p_page_size = IFNULL(p_page_size, 20);
     SET p_page = IFNULL(p_page, 1);
     
-    -- Set up dynamic SQL variables
-    SET @where_clause = CONCAT(
-        " WHERE 1=1",
+    -- Conditions to apply to the main query
+    SET @main_conditions = CONCAT(
+        "WHERE 1=1",
         IF(p_recipient_term IS NOT NULL, CONCAT(" AND r.legal_name LIKE '%", p_recipient_term, "%'"), ""),
         IF(p_institute_term IS NOT NULL, CONCAT(" AND i.name LIKE '%", p_institute_term, "%'"), ""),
         IF(p_grant_term IS NOT NULL, CONCAT(" AND rg.agreement_title_en LIKE '%", p_grant_term, "%'"), ""),
@@ -39,7 +39,17 @@ BEGIN
         " AND rg.agreement_value BETWEEN ", p_value_min, " AND ", p_value_max
     );
     
-    -- Handle agency filter
+    -- Conditions to apply to the subquery - using table alias 't' instead of 'rg'
+    SET @sub_conditions = CONCAT(
+        "WHERE 1=1",
+        IF(p_recipient_term IS NOT NULL, CONCAT(" AND tr.legal_name LIKE '%", p_recipient_term, "%'"), ""),
+        IF(p_institute_term IS NOT NULL, CONCAT(" AND ti.name LIKE '%", p_institute_term, "%'"), ""),
+        IF(p_grant_term IS NOT NULL, CONCAT(" AND t.agreement_title_en LIKE '%", p_grant_term, "%'"), ""),
+        " AND YEAR(t.agreement_start_date) BETWEEN ", p_year_start, " AND ", p_year_end,
+        " AND t.agreement_value BETWEEN ", p_value_min, " AND ", p_value_max
+    );
+    
+    -- Handle agency filter for main query
     IF JSON_LENGTH(p_agencies) > 0 THEN
         SET @agency_list = "";
         SET @i = 0;
@@ -51,10 +61,11 @@ BEGIN
             SET @agency_list = CONCAT(@agency_list, "'", @agency, "'");
             SET @i = @i + 1;
         END WHILE;
-        SET @where_clause = CONCAT(@where_clause, " AND o.abbreviation IN (", @agency_list, ")");
+        SET @main_conditions = CONCAT(@main_conditions, " AND o.abbreviation IN (", @agency_list, ")");
+        SET @sub_conditions = CONCAT(@sub_conditions, " AND org_t.abbreviation IN (", @agency_list, ")");
     END IF;
     
-    -- Handle country filter
+    -- Handle country filter for main query
     IF JSON_LENGTH(p_countries) > 0 THEN
         SET @country_list = "";
         SET @i = 0;
@@ -66,10 +77,11 @@ BEGIN
             SET @country_list = CONCAT(@country_list, "'", @country, "'");
             SET @i = @i + 1;
         END WHILE;
-        SET @where_clause = CONCAT(@where_clause, " AND i.country IN (", @country_list, ")");
+        SET @main_conditions = CONCAT(@main_conditions, " AND i.country IN (", @country_list, ")");
+        SET @sub_conditions = CONCAT(@sub_conditions, " AND ti.country IN (", @country_list, ")");
     END IF;
     
-    -- Handle province filter
+    -- Handle province filter for main query
     IF JSON_LENGTH(p_provinces) > 0 THEN
         SET @province_list = "";
         SET @i = 0;
@@ -81,10 +93,11 @@ BEGIN
             SET @province_list = CONCAT(@province_list, "'", @province, "'");
             SET @i = @i + 1;
         END WHILE;
-        SET @where_clause = CONCAT(@where_clause, " AND i.province IN (", @province_list, ")");
+        SET @main_conditions = CONCAT(@main_conditions, " AND i.province IN (", @province_list, ")");
+        SET @sub_conditions = CONCAT(@sub_conditions, " AND ti.province IN (", @province_list, ")");
     END IF;
     
-    -- Handle city filter
+    -- Handle city filter for main query
     IF JSON_LENGTH(p_cities) > 0 THEN
         SET @city_list = "";
         SET @i = 0;
@@ -96,36 +109,36 @@ BEGIN
             SET @city_list = CONCAT(@city_list, "'", @city, "'");
             SET @i = @i + 1;
         END WHILE;
-        SET @where_clause = CONCAT(@where_clause, " AND i.city IN (", @city_list, ")");
+        SET @main_conditions = CONCAT(@main_conditions, " AND i.city IN (", @city_list, ")");
+        SET @sub_conditions = CONCAT(@sub_conditions, " AND ti.city IN (", @city_list, ")");
     END IF;
     
-    -- Create a temporary table with unique ref_numbers and their latest amendment
-    CREATE TEMPORARY TABLE temp_latest_amendments AS
-    SELECT 
-        rg.ref_number,
-        MAX(CAST(rg.amendment_number AS UNSIGNED)) AS latest_amendment
-    FROM ResearchGrant rg
-    JOIN Recipient r ON rg.recipient_id = r.recipient_id
-    JOIN Institute i ON r.institute_id = i.institute_id
-    JOIN Organization o ON rg.owner_org = o.owner_org
-    WHERE 1=1
-        AND (p_recipient_term IS NULL OR r.legal_name LIKE CONCAT('%', p_recipient_term, '%'))
-        AND (p_institute_term IS NULL OR i.name LIKE CONCAT('%', p_institute_term, '%'))
-        AND (p_grant_term IS NULL OR rg.agreement_title_en LIKE CONCAT('%', p_grant_term, '%'))
-        AND YEAR(rg.agreement_start_date) BETWEEN p_year_start AND p_year_end
-        AND rg.agreement_value BETWEEN p_value_min AND p_value_max
-    GROUP BY rg.ref_number;
+    -- Define the list of reference numbers with latest amendments using a subquery
+    SET @latest_amendments_subquery = CONCAT("
+        JOIN (
+            SELECT 
+                t.ref_number,
+                MAX(CAST(t.amendment_number AS UNSIGNED)) AS latest_amendment
+            FROM ResearchGrant t
+            JOIN Recipient tr ON t.recipient_id = tr.recipient_id
+            JOIN Institute ti ON tr.institute_id = ti.institute_id
+            JOIN Organization org_t ON t.owner_org = org_t.owner_org
+            ", @sub_conditions, "
+            GROUP BY t.ref_number
+        ) AS tla ON rg.ref_number = tla.ref_number AND CAST(rg.amendment_number AS UNSIGNED) = tla.latest_amendment
+    ");
     
-    -- Get total count
+    -- Define the count query using a subquery
     SET @count_query = CONCAT("
-        SELECT COUNT(*) INTO @total_count
+        SELECT COUNT(*) INTO @v_total_count
         FROM ResearchGrant rg
         JOIN Recipient r ON rg.recipient_id = r.recipient_id
         JOIN Institute i ON r.institute_id = i.institute_id
         JOIN Organization o ON rg.owner_org = o.owner_org
-        JOIN temp_latest_amendments tla ON rg.ref_number = tla.ref_number AND rg.amendment_number = tla.latest_amendment
-        ", @where_clause);
+        ", @latest_amendments_subquery, "
+        ", @main_conditions);
     
+    -- Execute the count query
     PREPARE stmt FROM @count_query;
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
@@ -145,8 +158,8 @@ BEGIN
         )
     );
     
-    -- Create the base query to get all fields with pagination
-    SET @query = CONCAT("
+    -- Create the main query with pagination
+    SET @main_query = CONCAT("
         SELECT 
             rg.ref_number,
             rg.amendment_number AS latest_amendment_number,
@@ -163,6 +176,7 @@ BEGIN
             rg.expected_results_en,
             r.legal_name,
             i.name AS research_organization_name,
+            i.institute_id,
             rg.recipient_id,
             i.city,
             i.province,
@@ -171,6 +185,7 @@ BEGIN
             rg.owner_org,
             o.org_title AS owner_org_title,
             rg.prog_id,
+            p.name_en,
             (
                 SELECT JSON_ARRAYAGG(
                     JSON_OBJECT(
@@ -188,19 +203,19 @@ BEGIN
         JOIN Recipient r ON rg.recipient_id = r.recipient_id
         JOIN Institute i ON r.institute_id = i.institute_id
         JOIN Organization o ON rg.owner_org = o.owner_org
-        JOIN temp_latest_amendments tla ON rg.ref_number = tla.ref_number AND rg.amendment_number = tla.latest_amendment
-        ", @where_clause, @order_clause, 
-        " LIMIT ", p_page_size, 
-        " OFFSET ", v_offset);
+        LEFT JOIN Program p ON rg.prog_id = p.prog_id
+        ", @latest_amendments_subquery, "
+        ", @main_conditions, "
+        ", @order_clause, "
+        LIMIT ", p_page_size, " 
+        OFFSET ", v_offset);
     
-    -- First return the total count
-    SELECT IFNULL(@total_count, 0) AS total_count;
+    -- Return the total count first
+    SELECT IFNULL(@v_total_count, 0) AS total_count;
     
-    -- Then return the paginated data
-    PREPARE stmt FROM @query;
+    -- Execute the main query
+    PREPARE stmt FROM @main_query;
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
-    
-    DROP TEMPORARY TABLE temp_latest_amendments;
 END $$
 DELIMITER ;

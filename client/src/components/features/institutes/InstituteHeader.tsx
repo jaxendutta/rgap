@@ -1,6 +1,5 @@
-// src/components/features/recipients/RecipientHeader.tsx
+// src/components/features/institutes/InstituteHeader.tsx
 import {
-    GraduationCap,
     University,
     FileUser,
     MapPin,
@@ -11,47 +10,38 @@ import EntityHeader, {
     ActionButton,
 } from "@/components/common/ui/EntityHeader";
 
-// Recipient Header Component
-interface RecipientHeaderProps {
-    recipient: any;
+interface InstituteHeaderProps {
+    institute: any;
     isBookmarked: boolean;
     toggleBookmark: () => void;
 }
 
-const RecipientHeader = ({
-    recipient,
+const InstituteHeader = ({
+    institute,
     isBookmarked,
     toggleBookmark,
-}: RecipientHeaderProps) => {
-    // Create a Google search URL for the recipient
+}: InstituteHeaderProps) => {
+    // Create a Google search URL for the institute
     const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(
-        `${recipient.legal_name} ${recipient.research_organization_name || ""}`
+        institute.name
     )}`;
 
     // Prepare metadata for the EntityHeader
     const metadata: MetadataItem[] = [];
 
-    if (recipient.research_organization_name) {
-        metadata.push({
-            icon: University,
-            text: recipient.research_organization_name,
-            href: `/institutes/${recipient.institute_id}`,
-        });
-    }
-
-    if (recipient.recipient_type) {
+    if (institute.type) {
         metadata.push({
             icon: FileUser,
-            text: recipient.recipient_type,
+            text: institute.type,
         });
     }
 
-    if (recipient.city || recipient.province) {
+    if (institute.city || institute.province || institute.country) {
         metadata.push({
             icon: MapPin,
-            text: `${recipient.city ? `${recipient.city}, ` : ""}${
-                recipient.province || ""
-            }${recipient.country ? `, ${recipient.country}` : ""}`,
+            text: `${institute.city ? `${institute.city}, ` : ""}${
+                institute.province || ""
+            }${institute.country ? `, ${institute.country}` : ""}`,
         });
     }
 
@@ -68,8 +58,8 @@ const RecipientHeader = ({
 
     return (
         <EntityHeader
-            title={recipient.legal_name}
-            icon={GraduationCap}
+            title={institute.name}
+            icon={University}
             metadata={metadata}
             actions={actions}
             isBookmarked={isBookmarked}
@@ -78,4 +68,4 @@ const RecipientHeader = ({
     );
 };
 
-export default RecipientHeader;
+export default InstituteHeader;

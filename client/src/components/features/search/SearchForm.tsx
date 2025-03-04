@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Search as SearchIcon, BookmarkPlus, SlidersHorizontal, GraduationCap, University, BookMarked } from 'lucide-react';
 import { Button } from '@/components/common/ui/Button';
 import { Card } from '@/components/common/ui/Card';
-import { FilterTags } from '@/components/common/ui/FilterTags';
-import { FilterPanel } from './FilterPanel';
+import { FilterTags } from '@/components/features/filter/FilterTags';
+import { FilterPanel } from '../filter/FilterPanel';
 import type { GrantSearchParams } from '@/services/api/grants';
 import { DEFAULT_FILTER_STATE, FilterKey } from '@/constants/filters';
 

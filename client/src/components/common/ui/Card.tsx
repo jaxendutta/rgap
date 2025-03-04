@@ -16,14 +16,14 @@ const Card = ({
     isHoverable = false,
     isInteractive = false,
     variant = "default",
-    disableOverflow = false, // Default to false for backward compatibility
+    disableOverflow = false,
     ...props
 }: CardProps) => {
     return (
         <div
             className={cn(
                 "bg-white rounded-lg",
-                //!disableOverflow && "overflow-hidden", // Only apply overflow-hidden if not disabled
+                disableOverflow && "overflow-hidden",
                 variant === "default" && "border border-gray-200",
                 variant === "outline" && "border-2 border-gray-300",
                 variant === "filled" && "bg-gray-50 border border-gray-200",

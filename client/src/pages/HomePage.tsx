@@ -3,7 +3,7 @@ import { Search, Database, TrendingUp, UserPlus, LogIn } from 'lucide-react'
 
 export default function HomePage() {
   return (
-    <div className="h-full overflow-auto p-4 lg:p-6">
+    <div className="h-full p-4 lg:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Hero Section */}
         <div className="bg-white rounded-lg border hover:border-gray-300 transition-all duration-200">

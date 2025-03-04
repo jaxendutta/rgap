@@ -11,8 +11,8 @@ import {
 import { LucideIcon } from "lucide-react";
 import { Button } from "@/components/common/ui/Button";
 import { Card } from "@/components/common/ui/Card";
-import { FilterPanel } from "@/components/features/grants/FilterPanel";
-import { FilterTags } from "@/components/common/ui/FilterTags";
+import { FilterPanel } from "@/components/features/filter/FilterPanel";
+import { FilterTags } from "@/components/features/filter/FilterTags";
 import { DEFAULT_FILTER_STATE, FilterKey } from "@/constants/filters";
 import {
     PopularSearchesPanel,

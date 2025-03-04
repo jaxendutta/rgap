@@ -33,7 +33,7 @@ BEGIN
     GROUP BY r.recipient_id
     ORDER BY total_funding DESC;
 
-    -- Get institute's grants
+    -- Get institute's grants (through recipients)
     SELECT
         rg.*,
         r.legal_name as recipient_name,

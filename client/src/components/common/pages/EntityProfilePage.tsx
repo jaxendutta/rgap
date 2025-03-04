@@ -117,7 +117,7 @@ export const EntityProfilePage = ({
                 </div>
 
                 {/* Tab content */}
-                <div className="p-6">{renderTabContent(activeTab)}</div>
+                <div className="p-4 lg:p-6">{renderTabContent(activeTab)}</div>
             </div>
         </div>
     );

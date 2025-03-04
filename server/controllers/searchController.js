@@ -4,14 +4,14 @@ const pool = require("../config/db");
 const getFilterOptions = async (req, res) => {
     try {
         // Use the stored procedure for filter options
-        const [results] = await pool.query('CALL sp_get_filter_options()');
-        
+        const [results] = await pool.query("CALL sp_get_filter_options()");
+
         // The stored procedure returns multiple result sets
         const filterOptions = {
-            agencies: results[0].map(row => row.abbreviation),
-            countries: results[1].map(row => row.country),
-            provinces: results[2].map(row => row.province),
-            cities: results[3].map(row => row.city)
+            agencies: results[0].map((row) => row.abbreviation),
+            countries: results[1].map((row) => row.country),
+            provinces: results[2].map((row) => row.province),
+            cities: results[3].map((row) => row.city),
         };
 
         res.json(filterOptions);
@@ -23,18 +23,18 @@ const getFilterOptions = async (req, res) => {
 
 const searchGrants = async (req, res) => {
     try {
-        const { 
-            searchTerms = {}, 
-            filters = {}, 
-            sortConfig = {}, 
-            pagination = { page: 1, pageSize: 20 } 
+        const {
+            searchTerms = {},
+            filters = {},
+            sortConfig = {},
+            pagination = { page: 1, pageSize: 20 },
         } = req.body;
-        
-        console.log("Received request:", { 
-            searchTerms, 
-            filters, 
-            sortConfig, 
-            pagination 
+
+        console.log("Received request:", {
+            searchTerms,
+            filters,
+            sortConfig,
+            pagination,
         });
 
         // Default pagination values if not provided
@@ -49,7 +49,7 @@ const searchGrants = async (req, res) => {
 
         // Call the consolidated grant search procedure with pagination
         const [results] = await pool.query(
-            'CALL sp_consolidated_grant_search(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            "CALL sp_consolidated_grant_search(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 searchTerms.recipient || null,
                 searchTerms.institute || null,
@@ -62,31 +62,36 @@ const searchGrants = async (req, res) => {
                 countriesJson,
                 provincesJson,
                 citiesJson,
-                sortConfig.field || 'date',
-                sortConfig.direction || 'desc',
+                sortConfig.field || "date",
+                sortConfig.direction || "desc",
                 pageSize,
-                page
+                page,
             ]
         );
 
         // The first result set is the total count
         const totalCount = results[0][0]?.total_count || 0;
-        
+
         // The second result set contains the actual data
         const grantsData = results[1] || [];
 
         // Process the results to convert amendment_history from JSON string to actual array
-        const processedResults = grantsData.map(row => ({
+        const processedResults = grantsData.map((row) => ({
             ...row,
             agreement_value: parseFloat(row.latest_value) || 0,
             amendment_number: row.latest_amendment_number,
             amendment_date: row.latest_amendment_date,
-            amendments_history: typeof row.amendments_history === 'string' 
-                ? JSON.parse(row.amendments_history) 
-                : (row.amendments_history || [])
+            amendments_history:
+                typeof row.amendments_history === "string"
+                    ? JSON.parse(row.amendments_history)
+                    : row.amendments_history || [],
         }));
 
-        console.log(`Query returned ${processedResults.length} grants (page ${page} of ${Math.ceil(totalCount/pageSize)})`);
+        console.log(
+            `Query returned ${
+                processedResults.length
+            } grants (page ${page} of ${Math.ceil(totalCount / pageSize)})`
+        );
 
         res.json({
             message: "Success",
@@ -103,8 +108,41 @@ const searchGrants = async (req, res) => {
         });
     } catch (error) {
         console.error("Search error:", error);
+
+        // Enhanced error handling for specific database errors
+        if (error.code === "ER_TABLE_EXISTS_ERROR") {
+            console.error(
+                "Handling temporary table error, attempting to clean up..."
+            );
+
+            try {
+                // Try to clean up the temporary table
+                await pool.query(
+                    "DROP TEMPORARY TABLE IF EXISTS temp_latest_amendments"
+                );
+                console.log("Successfully cleaned up temporary table");
+
+                // Notify client to retry
+                return res.status(409).json({
+                    error: "Concurrent search issue. Please try again.",
+                    retryable: true,
+                    query: req.body,
+                });
+            } catch (cleanupError) {
+                console.error(
+                    "Failed to clean up temporary table:",
+                    cleanupError
+                );
+            }
+        }
+
+        // Return a more user-friendly error message
         res.status(500).json({
-            error: error.message,
+            error: "An error occurred while searching. Please try again.",
+            details:
+                process.env.NODE_ENV === "development"
+                    ? error.message
+                    : undefined,
             query: req.body,
         });
     }

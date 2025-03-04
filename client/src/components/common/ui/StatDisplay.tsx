@@ -1,6 +1,12 @@
 // src/components/common/ui/StatDisplay.tsx
 import React from "react";
-import { LucideIcon, TrendingUp, TrendingDown } from "lucide-react";
+import {
+    LucideIcon,
+    TrendingUp,
+    TrendingDown,
+    ChevronUp,
+    ChevronDown,
+} from "lucide-react";
 import { cn } from "@/utils/cn";
 
 export interface StatItem {
@@ -88,58 +94,65 @@ const StatDisplay: React.FC<StatDisplayProps> = ({
         expandable && !expanded ? items.slice(0, columns) : items;
 
     return (
-        <div className={className}>
-            <div className={cn(getLayoutClasses())}>
-                {visibleItems.map((item, index) => (
-                    <div
-                        key={index}
-                        className={cn(
-                            "bg-white rounded-lg border border-gray-100 shadow-sm",
-                            sizeClasses.card,
-                            cardClassName
-                        )}
-                    >
+        <div className="px-3 lg:px-6 pt-3 lg:pt-6 pb-2 bg-gray-50 rounded-b-lg">
+            <div className={className}>
+                <div className={cn(getLayoutClasses())}>
+                    {visibleItems.map((item, index) => (
                         <div
-                            className={`flex items-center text-gray-600 mb-1 ${sizeClasses.label}`}
+                            key={index}
+                            className={cn(
+                                "bg-white rounded-lg border border-gray-100 shadow-sm",
+                                sizeClasses.card,
+                                cardClassName
+                            )}
                         >
-                            {item.icon &&
-                                React.createElement(item.icon, {
-                                    className: sizeClasses.icon,
-                                })}
-                            <span>{item.label}</span>
-                        </div>
-                        <div className="flex items-center">
-                            <span className={sizeClasses.value}>
-                                {item.value}
-                            </span>
-                            {item.trend === "up" && (
-                                <TrendingUp className="h-5 w-5 ml-2 text-green-500" />
-                            )}
-                            {item.trend === "down" && (
-                                <TrendingDown className="h-5 w-5 ml-2 text-red-500" />
-                            )}
-                        </div>
-                        {item.secondaryText && (
-                            <div className="text-xs text-gray-500 mt-1">
-                                {item.secondaryText}
+                            <div
+                                className={`flex items-center text-gray-600 mb-1 ${sizeClasses.label}`}
+                            >
+                                {item.icon &&
+                                    React.createElement(item.icon, {
+                                        className: sizeClasses.icon,
+                                    })}
+                                <span>{item.label}</span>
                             </div>
-                        )}
-                    </div>
-                ))}
-            </div>
+                            <div className="flex items-center">
+                                <span className={sizeClasses.value}>
+                                    {item.value}
+                                </span>
+                                {item.trend === "up" && (
+                                    <TrendingUp className="h-5 w-5 ml-2 text-green-500" />
+                                )}
+                                {item.trend === "down" && (
+                                    <TrendingDown className="h-5 w-5 ml-2 text-red-500" />
+                                )}
+                            </div>
+                            {item.secondaryText && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                    {item.secondaryText}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
 
-            {expandable && items.length > columns && (
-                <button
-                    onClick={onToggleExpand}
-                    className="w-full flex items-center justify-center mt-3 text-sm text-gray-500 hover:text-gray-700"
-                >
-                    <span>
-                        {expanded
-                            ? "Show Less"
-                            : `Show ${items.length - columns} More`}
-                    </span>
-                </button>
-            )}
+                {expandable && items.length > columns && (
+                    <button
+                        onClick={onToggleExpand}
+                        className="w-full flex items-center justify-center mt-3 text-sm text-gray-500 hover:text-gray-700 group"
+                    >
+                        <span className="flex items-center gap-1">
+                            {expanded
+                                ? "Show Less"
+                                : `Show ${items.length - columns} More`}
+                            {expanded ? (
+                                <ChevronUp className="h-4 w-4 ml-1" />
+                            ) : (
+                                <ChevronDown className="h-4 w-4 ml-1" />
+                            )}
+                        </span>
+                    </button>
+                )}
+            </div>
         </div>
     );
 };
