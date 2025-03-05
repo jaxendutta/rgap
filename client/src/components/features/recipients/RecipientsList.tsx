@@ -123,7 +123,7 @@ export const RecipientsList = ({
                     <div className="text-lg font-medium">Recipients</div>
                     {totalCount > 0 && (
                         <span className="text-sm text-gray-500 lg:ml-2">
-                            ({allRecipients.length} out of {totalCount} results)
+                            ({allRecipients.length.toLocaleString()} out of {totalCount.toLocaleString()} results)
                         </span>
                     )}
                 </div>

@@ -137,6 +137,9 @@ export const RecipientProfilePage = () => {
                             recipientId: recipient.recipient_id,
                             instituteName: recipient.research_organization_name,
                             instituteId: recipient.institute_id,
+                            city: recipient.city,
+                            province: recipient.province,
+                            country: recipient.country
                         }}
                         emptyMessage="This recipient has no associated grants in our database."
                     />

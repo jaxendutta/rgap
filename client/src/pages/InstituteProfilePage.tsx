@@ -130,6 +130,9 @@ const InstituteProfilePage = () => {
                         contextData={{
                             instituteName: institute.name,
                             instituteId: id,
+                            city: institute.city,
+                            province: institute.province,
+                            country: institute.country,
                         }}
                         emptyMessage="This institute has no associated grants in our database."
                     />
