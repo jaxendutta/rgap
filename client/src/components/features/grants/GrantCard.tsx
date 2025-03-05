@@ -25,6 +25,7 @@ import {
     CalendarDays,
     Layers,
     LineChart,
+    Building,
 } from "lucide-react";
 import { formatSentenceCase } from "@/utils/format";
 import { cn } from "@/utils/cn";
@@ -40,6 +41,31 @@ import {
     BarChart,
     Cell,
 } from "recharts";
+
+export const Tag = ({
+    text,
+    icon: Icon,
+}: {
+    text: string;
+    icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+}) => (
+    <span className="inline-flex items-center px-2 py-1 m-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+        {Icon && <Icon className="h-3 w-3 mr-1.5" />}
+        {text}
+    </span>
+);
+
+export const Tags = ({
+    tags,
+}: {
+    tags: { text: string; icon?: React.ComponentType<React.SVGProps<SVGSVGElement>> }[];
+}) => (
+    <div className="flex flex-wrap gap-1">
+        {tags.map((tag, index) => (
+            <Tag key={`tag-${index}`} text={tag.text} icon={tag.icon} />
+        ))}
+    </div>
+);
 
 interface GrantCardProps {
     grant: ResearchGrant;
@@ -160,6 +186,28 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
         );
     };
 
+    const infotags = [
+        { text: grant.ref_number, icon: Database },
+        {
+            text:
+                (grant.city &&
+                    grant.city.toUpperCase() !== "N/A"
+                    ? `${grant.city}, `
+                    : "") +
+                (grant.province &&
+                    grant.province.toUpperCase() !== "N/A"
+                    ? `${grant.province}, `
+                    : "") +
+                (grant.country &&
+                    grant.country.toUpperCase() !== "N/A"
+                    ? grant.country
+                    : ""),
+            icon: MapPin,
+        },
+        { text: formatDate(grant.agreement_start_date), icon: Calendar },
+        { text: grant.org, icon: Building },
+    ];
+
     // Custom tooltip for the charts
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
@@ -266,57 +314,8 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                         </p>
 
                         {/* Reference Number & Location - Mobile Only */}
-                        <div className="flex flex-col lg:hidden text-sm text-gray-500 pt-1">
-                            <div className="flex items-start">
-                                <Database className="flex-shrink-0 h-3 w-3 mr-1.5 mt-1" />
-                                {grant.ref_number} • {grant.org}
-                            </div>
-                            <div className="flex items-start mt-1">
-                                {(grant.city &&
-                                    grant.city.toUpperCase() !== "N/A") ||
-                                (grant.province &&
-                                    grant.province.toUpperCase() !== "N/A") ||
-                                (grant.country &&
-                                    grant.country.toUpperCase() !== "N/A") ? (
-                                    <MapPin className="inline-block h-3 w-3 mr-1 mt-1" />
-                                ) : null}
-                                <span>
-                                    {grant.city &&
-                                        grant.city.toUpperCase() !== "N/A" && (
-                                            <>
-                                                {grant.city}
-                                                {(grant.province &&
-                                                    grant.province.toUpperCase() !==
-                                                        "N/A") ||
-                                                (grant.country &&
-                                                    grant.country.toUpperCase() !==
-                                                        "N/A")
-                                                    ? ", "
-                                                    : ""}
-                                            </>
-                                        )}
-                                    {grant.province &&
-                                        grant.province.toUpperCase() !==
-                                            "N/A" && (
-                                            <>
-                                                {grant.province}
-                                                {grant.country &&
-                                                grant.country.toUpperCase() !==
-                                                    "N/A"
-                                                    ? ", "
-                                                    : ""}
-                                            </>
-                                        )}
-                                    {grant.country &&
-                                        grant.country.toUpperCase() !== "N/A" &&
-                                        grant.country}
-                                </span>
-                                <span className="mx-2">•</span>
-                                <Calendar className="flex-shrink-0 h-3 w-3 mr-1.5 mt-1" />
-                                <span>
-                                    {formatDate(grant.agreement_start_date)}
-                                </span>
-                            </div>
+                        <div className="flex flex-wrap lg:hidden text-sm text-gray-500 leading-relaxed">
+                            <Tags tags={infotags} />
                         </div>
 
                         {/* Reference Number - Desktop Only */}
@@ -405,7 +404,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                             className="inline-flex items-center bg-blue-50 hover:bg-blue-100 transition-colors text-blue-700 text-xs font-medium rounded-full px-2.5 py-1"
                         >
                             <History className="h-3 w-3 mr-1" />
-                            {amendmentNumber > 0
+                            {typeof amendmentNumber === 'number' && amendmentNumber > 0
                                 ? `Latest Amendment: ${amendmentNumber}`
                                 : "Original"}{" "}
                             • {sortedAmendments.length} versions
@@ -1142,6 +1141,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                                                                                         .agreement_end_date,
                                                                                     amendment.agreement_end_date
                                                                                 )}
+
                                                                                 )
                                                                             </span>
                                                                         </div>

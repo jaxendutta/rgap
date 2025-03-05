@@ -45,6 +45,9 @@ interface GrantsListProps {
         recipientId?: number | string;
         instituteName?: string;
         instituteId?: number | string;
+        city?: string;
+        province?: string;
+        country?: string;
     };
     onBookmark?: (grantId: string) => void;
 
@@ -152,6 +155,10 @@ const GrantsList: React.FC<GrantsListProps> = ({
         // Enrich grants with context data if needed
         return allGrants.map((grant) => ({
             ...grant,
+            // Add local data (city, province, country) if not present
+            ...(!grant.city ? { city: contextData.city } : {}),
+            ...(!grant.province ? { province: contextData.province } : {}),
+            ...(!grant.country ? { country: contextData.country } : {}),
             // Add recipient information if in institute context
             ...(contextData.recipientName && !grant.legal_name
                 ? {
@@ -241,7 +248,8 @@ const GrantsList: React.FC<GrantsListProps> = ({
                     <div className="text-lg font-medium">{title}</div>
                     {totalCount > 0 && (
                         <span className="text-sm text-gray-500 lg:ml-2">
-                            ({getAllGrants.length} out of {totalCount} results)
+                            ({getAllGrants.length.toLocaleString()} out of{" "}
+                            {totalCount.toLocaleString()} results)
                         </span>
                     )}
                 </div>
