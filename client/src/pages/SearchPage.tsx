@@ -2,9 +2,8 @@
 import { useState } from "react";
 import { FileSearch2, University, UserSearch } from "lucide-react";
 import { useInfiniteGrantSearch } from "@/hooks/api/useGrants";
-import GrantsList, {
-    SortConfig,
-} from "@/components/features/grants/GrantsList";
+import GrantsList from "@/components/features/grants/GrantsList";
+import type { GrantSortConfig as SortConfig } from "@/types/search";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import type { GrantSearchParams } from "@/types/search";
 import SearchInterface from "@/components/features/search/SearchInterface";
@@ -21,7 +20,7 @@ export const SearchPage = () => {
 
     // UI state controls
     const [isBookmarked, setIsBookmarked] = useState(false);
-    const [sortConfig, setSortConfig] = useState<SortConfig>({
+    const [sortConfig] = useState<SortConfig>({
         field: "date",
         direction: "desc",
     });
@@ -56,17 +55,6 @@ export const SearchPage = () => {
         setTimeout(() => {
             infiniteQueryResult.refetch();
         }, 0);
-    };
-
-    const handleSortChange = (newSortConfig: SortConfig) => {
-        setSortConfig(newSortConfig);
-
-        // Only trigger search if we've already done a search before
-        if (!isInitialState) {
-            setTimeout(() => {
-                infiniteQueryResult.refetch();
-            }, 0);
-        }
     };
 
     const handleBookmark = () => {

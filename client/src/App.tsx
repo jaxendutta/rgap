@@ -1,3 +1,4 @@
+// src/App.tsx
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
     BrowserRouter as Router,
@@ -6,18 +7,18 @@ import {
     Navigate,
 } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import MainLayout from "./components/layout/MainLayout";
-import HomePage from "./pages/HomePage";
-import { SearchPage } from "./pages/SearchPage";
-import { InstitutesPage } from "./pages/InstitutesPage";
-import InstituteProfilePage from "./pages/InstituteProfilePage";
-import { RecipientsPage } from "./pages/RecipientsPage";
-import { RecipientProfilePage } from "./pages/RecipientProfilePage";
-import { BookmarksPage } from "./pages/BookmarksPage";
-import DocsPage from "./pages/DocsPage";
-import AuthPage from "./pages/AuthPage";
-import AccountPage from "./pages/AccountPage";
-import PageNotFound from "./pages/PageNotFound";
+import MainLayout from "@/components/layout/MainLayout";
+import HomePage from "@/pages/HomePage";
+import SearchPage from "@/pages/SearchPage";
+import InstitutesPage from "@/pages/InstitutesPage";
+import InstituteProfilePage from "@/pages/InstituteProfilePage";
+import RecipientsPage from "@/pages/RecipientsPage";
+import RecipientProfilePage from "@/pages/RecipientProfilePage";
+import BookmarksPage from "@/pages/BookmarksPage";
+import DocsPage from "@/pages/DocsPage";
+import AuthPage from "@/pages/AuthPage";
+import AccountPage from "@/pages/AccountPage";
+import PageNotFound from "@/pages/PageNotFound";
 
 const queryClient = new QueryClient({
     defaultOptions: {

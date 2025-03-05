@@ -10,7 +10,7 @@ import InstituteStats from "@/components/features/institutes/InstituteStats";
 import { RecipientsList } from "@/components/features/recipients/RecipientsList";
 import GrantsList from "@/components/features/grants/GrantsList";
 import { SortConfig } from "@/components/common/ui/EntityList";
-import { AnalyticsCards } from "@/components/features/recipients/AnalyticsCards";
+import { AnalyticsCards } from "@/components/common/ui/AnalyticsCards";
 import { formatCurrency } from "@/utils/format";
 import { getCategoryColor } from "@/utils/chartColors";
 import { DollarSign } from "lucide-react";
