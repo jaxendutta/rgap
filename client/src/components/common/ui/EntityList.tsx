@@ -1,7 +1,7 @@
 // src/components/common/ui/EntityList.tsx
 import React, { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
-import { MoreHorizontal, LucideIcon } from "lucide-react";
+import { MoreHorizontal, LucideIcon, X, LineChart } from "lucide-react";
 import { SortButton } from "./SortButton";
 import { Button } from "./Button";
 import LoadingState from "./LoadingState";
@@ -165,8 +165,8 @@ function EntityList<T>({
                             size="sm"
                             icon={
                                 visualizationToggle.isVisible
-                                    ? MoreHorizontal
-                                    : MoreHorizontal
+                                    ? X
+                                    : LineChart
                             }
                             onClick={visualizationToggle.toggle}
                             disabled={items.length === 0}

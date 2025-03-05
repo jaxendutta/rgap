@@ -8,7 +8,7 @@ import RecipientHeader from "@/components/features/recipients/RecipientHeader";
 import RecipientStats from "@/components/features/recipients/RecipientStats";
 import GrantsList from "@/components/features/grants/GrantsList";
 import { SortConfig } from "@/components/common/ui/EntityList";
-import { AnalyticsCards } from "@/components/features/recipients/AnalyticsCards";
+import { AnalyticsCards } from "@/components/common/ui/AnalyticsCards";
 import { formatCurrency } from "@/utils/format";
 import { getCategoryColor } from "@/utils/chartColors";
 
