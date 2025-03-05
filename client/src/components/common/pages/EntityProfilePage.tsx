@@ -1,6 +1,5 @@
 // src/components/common/pages/EntityProfilePage.tsx
 import { useState } from "react";
-import { ChartType, ChartMetric } from "@/types/search";
 import Tabs, { TabItem } from "@/components/common/ui/Tabs";
 import LoadingState from "@/components/common/ui/LoadingState";
 import ErrorState from "@/components/common/ui/ErrorState";
@@ -19,10 +18,7 @@ export interface EntityProfilePageProps {
         isBookmarked: boolean,
         toggleBookmark: () => void
     ) => React.ReactNode;
-    renderStats: (
-        isExpanded: boolean,
-        setIsExpanded: (value: boolean) => void
-    ) => React.ReactNode;
+    renderStats: () => React.ReactNode;
 
     // Tabs and content
     tabs: TabItem[];
@@ -31,15 +27,9 @@ export interface EntityProfilePageProps {
 
     // Tab content renderers
     renderTabContent: (tabId: string) => React.ReactNode;
-
-    // Optional props for chart configurations (needed for analytics tabs)
-    chartType?: ChartType;
-    setChartType?: (type: ChartType) => void;
-    chartMetric?: ChartMetric;
-    setChartMetric?: (metric: ChartMetric) => void;
 }
 
-export const EntityProfilePage = ({
+const EntityProfilePage = ({
     entity,
     entityType,
     entityTypeLabel,
@@ -55,7 +45,6 @@ export const EntityProfilePage = ({
 }: EntityProfilePageProps) => {
     // Local state for bookmarking
     const [isBookmarked, setIsBookmarked] = useState(false);
-    const [expandedStats, setExpandedStats] = useState(false);
 
     // Toggle bookmark handler
     const toggleBookmark = () => setIsBookmarked(!isBookmarked);
@@ -100,7 +89,7 @@ export const EntityProfilePage = ({
                 {renderHeader(isBookmarked, toggleBookmark)}
 
                 {/* Stats section */}
-                {renderStats(expandedStats, setExpandedStats)}
+                {renderStats()}
             </div>
 
             {/* Tabs for page content */}

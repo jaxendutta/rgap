@@ -1,32 +1,16 @@
 // src/components/features/grants/GrantsList.tsx
-import React, { useState, useEffect, useMemo } from "react";
-import { useInView } from "react-intersection-observer";
-import {
-    Calendar,
-    DollarSign,
-    MoreHorizontal,
-    LineChart,
-    X,
-} from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Calendar, DollarSign } from "lucide-react";
 import { ResearchGrant } from "@/types/models";
-import { SortButton } from "@/components/common/ui/SortButton";
-import { Button } from "@/components/common/ui/Button";
 import { GrantCard } from "./GrantCard";
-import LoadingState from "@/components/common/ui/LoadingState";
-import EmptyState from "@/components/common/ui/EmptyState";
-import ErrorState from "@/components/common/ui/ErrorState";
 import { UseInfiniteQueryResult } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "framer-motion";
+import EntityList, { SortConfig } from "@/components/common/ui/EntityList";
 import TrendVisualizer, {
     ViewContext,
 } from "@/components/features/visualizations/TrendVisualizer";
 
 export type GrantSortField = "date" | "value";
 export type SortDirection = "asc" | "desc";
-export type SortConfig = {
-    field: GrantSortField;
-    direction: SortDirection;
-};
 
 interface GrantsListProps {
     // Direct data mode
@@ -80,55 +64,20 @@ const GrantsList: React.FC<GrantsListProps> = ({
         visualizationInitiallyVisible
     );
 
-    // Set up infinite scrolling with intersection observer
-    const { ref, inView } = useInView({
-        threshold: 0.1,
-        rootMargin: "0px 0px 500px 0px", // Trigger 500px before reaching the end
-    });
-
-    // Handle infinite query mode loading states
-    const isLoading = infiniteQuery?.isLoading;
-    const isError = infiniteQuery?.isError;
-    const error = infiniteQuery?.error;
-    const isFetchingNextPage = infiniteQuery?.isFetchingNextPage;
-    const hasNextPage = infiniteQuery?.hasNextPage;
-
-    // Load more data when user scrolls to the bottom in infinite query mode
-    useEffect(() => {
-        if (inView && infiniteQuery && hasNextPage && !isFetchingNextPage) {
-            infiniteQuery.fetchNextPage();
-        }
-    }, [inView, infiniteQuery, hasNextPage, isFetchingNextPage]);
+    // Define sort options
+    const sortOptions = [
+        { field: "date", label: "Date", icon: Calendar },
+        { field: "value", label: "Value", icon: DollarSign },
+    ];
 
     // Handle local sorting for direct data mode
-    const handleSortChangeLocal = (field: GrantSortField) => {
-        const newSortConfig = {
-            field,
-            direction:
-                sortConfig.field === field && sortConfig.direction === "desc"
-                    ? "asc"
-                    : "desc",
-        } as SortConfig;
-
+    const handleSortChange = (newSortConfig: SortConfig) => {
         setSortConfig(newSortConfig);
 
         // If consumer provided an onSortChange callback, call it
         if (onSortChange) {
             onSortChange(newSortConfig);
         }
-    };
-
-    // Handle sort for infinite query mode
-    const handleSortChangeInfinite = (field: GrantSortField) => {
-        const newSortConfig = {
-            field,
-            direction:
-                sortConfig.field === field && sortConfig.direction === "desc"
-                    ? "asc"
-                    : "desc",
-        } as SortConfig;
-
-        setSortConfig(newSortConfig);
     };
 
     // Get all grants, not just the visible ones
@@ -208,163 +157,56 @@ const GrantsList: React.FC<GrantsListProps> = ({
         infiniteQuery?.data?.pages[0]?.metadata?.totalCount ||
         sortedGrantsToDisplay.length;
 
-    // Handle error state
-    if (isError && error) {
-        return (
-            <ErrorState
-                title="Error Loading Grants"
-                message={
-                    error instanceof Error
-                        ? error.message
-                        : "Failed to load grants"
-                }
-                onRetry={() => infiniteQuery?.refetch()}
-                size="md"
-            />
-        );
-    }
+    // Render grant item
+    const renderGrantItem = (grant: ResearchGrant) => (
+        <GrantCard
+            grant={grant}
+            onBookmark={
+                onBookmark ? () => onBookmark(grant.ref_number) : undefined
+            }
+        />
+    );
 
-    // Handle initial loading state
-    if (isLoading && !sortedGrantsToDisplay.length) {
-        return <LoadingState title="Loading Grants..." size="md" />;
-    }
+    // Key extractor for grants
+    const keyExtractor = (grant: ResearchGrant) =>
+        `grant-${grant.grant_id || grant.ref_number}`;
 
-    // Handle empty state
-    if (!isLoading && sortedGrantsToDisplay.length === 0) {
-        return (
-            <EmptyState
-                title="No Grants Found"
-                message={emptyMessage}
-                size="md"
-            />
-        );
-    }
+    // Visualization component
+    const visualization = showVisualization && (
+        <TrendVisualizer
+            grants={getAllGrants}
+            viewContext={viewContext}
+            height={350}
+        />
+    );
 
     return (
-        <div className="space-y-4">
-            {/* Header with sort controls and visualization toggle */}
-            <div className="flex justify-between items-center border-b pb-2">
-                <div className="flex flex-col lg:flex-row lg:items-center">
-                    <div className="text-lg font-medium">{title}</div>
-                    {totalCount > 0 && (
-                        <span className="text-sm text-gray-500 lg:ml-2">
-                            ({getAllGrants.length.toLocaleString()} out of{" "}
-                            {totalCount.toLocaleString()} results)
-                        </span>
-                    )}
-                </div>
-                <div className="flex items-center space-x-2">
-                    <SortButton
-                        label="Date"
-                        icon={Calendar}
-                        field="date"
-                        currentField={sortConfig.field}
-                        direction={sortConfig.direction}
-                        onClick={() =>
-                            infiniteQuery
-                                ? handleSortChangeInfinite("date")
-                                : handleSortChangeLocal("date")
-                        }
-                    />
-                    <SortButton
-                        label="Value"
-                        icon={DollarSign}
-                        field="value"
-                        currentField={sortConfig.field}
-                        direction={sortConfig.direction}
-                        onClick={() =>
-                            infiniteQuery
-                                ? handleSortChangeInfinite("value")
-                                : handleSortChangeLocal("value")
-                        }
-                    />
-                    {showVisualization && !doNotShowVisualizationToggle && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            icon={isVisualizationVisible ? X : LineChart}
-                            onClick={() =>
-                                setIsVisualizationVisible(
-                                    !isVisualizationVisible
-                                )
-                            }
-                            disabled={sortedGrantsToDisplay.length === 0}
-                            className="lg:space-x-2"
-                        >
-                            <span className="hidden lg:inline">
-                                {isVisualizationVisible
-                                    ? "Hide Trends"
-                                    : "Show Trends"}
-                            </span>
-                        </Button>
-                    )}
-                </div>
-            </div>
-
-            {/* Visualization Section */}
-            {showVisualization && (
-                <AnimatePresence>
-                    {isVisualizationVisible &&
-                        sortedGrantsToDisplay.length > 0 && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="overflow-hidden"
-                            >
-                                <div className="mt-4 mb-6">
-                                    <TrendVisualizer
-                                        grants={getAllGrants}
-                                        viewContext={viewContext}
-                                        height={350}
-                                    />
-                                </div>
-                            </motion.div>
-                        )}
-                </AnimatePresence>
-            )}
-
-            {/* Grants list */}
-            <div className="space-y-4">
-                {sortedGrantsToDisplay.map((grant) => (
-                    <GrantCard
-                        key={`grant-${grant.grant_id || grant.ref_number}`}
-                        grant={grant}
-                        onBookmark={
-                            onBookmark
-                                ? () => onBookmark(grant.ref_number)
-                                : undefined
-                        }
-                    />
-                ))}
-            </div>
-
-            {/* Loading indicator for infinite scroll */}
-            {infiniteQuery && (
-                <div ref={ref} className="flex justify-center py-4 h-16">
-                    {isFetchingNextPage ? (
-                        <LoadingState
-                            title=""
-                            message="Loading more grants..."
-                            size="sm"
-                        />
-                    ) : hasNextPage ? (
-                        <Button
-                            variant="outline"
-                            icon={MoreHorizontal}
-                            onClick={() => infiniteQuery.fetchNextPage()}
-                        >
-                            Load More
-                        </Button>
-                    ) : sortedGrantsToDisplay.length > 0 ? (
-                        <p className="text-sm text-gray-500">
-                            All grants loaded
-                        </p>
-                    ) : null}
-                </div>
-            )}
-        </div>
+        <EntityList
+            title={title}
+            items={sortedGrantsToDisplay}
+            renderItem={renderGrantItem}
+            keyExtractor={keyExtractor}
+            emptyMessage={emptyMessage}
+            sortOptions={sortOptions}
+            sortConfig={sortConfig}
+            onSortChange={handleSortChange}
+            infiniteQuery={infiniteQuery}
+            totalCount={totalCount}
+            totalItems={getAllGrants.length}
+            visualization={visualization}
+            visualizationToggle={
+                showVisualization
+                    ? {
+                          isVisible: isVisualizationVisible,
+                          toggle: () =>
+                              setIsVisualizationVisible(
+                                  !isVisualizationVisible
+                              ),
+                          showToggleButton: !doNotShowVisualizationToggle,
+                      }
+                    : undefined
+            }
+        />
     );
 };
 
