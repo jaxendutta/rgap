@@ -102,31 +102,44 @@ const GrantsList: React.FC<GrantsListProps> = ({
         const allGrants = getAllGrants;
 
         // Enrich grants with context data if needed
-        return allGrants.map((grant) => ({
-            ...grant,
-            // Add local data (city, province, country) if not present
-            ...(!grant.city ? { city: contextData.city } : {}),
-            ...(!grant.province ? { province: contextData.province } : {}),
-            ...(!grant.country ? { country: contextData.country } : {}),
-            // Add recipient information if in institute context
-            ...(contextData.recipientName && !grant.legal_name
-                ? {
-                      legal_name: contextData.recipientName,
-                      recipient_id: contextData.recipientId
-                          ? Number(contextData.recipientId)
-                          : grant.recipient_id,
-                  }
-                : {}),
-            // Add institute information if in recipient context
-            ...(contextData.instituteName && !grant.research_organization_name
-                ? {
-                      research_organization_name: contextData.instituteName,
-                      institute_id: contextData.instituteId
-                          ? Number(contextData.instituteId)
-                          : grant.institute_id,
-                  }
-                : {}),
-        }));
+        return allGrants.map((grant) => {
+            // Start with the grant as returned from the API
+            const processedGrant = { ...grant };
+
+            // Only fill in missing critical data as a fallback safety measure
+            // This should rarely or never be needed with the consolidated API
+            if (!processedGrant.city && contextData.city)
+                processedGrant.city = contextData.city;
+
+            if (!processedGrant.province && contextData.province)
+                processedGrant.province = contextData.province;
+
+            if (!processedGrant.country && contextData.country)
+                processedGrant.country = contextData.country;
+
+            // These should be extremely rare cases now that we have the consolidated procedure
+            if (!processedGrant.legal_name && contextData.recipientName) {
+                processedGrant.legal_name = contextData.recipientName;
+                if (contextData.recipientId)
+                    processedGrant.recipient_id = Number(
+                        contextData.recipientId
+                    );
+            }
+
+            if (
+                !processedGrant.research_organization_name &&
+                contextData.instituteName
+            ) {
+                processedGrant.research_organization_name =
+                    contextData.instituteName;
+                if (contextData.instituteId)
+                    processedGrant.institute_id = Number(
+                        contextData.instituteId
+                    );
+            }
+
+            return processedGrant;
+        });
     }, [getAllGrants, contextData]);
 
     // For direct data mode, sort the grants according to config

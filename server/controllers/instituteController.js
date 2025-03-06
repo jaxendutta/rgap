@@ -125,30 +125,25 @@ const getInstituteGrants = async (req, res) => {
         const instituteId = req.params.id;
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 20;
+        const sortField = req.query.sortField || 'date';
+        const sortDirection = req.query.sortDirection || 'desc';
 
-        // Use the stored procedure to get paginated grants
         const [results] = await pool.query(
-            "CALL sp_institute_grants(?, ?, ?)",
-            [instituteId, page, pageSize]
+            'CALL sp_entity_grants(NULL, ?, ?, ?, ?, ?)',
+            [instituteId, sortField, sortDirection, pageSize, page]
         );
 
-        // First result set contains total count
+        // First result set contains the total count
         const totalCount = results[0][0].total_count;
 
-        // Second result set contains grants data
+        // Second result set contains the grants data
         const grants = results[1] || [];
-
-        // Format grant values
-        const formattedGrants = grants.map((grant) => ({
-            ...grant,
-            agreement_value: parseFloat(grant.agreement_value) || 0,
-        }));
 
         res.json({
             message: "Institute grants retrieved successfully",
-            data: formattedGrants,
+            data: grants,
             metadata: {
-                count: formattedGrants.length,
+                count: grants.length,
                 totalCount,
                 page,
                 pageSize,

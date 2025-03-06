@@ -42,9 +42,11 @@ interface RecipientDetailsResponse {
         city?: string;
         province?: string;
         country?: string;
-        grants: Array<ResearchGrant & {
-            program_name?: string;
-        }>;
+        grants: Array<
+            ResearchGrant & {
+                program_name?: string;
+            }
+        >;
         funding_history: Array<{
             year: number;
             [agency: string]: number;
@@ -126,10 +128,15 @@ export function useRecipientDetails(id: number | string) {
 export function useRecipientGrants(
     id: number | string,
     page = 1,
-    pageSize = 20
+    pageSize = 20,
+    sortField: "date" | "value" = "date",
+    sortDirection: "asc" | "desc" = "desc"
 ) {
     return useQuery({
-        queryKey: [...recipientKeys.grants(Number(id)), { page, pageSize }],
+        queryKey: [
+            ...recipientKeys.grants(Number(id)),
+            { page, pageSize, sortField, sortDirection },
+        ],
         queryFn: async () => {
             const response = await API.get<{
                 message: string;
@@ -142,9 +149,21 @@ export function useRecipientGrants(
                     totalPages: number;
                 };
             }>(`/recipients/${id}/grants`, {
-                params: { page, pageSize },
+                params: { page, pageSize, sortField, sortDirection },
             });
-            return response.data;
+
+            // Process the consolidated grants to match expected format
+            return {
+                ...response.data,
+                data: response.data.data.map((grant) => ({
+                    ...grant,
+                    // Ensure amendment_history is properly parsed if needed
+                    amendments_history:
+                        typeof grant.amendments_history === "string"
+                            ? JSON.parse(grant.amendments_history)
+                            : grant.amendments_history,
+                })),
+            };
         },
         enabled: !!id,
     });
