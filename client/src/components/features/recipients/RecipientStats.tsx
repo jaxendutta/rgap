@@ -1,12 +1,12 @@
 // src/components/features/recipients/RecipientStats.tsx
-import { ResearchGrant } from "@/types/models";
+import { Grant } from "@/types/models";
 import StatDisplay, { StatItem } from "@/components/common/ui/StatDisplay";
 import { BookMarked, DollarSign, Users, Calendar } from "lucide-react";
 import { formatCurrency } from "@/utils/format";
 
 interface RecipientStatsProps {
     recipient: any;
-    processedGrants: ResearchGrant[];
+    processedGrants: Grant[];
     agencies: string[];
     expandedStats: boolean;
     setExpandedStats: (expanded: boolean) => void;

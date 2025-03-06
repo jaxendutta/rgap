@@ -163,11 +163,7 @@ function EntityList<T>({
                         <Button
                             variant="outline"
                             size="sm"
-                            icon={
-                                visualizationToggle.isVisible
-                                    ? X
-                                    : LineChart
-                            }
+                            icon={visualizationToggle.isVisible ? X : LineChart}
                             onClick={visualizationToggle.toggle}
                             disabled={items.length === 0}
                             className="lg:space-x-2"

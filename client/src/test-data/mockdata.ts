@@ -271,7 +271,7 @@ export const mock_data = {
             "owner_org": "sshrc-crsh",
         },
     ],
-    ResearchGrant: [
+    Grant: [
         {
             grant_id: 1,
             ref_number: "GRANT001",

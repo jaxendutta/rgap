@@ -1,6 +1,6 @@
 // src/components/grants/GrantCard.tsx
 import { useState } from "react";
-import { ResearchGrant } from "@/types/models";
+import { Grant } from "@/types/models";
 import { Card } from "@/components/common/ui/Card";
 import { formatCurrency, formatDate, formatDateDiff } from "@/utils/format";
 import { Link } from "react-router-dom";
@@ -68,7 +68,7 @@ export const Tags = ({
 );
 
 interface GrantCardProps {
-    grant: ResearchGrant;
+    grant: Grant;
     onBookmark?: () => void;
 }
 

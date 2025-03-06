@@ -42,7 +42,7 @@ BEGIN
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
     
-    -- Now build main query to get the grants with latest amendments
+    -- Main query to get the grants with latest amendments and improved program information
     SET @main_query = '
         SELECT 
             rg.*,
@@ -55,6 +55,8 @@ BEGIN
             org.abbreviation AS org,
             org.org_title AS owner_org_title,
             p.name_en AS prog_title_en,
+            p.name_en AS program_name,
+            p.purpose_en AS program_purpose,
             (
                 SELECT JSON_ARRAYAGG(
                     JSON_OBJECT(
