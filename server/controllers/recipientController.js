@@ -129,36 +129,19 @@ const getRecipientGrants = async (req, res) => {
         const recipientId = req.params.id;
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 20;
-        const offset = (page - 1) * pageSize;
+        const sortField = req.query.sortField || 'date';
+        const sortDirection = req.query.sortDirection || 'desc';
 
-        // Get total count for pagination metadata
-        const [countResult] = await pool.query(
-            `SELECT COUNT(*) as total FROM ResearchGrant WHERE recipient_id = ?`,
-            [recipientId]
+        const [results] = await pool.query(
+            'CALL sp_entity_grants(?, NULL, ?, ?, ?, ?)',
+            [recipientId, sortField, sortDirection, pageSize, page]
         );
-        const totalCount = countResult[0].total;
 
-        // Query grants with organization info
-        const [grants] = await pool.query(
-            `SELECT 
-                rg.*,
-                o.abbreviation as org,
-                o.org_title,
-                p.name_en as program_name,
-                p.purpose_en as program_purpose
-            FROM 
-                ResearchGrant rg
-            JOIN 
-                Organization o ON rg.owner_org = o.owner_org
-            LEFT JOIN 
-                Program p ON rg.prog_id = p.prog_id
-            WHERE 
-                rg.recipient_id = ?
-            ORDER BY 
-                rg.agreement_start_date DESC
-            LIMIT ? OFFSET ?`,
-            [recipientId, pageSize, offset]
-        );
+        // First result set contains the total count
+        const totalCount = results[0][0].total_count;
+
+        // Second result set contains the grants data
+        const grants = results[1] || [];
 
         res.json({
             message: "Recipient grants retrieved successfully",

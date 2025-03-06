@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { DollarSign, BookMarked, Users, GraduationCap } from "lucide-react";
 import { formatCurrency } from "@/utils/format";
 import { Card } from "@/components/common/ui/Card";
-import { useInfiniteInstituteRecipients } from "@/hooks/api/useInfiniteInstituteData";
+import { useInfiniteInstituteRecipients } from "@/hooks/api/useInstitutes";
 import EntityList, { SortConfig } from "@/components/common/ui/EntityList";
 
 interface RecipientsListProps {

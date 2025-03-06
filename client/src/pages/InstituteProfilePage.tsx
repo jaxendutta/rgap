@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { BookMarked, GraduationCap, PieChart } from "lucide-react";
 import { useInstituteDetails } from "@/hooks/api/useInstitutes";
-import { useInfiniteInstituteGrants } from "@/hooks/api/useInfiniteInstituteData";
+import { useInfiniteInstituteGrants } from "@/hooks/api/useInstitutes";
 import EntityProfilePage from "@/components/common/pages/EntityProfilePage";
 import InstituteHeader from "@/components/features/institutes/InstituteHeader";
 import InstituteStats from "@/components/features/institutes/InstituteStats";

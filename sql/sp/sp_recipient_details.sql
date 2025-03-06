@@ -33,8 +33,29 @@ BEGIN
         o.abbreviation as org,
         o.org_title,
         p.name_en as program_name,
-        p.purpose_en as program_purpose
+        p.purpose_en as program_purpose,
+        (
+            SELECT JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'amendment_number', a.amendment_number,
+                    'amendment_date', a.amendment_date,
+                    'agreement_value', a.agreement_value,
+                    'agreement_start_date', a.agreement_start_date,
+                    'agreement_end_date', a.agreement_end_date
+                )
+            )
+            FROM ResearchGrant a
+            WHERE a.ref_number = rg.ref_number
+        ) AS amendments_history
     FROM ResearchGrant rg
+    JOIN (
+        SELECT 
+            t.ref_number,
+            MAX(CAST(t.amendment_number AS UNSIGNED)) AS latest_amendment
+        FROM ResearchGrant t
+        WHERE t.recipient_id = p_recipient_id
+        GROUP BY t.ref_number
+    ) AS tla ON rg.ref_number = tla.ref_number AND rg.amendment_number = tla.latest_amendment
     JOIN Organization o ON rg.owner_org = o.owner_org
     LEFT JOIN Program p ON rg.prog_id = p.prog_id
     WHERE rg.recipient_id = p_recipient_id
@@ -52,5 +73,5 @@ BEGIN
     WHERE rg.recipient_id = p_recipient_id
     GROUP BY YEAR(rg.agreement_start_date), o.abbreviation
     ORDER BY year, agency;
-END $$
+END$$
 DELIMITER ;
