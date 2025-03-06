@@ -2,7 +2,7 @@
 import { useInfiniteQuery, useQuery, InfiniteData } from "@tanstack/react-query";
 import axios from "axios";
 import portConfig from "../../../../config/ports.json";
-import { ResearchGrant } from "@/types/models";
+import { Grant } from "@/types/models";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import { GrantSearchParams, SearchResponse } from "@/types/search";
 
@@ -174,7 +174,7 @@ export function useAllGrants() {
     return useQuery({
         queryKey: grantKeys.all,
         queryFn: async () => {
-            const response = await API.get<ResearchGrant[]>("/search/all");
+            const response = await API.get<Grant[]>("/search/all");
             return response.data;
         },
         staleTime: 5 * 60 * 1000,

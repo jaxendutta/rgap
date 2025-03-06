@@ -1,5 +1,5 @@
 // src/components/features/institutes/InstituteStats.tsx
-import { ResearchGrant } from "@/types/models";
+import { Grant } from "@/types/models";
 import StatDisplay, { StatItem } from "@/components/common/ui/StatDisplay";
 import {
     BookMarked,
@@ -12,7 +12,7 @@ import { formatCurrency } from "@/utils/format";
 
 interface InstituteStatsProps {
     institute: any;
-    processedGrants: ResearchGrant[];
+    processedGrants: Grant[];
     recipients: any[];
     agencies: string[];
     expandedStats: boolean;

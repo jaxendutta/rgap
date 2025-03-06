@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ResearchGrant } from "@/types/models";
+import { Grant } from "@/types/models";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import portConfig from "../../../../config/ports.json";
 
@@ -26,7 +26,7 @@ export interface GrantSearchParams {
 export const grantsApi = {
     search: async (params: GrantSearchParams) => {
         try {
-            const { data } = await API.post<{ data: ResearchGrant[] }>(
+            const { data } = await API.post<{ data: Grant[] }>(
                 "/search",
                 params
             );
@@ -43,7 +43,7 @@ export const grantsApi = {
 
     getAll: async () => {
         try {
-            const { data } = await API.get<ResearchGrant[]>("/search/all");
+            const { data } = await API.get<Grant[]>("/search/all");
             return data;
         } catch (error) {
             if (axios.isAxiosError(error)) {

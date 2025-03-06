@@ -2,7 +2,7 @@
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import axios from "axios";
 import portConfig from "../../../../config/ports.json";
-import { ResearchGrant } from "@/types/models";
+import { Grant } from "@/types/models";
 
 const API = axios.create({
     baseURL:
@@ -163,7 +163,7 @@ export function useInstituteGrants(
         queryFn: async () => {
             const response = await API.get<{
                 message: string;
-                data: ResearchGrant[];
+                data: Grant[];
                 metadata: {
                     count: number;
                     totalCount: number;

@@ -1,6 +1,6 @@
 // src/types/search.ts
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import { ResearchGrant } from "./models";
+import { Grant } from "./models";
 
 export type SortDirection = "asc" | "desc";
 
@@ -61,7 +61,7 @@ export interface SearchResponseMetadata {
 
 export interface SearchResponse {
     message: string;
-    data: ResearchGrant[];
+    data: Grant[];
     metadata: SearchResponseMetadata;
 }
 

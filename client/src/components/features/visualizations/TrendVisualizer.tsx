@@ -1,12 +1,13 @@
 // src/components/features/visualizations/TrendVisualizer.tsx
 import React, { useState, useMemo } from "react";
 import { LineChart, BarChart, BarChart2, DollarSign, Hash } from "lucide-react";
-import { ResearchGrant } from "@/types/models";
+import { Grant } from "@/types/models";
 import { Card } from "@/components/common/ui/Card";
 import { Dropdown } from "@/components/common/ui/Dropdown";
 import DataChart from "./DataChart";
 import { cn } from "@/utils/cn";
 import { getCategoryColor } from "@/utils/chartColors";
+import { prepareGrantsForVisualization } from "@/utils/chartDataTransforms";
 
 export type ChartType = "line" | "bar-stacked" | "bar-grouped";
 export type MetricType = "funding" | "count";
@@ -24,7 +25,7 @@ export type ViewContext = "search" | "recipient" | "institute" | "custom";
 
 interface AdvancedVisualizationProps {
     // The grants data to visualize
-    grants: ResearchGrant[];
+    grants: Grant[];
 
     // Configuration props
     viewContext?: ViewContext;
@@ -112,17 +113,23 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
         }));
     }, [groupingOptions]);
 
+    // Process grants to ensure all needed fields are properly formatted
+    const processedGrants = useMemo(() => {
+        return prepareGrantsForVisualization(grants);
+    }, [grants]);
+
     // Prepare data for visualization based on the selected options
     const chartData = useMemo(() => {
-        if (!grants || grants.length === 0) return { data: [], categories: [] };
+        if (!processedGrants || processedGrants.length === 0) return { data: [], categories: [] };
 
         const yearMap = new Map();
         const uniqueCategories = new Set<string>();
 
         // Group data by year and the selected dimension
-        grants.forEach((grant) => {
-            // Extract year from the grant
+        processedGrants.forEach((grant) => {
+            // Extract year from the grant (already validated in prepareGrantsForVisualization)
             const year = new Date(grant.agreement_start_date).getFullYear();
+            const grantValue = grant.agreement_value; // Already normalized to a number
 
             // Determine the category value based on the selected dimension
             let categoryValue: string;
@@ -143,11 +150,11 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                     categoryValue = grant.legal_name || "Unknown";
                     break;
                 case "institute":
-                    categoryValue =
-                        grant.research_organization_name || "Unknown";
+                    categoryValue = grant.research_organization_name || "Unknown";
                     break;
                 case "program":
-                    categoryValue = grant.prog_title_en || "Unknown";
+                    // We've already normalized program_name in prepareGrantsForVisualization
+                    categoryValue = grant.agreement_title_en || "Unknown";
                     break;
                 case "year":
                     // When grouping by year, use a single "Value" category
@@ -170,9 +177,7 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
             // Update the data based on the metric type
             if (metricType === "funding") {
                 // Sum funding values
-                yearData[categoryValue] =
-                    (yearData[categoryValue] || 0) +
-                    (grant.agreement_value || 0);
+                yearData[categoryValue] = (yearData[categoryValue] || 0) + grantValue;
             } else {
                 // Count grants
                 yearData[categoryValue] = (yearData[categoryValue] || 0) + 1;
@@ -239,7 +244,7 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
         }
 
         return { data: result, categories: Array.from(uniqueCategories) };
-    }, [grants, groupingDimension, metricType]);
+    }, [processedGrants, groupingDimension, metricType]);
 
     // Render nothing if no data
     if (!grants || grants.length === 0) {
@@ -345,17 +350,25 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                 </div>
             </div>
 
-            {/* Chart display */}
-            <div style={{ height: `${height}px` }}>
-                <DataChart
-                    data={chartData.data}
-                    chartType={chartType === "line" ? "line" : "bar"}
-                    dataType={metricType === "funding" ? "funding" : "counts"}
-                    categories={chartData.categories}
-                    height={height}
-                    stacked={chartType === "bar-stacked"}
-                />
-            </div>
+            {/* Chart display - only show if we have data */}
+            {chartData.data.length > 0 && chartData.categories.length > 0 ? (
+                <div style={{ height: `${height}px` }}>
+                    <DataChart
+                        data={chartData.data}
+                        chartType={chartType === "line" ? "line" : "bar"}
+                        dataType={
+                            metricType === "funding" ? "funding" : "counts"
+                        }
+                        categories={chartData.categories}
+                        height={height}
+                        stacked={chartType === "bar-stacked"}
+                    />
+                </div>
+            ) : (
+                <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg text-gray-500">
+                    No data available for the selected visualization
+                </div>
+            )}
 
             {/* Legend for top categories */}
             {chartData.categories.length > 0 && (
@@ -382,5 +395,3 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
         </Card>
     );
 };
-
-export default TrendVisualizer;

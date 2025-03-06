@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { clsx } from "clsx";
 import { formatCurrency, formatDate } from "@/utils/format";
-import { Recipient, ResearchGrant } from "@/types/models";
+import { Recipient, Grant } from "@/types/models";
 import PageHeader from "@/components/common/layout/PageHeader";
 import PageContainer from "@/components/common/layout/PageContainer";
 
@@ -18,7 +18,7 @@ import PageContainer from "@/components/common/layout/PageContainer";
 // Make a copy of the mock data for now
 import { mock_data } from "../test-data/mockdata";
 const recipients: Recipient[] = [...mock_data.Recipient];
-const grants: ResearchGrant[] = [...mock_data.ResearchGrant];
+const grants: Grant[] = [...mock_data.Grant];
 
 export const RecipientsPage = () => {
     const [bookmarked, setBookmarked] = useState<number[]>([]);

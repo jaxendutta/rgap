@@ -1,20 +1,22 @@
 // src/components/features/grants/GrantsList.tsx
 import React, { useState, useMemo } from "react";
 import { Calendar, DollarSign } from "lucide-react";
-import { ResearchGrant } from "@/types/models";
+import { Grant } from "@/types/models";
 import { GrantCard } from "./GrantCard";
 import { UseInfiniteQueryResult } from "@tanstack/react-query";
 import EntityList, { SortConfig } from "@/components/common/ui/EntityList";
-import TrendVisualizer, {
+import {
+    TrendVisualizer,
     ViewContext,
 } from "@/components/features/visualizations/TrendVisualizer";
+import { prepareGrantsForVisualization } from "@/utils/chartDataTransforms";
 
 export type GrantSortField = "date" | "value";
 export type SortDirection = "asc" | "desc";
 
 interface GrantsListProps {
     // Direct data mode
-    grants?: ResearchGrant[];
+    grants?: Grant[];
     onSortChange?: (sortConfig: SortConfig) => void;
 
     // OR Infinite query mode
@@ -81,11 +83,11 @@ const GrantsList: React.FC<GrantsListProps> = ({
     };
 
     // Get all grants, not just the visible ones
-    const getAllGrants = useMemo((): ResearchGrant[] => {
+    const getAllGrants = useMemo((): Grant[] => {
         // Infinite query mode - get ALL pages of data
         if (infiniteQuery?.data) {
             return infiniteQuery.data.pages.flatMap(
-                (page: { data: ResearchGrant[] }) => page.data
+                (page: { data: Grant[] }) => page.data
             );
         }
 
@@ -97,8 +99,8 @@ const GrantsList: React.FC<GrantsListProps> = ({
         return [];
     }, [infiniteQuery?.data, grants]);
 
-    // Determine the grants to display based on the mode
-    const getGrantsToDisplay = useMemo((): ResearchGrant[] => {
+    // Process grants with context data
+    const getGrantsToDisplay = useMemo((): Grant[] => {
         const allGrants = getAllGrants;
 
         // Enrich grants with context data if needed
@@ -107,7 +109,6 @@ const GrantsList: React.FC<GrantsListProps> = ({
             const processedGrant = { ...grant };
 
             // Only fill in missing critical data as a fallback safety measure
-            // This should rarely or never be needed with the consolidated API
             if (!processedGrant.city && contextData.city)
                 processedGrant.city = contextData.city;
 
@@ -117,7 +118,7 @@ const GrantsList: React.FC<GrantsListProps> = ({
             if (!processedGrant.country && contextData.country)
                 processedGrant.country = contextData.country;
 
-            // These should be extremely rare cases now that we have the consolidated procedure
+            // These should be extremely rare cases
             if (!processedGrant.legal_name && contextData.recipientName) {
                 processedGrant.legal_name = contextData.recipientName;
                 if (contextData.recipientId)
@@ -138,6 +139,15 @@ const GrantsList: React.FC<GrantsListProps> = ({
                     );
             }
 
+            // Ensure program information is correctly formatted
+            if (processedGrant.prog_title_en) {
+                processedGrant.program_name = processedGrant.prog_title_en;
+            }
+
+            // Ensure numeric values are valid numbers
+            processedGrant.agreement_value =
+                Number(processedGrant.agreement_value) || 0;
+
             return processedGrant;
         });
     }, [getAllGrants, contextData]);
@@ -156,11 +166,12 @@ const GrantsList: React.FC<GrantsListProps> = ({
                     ? a.agreement_value - b.agreement_value
                     : b.agreement_value - a.agreement_value;
             } else {
+                // Sort by date
+                const dateA = new Date(a.agreement_start_date).getTime();
+                const dateB = new Date(b.agreement_start_date).getTime();
                 return sortConfig.direction === "asc"
-                    ? new Date(a.agreement_start_date).getTime() -
-                          new Date(b.agreement_start_date).getTime()
-                    : new Date(b.agreement_start_date).getTime() -
-                          new Date(a.agreement_start_date).getTime();
+                    ? dateA - dateB
+                    : dateB - dateA;
             }
         });
     }, [getGrantsToDisplay, infiniteQuery, sortConfig]);
@@ -171,7 +182,7 @@ const GrantsList: React.FC<GrantsListProps> = ({
         sortedGrantsToDisplay.length;
 
     // Render grant item
-    const renderGrantItem = (grant: ResearchGrant) => (
+    const renderGrantItem = (grant: Grant) => (
         <GrantCard
             grant={grant}
             onBookmark={
@@ -181,17 +192,44 @@ const GrantsList: React.FC<GrantsListProps> = ({
     );
 
     // Key extractor for grants
-    const keyExtractor = (grant: ResearchGrant) =>
+    const keyExtractor = (grant: Grant) =>
         `grant-${grant.grant_id || grant.ref_number}`;
 
-    // Visualization component
-    const visualization = showVisualization && (
-        <TrendVisualizer
-            grants={getAllGrants}
-            viewContext={viewContext}
-            height={350}
-        />
-    );
+    // Visualization component - pass all available grant data, not just the visible ones
+    // Use the prepareGrantsForVisualization function to ensure data quality
+    const visualization = useMemo(() => {
+        if (!showVisualization || getAllGrants.length === 0) return null;
+
+        // Prepare and clean data for visualization
+        const preparedGrants = prepareGrantsForVisualization(getAllGrants);
+
+        // Determine appropriate available groupings based on context
+        let availableGroupings: any[] = [];
+
+        if (viewContext === "recipient") {
+            availableGroupings = ["org", "program", "year"];
+        } else if (viewContext === "institute") {
+            availableGroupings = ["recipient", "org", "program", "year"];
+        } else {
+            availableGroupings = [
+                "org",
+                "city",
+                "province",
+                "country",
+                "recipient",
+                "institute",
+            ];
+        }
+
+        return (
+            <TrendVisualizer
+                grants={preparedGrants}
+                viewContext={viewContext}
+                height={350}
+                availableGroupings={availableGroupings}
+            />
+        );
+    }, [showVisualization, getAllGrants, viewContext]);
 
     return (
         <EntityList

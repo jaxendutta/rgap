@@ -6,21 +6,31 @@ import { formatCurrency } from "@/utils/format";
 import { Card } from "@/components/common/ui/Card";
 import { useInfiniteInstituteRecipients } from "@/hooks/api/useInstitutes";
 import EntityList, { SortConfig } from "@/components/common/ui/EntityList";
+import { TrendVisualizer } from "@/components/features/visualizations/TrendVisualizer";
 
 interface RecipientsListProps {
     instituteId: string | number;
     initialPageSize?: number;
+    showVisualization?: boolean;
+    visualizationInitiallyVisible?: boolean;
 }
 
 export const RecipientsList = ({
     instituteId,
     initialPageSize = 10,
+    showVisualization = true,
+    visualizationInitiallyVisible = false,
 }: RecipientsListProps) => {
     // State for sorting
     const [sortConfig, setSortConfig] = useState<SortConfig>({
         field: "total_funding",
         direction: "desc",
     });
+
+    // State for visualization
+    const [isVisualizationVisible, setIsVisualizationVisible] = useState(
+        visualizationInitiallyVisible
+    );
 
     // Define sort options
     const sortOptions = [
@@ -46,6 +56,29 @@ export const RecipientsList = ({
     // Get total count
     const totalCount =
         infiniteQuery.data?.pages[0]?.metadata?.totalCount || recipients.length;
+
+    // Transform recipient data into a format suitable for visualization
+    const transformedData = useMemo(() => {
+        if (!recipients || recipients.length === 0) return [];
+
+        // Extract and transform data for visualization
+        // Group recipients by various attributes
+        const recipientData = recipients.map(recipient => ({
+            ...recipient,
+            // Ensure we have proper data types
+            grants_count: Number(recipient.grants_count) || 0,
+            total_funding: Number(recipient.total_funding) || 0,
+            // Add required properties for the visualizer
+            recipient_id: recipient.recipient_id,
+            legal_name: recipient.legal_name,
+            // Add dummy agreement dates for visualization purposes
+            agreement_start_date: recipient.latest_grant_date || new Date().toISOString(),
+            agreement_value: recipient.total_funding,
+            org: "Institute Recipient" // This could be replaced with actual org if available
+        }));
+
+        return recipientData;
+    }, [recipients]);
 
     // Render recipient card
     const renderRecipientItem = (recipient: any) => (
@@ -78,6 +111,23 @@ export const RecipientsList = ({
     const keyExtractor = (recipient: any) =>
         `recipient-${recipient.recipient_id}`;
 
+    // Visualization component
+    const visualization = useMemo(() => {
+        if (!showVisualization || transformedData.length === 0) return null;
+        
+        return (
+            <TrendVisualizer
+                grants={transformedData}
+                viewContext="institute"
+                height={350}
+                initialGrouping="recipient"
+                initialMetricType="funding"
+                initialChartType="bar-stacked"
+                availableGroupings={["recipient"]}
+            />
+        );
+    }, [showVisualization, transformedData]);
+
     return (
         <EntityList
             title="Recipients"
@@ -91,6 +141,16 @@ export const RecipientsList = ({
             infiniteQuery={infiniteQuery}
             totalCount={totalCount}
             totalItems={recipients.length}
+            visualization={visualization}
+            visualizationToggle={
+                showVisualization
+                    ? {
+                          isVisible: isVisualizationVisible,
+                          toggle: () => setIsVisualizationVisible(!isVisualizationVisible),
+                          showToggleButton: true,
+                      }
+                    : undefined
+            }
         />
     );
 };
