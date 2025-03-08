@@ -56,28 +56,22 @@ export const Tag: React.FC<TagProps> = ({
 }) => {
     // Define variant styles
     const variants = {
-        default:
-            "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200",
-        primary:
-            "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200",
-        secondary:
-            "bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-100",
-        success:
-            "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200",
-        warning:
-            "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200",
-        danger: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200",
-        outline:
-            "bg-transparent border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-200",
-        ghost: "bg-transparent text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800",
+        default: "bg-gray-100 text-gray-700",
+        primary: "bg-blue-100 text-blue-700",
+        secondary: "bg-gray-200 text-gray-800",
+        success: "bg-green-100 text-green-700",
+        warning: "bg-amber-100 text-amber-700",
+        danger: "bg-red-100 text-red-700",
+        outline: "bg-transparent border border-gray-300 text-gray-700",
+        ghost: "bg-transparent text-gray-700 hover:bg-gray-100",
     };
 
     // Define size styles
     const sizes = {
-        xs: "px-1.5 py-0.5 text-xs",
-        sm: "px-2 py-1 text-xs",
-        md: "px-2.5 py-1 text-sm",
-        lg: "px-3 py-1.5 text-base",
+        xs: "px-2 py-0.5 text-xs",
+        sm: "px-3 py-1 text-xs",
+        md: "px-3.5 py-1 text-sm",
+        lg: "px-4 py-1.5 text-base",
     };
 
     // Define icon sizes
@@ -91,15 +85,15 @@ export const Tag: React.FC<TagProps> = ({
     // Spacing between icon and text
     const iconSpacing = {
         xs: "mr-1",
-        sm: "mr-1.5",
-        md: "mr-1.5",
-        lg: "mr-2",
+        sm: "mr-1",
+        md: "mr-1",
+        lg: "mr-1.5",
     };
 
     return (
         <span
             className={cn(
-                "inline-flex items-center font-medium gap-1",
+                "inline-flex items-center font-medium gap-1 max-w-full",
                 variants[variant],
                 sizes[size],
                 pill ? "rounded-full" : "rounded-md",
@@ -112,20 +106,14 @@ export const Tag: React.FC<TagProps> = ({
                 <Icon
                     className={cn(
                         iconSizes[size],
-                        onRemove ? "" : iconSpacing[size]
+                        onRemove ? "" : iconSpacing[size],
+                        "flex-shrink-0"
                     )}
                     {...iconProps}
                 />
             )}
 
-            <span
-                className={cn(
-                    "truncate max-w-[180px]",
-                    size === "xs" && "max-w-[100px]"
-                )}
-            >
-                {children}
-            </span>
+            <span className="truncate flex-1">{children}</span>
 
             {onRemove && (
                 <button
@@ -137,7 +125,7 @@ export const Tag: React.FC<TagProps> = ({
                     className={cn(
                         "ml-1 text-current opacity-60 hover:opacity-100 focus:outline-none",
                         size === "xs" || size === "sm" ? "p-0.5" : "p-1",
-                        "rounded-full hover:bg-gray-200/30 dark:hover:bg-gray-600/30"
+                        "rounded-full hover:bg-gray-200/30"
                     )}
                 >
                     <X
