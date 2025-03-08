@@ -11,7 +11,7 @@ start_timer
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOG_FILE="${SCRIPT_DIR}/database_import.log"
+LOG_FILE="${SCRIPT_DIR}/log/database_import.log"
 
 # Get current user and directories
 USER=$(whoami)

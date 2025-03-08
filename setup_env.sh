@@ -9,7 +9,13 @@ start_timer
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_PATH="$SCRIPT_DIR/venv"
-LOG_FILE="$SCRIPT_DIR/setup.log"
+LOG_DIR="$SCRIPT_DIR/log"
+LOG_FILE="$LOG_DIR/setup_env.log"
+
+# Create log directory if it doesn't exist
+if [ ! -d "$LOG_DIR" ]; then
+    mkdir -p "$LOG_DIR"
+fi
 
 # Function to handle cleanup on error
 cleanup_on_error() {
@@ -39,7 +45,7 @@ cleanup_on_error() {
     fi
 
     if [ "$undo" = true ]; then
-        # Remove setup.log if it exists
+        # Remove log file if it exists
         if [ -f $LOG_FILE ]; then
             printf "${BLUE}  Removing setup log... ${NC}"
             rm $LOG_FILE
