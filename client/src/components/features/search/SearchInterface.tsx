@@ -311,7 +311,7 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                             variant={
                                 activePanelType === "popular"
                                     ? "primary"
-                                    : "outline"
+                                    : "secondary"
                             }
                             icon={Sparkles}
                             onClick={() => togglePanel("popular")}
@@ -334,7 +334,7 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                         variant={
                             activePanelType === "filters"
                                 ? "primary"
-                                : "outline"
+                                : "secondary"
                         }
                         icon={SlidersHorizontal}
                         onClick={() => togglePanel("filters")}
@@ -352,7 +352,7 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                 <div className="flex gap-2 ml-auto">
                     {onBookmark && (
                         <Button
-                            variant="outline"
+                            variant="secondary"
                             icon={isBookmarked ? BookmarkCheck : BookmarkPlus}
                             onClick={onBookmark}
                             className={isBookmarked ? "text-blue-600" : ""}

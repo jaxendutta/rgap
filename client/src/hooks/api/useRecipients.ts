@@ -169,19 +169,67 @@ export function useRecipientGrants(
     });
 }
 
+// Query key factory
+export const recipientSearchKeys = {
+    all: ["recipients", "search"] as const,
+    search: (term: string) => [...recipientSearchKeys.all, term] as const,
+};
+
+interface RecipientSearchResponse {
+    message: string;
+    data: Recipient[];
+    metadata: {
+        term: string;
+        count: number;
+        totalCount: number;
+        page: number;
+        pageSize: number;
+        totalPages: number;
+    };
+}
+
 /**
- * Hook to search recipients by name or organization
+ * Hook to search recipients by name, institution, or location
+ * @param term Search term
+ * @param enabled Whether this query should run
+ * @param page Page number (1-based)
+ * @param pageSize Items per page
  */
-export function useSearchRecipients(term: string, page = 1, pageSize = 20) {
+export const useSearchRecipients = (
+    term: string,
+    enabled = false,
+    page = 1,
+    pageSize = 20
+) => {
     return useQuery({
-        queryKey: [...recipientKeys.search(term), { page, pageSize }],
+        queryKey: [...recipientSearchKeys.search(term), { page, pageSize }],
         queryFn: async () => {
-            const response = await API.get<RecipientListResponse>(
+            if (!term || term.trim() === "") {
+                return {
+                    message: "No search term provided",
+                    data: [],
+                    metadata: {
+                        term: "",
+                        count: 0,
+                        totalCount: 0,
+                        page,
+                        pageSize,
+                        totalPages: 0,
+                    },
+                };
+            }
+
+            const response = await API.get<RecipientSearchResponse>(
                 "/recipients/search",
-                { params: { term, page, pageSize } }
+                {
+                    params: { term, page, pageSize },
+                }
             );
             return response.data;
         },
-        enabled: term.length > 0,
+        enabled: enabled && term.length > 0,
+        staleTime: 1000 * 60 * 5, // 5 minutes
     });
-}
+};
+
+export default useSearchRecipients;

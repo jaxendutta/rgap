@@ -28,7 +28,7 @@ export const SortButton = ({
 
   return (
     <Button
-      variant="outline"
+      variant="secondary"
       size="sm"
       onClick={onClick}
       className={cn(
