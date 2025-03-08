@@ -1,99 +1,37 @@
 // src/components/common/layout/PageHeader.tsx
 import React from "react";
-import { LucideIcon } from "lucide-react";
-import { Button } from "@/components/common/ui/Button";
 import { cn } from "@/utils/cn";
-
-export interface PageAction {
-    label: string;
-    icon?: LucideIcon;
-    onClick: () => void;
-    variant?: "primary" | "outline" | "secondary";
-    className?: string;
-    disabled?: boolean;
-}
 
 interface PageHeaderProps {
     title: string;
-    subtitle?: string;
-    icon?: LucideIcon;
-    actions?: PageAction[];
-    children?: React.ReactNode;
+    subtitle?: React.ReactNode;
+    action?: React.ReactNode;
+    breadcrumbs?: React.ReactNode;
     className?: string;
-    titleClassName?: string;
-    subtitleClassName?: string;
-    actionsClassName?: string;
 }
 
 const PageHeader: React.FC<PageHeaderProps> = ({
     title,
     subtitle,
-    icon: Icon,
-    actions = [],
-    children,
+    action,
+    breadcrumbs,
     className,
-    titleClassName,
-    subtitleClassName,
-    actionsClassName,
 }) => {
     return (
-        <div
-            className={cn(
-                "flex flex-wrap items-start justify-between gap-4 mb-6",
-                className
-            )}
-        >
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                    {Icon && <Icon className="h-6 w-6 text-gray-900" />}
-                    <h1
-                        className={cn(
-                            "text-2xl font-semibold text-gray-900 truncate",
-                            titleClassName
-                        )}
-                    >
+        <div className={cn("mb-6", className)}>
+            {breadcrumbs && <div className="mb-2">{breadcrumbs}</div>}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
                         {title}
                     </h1>
-                </div>
-                {subtitle && (
-                    <p
-                        className={cn(
-                            "mt-1 text-base text-gray-600",
-                            subtitleClassName
-                        )}
-                    >
-                        {subtitle}
-                    </p>
-                )}
-                {children}
-            </div>
-
-            {actions.length > 0 && (
-                <div
-                    className={cn(
-                        "flex flex-wrap items-center gap-3",
-                        actionsClassName
+                    {subtitle && (
+                        <p className="mt-1 text-gray-600">{subtitle}</p>
                     )}
-                >
-                    {actions.map((action, index) => {
-                        const ActionIcon = action.icon;
-                        return (
-                            <Button
-                                key={index}
-                                variant={action.variant || "outline"}
-                                onClick={action.onClick}
-                                className={action.className}
-                                disabled={action.disabled}
-                            >
-                                {ActionIcon && (
-                                    <ActionIcon className="h-4 w-4 mr-2" />
-                                )}
-                                {action.label}
-                            </Button>
-                        );
-                    })}
                 </div>
-            )}
+
+                {action && <div className="sm:ml-auto">{action}</div>}
+            </div>
         </div>
     );
 };

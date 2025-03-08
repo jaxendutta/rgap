@@ -1,6 +1,6 @@
 // src/components/common/ui/Tag.tsx
 import React from "react";
-import { LucideIcon, X } from "lucide-react";
+import { ArrowUpRight, LucideIcon, X } from "lucide-react";
 import { cn } from "@/utils/cn";
 
 export type TagSize = "xs" | "sm" | "md" | "lg";
@@ -12,7 +12,8 @@ export type TagVariant =
     | "warning" // Yellow/orange for warnings
     | "danger" // Red for errors/danger
     | "outline" // Bordered version
-    | "ghost"; // Minimal background
+    | "ghost" // Minimal background
+    | "link"; // Blue text with hover effects
 
 export interface TagProps {
     /** The text content of the tag */
@@ -64,6 +65,7 @@ export const Tag: React.FC<TagProps> = ({
         danger: "bg-red-100 text-red-700",
         outline: "bg-transparent border border-gray-300 text-gray-700",
         ghost: "bg-transparent text-gray-700 hover:bg-gray-100",
+        link: "text-blue-700 bg-blue-100 hover:opacity-90 hover:text-blue-600",
     };
 
     // Define size styles
@@ -84,16 +86,16 @@ export const Tag: React.FC<TagProps> = ({
 
     // Spacing between icon and text
     const iconSpacing = {
-        xs: "mr-1",
-        sm: "mr-1",
+        xs: "mr-0.5",
+        sm: "mr-0.5",
         md: "mr-1",
-        lg: "mr-1.5",
+        lg: "mr-1",
     };
 
     return (
         <span
             className={cn(
-                "inline-flex items-center font-medium gap-1 max-w-full",
+                "flex items-center font-medium gap-1 max-w-full group",
                 variants[variant],
                 sizes[size],
                 pill ? "rounded-full" : "rounded-md",
@@ -114,6 +116,15 @@ export const Tag: React.FC<TagProps> = ({
             )}
 
             <span className="truncate flex-1">{children}</span>
+            {onClick && (
+                <ArrowUpRight
+                    className={cn(
+                        iconSizes[size],
+                        "flex-shrink-0 transition-transform duration-200",
+                        "group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    )}
+                />
+            )}
 
             {onRemove && (
                 <button

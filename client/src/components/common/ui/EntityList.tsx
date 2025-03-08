@@ -161,7 +161,7 @@ function EntityList<T>({
 
                     {visualizationToggle?.showToggleButton && visualization && (
                         <Button
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
                             icon={visualizationToggle.isVisible ? X : LineChart}
                             onClick={visualizationToggle.toggle}

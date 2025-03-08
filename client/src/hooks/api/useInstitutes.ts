@@ -315,19 +315,67 @@ export function useInfiniteInstituteRecipients(
     });
 }
 
+// Query key factory
+export const instituteSearchKeys = {
+    all: ["institutes", "search"] as const,
+    search: (term: string) => [...instituteSearchKeys.all, term] as const,
+};
+
+interface InstituteSearchResponse {
+    message: string;
+    data: Institute[];
+    metadata: {
+        term: string;
+        count: number;
+        totalCount: number;
+        page: number;
+        pageSize: number;
+        totalPages: number;
+    };
+}
+
 /**
- * Hook to search institutes by name
+ * Hook to search institutes by name, type, or location
+ * @param term Search term
+ * @param enabled Whether this query should run
+ * @param page Page number (1-based)
+ * @param pageSize Items per page
  */
-export function useSearchInstitutes(term: string, page = 1, pageSize = 20) {
+export const useSearchInstitutes = (
+    term: string,
+    enabled = false,
+    page = 1,
+    pageSize = 20
+) => {
     return useQuery({
-        queryKey: [...instituteKeys.search(term), { page, pageSize }],
+        queryKey: [...instituteSearchKeys.search(term), { page, pageSize }],
         queryFn: async () => {
-            const response = await API.get<InstituteListResponse>(
+            if (!term || term.trim() === "") {
+                return {
+                    message: "No search term provided",
+                    data: [],
+                    metadata: {
+                        term: "",
+                        count: 0,
+                        totalCount: 0,
+                        page,
+                        pageSize,
+                        totalPages: 0,
+                    },
+                };
+            }
+
+            const response = await API.get<InstituteSearchResponse>(
                 "/institutes/search",
-                { params: { term, page, pageSize } }
+                {
+                    params: { term, page, pageSize },
+                }
             );
             return response.data;
         },
-        enabled: term.length > 0,
+        enabled: enabled && term.length > 0,
+        staleTime: 1000 * 60 * 5, // 5 minutes
     });
-}
+};
+
+export default useSearchInstitutes;

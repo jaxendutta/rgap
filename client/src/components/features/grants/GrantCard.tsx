@@ -28,6 +28,7 @@ import {
     Building,
     Hourglass,
     Calendar1,
+    GraduationCap
 } from "lucide-react";
 import { formatSentenceCase } from "@/utils/format";
 import { cn } from "@/utils/cn";
@@ -247,12 +248,13 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                         <div className="flex items-start justify-between gap-2 mb-2 lg:mb-1">
                             <Link
                                 to={`/recipients/${grant.recipient_id}`}
-                                className="inline-flex items-start text-lg font-medium text-blue-700 transition-colors gap-1.5 group"
+                                className="inline-flex items-start text-lg font-medium hover:text-blue-700 transition-colors gap-1.5 group"
                                 aria-label={`View profile for recipient ${grant.legal_name}`}
                             >
-                                <span className="inline-block">
+                                <span className="inline-flex">
+                                    <GraduationCap className="h-5 w-5 mt-1 mr-1.5" />
                                     {grant.legal_name}
-                                    <ArrowUpRight className="inline-block h-4 w-4 ml-1 lg:opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all" />
+                                    <ArrowUpRight className="inline-block h-4 w-4 ml-1 mt-1.5 lg:opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all" />
                                 </span>
                             </Link>
 
@@ -287,7 +289,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                                 icon={University}
                                 size="md"
                                 pill={true}
-                                variant="default"
+                                variant="link"
                                 onClick={() =>
                                     (window.location.href = `/institutes/${grant.institute_id}`)
                                 }
@@ -295,7 +297,6 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                             >
                                 <span className="flex items-center justify-between w-full gap-1.5">
                                     {grant.research_organization_name}
-                                    <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                                 </span>
                             </Tag>
 
