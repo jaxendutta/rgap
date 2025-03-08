@@ -1,3 +1,4 @@
+// src/utils/format.ts
 export const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat("en-CA", {
         style: "currency",
@@ -35,15 +36,15 @@ export const formatDateDiff = (startDate: string, endDate: string): string => {
         const months = diffMonths % 12;
 
         if (years > 0 && months > 0) {
-            return `+${years} ${years === 1 ? "year" : "years"} and ${months} ${
+            return `${years} ${years === 1 ? "year" : "years"} and ${months} ${
                 months === 1 ? "month" : "months"
             }`;
         } else if (years > 0) {
-            return `+${years} ${years === 1 ? "year" : "years"}`;
+            return `${years} ${years === 1 ? "year" : "years"}`;
         } else if (months > 0) {
-            return `+${months} ${months === 1 ? "month" : "months"}`;
+            return `${months} ${months === 1 ? "month" : "months"}`;
         } else if (diffDays > 0) {
-            return `+${diffDays} ${diffDays === 1 ? "day" : "days"}`;
+            return `${diffDays} ${diffDays === 1 ? "day" : "days"}`;
         } else {
             return "Same date";
         }

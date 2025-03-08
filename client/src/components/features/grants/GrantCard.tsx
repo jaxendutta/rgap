@@ -1,4 +1,4 @@
-// src/components/grants/GrantCard.tsx
+// src/components/features/grants/GrantCard.tsx
 import { useState } from "react";
 import { Grant } from "@/types/models";
 import { Card } from "@/components/common/ui/Card";
@@ -26,9 +26,12 @@ import {
     Layers,
     LineChart,
     Building,
+    Hourglass,
+    Calendar1,
 } from "lucide-react";
 import { formatSentenceCase } from "@/utils/format";
 import { cn } from "@/utils/cn";
+import Tag, { TagGroup } from "@/components/common/ui/Tag";
 import {
     LineChart as RechartsLineChart,
     Line,
@@ -41,31 +44,6 @@ import {
     BarChart,
     Cell,
 } from "recharts";
-
-export const Tag = ({
-    text,
-    icon: Icon,
-}: {
-    text: string;
-    icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-}) => (
-    <span className="inline-flex items-center px-2 py-1 m-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-        {Icon && <Icon className="h-3 w-3 mr-1.5" />}
-        {text}
-    </span>
-);
-
-export const Tags = ({
-    tags,
-}: {
-    tags: { text: string; icon?: React.ComponentType<React.SVGProps<SVGSVGElement>> }[];
-}) => (
-    <div className="flex flex-wrap gap-1">
-        {tags.map((tag, index) => (
-            <Tag key={`tag-${index}`} text={tag.text} icon={tag.icon} />
-        ))}
-    </div>
-);
 
 interface GrantCardProps {
     grant: Grant;
@@ -186,27 +164,42 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
         );
     };
 
-    const infotags = [
-        { text: grant.ref_number, icon: Database },
+    // Create metadata tags
+    const metadataTags = [
+        { icon: Database, text: grant.ref_number },
         {
+            icon: MapPin,
             text:
-                (grant.city &&
-                    grant.city.toUpperCase() !== "N/A"
+                (grant.city && grant.city.toUpperCase() !== "N/A"
                     ? `${grant.city}, `
                     : "") +
-                (grant.province &&
-                    grant.province.toUpperCase() !== "N/A"
+                (grant.province && grant.province.toUpperCase() !== "N/A"
                     ? `${grant.province}, `
                     : "") +
-                (grant.country &&
-                    grant.country.toUpperCase() !== "N/A"
+                (grant.country && grant.country.toUpperCase() !== "N/A"
                     ? grant.country
                     : ""),
-            icon: MapPin,
+            hide: !(
+                (grant.city && grant.city.toUpperCase() !== "N/A") ||
+                (grant.province && grant.province.toUpperCase() !== "N/A") ||
+                (grant.country && grant.country.toUpperCase() !== "N/A")
+            ),
         },
-        { text: formatDate(grant.agreement_start_date), icon: Calendar },
-        { text: grant.org, icon: Building },
-    ];
+        {
+            icon: Calendar,
+            text: `${formatDate(grant.agreement_start_date)} → ${formatDate(
+                grant.agreement_end_date
+            )}`,
+        },
+        {
+            icon: Hourglass,
+            text: formatDateDiff(
+                grant.agreement_start_date,
+                grant.agreement_end_date
+            ),
+        },
+        { icon: Building, text: grant.org },
+    ].filter((tag) => !tag.hide);
 
     // Custom tooltip for the charts
     const CustomTooltip = ({ active, payload }: any) => {
@@ -247,25 +240,34 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
         <Card isHoverable className="p-4 transition-all duration-300">
             <div>
                 {/* Main Content */}
-                <div className="flex flex-col lg:flex-row lg:justify-between gap-2 lg:gap-6">
-                    {/* Left Column - Grant Details */}
-                    <div className="flex-1 lg:max-w-[80%]">
+                <div className="flex flex-col lg:flex-row gap-2 lg:gap-6">
+                    {/* Grant Details */}
+                    <div className="flex-1">
                         {/* Recipient Name with Bookmark button inline */}
-                        <div className="flex items-start justify-between lg:justify-start gap-2">
+                        <div className="flex items-start justify-between gap-2 mb-2 lg:mb-1">
                             <Link
                                 to={`/recipients/${grant.recipient_id}`}
-                                className="inline-flex items-start text-lg font-medium hover:text-blue-600 transition-colors gap-1.5 group"
+                                className="inline-flex items-start text-lg font-medium text-blue-700 transition-colors gap-1.5 group"
                                 aria-label={`View profile for recipient ${grant.legal_name}`}
                             >
                                 <span className="inline-block">
                                     {grant.legal_name}
-                                    <ArrowUpRight className="inline-block h-4 w-4 ml-1 opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all" />
+                                    <ArrowUpRight className="inline-block h-4 w-4 ml-1 lg:opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all" />
                                 </span>
                             </Link>
 
-                            {/* Show amount on mobile, hidden on desktop */}
-                            <div className="lg:hidden flex items-center gap-3">
-                                <span className="font-medium text-lg">
+                            {/* Grant Values */}
+                            <div className="flex items-center gap-3">
+                                <Tag
+                                    icon={Calendar1}
+                                    size="md"
+                                    pill={true}
+                                    variant="outline"
+                                    className="hidden lg:flex"
+                                >
+                                    {formatDate(grant.agreement_start_date)}
+                                </Tag>
+                                <span className="font-medium text-lg lg:text-xl">
                                     {formatCurrency(grant.agreement_value)}
                                 </span>
                                 {onBookmark && (
@@ -279,30 +281,33 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                             </div>
                         </div>
 
-                        {/* Institution */}
-                        <Link
-                            to={`/institutes/${grant.institute_id}`}
-                            className="inline-flex items-start text-gray-600 hover:text-blue-600 transition-colors group"
-                        >
-                            <University className="inline-block flex-shrink-0 h-4 w-4 mr-1.5 mt-1" />
-                            <span className="inline-block">
-                                {grant.research_organization_name}
-                                <ArrowUpRight className="inline-block h-4 w-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </span>
-                        </Link>
+                        <TagGroup spacing="normal">
+                            {/* Institution */}
+                            <Tag
+                                icon={University}
+                                size="md"
+                                pill={true}
+                                variant="default"
+                                onClick={() =>
+                                    (window.location.href = `/institutes/${grant.institute_id}`)
+                                }
+                                className="group w-full lg:w-auto"
+                            >
+                                <span className="flex items-center justify-between w-full gap-1.5">
+                                    {grant.research_organization_name}
+                                    <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                                </span>
+                            </Tag>
 
-                        {/* Grant Title - Handle empty case */}
-                        <p className="text-gray-600 flex items-start">
-                            <BookMarked
+                            {/* Grant Title - Handle empty case */}
+                            <Tag
+                                icon={BookMarked}
+                                size="md"
+                                pill={true}
+                                variant="default"
                                 className={cn(
-                                    "flex-shrink-0 h-4 w-4 mt-1 mr-1.5",
-                                    !hasTitle && "text-gray-300"
-                                )}
-                            />
-                            <span
-                                className={cn(
-                                    "flex-1",
-                                    !hasTitle && "text-gray-400 italic"
+                                    !hasTitle && "text-gray-400 italic",
+                                    "w-full lg:w-auto"
                                 )}
                             >
                                 {hasTitle
@@ -310,85 +315,24 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                                           grant.agreement_title_en
                                       )
                                     : "No Agreement Title Record Found"}
-                            </span>
-                        </p>
+                            </Tag>
+                        </TagGroup>
 
-                        {/* Reference Number & Location - Mobile Only */}
-                        <div className="flex flex-wrap lg:hidden text-sm text-gray-500 leading-relaxed">
-                            <Tags tags={infotags} />
-                        </div>
-
-                        {/* Reference Number - Desktop Only */}
-                        <div className="hidden lg:block">
-                            <p className="text-sm text-gray-500 flex items-center mt-0.5">
-                                <Database className="inline-block h-3 w-3 ml-0.5 mr-1.5" />
-                                <span>{grant.ref_number}</span>
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Right Column - Hidden on mobile */}
-                    <div className="hidden lg:block text-right">
-                        <div className="flex items-center justify-end gap-2">
-                            <p className="font-medium text-lg">
-                                {formatCurrency(grant.agreement_value)}
-                            </p>
-                            {onBookmark && (
-                                <button
-                                    onClick={onBookmark}
-                                    className="text-gray-400 hover:text-gray-600 focus:outline-none"
-                                >
-                                    <BookmarkPlus className="h-5 w-5" />
-                                </button>
-                            )}
-                        </div>
-                        <p className="text-gray-600">{grant.org}</p>
-                        <p className="text-sm text-gray-500 flex justify-end items-center">
-                            {(grant.city &&
-                                grant.city.toUpperCase() !== "N/A") ||
-                            (grant.province &&
-                                grant.province.toUpperCase() !== "N/A") ||
-                            (grant.country &&
-                                grant.country.toUpperCase() !== "N/A") ? (
-                                <MapPin className="inline-block h-3 w-3 mr-1" />
-                            ) : null}
-                            <span>
-                                {grant.city &&
-                                    grant.city.toUpperCase() !== "N/A" && (
-                                        <>
-                                            {grant.city}
-                                            {(grant.province &&
-                                                grant.province.toUpperCase() !==
-                                                    "N/A") ||
-                                            (grant.country &&
-                                                grant.country.toUpperCase() !==
-                                                    "N/A")
-                                                ? ", "
-                                                : ""}
-                                        </>
-                                    )}
-                                {grant.province &&
-                                    grant.province.toUpperCase() !== "N/A" && (
-                                        <>
-                                            {grant.province}
-                                            {grant.country &&
-                                            grant.country.toUpperCase() !==
-                                                "N/A"
-                                                ? ", "
-                                                : ""}
-                                        </>
-                                    )}
-                                {grant.country &&
-                                    grant.country.toUpperCase() !== "N/A" &&
-                                    grant.country}
-                            </span>
-                        </p>
-                        <div className="text-sm text-gray-500 flex justify-end items-center gap-2">
-                            <span>
-                                {formatDate(grant.agreement_start_date)}
-                            </span>
-                            <span className="w-0.5 h-3 bg-gray-200"></span>
-                            <span>{formatDate(grant.agreement_end_date)}</span>
+                        {/* Tags */}
+                        <div className="mt-1.5">
+                            <TagGroup spacing="tight">
+                                {metadataTags.map((tag, index) => (
+                                    <Tag
+                                        key={index}
+                                        icon={tag.icon}
+                                        size="sm"
+                                        pill={true}
+                                        variant="outline"
+                                    >
+                                        {tag.text}
+                                    </Tag>
+                                ))}
+                            </TagGroup>
                         </div>
                     </div>
                 </div>
@@ -404,7 +348,8 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                             className="inline-flex items-center bg-blue-50 hover:bg-blue-100 transition-colors text-blue-700 text-xs font-medium rounded-full px-2.5 py-1"
                         >
                             <History className="h-3 w-3 mr-1" />
-                            {typeof amendmentNumber === 'number' && amendmentNumber > 0
+                            {typeof amendmentNumber === "number" &&
+                            amendmentNumber > 0
                                 ? `Latest Amendment: ${amendmentNumber}`
                                 : "Original"}{" "}
                             • {sortedAmendments.length} versions
