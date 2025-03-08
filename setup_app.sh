@@ -14,28 +14,28 @@ INTERACTIVE=true
 DATA_SIZE="sample"
 
 while [[ $# -gt 0 ]]; do
-  key="$1"
-  case $key in
+    key="$1"
+    case $key in
     --full)
-      DATA_SIZE="full"
-      shift
-      ;;
+        DATA_SIZE="full"
+        shift
+        ;;
     --non-interactive)
-      INTERACTIVE=false
-      shift
-      ;;
+        INTERACTIVE=false
+        shift
+        ;;
     *)
-      # Unknown option
-      shift
-      ;;
-  esac
+        # Unknown option
+        shift
+        ;;
+    esac
 done
 
 # Function to clean up processes and files
 cleanup() {
     local force=$1
     print_status "Cleaning up..."
-    
+
     # Kill processes using PID files
     if [ -f "$SCRIPT_DIR/.client.pid" ]; then
         kill -9 $(cat "$SCRIPT_DIR/.client.pid") 2>/dev/null
@@ -45,25 +45,25 @@ cleanup() {
         kill -9 $(cat "$SCRIPT_DIR/.server.pid") 2>/dev/null
         rm "$SCRIPT_DIR/.server.pid"
     fi
-    
+
     # Stop MySQL if it's running
     if [ -f "$USER_MYSQL_DIR/stop.sh" ]; then
         "$USER_MYSQL_DIR/stop.sh"
     fi
-    
+
     # Force kill any remaining processes if requested
     if [ "$force" = "force" ]; then
         print_warning "Force killing any remaining processes..."
         pkill -f "node.*$SCRIPT_DIR" 2>/dev/null
         pkill -f "$USER_MYSQL_DIR" 2>/dev/null
     fi
-    
+
     # Clean up socket and pid files
     rm -f "$MYSQL_SOCKET" "$USER_MYSQL_DIR/run/mysql.pid" 2>/dev/null
-    
+
     # Clean up port config file
     rm -f "$SCRIPT_DIR/config/.port-config.json" 2>/dev/null
-    
+
     print_success "Cleanup complete"
 }
 
@@ -216,7 +216,7 @@ if [ "$INTERACTIVE" = true ]; then
     echo "2) Use full dataset (~170K records, comprehensive but slower)"
     echo
     read -p "Choose an option [1/2] (default: 1): " data_choice
-    
+
     if [ "$data_choice" = "2" ]; then
         DATA_SIZE="full"
         print_status "Using full dataset. This may take several minutes to load."
@@ -249,13 +249,13 @@ export MYSQL_PORT
 print_status "Starting server..."
 cd "$SCRIPT_DIR/server"
 PORT="$SERVER_PORT" \
-DB_PORT="$MYSQL_PORT" \
-DB_HOST="127.0.0.1" \
-DB_USER="rgap_user" \
-DB_PASSWORD="12345" \
-DB_NAME="rgap" \
-MYSQL_SOCKET="$MYSQL_SOCKET" \
-npm run dev &
+    DB_PORT="$MYSQL_PORT" \
+    DB_HOST="127.0.0.1" \
+    DB_USER="rgap_user" \
+    DB_PASSWORD="12345" \
+    DB_NAME="rgap" \
+    MYSQL_SOCKET="$MYSQL_SOCKET" \
+    npm run dev &
 SERVER_PID=$!
 echo $SERVER_PID > "$SCRIPT_DIR/.server.pid"
 
@@ -280,7 +280,7 @@ done
 print_status "Starting client..."
 cd "$SCRIPT_DIR/client"
 VITE_API_URL="http://localhost:$SERVER_PORT" \
-PORT="$CLIENT_PORT" npm run dev &
+    PORT="$CLIENT_PORT" npm run dev &
 CLIENT_PID=$!
 echo $CLIENT_PID > "$SCRIPT_DIR/.client.pid"
 
