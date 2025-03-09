@@ -1,34 +1,32 @@
 # Research Grant Analytics Platform (RGAP)
-
-> [!IMPORTANT]  
-> Head to the [Milestone 1 Preliminary Setup Guide](setup_prelim.md) to have a walkthrough of how to run our application for Milestone 1.
+<img src="client/public/rgap.svg" alt="RGAP Logo" width="200" height="200">
 
 ## Table of Contents
 - [Research Grant Analytics Platform (RGAP)](#research-grant-analytics-platform-rgap)
   - [Table of Contents](#table-of-contents)
-  - [1. Project Overview](#1-project-overview)
-    - [Key Focus Areas:](#key-focus-areas)
-  - [2. Technology Stack](#2-technology-stack)
-    - [Frontend:](#frontend)
-    - [Backend:](#backend)
-    - [Development Tools:](#development-tools)
-  - [3. Project Structure](#3-project-structure)
-  - [4. Features](#4-features)
+  - [Project Overview](#project-overview)
+    - [Key Focus Areas](#key-focus-areas)
+  - [Documentation](#documentation)
+  - [Technology Stack](#technology-stack)
+    - [Frontend](#frontend)
+    - [Backend](#backend)
+    - [Development Tools](#development-tools)
+  - [Quick Start](#quick-start)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+  - [Data Fetch and App Setup](#data-fetch-and-app-setup)
+  - [Features](#features)
     - [Basic Features:](#basic-features)
     - [Advanced Features:](#advanced-features)
-  - [5. Data Management](#5-data-management)
+  - [Data Management](#data-management)
     - [Sample Dataset:](#sample-dataset)
     - [Production Dataset:](#production-dataset)
     - [Data Processing Pipeline:](#data-processing-pipeline)
-  - [6. Performance Optimization](#6-performance-optimization)
+  - [Performance Optimization](#performance-optimization)
     - [Database Level:](#database-level)
     - [Application Level:](#application-level)
-  - [7. Development Workflow](#7-development-workflow)
-    - [Milestone Planning:](#milestone-planning)
-    - [Quality Assurance:](#quality-assurance)
-  - [8. Documentation](#8-documentation)
 
-## 1. Project Overview
+## Project Overview
 RGAP is a comprehensive web-based analytics platform analyzing research funding data from Canada's three major research funding agencies: NSERC (Natural Sciences and Engineering Research Council), CIHR (Canadian Institutes of Health Research), and SSHRC (Social Sciences and Humanities Research Council). The platform leverages open data from Open Canada (https://search.open.canada.ca/grants), which provides detailed grant information from these agencies:
 
 - NSERC: ~90,378 grant records
@@ -39,70 +37,91 @@ Total Dataset: ~170,116 grants
 The platform will provide researchers, administrators, and the public with insights into
 funding patterns, institutional success rates, and research investment trends across Canadian academic institutions.
 
-### Key Focus Areas:
+### Key Focus Areas
 - Integration of tri-agency funding data (~170,000 grants)
 - Cross-agency funding pattern analysis
 - Geographical distribution of research funding
 - Program-specific success metrics
 - Institutional funding trajectories
 
-## 2. Technology Stack
-### Frontend:
-- React 18+
+## Documentation
+
+- [Installation Guide](docs/installation.md)
+- [User Guide](docs/user-guide.md)
+- [Developer Guide](docs/developer-guide.md)
+- [API Reference](docs/api-reference.md)
+- [Data Documentation](docs/data-guide.md)
+- [Data Fetcher Guide](docs/fetcher-guide.md)
+- [MySQL for RGAP Guide](docs/mysql-rgap-guide.md)
+- [Troubleshooting](docs/troubleshooting.md)
+
+## Technology Stack
+### Frontend
+- React 18.2.0+
 - Tailwind CSS for styling
 - Recharts/chart.js for data visualization
 - React Query for data fetching
 
-### Backend:
+### Backend
 - Node.js + Express
-- MySQL 8.0
+- MySQL 8.0.36
 - RESTful API design
 
-### Development Tools:
+### Development Tools
 - Git & GitHub
 - npm for package management
 - Docker for development environment
-- Postman/Jest for testing
 
-## 3. Project Structure
-```
-rgap/
-├── client/
-│   ├── public/
-│   └── src/
-│       ├── components/
-│       │   ├── analytics/    # Data visualization components
-│       │   ├── search/       # Search interface components
-│       │   └── common/       # Shared components
-│       ├── pages/
-│       ├── services/
-│       └── utils/
-│
-├── server/
-│   ├── routes/
-│   ├── db/
-│   │   ├── migrations/       # Database migration scripts
-│   │   └── seeds/            # Seeder scripts for sample data
-│   ├── services/
-│   └── config/
-│
-├── data/
-│   ├── sample/               # Sample dataset files
-│   └── production/           # Production dataset files
-│
-├── milestone-0/
-│   ├── README.md
-│   ├── report.pdf
-│   ├── schema.sql
-│   └── src/
-│
-├── milestone-1/
-├── milestone-2/
-├── milestone-3/
-└── README.md
+## Quick Start
+
+### Prerequisites
+
+- Node.js 22.14.0+
+- MySQL 8.0.36+
+- Python 3.12.7+ (for data fetching)
+- 7zip (optional, for better data compression)
+
+### Installation
+
+1. Clone the repository
+   ```bash
+   git clone https://github.com/jaxendutta/rgap.git
+   cd rgap
+   ```
+
+2. Set up environment variables and packages
+   ```bash
+   source setup_env.sh
+   ```
+
+3. Run the MySQL setup script
+   ```bash
+   ./setup_mysql.sh
+   ```
+
+This will:
+- Set up a local MySQL instance
+- Install dependencies for server and client
+- Create database schema and import sample data
+- Start the server and client applications
+
+The setup will display URLs for accessing the application, typically:
+- Client: http://localhost:3000
+- Server: http://localhost:4000
+
+## Data Fetch and App Setup
+
+RGAP comes with sample data, but you can import the full dataset:
+
+```bash
+# Fetch data from the tri-agency sources
+python fetcher.py --year-start 2019 --year-end 2023 --save
+
+# Import the downloaded data
+./setup_app.sh --full
 ```
 
-## 4. Features
+## Features
 
 ### Basic Features:
 
@@ -158,7 +177,7 @@ rgap/
    - ROI analysis
    - Success indicator monitoring
 
-## 5. Data Management
+## Data Management
 
 ### Sample Dataset:
 - 100 grants per agency
@@ -169,7 +188,7 @@ rgap/
 ### Production Dataset:
 - Full tri-agency data (~170,000 grants)
 - All Canadian institutions
-- 10+ years of historical data
+- 25+ years of historical data
 - Complete program listings
 
 ### Data Processing Pipeline:
@@ -179,7 +198,7 @@ rgap/
 3. Agency-specific transformations
 4. Database loading and validation
 
-## 6. Performance Optimization
+## Performance Optimization
 
 ### Database Level:
 - Indexed queries for common searches
@@ -192,39 +211,3 @@ rgap/
 - Server-side response caching
 - Pagination for large result sets
 - Lazy loading of components
-
-## 7. Development Workflow
-
-### Milestone Planning:
-1. Milestone 0 (Setup & Planning)
-   - Environment setup
-   - Sample data processing
-   - Basic connectivity testing
-
-2. Milestone 1 (Core Implementation)
-   - Database schema implementation
-   - Basic search functionality
-   - Initial visualizations
-
-3. Milestone 2 (Feature Development)
-   - Advanced search features
-   - Analytics implementation
-   - Performance optimization
-
-4. Milestone 3 (Completion & Polish)
-   - Advanced features
-   - UI/UX refinement
-   - Documentation completion
-
-### Quality Assurance:
-- Automated testing
-- Performance benchmarking
-- Security testing
-- Cross-browser compatibility
-
-## 8. Documentation
-- Setup instructions
-- API documentation
-- Database schema documentation
-- Feature guides
-- Testing procedures
