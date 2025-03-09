@@ -280,6 +280,101 @@ class Fetcher:
             # If we get here, compression failed or wasn't available
             return file_path
 
+    def is_likely_institution(self, name):
+        """
+        Check if a recipient name likely refers to an institution based on keywords.
+        
+        Args:
+            name: The recipient name to check
+            
+        Returns:
+            bool: True if the name appears to be an institution, False otherwise
+        """
+        if not name or not isinstance(name, str):
+            return False
+            
+        # Convert to lowercase for case-insensitive matching
+        name_lower = name.lower()
+        
+        # English and French keywords that suggest an institution
+        institution_keywords = [
+            'university', 'université', 'univ.', 'univ ',
+            'college', 'collège', 'coll.',
+            'institute', 'institut', 'inst.',
+            'school', 'école', 'ecole',
+            'academy', 'académie', 'academie',
+            'cegep', 'cégep',
+            'polytechnique', 'polytechnic',
+            'research centre', 'centre de recherche',
+            'laboratory', 'laboratoire', 'lab ',
+            'hospital', 'hôpital', 'hopital',
+            'foundation', 'fondation',
+            'center', 'centre',
+            'council', 'conseil'
+        ]
+        
+        # Check if any of the keywords are in the name
+        for keyword in institution_keywords:
+            if keyword in name_lower:
+                return True
+                
+        return False
+
+    def fix_missing_research_organizations(self, df):
+        """
+        Fix missing research_organization_name entries by using the recipient name 
+        when it appears to be an institution.
+        
+        Args:
+            df: DataFrame with grant data
+            
+        Returns:
+            DataFrame with fixed research_organization_name values
+        """
+        # Make a copy to avoid modifying the input
+        df_fixed = df.copy()
+        
+        # Define the recipient and research org column names
+        recipient_col = 'recipient_legal_name'
+        research_org_col = 'research_organization_name'
+        
+        # Check if required columns exist
+        if recipient_col not in df_fixed.columns:
+            print(f"Warning: '{recipient_col}' column not found, skipping fix.")
+            return df_fixed
+            
+        if research_org_col not in df_fixed.columns:
+            print(f"Warning: '{research_org_col}' column not found, skipping fix.")
+            return df_fixed
+        
+        # Count missing research organization names before fix
+        missing_before = df_fixed[research_org_col].isna().sum()
+        
+        # Find rows where research_organization_name is missing but recipient_legal_name exists
+        # and the recipient name likely refers to an institution
+        mask = (
+            df_fixed[research_org_col].isna() & 
+            df_fixed[recipient_col].notna() & 
+            df_fixed[recipient_col].apply(self.is_likely_institution)
+        )
+        
+        # For these rows, set research_organization_name to recipient_legal_name
+        if mask.any():
+            df_fixed.loc[mask, research_org_col] = df_fixed.loc[mask, recipient_col]
+            
+            # Count fixed entries
+            fixed_count = mask.sum()
+            missing_after = df_fixed[research_org_col].isna().sum()
+            
+            print(f"✓ Fixed {fixed_count} missing research organization names")
+            print(f"  - Missing before: {missing_before}")
+            print(f"  - Missing after: {missing_after}")
+            print(f"  - Improvement: {missing_before - missing_after} entries ({(fixed_count / missing_before * 100):.1f}% of missing entries)")
+        else:
+            print("No missing research organization names that could be fixed.")
+        
+        return df_fixed
+
     def _fetch_data_via_api(self, force_refresh: bool = False, verify_ssl: bool = False) -> pd.DataFrame:
         """
         Fetch all tri-agency data using the CKAN API with pagination.
@@ -306,7 +401,7 @@ class Fetcher:
                         
                         with tempfile.TemporaryDirectory() as tmpdirname:
                             subprocess.run(['7z', 'e', str(latest_file), f'-o{tmpdirname}', '-y'], 
-                                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                             # Find the extracted CSV file
                             csv_files = glob.glob(f"{tmpdirname}/*.csv")
                             if csv_files:
@@ -509,6 +604,10 @@ class Fetcher:
                 print("Warning: 'agreement_start_date' column not found")
                 df['year'] = None
             
+            # NEW: Fix missing research organization names
+            print("\n==> Checking for and fixing missing research organization names...")
+            df = self.fix_missing_research_organizations(df)
+            
             # Print dataset modification status again for clarity
             if dataset_updated:
                 print("  📢 DATASET STATUS: Processing updated dataset from the server")
@@ -545,7 +644,7 @@ class Fetcher:
         else:
             print("⚠️ No records found")
             return pd.DataFrame()
-
+    
     def fetch_all_orgs(self, 
                       year_start: int,
                       year_end: int = None,
