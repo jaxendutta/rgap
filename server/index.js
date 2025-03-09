@@ -33,6 +33,7 @@ app.use("/auth", require("./routes/authRoutes"));
 app.use("/search", require("./routes/searchRoutes"));
 app.use("/grants", require("./routes/grantRoutes"));
 app.use("/recipients", require("./routes/recepientRoutes"));
+app.use("/save", require("./routes/saveRoutes"));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
