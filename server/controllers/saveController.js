@@ -55,7 +55,7 @@ const getSavedGrant = async (req, res) => {
         }
 
         const results = await pool.query(
-            `SELECT ResearchGrant.grant_id, agreement_title_en
+            `SELECT ResearchGrant.grant_id
             FROM BookmarkedGrants 
             LEFT OUTER JOIN ResearchGrant ON ResearchGrant.grant_id = BookmarkedGrants.grant_id
             WHERE user_id = ${user_id};`
@@ -123,7 +123,7 @@ const getSavedRecipient = async (req, res) => {
         }
 
         const results = await pool.query(
-            `SELECT Recipient.recipient_id, agreement_title_en
+            `SELECT Recipient.recipient_id
             FROM BookmarkedRecipients 
             LEFT OUTER JOIN Recipient ON Recipient.recipient_id = BookmarkedRecipients.recipient_id
             WHERE user_id = ${user_id};`
