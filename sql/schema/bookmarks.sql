@@ -26,7 +26,7 @@ CREATE TABLE BookmarkedInstitutes(
     user_id INT NOT NULL,
     institute_id INT NOT NULL,    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (user_id, recipient_id),
+    UNIQUE (user_id, institute_id),
     FOREIGN KEY (user_id) REFERENCES User(user_id),
     FOREIGN KEY (institute_id) REFERENCES Institute(institute_id)
 );
