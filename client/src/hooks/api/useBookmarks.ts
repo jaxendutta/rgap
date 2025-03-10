@@ -43,9 +43,12 @@ export function useAllBookmarks(bookmarkType: "grant" | EntityType, user_id: num
     return useQuery({
         queryKey: [...bookmarkKeys.type(bookmarkType), user_id],
         queryFn: async () => {
-            const response = await API.get<number[]>(`/save/${bookmarkType}/${user_id}`);
-            console.log('useAllBookmarks:response:',response)
-            return response.data;
+            const response = await API.get<number[]>(`/save/${bookmarkType}/id/${user_id}`);
+            //console.log(`${bookmarkType}:useAllBookmarks:response:`, response)
+            
+            // convert object to array
+            const idsArray = response.data.map(entry => Object.values(entry)[0]);
+            return idsArray;
         },
         enabled: !!user_id,
         staleTime: 5 * 60 * 1000,
@@ -65,39 +68,39 @@ export function useToggleBookmark(bookmarkType: "grant" | EntityType) {
     const { showNotification } = useNotification();
 
 
-    return useMutation<void, Error, ToggleBookmarkVariables, { prevBookmarks: number[] }>({
+    return useMutation<void, Error, ToggleBookmarkVariables, { prevBookmarks: number[];queryKey:(string|number)[] }>({
         mutationFn: async ({ user_id, entity_id, isBookmarked }) => {
             if (isBookmarked) {
                 // Remove bookmark
-                await API.delete(`/save/${bookmarkType}/${entity_id}`);
+                await API.delete(`/save/${bookmarkType}/${entity_id}`, { data: { user_id } });
             } else {
                 // Add bookmark
                 await API.post(`/save/${bookmarkType}/${entity_id}`, { user_id });
             }
         },
-        onMutate: async ({ entity_id, isBookmarked }) => {
-            await queryClient.cancelQueries({ queryKey: bookmarkKeys.type(bookmarkType) });
+        onMutate: async ({ user_id, entity_id, isBookmarked }) => {
+            const queryKey = [...bookmarkKeys.type(bookmarkType), user_id];
+            await queryClient.cancelQueries({ queryKey });
 
+            const prevBookmarks = queryClient.getQueryData<number[]>(queryKey) || [];
 
-            const prevBookmarks = queryClient.getQueryData<number[]>(bookmarkKeys.type(bookmarkType)) || [];
-
-            queryClient.setQueryData<number[]>(bookmarkKeys.type(bookmarkType), (prev = []) =>
+            queryClient.setQueryData<number[]>(queryKey, (prev = []) =>
                 isBookmarked ? prev.filter((i) => i !== entity_id) : [...prev, entity_id]
             );
-
-            return { prevBookmarks };
+            console.log("onMutate");
+            return { prevBookmarks, queryKey };
         },
         onError: (err, _, context) => {
             if (context && context.prevBookmarks) {
-                queryClient.setQueryData(bookmarkKeys.type(bookmarkType), context.prevBookmarks);
+                queryClient.setQueryData(context.queryKey, context.prevBookmarks);
                 showNotification(
                     "Failed to update bookmark. Please try again.",
                     "error",
                 );
             }
         },
-        onSuccess: (_, { isBookmarked }) => {
-            queryClient.invalidateQueries({ queryKey: bookmarkKeys.type(bookmarkType) });
+        onSuccess: (_, { user_id, isBookmarked }) => {
+            queryClient.invalidateQueries({ queryKey: [...bookmarkKeys.type(bookmarkType), user_id] });
             showNotification(
                 isBookmarked ? "Bookmark removed successfully!" : "Saved to bookmarks!",
                 "success",
