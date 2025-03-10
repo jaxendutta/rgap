@@ -20,3 +20,13 @@ CREATE TABLE BookmarkedRecipients (
     FOREIGN KEY (user_id) REFERENCES User(user_id),
     FOREIGN KEY (recipient_id) REFERENCES Recipient(recipient_id)
 );
+
+CREATE TABLE BookmarkedInstitutes(
+    bookmark_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    institute_id INT NOT NULL,    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, recipient_id),
+    FOREIGN KEY (user_id) REFERENCES User(user_id),
+    FOREIGN KEY (institute_id) REFERENCES Institute(institute_id)
+);
