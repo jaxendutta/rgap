@@ -2,8 +2,8 @@
 USE rgap;
 
 CREATE TABLE SearchHistory (
-   history_id INT PRIMARY KEY AUTO_INCREMENT,
-   user_id INT NOT NULL,
+   history_id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+   user_id INT UNSIGNED NOT NULL,
    quick_search VARCHAR(500),
    search_recipient VARCHAR(500),
    search_grant VARCHAR(500),

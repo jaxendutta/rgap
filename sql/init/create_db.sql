@@ -6,7 +6,7 @@ DROP USER IF EXISTS 'rgap_user'@'%';
 -- Create fresh database with proper encoding
 CREATE DATABASE rgap
   CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
+  COLLATE utf8mb4_0900_ai_ci;
 
 -- Create users
 CREATE USER 'rgap_user'@'localhost' IDENTIFIED BY '12345';

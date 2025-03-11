@@ -39,6 +39,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Initialize log file
+mkdir -p "$(dirname "$LOG_FILE")"
 echo "Database setup started at $(date)" >"$LOG_FILE"
 
 # Define schema file execution order
@@ -147,14 +148,6 @@ for dir in "${DIRS[@]}"; do
     fi
 done
 
-print_status "Fixing schema compatibility..."
-mysql --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap < "${SQL_ROOT}/data/fix_schema.sql" 2>>"$LOG_FILE"
-if [ $? -ne 0 ]; then
-    print_error "Failed to fix schema compatibility"
-    exit 1
-fi
-
-# Special handling for data loading
 print_status "Loading data preparation scripts..."
 {
     # Run data preparation SQL
@@ -163,15 +156,6 @@ print_status "Loading data preparation scripts..."
     print_error "Failed to prepare data tables"
     exit 1
 }
-
-# After the schema files are run and before the data import
-print_status "Fixing database collations..."
-mysql --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap <"${SQL_ROOT}/data/fix_collations.sql" 2>>"$LOG_FILE"
-if [ $? -ne 0 ]; then
-    print_error "Failed to fix collations. Check the logs for details."
-    cat "$LOG_FILE" | tail -n 20
-    exit 1
-fi
 
 print_status "Loading ${DATA_SOURCE} data..."
 
@@ -207,25 +191,22 @@ if [ "$DATA_SOURCE" = "full" ]; then
         print_status "Using full dataset: $(basename "$SAMPLE_DATA_7Z")"
     fi
 else
-    # Use the sample data file
-    SAMPLE_DATA_7Z="${SCRIPT_DIR}/data/sample/data_2019.7z"
+    # Find the most recent sample data file in the sample directory
+    SAMPLE_DATA_7Z=$(find "${SCRIPT_DIR}/data/sample" -name "data_*.7z" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
     
-    # If the 7z file doesn't exist, check for csv or csv.gz
-    if [ ! -f "$SAMPLE_DATA_7Z" ]; then
-        SAMPLE_DATA_CSV="${SCRIPT_DIR}/data/sample/data_2019.csv"
-        SAMPLE_DATA_CSV_GZ="${SCRIPT_DIR}/data/sample/data_2019.csv.gz"
-        
-        if [ -f "$SAMPLE_DATA_CSV" ]; then
-            SAMPLE_DATA_7Z="$SAMPLE_DATA_CSV"
-        elif [ -f "$SAMPLE_DATA_CSV_GZ" ]; then
-            SAMPLE_DATA_7Z="$SAMPLE_DATA_CSV_GZ"
-        else
-            print_error "Sample data file not found. Checked for:"
-            print_error "  - ${SAMPLE_DATA_7Z}"
-            print_error "  - ${SAMPLE_DATA_CSV}"
-            print_error "  - ${SAMPLE_DATA_CSV_GZ}"
-            exit 1
-        fi
+    # If no 7z file, try to find a csv.gz file
+    if [ -z "$SAMPLE_DATA_7Z" ]; then
+        SAMPLE_DATA_7Z=$(find "${SCRIPT_DIR}/data/sample" -name "data_*.csv.gz" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
+    fi
+    
+    # If still no file, try to find a plain csv file
+    if [ -z "$SAMPLE_DATA_7Z" ]; then
+        SAMPLE_DATA_7Z=$(find "${SCRIPT_DIR}/data/sample" -name "data_*.csv" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
+    fi
+    
+    if [ -z "$SAMPLE_DATA_7Z" ]; then
+        print_error "No sample dataset found in ${SCRIPT_DIR}/data/sample"
+        exit 1
     fi
     
     print_status "Using sample dataset: $(basename "$SAMPLE_DATA_7Z")"
@@ -285,14 +266,14 @@ mv "${SAMPLE_DATA}.fixed" "$SAMPLE_DATA"
 TOTAL_ROWS=$(wc -l < "$SAMPLE_DATA" | awk '{print $1-1}')  # Subtract 1 for header
 print_status "Preparing to load ${TOTAL_ROWS} records..."
 
-# Create a load file with special handling for embedded newlines
+# Create a load file with special handling for embedded newlines - Updated for MySQL 9.2
 LOAD_SQL="${TMP_DIR}/load_data_runtime.sql"
 cat >"$LOAD_SQL" <<EOF
 SET SESSION character_set_client = utf8mb4;
 SET SESSION character_set_connection = utf8mb4;
 SET SESSION character_set_results = utf8mb4;
-SET SESSION collation_connection = utf8mb4_unicode_ci;
-SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET SESSION collation_connection = utf8mb4_0900_ai_ci;
+SET NAMES utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 SET FOREIGN_KEY_CHECKS = 0;
 

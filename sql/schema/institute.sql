@@ -3,7 +3,7 @@ USE rgap;
 
 DROP TABLE IF EXISTS Institute;
 CREATE TABLE Institute (
-    institute_id INT PRIMARY KEY AUTO_INCREMENT,
+    institute_id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     type VARCHAR(50),
     country VARCHAR(50),
@@ -12,6 +12,5 @@ CREATE TABLE Institute (
     postal_code VARCHAR(10),
     riding_name_en VARCHAR(100),
     riding_name_fr VARCHAR(100),
-    riding_number VARCHAR(10),
-    UNIQUE (name, country, province, city)
+    riding_number VARCHAR(10)
 );

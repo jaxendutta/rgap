@@ -29,16 +29,16 @@
 ## Project Overview
 RGAP is a comprehensive web-based analytics platform analyzing research funding data from Canada's three major research funding agencies: NSERC (Natural Sciences and Engineering Research Council), CIHR (Canadian Institutes of Health Research), and SSHRC (Social Sciences and Humanities Research Council). The platform leverages open data from Open Canada (https://search.open.canada.ca/grants), which provides detailed grant information from these agencies:
 
-- NSERC: ~90,378 grant records
-- CIHR: ~35,340 grant records
-- SSHRC: ~44,398 grant records
-Total Dataset: ~170,116 grants
+- NSERC: 136,034+ grant records
+- CIHR: 39,768+ grant records
+- SSHRC: 55,808+ grant records
+Total Dataset: 231,610+ grants
 
 The platform will provide researchers, administrators, and the public with insights into
 funding patterns, institutional success rates, and research investment trends across Canadian academic institutions.
 
 ### Key Focus Areas
-- Integration of tri-agency funding data (~170,000 grants)
+- Integration of tri-agency funding data
 - Cross-agency funding pattern analysis
 - Geographical distribution of research funding
 - Program-specific success metrics
@@ -186,7 +186,7 @@ python fetcher.py --year-start 2019 --year-end 2023 --save
 - Complete program coverage
 
 ### Production Dataset:
-- Full tri-agency data (~170,000 grants)
+- Full tri-agency data (231K+ grants)
 - All Canadian institutions
 - 25+ years of historical data
 - Complete program listings

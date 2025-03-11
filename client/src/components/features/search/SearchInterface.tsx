@@ -18,7 +18,7 @@ import {
     PopularSearchesPanel,
     SearchCategory,
 } from "@/components/features/search/PopularSearchesPanel";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/utils/cn";
 import { SearchField } from "@/components/common/ui/SearchField";
 
@@ -317,8 +317,10 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                             onClick={() => togglePanel("popular")}
                             className={
                                 activePanelType === "popular"
-                                    ? "bg-blue-600 hover:bg-blue-700"
-                                    : ""
+                                ? cn("bg-blue-100 hover:bg-blue-100 rounded-full",
+                                    "text-blue-600 border border-blue-300 transition-all duration-300"
+                                )
+                                : "shadow-sm"
                             }
                         >
                             <span>
@@ -340,8 +342,10 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                         onClick={() => togglePanel("filters")}
                         className={
                             activePanelType === "filters"
-                                ? "bg-blue-600 hover:bg-blue-700"
-                                : ""
+                                ? cn("bg-blue-100 hover:bg-blue-100 rounded-full",
+                                    "text-blue-600 border border-blue-300 transition-all duration-300"
+                                )
+                                : "shadow-sm"
                         }
                     >
                         <span className="hidden lg:inline">Filters</span>
@@ -373,21 +377,37 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
             </div>
 
             {/* Panels Area */}
-            <div className="transition-all duration-300 ease-in-out mt-4 relative">
-                {activePanelType === "filters" && (
-                    <Card className="p-4 mb-4">
-                        <FilterPanel
-                            filters={filters}
-                            onChange={handleFilterChange}
-                        />
-                    </Card>
-                )}
+            <div className="transition-all duration-800 ease-in-out mt-4 relative">
+                <AnimatePresence>
+                    {activePanelType === "filters" && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <Card className="p-4 mb-4">
+                                <FilterPanel
+                                    filters={filters}
+                                    onChange={handleFilterChange}
+                                />
+                            </Card>
+                        </motion.div>
+                    )}
 
-                {activePanelType === "popular" && (
-                    <PopularSearchesPanel
-                        onSelect={handlePopularSearchSelect}
-                    />
-                )}
+                    {activePanelType === "popular" && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <PopularSearchesPanel
+                                onSelect={handlePopularSearchSelect}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Filter Tags */}

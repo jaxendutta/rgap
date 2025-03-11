@@ -3,9 +3,9 @@ USE rgap;
 
 DROP TABLE IF EXISTS Recipient;
 CREATE TABLE Recipient (
-    recipient_id INT PRIMARY KEY AUTO_INCREMENT,
+    recipient_id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     legal_name VARCHAR(255) NOT NULL,
-    institute_id INT,
+    institute_id INT UNSIGNED,
     type VARCHAR(50),
     recipient_type ENUM(
          'Indigenous recipients',                      

@@ -3,7 +3,7 @@ USE rgap;
 
 DROP TABLE IF EXISTS ResearchGrant;
 CREATE TABLE ResearchGrant (
-    grant_id INT PRIMARY KEY AUTO_INCREMENT,
+    grant_id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     ref_number VARCHAR(50),
     amendment_number VARCHAR(10),
     UNIQUE (ref_number, amendment_number),
@@ -21,11 +21,10 @@ CREATE TABLE ResearchGrant (
     description_fr TEXT,
     expected_results_en TEXT,
     expected_results_fr TEXT,
-    org VARCHAR(20),
-    owner_org VARCHAR(20),
-    recipient_id INT,
-    prog_id VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+    org VARCHAR(5),
+    recipient_id INT UNSIGNED,
+    prog_id INT UNSIGNED,
     FOREIGN KEY (recipient_id) REFERENCES Recipient(recipient_id),
-    FOREIGN KEY (owner_org) REFERENCES Organization(owner_org),
+    FOREIGN KEY (org) REFERENCES Organization(org),
     FOREIGN KEY (prog_id) REFERENCES Program(prog_id)
 );

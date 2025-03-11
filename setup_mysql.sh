@@ -80,26 +80,26 @@ if [ ! $MYSQL_VERSION ]; then
 fi
 
 # Download MySQL if not already downloaded
-if [ ! -f "${MYSQL_VERSION}.tar.xz" ]; then
+if [ ! -f "mysql-${MYSQL_VERSION}.tar.xz" ]; then
     print_status "Downloading MySQL..."
-    wget "https://dev.mysql.com/get/Downloads/MySQL-8.0/${MYSQL_VERSION}.tar.xz"
+    wget "https://cdn.mysql.com/Downloads/MySQL-${MYSQL_VERSION%.*}/mysql-${MYSQL_VERSION}-linux-glibc2.28-x86_64.tar.xz" -O "mysql-${MYSQL_VERSION}.tar.xz"
     check_error "Failed to download MySQL"
 fi
 
 # Extract MySQL if not already extracted
-if [ ! -d "${MYSQL_VERSION}" ]; then
+if [ ! -d "mysql-${MYSQL_VERSION}" ]; then
     print_status "Extracting MySQL..."
-    tar xf "${MYSQL_VERSION}.tar.xz"
+    tar xf "mysql-${MYSQL_VERSION}.tar.xz" --one-top-level="mysql-${MYSQL_VERSION}" --strip-components 1
     check_error "Failed to extract MySQL"
 else
-    rm -rf "${MYSQL_VERSION}.tar.xz"
+    rm -rf "mysql-${MYSQL_VERSION}.tar.xz"
 fi
 
 # Create MySQL configuration
 print_status "Creating MySQL configuration..."
 cat >"${USER_MYSQL_DIR}/my.cnf" <<EOF
 [mysqld]
-basedir = ${MYSQL_DIR}/${MYSQL_VERSION}
+basedir = ${MYSQL_DIR}/mysql-${MYSQL_VERSION}
 datadir = ${USER_MYSQL_DIR}/data
 socket = ${USER_MYSQL_DIR}/run/mysql.sock
 pid-file = ${USER_MYSQL_DIR}/run/mysql.pid
@@ -112,9 +112,9 @@ mysqlx = 0
 # Security Settings
 secure-file-priv = NULL
 
-# InnoDB Settings
-innodb_buffer_pool_size = 1G
-innodb_redo_log_capacity = 128M
+# InnoDB Settings 
+innodb_buffer_pool_size = 2G
+innodb_redo_log_capacity = 256M
 innodb_flush_log_at_trx_commit = 0
 innodb_file_per_table = 1
 innodb_thread_concurrency = 4
@@ -123,7 +123,7 @@ innodb_thread_concurrency = 4
 key_buffer_size = 256M
 max_allowed_packet = 64M
 table_open_cache = 2000
-sort_buffer_size = 2M
+sort_buffer_size = 4M
 read_buffer_size = 2M
 read_rnd_buffer_size = 2M
 thread_cache_size = 8
@@ -160,7 +160,7 @@ if [ -f "\${USER_MYSQL_DIR}/run/mysql.pid" ]; then
 fi
 
 echo "Starting MySQL in the background..."
-cd "\${MYSQL_DIR}/${MYSQL_VERSION}"
+cd "\${MYSQL_DIR}/mysql-${MYSQL_VERSION}"
 "\${MYSQL_BIN}/mysqld" --defaults-file="\${USER_MYSQL_DIR}/my.cnf" > "\${USER_MYSQL_DIR}/log/nohup.out" 2>&1 & 
 
 MYSQL_PID=\$!
@@ -232,7 +232,7 @@ print_status "Initializing MySQL..."
 # Clean up existing data for this user only
 rm -rf "${USER_MYSQL_DIR}/data/"*
 
-# Initialize MySQL with --initialize-insecure to create root without password
+# Initialize MySQL and create root without password
 cd "${MYSQL_DIR}"
 "${MYSQL_BIN}/mysqld" --defaults-file="${USER_MYSQL_DIR}/my.cnf" --initialize-insecure --user=${USER}
 
@@ -255,12 +255,13 @@ done
 
 if [ $attempt -eq $max_attempts ]; then
     print_error "MySQL failed to start"
+    rm -rf "mysql"
     exit 1
 fi
 
 # Ensure root can connect without password and enable local infile
 mysql -u root --socket="${USER_MYSQL_DIR}/run/mysql.sock" <<EOF
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '';
+ALTER USER 'root'@'localhost' IDENTIFIED WITH caching_sha2_password BY '';
 SET GLOBAL local_infile = 1;
 FLUSH PRIVILEGES;
 EOF

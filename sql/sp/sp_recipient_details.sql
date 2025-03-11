@@ -19,18 +19,18 @@ BEGIN
         COALESCE(AVG(rg.agreement_value), 0) as avg_funding,
         MIN(rg.agreement_start_date) as first_grant_date,
         MAX(rg.agreement_start_date) as latest_grant_date,
-        COUNT(DISTINCT o.abbreviation) as funding_agencies_count
+        COUNT(DISTINCT o.org) as funding_agencies_count
     FROM Recipient r
     LEFT JOIN Institute i ON r.institute_id = i.institute_id
     LEFT JOIN ResearchGrant rg ON r.recipient_id = rg.recipient_id
-    LEFT JOIN Organization o ON rg.owner_org = o.owner_org
+    LEFT JOIN Organization o ON rg.org = o.org
     WHERE r.recipient_id = p_recipient_id
     GROUP BY r.recipient_id, i.name, i.type, i.city, i.province, i.country, i.postal_code;
 
     -- Get recipient's grants with enhanced program information
     SELECT
         rg.*,
-        o.abbreviation as org,
+        o.org as org,
         o.org_title,
         p.name_en as prog_title_en,  -- Standardized field name
         p.name_en as program_name,   -- Also include as program_name for backward compatibility
@@ -57,7 +57,7 @@ BEGIN
         WHERE t.recipient_id = p_recipient_id
         GROUP BY t.ref_number
     ) AS tla ON rg.ref_number = tla.ref_number AND rg.amendment_number = tla.latest_amendment
-    JOIN Organization o ON rg.owner_org = o.owner_org
+    JOIN Organization o ON rg.org = o.org
     LEFT JOIN Program p ON rg.prog_id = p.prog_id
     WHERE rg.recipient_id = p_recipient_id
     ORDER BY rg.agreement_start_date DESC;
@@ -65,16 +65,16 @@ BEGIN
     -- Get funding history by year and agency with more details
     SELECT 
         YEAR(rg.agreement_start_date) as year,
-        o.abbreviation as agency,
+        o.org as agency,
         COUNT(rg.grant_id) as grant_count,
         SUM(rg.agreement_value) as total_value,
         AVG(rg.agreement_value) as avg_value,
         COUNT(DISTINCT p.prog_id) as program_count
     FROM ResearchGrant rg
-    JOIN Organization o ON rg.owner_org = o.owner_org
+    JOIN Organization o ON rg.org = o.org
     LEFT JOIN Program p ON rg.prog_id = p.prog_id
     WHERE rg.recipient_id = p_recipient_id
-    GROUP BY YEAR(rg.agreement_start_date), o.abbreviation
+    GROUP BY YEAR(rg.agreement_start_date), o.org
     ORDER BY year, agency;
 END$
 DELIMITER ;

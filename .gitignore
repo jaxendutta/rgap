@@ -50,3 +50,6 @@ mysql-rgap-start
 mysql-rgap-stop
 mysql-rgap
 *.pid
+
+# Checklist
+checklist.md

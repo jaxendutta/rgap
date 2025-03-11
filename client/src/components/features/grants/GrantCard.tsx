@@ -254,7 +254,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                                 <span className="inline-flex">
                                     <GraduationCap className="h-5 w-5 mt-1 mr-1.5" />
                                     {grant.legal_name}
-                                    <ArrowUpRight className="inline-block h-4 w-4 ml-1 mt-1.5 lg:opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all" />
+                                    <ArrowUpRight className="inline-block h-4 w-4 ml-1 mt-2.5 lg:mt-1.5 lg:opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all" />
                                 </span>
                             </Link>
 
@@ -597,10 +597,10 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                                                 </span>
                                                 <span className="col-span-7 text-gray-800 break-words">
                                                     {grant.org}
-                                                    {grant.owner_org_title && (
+                                                    {grant.org_title && (
                                                         <span className="block text-gray-500 text-xs mt-1">
                                                             {
-                                                                grant.owner_org_title
+                                                                grant.org_title
                                                             }
                                                         </span>
                                                     )}

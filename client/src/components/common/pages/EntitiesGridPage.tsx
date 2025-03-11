@@ -148,7 +148,7 @@ const EntitiesGridPage = ({
             />
 
             {/* Search Bar */}
-            <div className="mb-6 flex flex-col lg:flex-row gap-2">
+            <div className="mb-6 flex gap-2">
                 <div className="flex-1">
                     <SearchField
                         icon={Search}
@@ -165,7 +165,7 @@ const EntitiesGridPage = ({
                         onClick={handleSearch}
                         className="bg-gray-900 hover:bg-gray-800 flex-1 lg:flex-auto rounded-full"
                     >
-                        Search
+                        <span className="hidden lg:flex">Search</span>
                     </Button>
                     {isSearching && (
                         <Button

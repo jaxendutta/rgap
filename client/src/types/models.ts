@@ -80,9 +80,8 @@ export interface Grant {
     country?: string;
 
     // Organization information
-    org: string; // abbreviation from Organization table
-    owner_org?: string;
-    owner_org_title?: string; // Full name of the organization
+    org: string;
+    org_title: string; // Full name of the organization
 
     // Program information
     prog_id?: string;

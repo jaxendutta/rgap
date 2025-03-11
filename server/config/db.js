@@ -39,7 +39,7 @@ async function verifyDatabaseSetup() {
             SELECT COUNT(*) as count 
             FROM ResearchGrant rg 
             JOIN Recipient r ON rg.recipient_id = r.recipient_id 
-            JOIN Organization o ON rg.owner_org = o.owner_org 
+            JOIN Organization o ON rg.org = o.org 
             LIMIT 1
         `);
         console.log("Join query test successful");

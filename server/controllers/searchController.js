@@ -8,7 +8,7 @@ const getFilterOptions = async (req, res) => {
 
         // The stored procedure returns multiple result sets
         const filterOptions = {
-            agencies: results[0].map((row) => row.abbreviation),
+            agencies: results[0].map((row) => row.org),
             countries: results[1].map((row) => row.country),
             provinces: results[2].map((row) => row.province),
             cities: results[3].map((row) => row.city),
@@ -49,7 +49,7 @@ const searchGrants = async (req, res) => {
 
         // Call the consolidated grant search procedure with pagination
         const [results] = await pool.query(
-            "CALL sp_consolidated_grant_search(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "CALL sp_grant_search(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 searchTerms.recipient || null,
                 searchTerms.institute || null,

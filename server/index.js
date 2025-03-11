@@ -32,7 +32,6 @@ app.get("/health", (req, res) => {
 // Routes
 app.use("/auth", require("./routes/authRoutes"));
 app.use("/search", require("./routes/searchRoutes"));
-app.use("/grants", require("./routes/grantRoutes"));
 app.use("/recipients", require("./routes/recipientRoutes"));
 app.use("/institutes", require("./routes/instituteRoutes"));
 

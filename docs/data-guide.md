@@ -227,12 +227,12 @@ The data can be updated periodically to include new grants and amendments:
 ## Data Statistics
 
 The sample dataset includes:
-- Approximately 35,000 grants
+- Over 35,000 grants
 - Covering years 2019-2023
 - From NSERC, CIHR, and SSHRC
 
 The full dataset includes:
-- Approximately 170,000 grants
+- Over 231,000 grants
 - Covering years 1998-2023
 - From NSERC, CIHR, and SSHRC
 

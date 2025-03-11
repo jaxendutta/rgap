@@ -212,8 +212,8 @@ print_status "Setting up database..."
 if [ "$INTERACTIVE" = true ]; then
     echo
     echo "Database setup options:"
-    echo "1) Use sample data (~35K records, faster setup)"
-    echo "2) Use full dataset (~170K records, comprehensive but slower)"
+    echo "1) Use sample data (5K+ records, ~10s to setup)"
+    echo "2) Use full dataset (231K+ records, ~5-10min to setup)"
     echo
     read -p "Choose an option [1/2] (default: 1): " data_choice
 
@@ -287,7 +287,6 @@ echo $CLIENT_PID > "$SCRIPT_DIR/.client.pid"
 print_success "Application started successfully!"
 print_status "Opening client in your default browser..."
 sleep 3
-xdg-open "http://localhost:$CLIENT_PORT" 2>/dev/null || open "http://localhost:$CLIENT_PORT" 2>/dev/null || print_warning "Couldn't open browser automatically. Please open http://localhost:$CLIENT_PORT manually."
 
 print
 print_status "To stop the application:"
