@@ -149,6 +149,9 @@ const EntitiesGridPage = ({
             return;
         }
         const isBookmarked = bookmarkedIds.includes(id);
+        //console.log(`toggleBookmark: isBookmarked:${isBookmarked}`);
+        //console.log(bookmarkedIds)
+        
         // Trigger the mutation
         toggleBookmarkMutation.mutate({ user_id: user_id, entity_id: id, isBookmarked });
     };
@@ -279,7 +282,7 @@ const EntitiesGridPage = ({
                                 key={`${entityType}-${id}`}
                                 entity={entity}
                                 entityType={entityType}
-                                isBookmarked={bookmarkedIds.includes(id) || false}
+                                isBookmarked={bookmarkedIds.includes(id)}
                                 onBookmark={() => toggleBookmark(id)}
                             />
                         );
