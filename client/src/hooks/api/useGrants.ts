@@ -4,7 +4,8 @@ import axios from "axios";
 import portConfig from "../../../../config/ports.json";
 import { Grant } from "@/types/models";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import { GrantSearchParams, SearchResponse } from "@/types/search";
+import { GrantSearchParams, SearchResponse, SortConfig } from "@/types/search";
+import { sortGrants } from "@/services/api";
 
 const API = axios.create({
     baseURL:
@@ -180,4 +181,16 @@ export function useAllGrants() {
         staleTime: 5 * 60 * 1000,
         gcTime: 10 * 60 * 1000,
     });
+}
+
+
+export function useSortGrant(sortConfig: SortConfig, page: number, pageSize: number) {
+    return useQuery({
+        queryKey: ["sort", sortConfig, page, pageSize],
+        queryFn: async () => {
+            console.log("Sending sort request with config:", sortConfig);
+            return await sortGrants(sortConfig.field, sortConfig.direction, page, pageSize);
+        },
+        enabled: false,
+    }); 
 }
