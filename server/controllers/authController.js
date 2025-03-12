@@ -88,4 +88,36 @@ const loginUser = async (req, res) => {
     }
 };
 
-module.exports = { signupUser, loginUser };
+// Update profile information
+const updateUserProfile = async (req, res) => {
+    const { user_id, email, name } = req.body;
+    try {
+      const [rows] = await pool.query('CALL sp_update_user_profile(?, ?, ?)', [user_id, email, name]);
+      if (!rows || !rows[0] || !rows[0][0]) {
+        return res.status(500).json({ message: 'Profile update failed.' });
+      }
+      return res.status(200).json(rows[0][0]);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      return res.status(500).json({ message: error.message });
+    }
+};
+
+// Change password
+const updateUserPassword = async (req, res) => {
+    const { user_id, newPassword } = req.body;
+    try {
+      const saltRounds = 10;
+      const new_password_hash = await bcrypt.hash(newPassword, saltRounds);
+      const [rows] = await pool.query('CALL sp_update_user_password(?, ?)', [user_id, new_password_hash]);
+      if (!rows || !rows[0] || !rows[0][0]) {
+        return res.status(500).json({ message: 'Password update failed.' });
+      }
+      return res.status(200).json({ message: 'Password updated successfully.' });
+    } catch (error) {
+      console.error('Error updating password:', error);
+      return res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { signupUser, loginUser, updateUserProfile, updateUserPassword };
