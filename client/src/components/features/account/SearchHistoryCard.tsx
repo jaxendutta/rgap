@@ -7,46 +7,52 @@ import { formatCurrency } from '@/utils/format'
 import type { GrantSearchParams } from '@/types/search'
 import { FILTER_LIMITS } from '@/constants/filters'
 
-interface SearchHistory {
-  id: number
-  timestamp: Date
-  search_params: GrantSearchParams
-  results: number
+export interface SearchHistory {
+  history_id: number;
+  timestamp: Date;
+  search_params: GrantSearchParams;
+  results: number;
 }
 
 interface SearchHistoryCardProps {
-  search: SearchHistory
-  onRerun: (params: GrantSearchParams) => void
+  search: SearchHistory;
+  onRerun: (params: GrantSearchParams) => void;
+  onDelete: (historyId: number) => void;
 }
 
-export const SearchHistoryCard = ({ search, onRerun }: SearchHistoryCardProps) => {
-  // Filter out empty search terms
+export const SearchHistoryCard = ({
+  search,
+  onRerun,
+  onDelete,
+}: SearchHistoryCardProps) => {
+  // Extract search terms from the search_params object, filtering out empty values
   const searchTerms = Object.entries(search.search_params.searchTerms)
     .filter(([_, value]) => value !== '')
     .map(([key, value]) => ({
       key,
       value,
-      icon: key === 'recipient' 
-        ? GraduationCap 
-        : key === 'institute' 
-          ? University 
-          : BookMarked
-    }))
+      icon:
+        key === 'recipient'
+          ? GraduationCap
+          : key === 'institute'
+          ? University
+          : BookMarked,
+    }));
 
   // Filter out empty filter values
   const activeFilters = Object.entries(search.search_params.filters)
     .filter(([_, value]) => {
-      if (Array.isArray(value)) return value.length > 0
+      if (Array.isArray(value)) return value.length > 0;
       if (typeof value === 'object' && value !== null) {
         if ('start' in value && 'end' in value) {
-          return value.start > FILTER_LIMITS.YEAR.MIN || value.end < FILTER_LIMITS.YEAR.MAX
+          return value.start > FILTER_LIMITS.YEAR.MIN || value.end < FILTER_LIMITS.YEAR.MAX;
         }
         if ('min' in value && 'max' in value) {
-          return value.min > FILTER_LIMITS.GRANT_VALUE.MIN || value.max < FILTER_LIMITS.GRANT_VALUE.MAX
+          return value.min > FILTER_LIMITS.GRANT_VALUE.MIN || value.max < FILTER_LIMITS.GRANT_VALUE.MAX;
         }
       }
-      return false
-    })
+      return false;
+    });
 
   return (
     <Card className="p-4 space-y-3">
@@ -81,7 +87,7 @@ export const SearchHistoryCard = ({ search, onRerun }: SearchHistoryCardProps) =
         <div className="flex flex-wrap gap-1.5">
           {activeFilters.map(([key, value]) => {
             if (key === 'yearRange' && typeof value === 'object' && value !== null) {
-              const { start, end } = value as { start: number; end: number }
+              const { start, end } = value as { start: number; end: number };
               if (start > FILTER_LIMITS.YEAR.MIN || end < FILTER_LIMITS.YEAR.MAX) {
                 return (
                   <FilterTag
@@ -91,11 +97,11 @@ export const SearchHistoryCard = ({ search, onRerun }: SearchHistoryCardProps) =
                     value={`${start} - ${end}`}
                     size="sm"
                   />
-                )
+                );
               }
             }
             if (key === 'valueRange' && typeof value === 'object' && value !== null) {
-              const { min, max } = value as { min: number; max: number }
+              const { min, max } = value as { min: number; max: number };
               if (min > FILTER_LIMITS.GRANT_VALUE.MIN || max < FILTER_LIMITS.GRANT_VALUE.MAX) {
                 return (
                   <FilterTag
@@ -105,7 +111,7 @@ export const SearchHistoryCard = ({ search, onRerun }: SearchHistoryCardProps) =
                     value={`${formatCurrency(min)} - ${formatCurrency(max)}`}
                     size="sm"
                   />
-                )
+                );
               }
             }
             if (Array.isArray(value) && value.length > 0) {
@@ -117,23 +123,22 @@ export const SearchHistoryCard = ({ search, onRerun }: SearchHistoryCardProps) =
                   value={value.join(', ')}
                   size="sm"
                 />
-              )
+              );
             }
-            return null
+            return null;
           })}
         </div>
       )}
 
-      {/* Action Button */}
-      <div className="flex justify-end">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onRerun(search.search_params)}
-        >
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={() => onRerun(search.search_params)}>
           Run Search
+        </Button>
+        <Button variant="destructive" size="sm" onClick={() => onDelete(search.history_id)}>
+          Delete
         </Button>
       </div>
     </Card>
-  )
-}
+  );
+};

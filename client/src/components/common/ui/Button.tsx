@@ -3,7 +3,7 @@ import { cn } from '@/utils/cn'
 import { LucideIcon } from 'lucide-react'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline'
+  variant?: 'primary' | 'secondary' | 'outline' | 'destructive'
   size?: 'sm' | 'md' | 'lg'
   icon?: LucideIcon
   iconPosition?: 'left' | 'right'
@@ -25,6 +25,7 @@ export const Button = ({
     primary: 'bg-gray-900 text-white hover:bg-gray-800',
     secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50',
     outline: 'bg-transparent text-gray-700 border border-gray-300 hover:bg-gray-50',
+    destructive: 'bg-red-600 text-white hover:bg-red-700', // added destructive variant
   }
 
   const sizes = {

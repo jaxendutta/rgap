@@ -103,21 +103,41 @@ const updateUserProfile = async (req, res) => {
     }
 };
 
-// Change password
 const updateUserPassword = async (req, res) => {
-    const { user_id, newPassword } = req.body;
+    const { user_id, currentPassword, newPassword } = req.body;
     try {
+      // Check that required fields are provided
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current and new passwords are required." });
+      }
+  
+      // Retrieve the user's stored password hash
+      const [userRows] = await pool.query("SELECT password_hash FROM User WHERE user_id = ?", [user_id]);
+      if (!userRows || userRows.length === 0) {
+        return res.status(404).json({ message: "User not found." });
+      }
+      const storedHash = userRows[0].password_hash;
+  
+      // Verify the current password
+      const isValid = await bcrypt.compare(currentPassword, storedHash);
+      if (!isValid) {
+        return res.status(401).json({ message: "Invalid current password." });
+      }
+  
+      // Hash the new password
       const saltRounds = 10;
       const new_password_hash = await bcrypt.hash(newPassword, saltRounds);
-      const [rows] = await pool.query('CALL sp_update_user_password(?, ?)', [user_id, new_password_hash]);
+  
+      // Update the password using the stored procedure
+      const [rows] = await pool.query("CALL sp_update_user_password(?, ?)", [user_id, new_password_hash]);
       if (!rows || !rows[0] || !rows[0][0]) {
-        return res.status(500).json({ message: 'Password update failed.' });
+        return res.status(500).json({ message: "Password update failed." });
       }
-      return res.status(200).json({ message: 'Password updated successfully.' });
+      return res.status(200).json({ message: "Password updated successfully." });
     } catch (error) {
-      console.error('Error updating password:', error);
+      console.error("Error updating password:", error);
       return res.status(500).json({ message: error.message });
     }
 };
-
+  
 module.exports = { signupUser, loginUser, updateUserProfile, updateUserPassword };

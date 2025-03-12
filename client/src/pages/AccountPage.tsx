@@ -58,6 +58,9 @@ export default function AccountPage() {
     const [confirmNewPassword, setConfirmNewPassword] = useState("");
     const [updateError, setUpdateError] = useState("");
     const [updateLoading, setUpdateLoading] = useState(false);
+    const [searchHistory, setSearchHistory] = useState<any[]>([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyError, setHistoryError] = useState("");
 
     const { user, logout, updateUser } = useAuth();
     const { showNotification } = useNotification();
@@ -74,32 +77,82 @@ export default function AccountPage() {
     setEditEmail(user.email);
     }, [user]);
 
-    const sortedSearches = [...(user.searches || [])].sort((a, b) => {
-        if (sortConfig.field === "date") {
-            const dateA = new Date(a.timestamp).getTime();
-            const dateB = new Date(b.timestamp).getTime();
-            return sortConfig.direction === "asc"
-                ? dateA - dateB
-                : dateB - dateA;
-        } else {
-            return sortConfig.direction === "asc"
-                ? a.results - b.results
-                : b.results - a.results;
-        }
-    });
+    useEffect(() => {
+        const fetchSearchHistory = async () => {
+          setHistoryLoading(true);
+          try {
+            const baseurl =
+              process.env.VITE_API_URL || `http://localhost:${portConfig.defaults.server}`;
+            const response = await fetch(
+              `${baseurl}/search-history/${user.user_id}?sortField=search_time&sortDirection=desc`
+            );
+            const data = await response.json();
+            if (!response.ok) {
+              throw new Error(data.message || "Failed to fetch search history");
+            }
+            setSearchHistory(data.searches);
+          } catch (error: any) {
+            setHistoryError(error.message);
+          } finally {
+            setHistoryLoading(false);
+          }
+        };
+      
+        fetchSearchHistory();
+    }, [user.user_id]);
 
-    const toggleSort = (field: SortField) => {
-        setSortConfig((prev) => ({
-            field,
-            direction:
-                prev.field === field && prev.direction === "desc"
-                    ? "asc"
-                    : "desc",
-        }));
+    const handleSortChange = async (field: "search_time" | "result_count", direction: "asc" | "desc") => {
+        // Optionally, update local state for sort config
+        setSortConfig({ field: field === "search_time" ? "date" : "results", direction });
+        // Fetch the sorted search history
+        setHistoryLoading(true);
+        try {
+          const baseurl =
+            process.env.VITE_API_URL || `http://localhost:${portConfig.defaults.server}`;
+          const response = await fetch(
+            `${baseurl}/search-history/${user.user_id}?sortField=${field}&sortDirection=${direction}`
+          );
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.message || "Failed to fetch sorted history");
+          }
+          setSearchHistory(data.searches);
+        } catch (error: any) {
+          setHistoryError(error.message);
+        } finally {
+          setHistoryLoading(false);
+        }
     };
 
     const handleRerunSearch = (searchParams: any) => {
         navigate("/search", { state: { searchParams } });
+    };
+
+    // Handle deletion of a search history entry
+    const handleDeleteHistory = async (historyId: number) => {
+        setHistoryLoading(true);
+        try {
+        const baseurl =
+            process.env.VITE_API_URL ||
+            `http://localhost:${portConfig.defaults.server}`;
+        const response = await fetch(`${baseurl}/search-history/${historyId}`, {
+            method: "DELETE",
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to delete history entry");
+        }
+        // Remove the deleted entry from state
+        setSearchHistory((prev) =>
+            prev.filter((entry) => entry.history_id !== historyId)
+        );
+        showNotification("History entry deleted successfully!", "success");
+        } catch (error: any) {
+        setHistoryError(error.message);
+        showNotification(error.message, "error");
+        } finally {
+        setHistoryLoading(false);
+        }
     };
 
     // Profile update in Account Settings
@@ -377,73 +430,56 @@ export default function AccountPage() {
 
                     {/* Search History */}
                     {activeTab === "history" && (
-                        <Card className="p-4 lg:p-6">
-                            <div className="space-y-4">
-                                {/* Header */}
-                                <div className="flex justify-between gap-4">
-                                    <h2 className="text-2xl font-medium">
-                                        Recent Searches
-                                    </h2>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <SortButton
+                    <Card className="p-4 lg:p-6">
+                        <div className="space-y-4">
+                        {/* Header */}
+                        <div className="flex justify-between gap-4">
+                            <h2 className="text-2xl font-medium">Recent Searches</h2>
+                            <div className="flex flex-wrap items-center gap-2">
+                            <SortButton
                                             label="Date"
                                             icon={Calendar}
-                                            field="date"
-                                            currentField={sortConfig.field}
-                                            direction={sortConfig.direction}
-                                            onClick={() => toggleSort("date")}
-                                        />
-                                        <SortButton
+                                            // For backend sorting not using React
+                                            onClick={() => handleSortChange("search_time", sortConfig.direction === "asc" ? "desc" : "asc")} field={""} currentField={""} direction={"asc"}                            />
+                            <SortButton
                                             label="Results"
                                             icon={History}
-                                            field="results"
-                                            currentField={sortConfig.field}
-                                            direction={sortConfig.direction}
-                                            onClick={() =>
-                                                toggleSort("results")
-                                            }
-                                        />
-                                    </div>
-                                </div>
-
-                                {sortedSearches.length > 0 ? (
-                                    <motion.div
-                                        layout
-                                        className="grid grid-cols-1 gap-4"
-                                    >
-                                        {sortedSearches.map((search) => (
-                                            <motion.div
-                                                key={search.id}
-                                                layout
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -20 }}
-                                                transition={{ duration: 0.2 }}
-                                            >
-                                                <SearchHistoryCard
-                                                    search={search}
-                                                    onRerun={handleRerunSearch}
-                                                />
-                                            </motion.div>
-                                        ))}
-                                    </motion.div>
-                                ) : (
-                                    <div className="flex flex-col justify-center items-center space-y-4 h-64 bg-gray-100 p-8 rounded-lg text-center w-full">
-                                        <PackageOpen className="h-16 w-16 text-gray-400" />
-                                        <p className="text-gray-700 text-md">
-                                            You have no recorded search history.
-                                        </p>
-                                        <Button
-                                            variant="primary"
-                                            onClick={() => navigate("/search")}
-                                            icon={Search}
-                                        >
-                                            Start exploring
-                                        </Button>
-                                    </div>
-                                )}
+                                            onClick={() => handleSortChange("result_count", sortConfig.direction === "asc" ? "desc" : "asc")} field={""} currentField={""} direction={"asc"}                            />
                             </div>
-                        </Card>
+                        </div>
+
+                        {historyLoading ? (
+                            <p>Loading search history...</p>
+                        ) : historyError ? (
+                            <p className="text-red-600">{historyError}</p>
+                        ) : searchHistory.length > 0 ? (
+                            <motion.div layout className="grid grid-cols-1 gap-4">
+                            {searchHistory.map((search) => (
+                                <motion.div
+                                key={search.history_id}
+                                layout
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2 }}
+                                >
+                                <SearchHistoryCard search={search} onRerun={handleRerunSearch} onDelete={handleDeleteHistory} />
+                                </motion.div>
+                            ))}
+                            </motion.div>
+                        ) : (
+                            <div className="flex flex-col justify-center items-center space-y-4 h-64 bg-gray-100 p-8 rounded-lg text-center w-full">
+                            <PackageOpen className="h-16 w-16 text-gray-400" />
+                            <p className="text-gray-700 text-md">
+                                You have no recorded search history.
+                            </p>
+                            <Button variant="primary" onClick={() => navigate("/search")} icon={Search}>
+                                Start exploring
+                            </Button>
+                            </div>
+                        )}
+                        </div>
+                    </Card>
                     )}
 
                     {/* Logout Confirmation */}
