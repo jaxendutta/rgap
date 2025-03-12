@@ -1,12 +1,13 @@
 // src/components/common/ui/RangeFilter.tsx
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, CircleDollarSign, Calendar } from "lucide-react";
 import { FILTER_LIMITS } from "@/constants/filters";
 import { cn } from "@/utils/cn";
+import { formatDate } from "@/utils/format";
 
 export interface RangeValue {
-    min: number;
-    max: number;
+    min: number | Date;
+    max: number | Date;
 }
 
 export interface RangeFilterProps {
@@ -28,9 +29,14 @@ export const RangeFilter = ({
 
     // Get limits based on type
     const limits =
-        type === "currency" ? FILTER_LIMITS.GRANT_VALUE : FILTER_LIMITS.YEAR;
+        type === "currency"
+            ? FILTER_LIMITS.GRANT_VALUE
+            : FILTER_LIMITS.DATE_VALUE;
 
-    const formatValue = (val: number) => {
+    const formatValue = (val: number | Date) => {
+        if (val instanceof Date) {
+            return formatDate(val);
+        }
         if (type === "currency") {
             return new Intl.NumberFormat("en-CA", {
                 style: "currency",
@@ -93,8 +99,18 @@ export const RangeFilter = ({
                 ...prev,
                 [input]:
                     input === "min"
-                        ? Math.min(numValue, value.max)
-                        : Math.max(numValue, value.min),
+                        ? Math.min(
+                              numValue,
+                              value.max instanceof Date
+                                  ? value.max.getTime()
+                                  : value.max
+                          )
+                        : Math.max(
+                              numValue,
+                              value.min instanceof Date
+                                  ? value.min.getTime()
+                                  : value.min
+                          ),
             }));
         }
     };
@@ -115,8 +131,13 @@ export const RangeFilter = ({
                 )}
             >
                 <span className="flex items-center gap-2">
-                    <span className="font-medium">{label}:</span>
-                    <span className="text-gray-600">{displayValue}</span>
+                    {type === "currency" ? (
+                        <CircleDollarSign className="h-4 w-4 text-gray-500" />
+                    ) : (
+                        <Calendar className="h-4 w-4 text-gray-500" />
+                    )}
+                    <span className="font-medium">{label}</span>
+                    <span className="text-gray-600 italic">{displayValue}</span>
                 </span>
                 <ChevronDown
                     className={cn(
@@ -148,7 +169,7 @@ export const RangeFilter = ({
                         </div>
 
                         <div className="border-t pt-4">
-                            <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center justify-between space-x-2">
                                 <div>
                                     <label className="block text-sm text-gray-600 mb-1">
                                         Minimum

@@ -52,11 +52,11 @@ const cleanFilters = (filters: typeof DEFAULT_FILTER_STATE) => {
     };
 
     return {
-        yearRange: {
-            start:
-                filters.yearRange?.start ??
-                DEFAULT_FILTER_STATE.yearRange.start,
-            end: filters.yearRange?.end ?? DEFAULT_FILTER_STATE.yearRange.end,
+        dateRange: {
+            from:
+                filters.dateRange?.from ??
+                DEFAULT_FILTER_STATE.dateRange.from,
+            to: filters.dateRange?.to ?? DEFAULT_FILTER_STATE.dateRange.to,
         },
         valueRange: {
             min: filters.valueRange?.min ?? DEFAULT_FILTER_STATE.valueRange.min,

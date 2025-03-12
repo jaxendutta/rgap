@@ -41,32 +41,70 @@ const searchGrants = async (req, res) => {
         const page = pagination.page || 1;
         const pageSize = pagination.pageSize || 20;
 
-        // Convert filter arrays to JSON strings for the stored procedure
-        const agenciesJson = JSON.stringify(filters.agencies || []);
-        const countriesJson = JSON.stringify(filters.countries || []);
-        const provincesJson = JSON.stringify(filters.provinces || []);
-        const citiesJson = JSON.stringify(filters.cities || []);
+        // Ensure we're providing proper JSON arrays for filters
+        // Convert filter arrays to JSON strings for the stored procedure with explicit checking
+        const ensureValidJsonArray = (arr) => {
+            if (!arr || !Array.isArray(arr)) {
+                return "[]"; // Return empty JSON array if invalid
+            }
+            return JSON.stringify(arr);
+        };
 
-        // Call the consolidated grant search procedure with pagination
+        const agenciesJson = ensureValidJsonArray(filters.agencies);
+        const countriesJson = ensureValidJsonArray(filters.countries);
+        const provincesJson = ensureValidJsonArray(filters.provinces);
+        const citiesJson = ensureValidJsonArray(filters.cities);
+
+        // Get date range parameters (using null if not provided)
+        let fromDate = null;
+        let toDate = null;
+
+        if (filters.dateRange) {
+            if (filters.dateRange.from) {
+                fromDate = new Date(filters.dateRange.from)
+                    .toISOString()
+                    .split("T")[0];
+            }
+
+            if (filters.dateRange.to) {
+                toDate = new Date(filters.dateRange.to)
+                    .toISOString()
+                    .split("T")[0];
+            }
+        }
+
+        console.log(`Using date range: ${fromDate} to ${toDate}`);
+
+        // Get min/max values with defaults
+        const valueMin = filters.valueRange?.min || 0;
+        const valueMax = filters.valueRange?.max || 200000000;
+
+        // Create the query parameters array with proper order matching the stored procedure
+        const queryParams = [
+            searchTerms.recipient || null, // p_recipient_term
+            searchTerms.institute || null, // p_institute_term
+            searchTerms.grant || null, // p_grant_term
+            fromDate, // p_from_date
+            toDate, // p_to_date
+            valueMin, // p_value_min
+            valueMax, // p_value_max
+            agenciesJson, // p_agencies
+            countriesJson, // p_countries
+            provincesJson, // p_provinces
+            citiesJson, // p_cities
+            sortConfig.field || "date", // p_sort_field
+            sortConfig.direction || "desc", // p_sort_direction
+            pageSize, // p_page_size
+            page, // p_page
+        ];
+
+        // Log the query parameters for debugging
+        console.log("Query parameters:", queryParams);
+
+        // Call the stored procedure with the correct parameter order
         const [results] = await pool.query(
-            "CALL sp_grant_search(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [
-                searchTerms.recipient || null,
-                searchTerms.institute || null,
-                searchTerms.grant || null,
-                filters.yearRange?.start || 1900,
-                filters.yearRange?.end || 2025,
-                filters.valueRange?.min || 0,
-                filters.valueRange?.max || 200000000,
-                agenciesJson,
-                countriesJson,
-                provincesJson,
-                citiesJson,
-                sortConfig.field || "date",
-                sortConfig.direction || "desc",
-                pageSize,
-                page,
-            ]
+            "CALL sp_grant_search(?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), CAST(? AS JSON), CAST(? AS JSON), CAST(? AS JSON), ?, ?, ?, ?)",
+            queryParams
         );
 
         // The first result set is the total count

@@ -1,12 +1,12 @@
 -- File: sql/sp/sp_grant_search.sql
-DELIMITER $$
-DROP PROCEDURE IF EXISTS sp_grant_search$$
+DELIMITER $
+DROP PROCEDURE IF EXISTS sp_grant_search$
 CREATE PROCEDURE sp_grant_search(
     IN p_recipient_term VARCHAR(255),
     IN p_institute_term VARCHAR(255),
     IN p_grant_term VARCHAR(255),
-    IN p_year_start INT,
-    IN p_year_end INT,
+    IN p_from_date DATE,
+    IN p_to_date DATE,
     IN p_value_min DECIMAL(15,2),
     IN p_value_max DECIMAL(15,2),
     IN p_agencies JSON,
@@ -29,23 +29,33 @@ BEGIN
     SET p_page_size = IFNULL(p_page_size, 20);
     SET p_page = IFNULL(p_page, 1);
     
-    -- Conditions to apply to the main query
+    -- Build date condition
+    SET @date_condition = "1=1"; -- Default to true if no dates provided
+    IF p_from_date IS NOT NULL AND p_to_date IS NOT NULL THEN
+        SET @date_condition = CONCAT("rg.agreement_start_date BETWEEN '", p_from_date, "' AND '", p_to_date, "'");
+    END IF;
+    
+    -- Main conditions setup
     SET @main_conditions = CONCAT(
-        "WHERE 1=1",
+        "WHERE ", @date_condition,  
         IF(p_recipient_term IS NOT NULL, CONCAT(" AND r.legal_name LIKE '%", p_recipient_term, "%'"), ""),
         IF(p_institute_term IS NOT NULL, CONCAT(" AND i.name LIKE '%", p_institute_term, "%'"), ""),
         IF(p_grant_term IS NOT NULL, CONCAT(" AND rg.agreement_title_en LIKE '%", p_grant_term, "%'"), ""),
-        " AND YEAR(rg.agreement_start_date) BETWEEN ", p_year_start, " AND ", p_year_end,
         " AND rg.agreement_value BETWEEN ", p_value_min, " AND ", p_value_max
     );
     
-    -- Conditions to apply to the subquery - using table alias 't' instead of 'rg'
+    -- Build subquery date condition 
+    SET @sub_date_condition = "1=1"; -- Default to true if no dates provided
+    IF p_from_date IS NOT NULL AND p_to_date IS NOT NULL THEN
+        SET @sub_date_condition = CONCAT("t.agreement_start_date BETWEEN '", p_from_date, "' AND '", p_to_date, "'");
+    END IF;
+    
+    -- Subquery conditions setup
     SET @sub_conditions = CONCAT(
-        "WHERE 1=1",
+        "WHERE ", @sub_date_condition,  
         IF(p_recipient_term IS NOT NULL, CONCAT(" AND tr.legal_name LIKE '%", p_recipient_term, "%'"), ""),
         IF(p_institute_term IS NOT NULL, CONCAT(" AND ti.name LIKE '%", p_institute_term, "%'"), ""),
         IF(p_grant_term IS NOT NULL, CONCAT(" AND t.agreement_title_en LIKE '%", p_grant_term, "%'"), ""),
-        " AND YEAR(t.agreement_start_date) BETWEEN ", p_year_start, " AND ", p_year_end,
         " AND t.agreement_value BETWEEN ", p_value_min, " AND ", p_value_max
     );
     

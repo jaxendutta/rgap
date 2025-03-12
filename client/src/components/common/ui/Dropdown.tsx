@@ -1,6 +1,6 @@
 // src/components/common/ui/Dropdown.tsx
-import { useState, useEffect, useRef, ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
+import React, { useState, useEffect, useRef, ReactNode } from "react";
+import { ChevronDown, LucideIcon } from "lucide-react";
 import { cn } from "@/utils/cn";
 
 export interface Option {
@@ -9,6 +9,7 @@ export interface Option {
 }
 
 export interface DropdownProps {
+    icon?: LucideIcon;
     label?: string;
     value: string | string[];
     options: (Option | string)[];
@@ -27,6 +28,7 @@ const normalizeOption = (option: Option | string): Option => {
 };
 
 export const Dropdown = ({
+    icon,
     label,
     value,
     options,
@@ -91,8 +93,9 @@ export const Dropdown = ({
                 )}
             >
                 <span className="flex items-center gap-2">
-                    {label && <span className="font-medium">{label}:</span>}
-                    <span className="text-gray-600">{getDisplayValue()}</span>
+                    {icon && React.createElement(icon, { className: "h-4 w-4 text-gray-500" })}
+                    {label && <span className="font-medium">{label}</span>}
+                    <span className="text-gray-600 italic">{getDisplayValue()}</span>
                 </span>
                 <ChevronDown
                     className={cn(

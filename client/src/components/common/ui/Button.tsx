@@ -36,7 +36,8 @@ export const Button = ({
   return (
     <button
       className={cn(
-      'flex items-center justify-center font-medium rounded-md transition-colors gap-2',
+      "flex items-center justify-center font-medium rounded-md gap-2",
+      "transition-colors transition-all duration-800 ease-in-out",
       variants[variant],
       sizes[size],
       (disabled || isLoading) && 'opacity-50 cursor-not-allowed',

@@ -166,8 +166,8 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                 (newFilters[type] as string[]) = (
                     newFilters[type] as string[]
                 ).filter((v) => v !== value);
-            } else if (type === "yearRange") {
-                newFilters.yearRange = DEFAULT_FILTER_STATE.yearRange;
+            } else if (type === "dateRange") {
+                newFilters.dateRange = DEFAULT_FILTER_STATE.dateRange;
             } else if (type === "valueRange") {
                 newFilters.valueRange = DEFAULT_FILTER_STATE.valueRange;
             }
@@ -316,7 +316,6 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                             icon={Sparkles}
                             onClick={() => togglePanel("popular")}
                             className={cn(
-                                "transition-all duration-800 ease-in-out",
                                 activePanelType === "popular"
                                     ? "bg-blue-100 hover:bg-blue-100 rounded-full text-blue-600 border border-blue-300"
                                     : "shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:rounded-full"
@@ -340,7 +339,6 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                         icon={SlidersHorizontal}
                         onClick={() => togglePanel("filters")}
                         className={cn(
-                            "transition-all duration-800 ease-in-out",
                             activePanelType === "filters"
                                 ? "bg-blue-100 hover:bg-blue-100 rounded-full text-blue-600 border border-blue-300"
                                 : "shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:rounded-full"
@@ -357,7 +355,11 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                             variant="secondary"
                             icon={isBookmarked ? BookmarkCheck : BookmarkPlus}
                             onClick={onBookmark}
-                            className={isBookmarked ? "text-blue-600" : ""}
+                            className={cn(
+                                isBookmarked
+                                    ? "bg-blue-100 hover:bg-blue-100 rounded-full text-blue-600 border border-blue-300"
+                                    : "shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:rounded-full"
+                            )}
                         >
                             <span className="hidden lg:inline">Bookmark</span>
                         </Button>

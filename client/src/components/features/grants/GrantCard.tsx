@@ -25,10 +25,10 @@ import {
     CalendarDays,
     Layers,
     LineChart,
-    Building,
     Hourglass,
     Calendar1,
-    GraduationCap
+    GraduationCap,
+    Landmark
 } from "lucide-react";
 import { formatSentenceCase } from "@/utils/format";
 import { cn } from "@/utils/cn";
@@ -188,8 +188,8 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
         },
         {
             icon: Calendar,
-            text: `${formatDate(grant.agreement_start_date)} → ${formatDate(
-                grant.agreement_end_date
+            text: `${formatDate(new Date(grant.agreement_start_date))} → ${formatDate(
+                new Date(grant.agreement_end_date)
             )}`,
         },
         {
@@ -199,7 +199,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                 grant.agreement_end_date
             ),
         },
-        { icon: Building, text: grant.org },
+        { icon: Landmark, text: grant.org },
     ].filter((tag) => !tag.hide);
 
     // Custom tooltip for the charts
