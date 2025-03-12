@@ -30,10 +30,9 @@ yarn-error.log*
 *.swo
 
 # Data
-data/raw/*
-data/processed/*
+data/production/*
 data/sample/*
-!data/sample/data_2019.7z
+!data/sample/data_sample.7z
 
 # Logs
 *.log

@@ -191,9 +191,9 @@ const GrantsList: React.FC<GrantsListProps> = ({
         />
     );
 
-    // Key extractor for grants
-    const keyExtractor = (grant: Grant) =>
-        `grant-${grant.grant_id || grant.ref_number}`;
+    // Key extractor for grants - ensure unique keys by combining multiple identifiers
+    const keyExtractor = (grant: Grant, index: number) =>
+        `grant-${grant.grant_id || ''}-${grant.ref_number || ''}-${grant.amendment_number || '0'}-idx${index}`;
 
     // Visualization component - pass all available grant data, not just the visible ones
     // Use the prepareGrantsForVisualization function to ensure data quality

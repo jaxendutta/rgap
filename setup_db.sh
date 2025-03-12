@@ -161,10 +161,10 @@ print_status "Loading ${DATA_SOURCE} data..."
 
 # Determine which data file to use
 if [ "$DATA_SOURCE" = "full" ]; then
-    # Find the most recent data file in the processed directory
-    PROCESSED_DIR="${SCRIPT_DIR}/data/processed"
+    # Find the most recent data file in the production directory
+    PROCESSED_DIR="${SCRIPT_DIR}/data/production"
     
-    # Check if processed directory exists
+    # Check if production directory exists
     if [ ! -d "$PROCESSED_DIR" ]; then
         print_error "Processed data directory not found at ${PROCESSED_DIR}"
         exit 1

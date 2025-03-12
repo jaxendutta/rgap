@@ -21,8 +21,8 @@ interface EntityListProps<T> {
     // Content props
     title: string;
     items: T[];
-    renderItem: (item: T) => React.ReactNode;
-    keyExtractor: (item: T) => string;
+    renderItem: (item: T, index: number) => React.ReactNode;
+    keyExtractor: (item: T, index: number) => string;
     emptyMessage?: string;
 
     // Sorting props
@@ -195,9 +195,9 @@ function EntityList<T>({
 
             {/* Items list */}
             <div className="space-y-4 mt-4">
-                {items.map((item) => (
-                    <React.Fragment key={keyExtractor(item)}>
-                        {renderItem(item)}
+                {items.map((item, index) => (
+                    <React.Fragment key={keyExtractor(item, index)}>
+                        {renderItem(item, index)}
                     </React.Fragment>
                 ))}
             </div>

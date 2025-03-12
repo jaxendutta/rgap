@@ -29,12 +29,8 @@ class RGAPEnvironmentSetup:
         print(f"{" "*4}==> Creating directory structure...", end=' ', flush=True)
         
         directories = [
-            "data/raw",
-            "data/processed",
+            "data/production",
             "data/sample",
-            "notebooks/exploratory",
-            "notebooks/reports",
-            "tests",
             "client",
             "server",
             "sql",

@@ -80,7 +80,7 @@ class Fetcher:
         self.config = config or FetcherConfig()
         self._setup_directories()
         self.timestamp = time.strftime("%Y%m%d_%H%M%S")
-        self.metadata_file = self.processed_dir / "dataset_metadata.json"
+        self.metadata_file = self.production_dir / "dataset_metadata.json"
         self._setup_signal_handlers()
         self.interrupted = False
         
@@ -105,10 +105,10 @@ class Fetcher:
         """Set up necessary directories for data storage"""
         self.data_dir = self.config.ROOT / 'data'
         self.raw_dir = self.data_dir / "raw"
-        self.processed_dir = self.data_dir / "processed"
+        self.production_dir = self.data_dir / "production"
         self.sample_dir = self.data_dir / "sample"
                
-        for dir_path in [self.data_dir, self.raw_dir, self.processed_dir]:
+        for dir_path in [self.data_dir, self.raw_dir, self.production_dir]:
             dir_path.mkdir(parents=True, exist_ok=True)
             
     def _save_metadata(self, metadata: Dict) -> None:
@@ -167,13 +167,13 @@ class Fetcher:
     
     def _get_latest_dataset_file(self) -> Optional[Path]:
         """Find the most recent dataset file"""
-        pattern = str(self.processed_dir / "data_*.csv")
+        pattern = str(self.production_dir / "data_*.csv")
         files = glob.glob(pattern)
         
         if not files:
             # Also check for compressed files
-            pattern_gz = str(self.processed_dir / "data_*.csv.gz")
-            pattern_7z = str(self.processed_dir / "data_*.7z")
+            pattern_gz = str(self.production_dir / "data_*.csv.gz")
+            pattern_7z = str(self.production_dir / "data_*.7z")
             files = glob.glob(pattern_gz) + glob.glob(pattern_7z)
             if not files:
                 return None
@@ -641,7 +641,7 @@ class Fetcher:
                 print("  📢 DATASET STATUS: Processing fresh download of dataset (not modified since last fetch)")
             
             # Save the complete dataset with timestamp
-            master_file = self.processed_dir / f"data_{self.timestamp}.csv"
+            master_file = self.production_dir / f"data_{self.timestamp}.csv"
             print(f"  ==> Saving dataset to {master_file}...")
             df.to_csv(master_file, index=False)
             print(f"      ✓ Saved: {master_file}")
@@ -1126,7 +1126,7 @@ class Fetcher:
             year_range += f"_{year_end}"
             
         # Create the output file path
-        output_file = self.processed_dir / f"data_{self.timestamp}_{year_range}.csv"
+        output_file = self.production_dir / f"data_{self.timestamp}_{year_range}.csv"
         
         try:
             # Save the data
@@ -1227,7 +1227,7 @@ def main():
             output_folder = fetcher.sample_dir
             output_label = "sample"
         else:
-            output_folder = fetcher.processed_dir
+            output_folder = fetcher.production_dir
             output_label = "" if args.all else f"{args.year_start}-{args.year_end or args.year_start}"
             if args.agency:
                 output_label = f"{args.agency}-{output_label}"
