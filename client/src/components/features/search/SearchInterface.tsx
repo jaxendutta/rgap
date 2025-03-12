@@ -315,13 +315,12 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                             }
                             icon={Sparkles}
                             onClick={() => togglePanel("popular")}
-                            className={
+                            className={cn(
+                                "transition-all duration-800 ease-in-out",
                                 activePanelType === "popular"
-                                ? cn("bg-blue-100 hover:bg-blue-100 rounded-full",
-                                    "text-blue-600 border border-blue-300 transition-all duration-300"
-                                )
-                                : "shadow-sm"
-                            }
+                                    ? "bg-blue-100 hover:bg-blue-100 rounded-full text-blue-600 border border-blue-300"
+                                    : "shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:rounded-full"
+                            )}
                         >
                             <span>
                                 Popular
@@ -340,13 +339,12 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                         }
                         icon={SlidersHorizontal}
                         onClick={() => togglePanel("filters")}
-                        className={
+                        className={cn(
+                            "transition-all duration-800 ease-in-out",
                             activePanelType === "filters"
-                                ? cn("bg-blue-100 hover:bg-blue-100 rounded-full",
-                                    "text-blue-600 border border-blue-300 transition-all duration-300"
-                                )
-                                : "shadow-sm"
-                        }
+                                ? "bg-blue-100 hover:bg-blue-100 rounded-full text-blue-600 border border-blue-300"
+                                : "shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:rounded-full"
+                        )}
                     >
                         <span className="hidden lg:inline">Filters</span>
                     </Button>
