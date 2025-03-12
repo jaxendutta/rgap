@@ -93,7 +93,7 @@ print_time_taken() {
     if [ -n "$start_time" ]; then
         local end_time=$(date +%s)
         local duration=$((end_time - start_time))
-        print "${BLUE}Script completed in $(format_duration $duration)${NC}"
+        print "${BLUE}Script concluded in $(format_duration $duration)${NC}"
     fi
 }
 export -f print_time_taken

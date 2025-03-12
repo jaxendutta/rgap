@@ -107,6 +107,7 @@ class Fetcher:
         self.raw_dir = self.data_dir / "raw"
         self.production_dir = self.data_dir / "production"
         self.sample_dir = self.data_dir / "sample"
+        self.filtered_dir = self.data_dir / "filtered"
                
         for dir_path in [self.data_dir, self.raw_dir, self.production_dir]:
             dir_path.mkdir(parents=True, exist_ok=True)
@@ -1126,7 +1127,7 @@ class Fetcher:
             year_range += f"_{year_end}"
             
         # Create the output file path
-        output_file = self.production_dir / f"data_{self.timestamp}_{year_range}.csv"
+        output_file = self.filtered_dir / f"data_{self.timestamp}_{year_range}.csv"
         
         try:
             # Save the data
@@ -1226,9 +1227,12 @@ def main():
         if args.sample:
             output_folder = fetcher.sample_dir
             output_label = "sample"
-        else:
+        elif args.all:
             output_folder = fetcher.production_dir
-            output_label = "" if args.all else f"{args.year_start}-{args.year_end or args.year_start}"
+            output_label = ""
+        else:
+            output_folder = fetcher.filtered_dir
+            output_label = f"{args.year_start}-{args.year_end or args.year_start}"
             if args.agency:
                 output_label = f"{args.agency}-{output_label}"
         

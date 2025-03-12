@@ -31,6 +31,7 @@ yarn-error.log*
 
 # Data
 data/production/*
+data/filtered/*
 data/sample/*
 !data/sample/data_sample.7z
 
