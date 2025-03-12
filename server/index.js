@@ -1,3 +1,4 @@
+// server/index.js
 const express = require("express");
 const cors = require("cors");
 const { config } = require("../config/ports");
@@ -32,7 +33,8 @@ app.get("/health", (req, res) => {
 app.use("/auth", require("./routes/authRoutes"));
 app.use("/search", require("./routes/searchRoutes"));
 app.use("/grants", require("./routes/grantRoutes"));
-app.use("/recipients", require("./routes/recepientRoutes"));
+app.use("/recipients", require("./routes/recipientRoutes"));
+app.use("/institutes", require("./routes/instituteRoutes"));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

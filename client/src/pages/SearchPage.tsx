@@ -1,329 +1,123 @@
 // src/pages/SearchPage.tsx
-import { useState, useCallback, useEffect } from "react";
-import {
-    Search as SearchIcon,
-    BookmarkPlus,
-    BookmarkCheck,
-    Calendar,
-    DollarSign,
-    LineChart as ChartIcon,
-    SlidersHorizontal,
-    University,
-    UserRoundSearch,
-    X,
-    FileSearch2,
-} from "lucide-react";
-import { useGrantSearch } from "@/hooks/api/useGrants";
-import { FilterPanel } from "@/components/features/grants/FilterPanel";
-import { FilterTags } from "@/components/common/ui/FilterTags";
-import { SearchResults } from "@/components/features/grants/SearchResults";
-import { Card } from "@/components/common/ui/Card";
-import { Button } from "@/components/common/ui/Button";
-import { SortButton } from "@/components/common/ui/SortButton";
+import { useState } from "react";
+import { FileSearch2, University, UserSearch } from "lucide-react";
+import { useInfiniteGrantSearch } from "@/hooks/api/useGrants";
+import GrantsList from "@/components/features/grants/GrantsList";
+import type { GrantSortConfig as SortConfig } from "@/types/search";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import type { SortConfig, GrantSearchParams } from "@/types/search";
+import type { GrantSearchParams } from "@/types/search";
+import SearchInterface from "@/components/features/search/SearchInterface";
+import PageHeader from "@/components/common/layout/PageHeader";
+import PageContainer from "@/components/common/layout/PageContainer";
 
 export const SearchPage = () => {
-    // Split the search parameters into two states
+    // Current search terms (what's shown in the input fields)
     const [searchTerms, setSearchTerms] = useState({
         recipient: "",
         institute: "",
         grant: "",
     });
 
-    // Keep track of the last searched terms to know when to keep showing results
-    const [lastSearchedTerms, setLastSearchedTerms] = useState({
-        recipient: "",
-        institute: "",
-        grant: "",
-    });
-
-    const [showVisualization, setShowVisualization] = useState(false);
-    const [showFilters, setShowFilters] = useState(false);
+    // UI state controls
     const [isBookmarked, setIsBookmarked] = useState(false);
-    const [sortConfig, setSortConfig] = useState<SortConfig>({
+    const [sortConfig] = useState<SortConfig>({
         field: "date",
         direction: "desc",
     });
     const [filters, setFilters] = useState(DEFAULT_FILTER_STATE);
     const [isInitialState, setIsInitialState] = useState(true);
 
-    // Create the full search params for the API
-    const searchParams: GrantSearchParams = {
-        searchTerms: lastSearchedTerms,
+    // Create search params
+    const searchParams: Omit<GrantSearchParams, "pagination"> = {
+        searchTerms,
         filters,
         sortConfig,
     };
 
-    const { data, isLoading, error, refetch } = useGrantSearch({
-        ...searchParams,
-        sortConfig: {
-            ...searchParams.sortConfig,
-            field:
-                searchParams.sortConfig.field === "results"
-                    ? (() => {
-                          throw new Error("Invalid sort field: results");
-                      })()
-                    : searchParams.sortConfig.field,
-        },
-    });
+    // Initialize infinite query
+    const infiniteQueryResult = useInfiniteGrantSearch(searchParams);
 
-    const handleSearch = useCallback(() => {
-        const hasSearchTerms = Object.values(searchTerms).some(
-            (term) => term.trim() !== ""
+    const handleSearch = (params: {
+        searchTerms: Record<string, string>;
+        filters: typeof DEFAULT_FILTER_STATE;
+    }) => {
+        setSearchTerms(
+            params.searchTerms as {
+                recipient: string;
+                institute: string;
+                grant: string;
+            }
         );
-        const hasActiveFilters =
-            filters.agencies.length > 0 ||
-            filters.countries.length > 0 ||
-            filters.provinces.length > 0 ||
-            filters.cities.length > 0 ||
-            filters.yearRange.start !== DEFAULT_FILTER_STATE.yearRange.start ||
-            filters.yearRange.end !== DEFAULT_FILTER_STATE.yearRange.end ||
-            filters.valueRange.min !== DEFAULT_FILTER_STATE.valueRange.min ||
-            filters.valueRange.max !== DEFAULT_FILTER_STATE.valueRange.max;
+        setFilters(params.filters);
+        setIsInitialState(false);
 
-        console.log("Search triggered:", {
-            hasSearchTerms,
-            hasActiveFilters,
-            filters,
-        });
-
-        if (hasSearchTerms || hasActiveFilters) {
-            setIsInitialState(false);
-            setLastSearchedTerms(searchTerms);
-            refetch();
-        } else {
-            setIsInitialState(true);
-        }
-    }, [searchTerms, filters, refetch]);
-
-    // Add effect to trigger search when filters change
-    useEffect(() => {
-        if (!isInitialState) {
-            console.log("Filter changed, triggering search");
-            handleSearch();
-        }
-    }, [filters, handleSearch, isInitialState]);
-
-    const handleInputChange = (
-        field: keyof typeof searchTerms,
-        value: string
-    ) => {
-        setSearchTerms((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
+        // Refetch with updated parameters
+        setTimeout(() => {
+            infiniteQueryResult.refetch();
+        }, 0);
     };
 
-    const handleSort = (field: SortConfig["field"]) => {
-        setSortConfig((prev) => {
-            const newConfig: SortConfig = {
-                field,
-                direction:
-                    prev.field === field && prev.direction === "desc"
-                        ? "asc"
-                        : "desc",
-            };
-            return newConfig;
-        });
-        if (!isInitialState) {
-            refetch();
-        }
+    const handleBookmark = () => {
+        setIsBookmarked(!isBookmarked);
+        // Implement the actual bookmark functionality here
     };
 
-    const handleFilterChange = useCallback(
-        (newFilters: typeof DEFAULT_FILTER_STATE) => {
-            console.log("Filter change:", newFilters);
-            setFilters(newFilters);
-            setIsInitialState(false);
-        },
-        []
-    );
-
-    const handleBookmark = useCallback((grantId: string) => {
+    const handleBookmarkGrant = (grantId: string) => {
         console.log("Bookmarking grant:", grantId);
-    }, []);
+        // Implement grant bookmarking here
+    };
 
     return (
-        <div className="max-w-7xl mx-auto p-2 lg:p-6 space-y-6">
-            {/* Search Header */}
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">Advanced Search</h1>
-                <Button
-                    variant="outline"
-                    icon={SlidersHorizontal}
-                    onClick={() => setShowFilters(!showFilters)}
-                >
-                    {showFilters ? "Hide Filters" : "Show Filters"}
-                </Button>
-            </div>
+        <PageContainer>
+            {/* Header */}
+            <PageHeader title="Advanced Grant Search" />
 
-            {/* Search Fields */}
-            <div className="grid gap-4">
-                {[
+            {/* Search Interface */}
+            <SearchInterface
+                fields={[
                     {
-                        field: "recipient",
-                        icon: UserRoundSearch,
+                        key: "recipient",
+                        icon: UserSearch,
                         placeholder: "Search by recipient...",
                     },
                     {
-                        field: "institute",
+                        key: "institute",
                         icon: University,
                         placeholder: "Search by institute...",
                     },
                     {
-                        field: "grant",
+                        key: "grant",
                         icon: FileSearch2,
                         placeholder: "Search by grant...",
                     },
-                ].map(({ field, icon: Icon, placeholder }) => (
-                    <div key={field} className="relative">
-                        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                        <input
-                            type="search"
-                            placeholder={placeholder}
-                            value={
-                                searchTerms[field as keyof typeof searchTerms]
-                            }
-                            onChange={(e) =>
-                                handleInputChange(
-                                    field as keyof typeof searchTerms,
-                                    e.target.value
-                                )
-                            }
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    handleSearch();
-                                }
-                            }}
-                            className="w-full pl-10 pr-2.5 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-300"
-                        />
-                    </div>
-                ))}
-            </div>
-
-            {/* Filters Panel */}
-            {showFilters && (
-                <div className="transition-all duration-300 ease-in-out">
-                    <Card className="p-4">
-                        <FilterPanel
-                            filters={filters}
-                            onChange={(newFilters) => {
-                                console.log("Filter panel change:", newFilters);
-                                handleFilterChange(newFilters);
-                            }}
-                        />
-                    </Card>
-                </div>
-            )}
-
-            {/* Filter Tags */}
-            <FilterTags
+                ]}
+                initialValues={searchTerms}
                 filters={filters}
-                onRemove={(type, value) => {
-                    const newFilters = { ...filters };
-                    if (
-                        Array.isArray(newFilters[type as keyof typeof filters])
-                    ) {
-                        (newFilters[type as keyof typeof filters] as string[]) =
-                            (
-                                newFilters[
-                                    type as keyof typeof filters
-                                ] as string[]
-                            ).filter((v) => v !== value);
-                    } else if (type === "yearRange") {
-                        newFilters.yearRange = DEFAULT_FILTER_STATE.yearRange;
-                    } else if (type === "valueRange") {
-                        newFilters.valueRange = DEFAULT_FILTER_STATE.valueRange;
-                    }
-                    setFilters(newFilters);
-                    if (!isInitialState) {
-                        handleSearch();
-                    }
-                }}
-                onClearAll={() => {
-                    setFilters(DEFAULT_FILTER_STATE);
-                    if (!isInitialState) {
-                        handleSearch();
-                    }
-                }}
-            />
-
-            {/* Search Actions */}
-            <div className="flex items-center justify-between">
-                <Button
-                    variant="outline"
-                    icon={isBookmarked ? BookmarkCheck : BookmarkPlus}
-                    onClick={() => setIsBookmarked(!isBookmarked)}
-                >
-                    Bookmark Search
-                </Button>
-
-                <Button
-                    variant="primary"
-                    icon={SearchIcon}
-                    onClick={handleSearch}
-                >
-                    Search
-                </Button>
-            </div>
-
-            {/* Results Header with Sort Controls */}
-            <div className="flex items-center justify-between border-b pb-2">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-0 lg:space-y-1">
-                    <h2 className="flex text-lg font-medium">
-                        <span className="hidden lg:flex mr-1">Search</span>
-                        <span>Results</span>
-                    </h2>
-                    {!isInitialState &&
-                        !isLoading &&
-                        data &&
-                        data.length > 0 && (
-                            <span className="flex text-sm text-gray-500 lg:ml-2">
-                                <span className="hidden lg:flex">(</span>
-                                <span>{data.length} results</span>
-                                <span className="hidden lg:flex">)</span>
-                            </span>
-                        )}
-                </div>
-                <div className="flex items-center space-x-2">
-                    <SortButton
-                        label="Date"
-                        icon={Calendar}
-                        field="date"
-                        currentField={sortConfig.field}
-                        direction={sortConfig.direction}
-                        onClick={() => handleSort("date")}
-                    />
-                    <SortButton
-                        label="Value"
-                        icon={DollarSign}
-                        field="value"
-                        currentField={sortConfig.field}
-                        direction={sortConfig.direction}
-                        onClick={() => handleSort("value")}
-                    />
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        icon={showVisualization ? X : ChartIcon}
-                        onClick={() => setShowVisualization(!showVisualization)}
-                        disabled={!data || data.length === 0}
-                    >
-                        {showVisualization ? "Hide Trends" : "Show Trends"}
-                    </Button>
-                </div>
-            </div>
-
-            {/* Results */}
-            <SearchResults
-                data={data}
-                isLoading={isLoading}
-                error={error}
+                onSearch={handleSearch}
                 onBookmark={handleBookmark}
-                showVisualization={showVisualization}
-                isEmptyState={isInitialState}
+                isBookmarked={isBookmarked}
+                isInitialState={isInitialState}
+                showPopularSearches={true}
             />
-        </div>
+
+            {/* Search Results */}
+            <div className="mt-4">
+                <GrantsList
+                    infiniteQuery={infiniteQueryResult}
+                    title="Grants"
+                    initialSortConfig={sortConfig}
+                    onBookmark={handleBookmarkGrant}
+                    emptyMessage={
+                        isInitialState
+                            ? "Enter search terms above to begin exploring grants."
+                            : "No grants match your search criteria."
+                    }
+                    showVisualization={true}
+                    visualizationInitiallyVisible={false}
+                />
+            </div>
+        </PageContainer>
     );
 };
+
+export default SearchPage;

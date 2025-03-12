@@ -32,9 +32,8 @@ yarn-error.log*
 # Data
 data/raw/*
 data/processed/*
-!data/raw/.gitkeep
-!data/processed/.gitkeep
-data/**/*.csv
+data/sample/*
+!data/sample/data_2019.7z
 
 # Logs
 *.log

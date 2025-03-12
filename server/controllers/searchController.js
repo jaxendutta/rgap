@@ -3,8 +3,10 @@ const pool = require("../config/db");
 
 const getFilterOptions = async (req, res) => {
     try {
+        // Use the stored procedure for filter options
         const [results] = await pool.query("CALL sp_get_filter_options()");
 
+        // The stored procedure returns multiple result sets
         const filterOptions = {
             agencies: results[0].map((row) => row.abbreviation),
             countries: results[1].map((row) => row.country),
@@ -21,23 +23,38 @@ const getFilterOptions = async (req, res) => {
 
 const searchGrants = async (req, res) => {
     try {
-        const { searchTerms = {}, filters = {}, sortConfig = {} } = req.body;
-        console.log("Received request:", { searchTerms, filters, sortConfig });
+        const {
+            searchTerms = {},
+            filters = {},
+            sortConfig = {},
+            pagination = { page: 1, pageSize: 20 },
+        } = req.body;
 
-        // Convert array filters to JSON strings
+        console.log("Received request:", {
+            searchTerms,
+            filters,
+            sortConfig,
+            pagination,
+        });
+
+        // Default pagination values if not provided
+        const page = pagination.page || 1;
+        const pageSize = pagination.pageSize || 20;
+
+        // Convert filter arrays to JSON strings for the stored procedure
         const agenciesJson = JSON.stringify(filters.agencies || []);
         const countriesJson = JSON.stringify(filters.countries || []);
         const provincesJson = JSON.stringify(filters.provinces || []);
         const citiesJson = JSON.stringify(filters.cities || []);
 
-        // Execute the stored procedure with ALL 13 parameters
+        // Call the consolidated grant search procedure with pagination
         const [results] = await pool.query(
-            "CALL sp_grant_search(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "CALL sp_consolidated_grant_search(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 searchTerms.recipient || null,
                 searchTerms.institute || null,
                 searchTerms.grant || null,
-                filters.yearRange?.start || 1990,
+                filters.yearRange?.start || 1900,
                 filters.yearRange?.end || 2025,
                 filters.valueRange?.min || 0,
                 filters.valueRange?.max || 200000000,
@@ -45,30 +62,87 @@ const searchGrants = async (req, res) => {
                 countriesJson,
                 provincesJson,
                 citiesJson,
-                sortConfig.field === "value" ? "value" : "date",
+                sortConfig.field || "date",
                 sortConfig.direction || "desc",
+                pageSize,
+                page,
             ]
         );
 
-        console.log(`Query returned ${results[0].length} results`);
+        // The first result set is the total count
+        const totalCount = results[0][0]?.total_count || 0;
 
-        // Format and return the results
+        // The second result set contains the actual data
+        const grantsData = results[1] || [];
+
+        // Process the results to convert amendment_history from JSON string to actual array
+        const processedResults = grantsData.map((row) => ({
+            ...row,
+            agreement_value: parseFloat(row.latest_value) || 0,
+            amendment_number: row.latest_amendment_number,
+            amendment_date: row.latest_amendment_date,
+            amendments_history:
+                typeof row.amendments_history === "string"
+                    ? JSON.parse(row.amendments_history)
+                    : row.amendments_history || [],
+        }));
+
+        console.log(
+            `Query returned ${
+                processedResults.length
+            } grants (page ${page} of ${Math.ceil(totalCount / pageSize)})`
+        );
+
         res.json({
             message: "Success",
-            data: results[0].map((row) => ({
-                ...row,
-                agreement_value: parseFloat(row.agreement_value) || 0,
-            })),
+            data: processedResults,
             metadata: {
-                count: results[0].length,
+                count: processedResults.length,
+                totalCount: totalCount,
+                page: page,
+                pageSize: pageSize,
+                totalPages: Math.ceil(totalCount / pageSize),
                 filters: filters,
                 searchTerms: searchTerms,
             },
         });
     } catch (error) {
         console.error("Search error:", error);
+
+        // Enhanced error handling for specific database errors
+        if (error.code === "ER_TABLE_EXISTS_ERROR") {
+            console.error(
+                "Handling temporary table error, attempting to clean up..."
+            );
+
+            try {
+                // Try to clean up the temporary table
+                await pool.query(
+                    "DROP TEMPORARY TABLE IF EXISTS temp_latest_amendments"
+                );
+                console.log("Successfully cleaned up temporary table");
+
+                // Notify client to retry
+                return res.status(409).json({
+                    error: "Concurrent search issue. Please try again.",
+                    retryable: true,
+                    query: req.body,
+                });
+            } catch (cleanupError) {
+                console.error(
+                    "Failed to clean up temporary table:",
+                    cleanupError
+                );
+            }
+        }
+
+        // Return a more user-friendly error message
         res.status(500).json({
-            error: error.message,
+            error: "An error occurred while searching. Please try again.",
+            details:
+                process.env.NODE_ENV === "development"
+                    ? error.message
+                    : undefined,
             query: req.body,
         });
     }

@@ -7,9 +7,15 @@ source "setup_utils.sh"
 start_timer
 
 # Get the directory where the script is located
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_PATH="$SCRIPT_DIR/venv"
-LOG_FILE="$SCRIPT_DIR/setup.log"
+LOG_DIR="$SCRIPT_DIR/log"
+LOG_FILE="$LOG_DIR/setup_env.log"
+
+# Create log directory if it doesn't exist
+if [ ! -d "$LOG_DIR" ]; then
+    mkdir -p "$LOG_DIR"
+fi
 
 # Function to handle cleanup on error
 cleanup_on_error() {
@@ -19,7 +25,7 @@ cleanup_on_error() {
     else
         print "${RED}\nError occurred. Cleaning up...${NC}"
     fi
-    
+
     # Deactivate venv if it's active
     if [[ "$VIRTUAL_ENV" == *"$VENV_PATH"* ]]; then
         printf "${BLUE}  Deactivating virtual environment... ${NC}"
@@ -39,7 +45,7 @@ cleanup_on_error() {
     fi
 
     if [ "$undo" = true ]; then
-        # Remove setup.log if it exists
+        # Remove log file if it exists
         if [ -f $LOG_FILE ]; then
             printf "${BLUE}  Removing setup log... ${NC}"
             rm $LOG_FILE
@@ -61,6 +67,9 @@ if [ "$1" = "-undo" ]; then
     return 0
 fi
 
+# Print header
+print_header "RGAP Development Environment Setup"
+
 # Function to check if virtualenv exists and is valid
 check_venv() {
     if [ -d "$VENV_PATH" ] && [ -f "$VENV_PATH/bin/activate" ]; then
@@ -71,122 +80,161 @@ check_venv() {
     return 1
 }
 
-# Function to strip ANSI color codes
-log_with_no_color() {
-    sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g"
+# Function to check for package updates
+check_package_updates() {
+    print_section "3" "Package Updates Check"
+
+    print_status "Checking for outdated packages..."
+    local outdated=$(pip list --outdated --format=json)
+    local outdated_count=$(echo $outdated | jq '. | length')
+
+    if [ "$outdated_count" -eq "0" ]; then
+        print_success "All packages are up to date"
+        return 0
+    fi
+
+    print_warning "Found $outdated_count outdated packages:"
+    local total_packages=$outdated_count
+    local current=0
+
+    echo $outdated | jq -c '.[]' | while read -r package; do
+        ((current++))
+        local name=$(echo $package | jq -r '.name')
+        local current_version=$(echo $package | jq -r '.version')
+        local latest_version=$(echo $package | jq -r '.latest_version')
+
+        setup_progress "$current" "$total_packages" "Upgrading $name $current_version -> $latest_version"
+        pip install --upgrade "$name" >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            clear_progress_line
+            print_success "Upgraded $name: $current_version -> $latest_version"
+        else
+            clear_progress_line
+            print_error "Failed to upgrade $name"
+        fi
+    done
 }
 
 # Function to upgrade pip if needed
 upgrade_pip() {
-    print "${BLUE}=> Checking for pip upgrades...${NC}"
+    print_section "2" "Python Environment"
+
+    print_status "Checking pip version..."
     current_version=$(pip --version | awk '{print $2}')
     pip install --upgrade pip --quiet
     new_version=$(pip --version | awk '{print $2}')
     if [ "$current_version" != "$new_version" ]; then
-        print "   ${GREEN}Successfully upgraded pip $current_version -> $new_version${NC}"
+        print_success "Upgraded pip $current_version -> $new_version"
     else
-        print "   ${GREEN}pip is up to date ($current_version)${NC}"
+        print_success "pip is up to date ($current_version)"
     fi
 }
 
 # Function to set up Node.js
 setup_node() {
-    print "${BLUE}=> Setting up Node.js toolchain...${NC}"
-    
+    print_section "4" "Node.js Environment"
+
+    print_status "Checking nvm installation..."
+
     # Check if nvm is installed
     if [ -d "$HOME/.nvm" ]; then
-        print "   ${GREEN}Found existing nvm installation${NC}"
-        
+        print_success "Found existing nvm installation"
+
         # Upgrade nvm itself
-        print "   ${BLUE}=> Checking for nvm updates...${NC}"
+        print_status "Checking for nvm updates..."
         current_version=$(nvm --version 2>/dev/null || echo "Unknown!")
-        
+
         # Only try to upgrade if we got a valid version
         if [ "$current_version" != "unknown" ]; then
             # Use curl to get the latest version number
             latest_version=$(curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
-            
+
             if [ "$current_version" != "$latest_version" ]; then
-                print "      ${BLUE}Upgrading nvm $current_version -> $latest_version${NC}"
+                print_status "Upgrading nvm $current_version -> $latest_version"
                 curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/$latest_version/install.sh" | bash
             else
-                print "      ${GREEN}nvm is up to date ($current_version)${NC}"
+                print_success "nvm is up to date ($current_version)"
             fi
         else
-            print "      ${RED}Unexpected outcome. Current nvm version: $current_version${NC}"
+            print_error "Unexpected outcome. Current nvm version: $current_version"
             return 1
         fi
     else
-        print "${BLUE}=> Installing nvm...${NC}"
-        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+        print_status "Installing nvm..."
+        curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh" | bash
     fi
-    
+
     # Load nvm
     export NVM_DIR="$HOME/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-    
+
     # Check Node.js and upgrade if needed
-    if command -v node > /dev/null; then
+    if command -v node >/dev/null; then
         current_version=$(node -v)
-        print "   ${BLUE}=> Checking for Node.js updates...${NC}"
-        
+        print_status "Checking for Node.js updates..."
+
         # Get the latest LTS version without the 'v' prefix
         latest_version=$(nvm version-remote --lts | sed 's/v//')
         current_version=$(echo $current_version | sed 's/v//')
-        
+
         # Version comparison
         if [ "$current_version" != "$latest_version" ]; then
-            print "      ${BLUE}Upgrading Node.js v$current_version -> v$latest_version${NC}"
+            print_status "Upgrading Node.js v$current_version -> v$latest_version"
             nvm install --lts --reinstall-packages-from=current --latest-npm
             nvm use --lts
             nvm alias default "lts/*"
         else
-            print "      ${GREEN}Node.js is up to date (v$current_version)${NC}"
+            print_success "Node.js is up to date (v$current_version)"
         fi
     else
-        print "   => ${BLUE}Installing Node.js LTS...${NC}"
+        print_status "Installing Node.js LTS..."
         nvm install --lts --latest-npm
         nvm use --lts
         nvm alias default "lts/*"
     fi
-    
+
     # Check npm and upgrade if needed
-    if command -v npm > /dev/null; then
+    if command -v npm >/dev/null; then
         current_version=$(npm -v)
-        print "   ${BLUE}=> Checking for npm updates...${NC}"
+        print_status "Checking for npm updates..."
         latest_version=$(npm view npm version 2>/dev/null)
-        
+
         if [ "$current_version" != "$latest_version" ]; then
-            print "      ${BLUE}Upgrading npm $current_version -> $latest_version${NC}"
+            print_status "Upgrading npm $current_version -> $latest_version"
             npm install -g npm@latest
         else
-            print "      ${GREEN}npm is up to date ($current_version)${NC}"
+            print_success "npm is up to date ($current_version)"
         fi
     else
-        print "      ${RED}npm not found after Node.js installation${NC}"
+        print_error "npm not found after Node.js installation"
         return 1
     fi
-    
-    print "${GREEN}   Node.js toolchain setup complete!${NC}"
+
+    print_success "Node.js toolchain setup complete"
+    return 0
 }
+
+# Environment check
+print_section "1" "Environment Check"
 
 # Setup portion with both terminal output and logging
 {
-    print "${BLUE}\n=> Checking RGAP development environment...${NC}"
+    print_status "Checking RGAP development environment..."
 
     # Create virtual environment if it doesn't exist
     if ! check_venv; then
-        print "${BLUE}   => Creating new virtual environment...${NC}"
-        python -m venv "$VENV_PATH"
-        
+        print_status "Creating new virtual environment..."
+        # Run the Python setup script
+        python setup_env.py --path "$SCRIPT_DIR"
+
         if [ $? -ne 0 ]; then
             cleanup_on_error
             return 1
         fi
     fi
 
-    print "${GREEN}   Environment check completed successfully!${NC}"
-} 2>&1 | tee >(log_with_no_color >> $LOG_FILE)
+    print_success "Environment check completed successfully"
+} 2>&1 | tee >(log_with_no_color >>$LOG_FILE)
 
 # Export MySQL related paths
 export MYSQL_DIR="$SCRIPT_DIR/mysql"
@@ -202,7 +250,7 @@ if ! check_venv; then
     return 1
 fi
 
-print "${BLUE}=> Activating RGAP Virtual Environment...${NC}"
+print_status "Activating RGAP Virtual Environment..."
 source "$VENV_PATH/bin/activate"
 
 # Add environment info to PS1 if not already there
@@ -211,10 +259,15 @@ if [[ $PS1 != *"RGAP"* ]]; then
     export PS1="(RGAP) $PS1"
 fi
 
-print "${GREEN}   Activated. You're now in the RGAP Virtual Environment!${NC}"
+print_success "Virtual environment activated"
 
 # Upgrade pip
 upgrade_pip
+
+# Check for package updates if environment already existed
+if [ -f "$VENV_PATH/.initialized" ]; then
+    check_package_updates
+fi
 
 # Set up Node.js tools
 setup_node
@@ -225,23 +278,28 @@ if [ $node_exit_code -ne 0 ]; then
 fi
 
 # Install RGAP package in development mode
+print_section "5" "Project Setup"
 {
-    print "${BLUE}=> Installing RGAP package in development mode...${NC}"
+    print_status "Installing RGAP package in development mode..."
     pip install -e . --quiet 2>&1
     pip_exit_code=$?
-    
+
     if [ $pip_exit_code -ne 0 ]; then
-        print "${RED}Error occurred while installing RGAP package.${NC}"
+        print_error "Error occurred while installing RGAP package."
     fi
-    
+
     if [ $pip_exit_code -ne 0 ]; then
         cleanup_on_error
         return 1
     fi
-    print "${GREEN}   RGAP project package installed successfully!${NC}"
-} 2>&1 | tee >(log_with_no_color >> $LOG_FILE)
+    print_success "RGAP project package installed successfully"
 
-print "${BLUE}\nTo set-up the RGAP Virtual Environment in any terminal, run this script again:${NC}"
+    # Mark environment as initialized
+    touch "$VENV_PATH/.initialized"
+} 2>&1 | tee >(log_with_no_color >>$LOG_FILE)
+
+print_header "Ready to Use"
+print "${BLUE}To set-up the RGAP Virtual Environment in any terminal, run this script again:${NC}"
 print "  source $(basename "${BASH_SOURCE[0]}")\n"
 
 print "${GREEN}Environment setup complete!${NC}"

@@ -17,9 +17,8 @@ DEALLOCATE PREPARE stmt;
 
 /* Create temporary table for data import */
 CREATE TABLE temp_grants (
-    ref_number VARCHAR(50),
     _id VARCHAR(50),
-    _full_text TEXT,
+    ref_number VARCHAR(50),
     amendment_number VARCHAR(10),
     amendment_date VARCHAR(50),
     agreement_type VARCHAR(50),

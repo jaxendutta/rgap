@@ -1,6 +1,7 @@
 -- File: sql/schema/programs.sql
 USE rgap;
 
+DROP TABLE IF EXISTS Program;
 CREATE TABLE Program (
     prog_id VARCHAR(50) PRIMARY KEY,
     name_en VARCHAR(255),

@@ -11,13 +11,6 @@ export const FILTER_LIMITS = {
     },
 };
 
-export const FILTER_OPTIONS = {
-    AGENCIES: ['NSERC', 'SSHRC', 'CIHR'],
-    COUNTRIES: ['Canada', 'United States', 'United Kingdom', 'France'],
-    PROVINCES: ['Ontario', 'Quebec', 'British Columbia', 'Alberta'],
-    CITIES: ['Toronto', 'Montreal', 'Vancouver', 'Ottawa'],
-};
-
 export const DEFAULT_FILTER_STATE = {
     yearRange: { start: FILTER_LIMITS.YEAR.MIN, end: FILTER_LIMITS.YEAR.MAX },
     valueRange: { min: FILTER_LIMITS.GRANT_VALUE.MIN, max: FILTER_LIMITS.GRANT_VALUE.MAX },
