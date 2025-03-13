@@ -1,11 +1,11 @@
 // src/components/features/filter/FilterPanel.tsx
 import { DEFAULT_FILTER_STATE, FILTER_LIMITS } from "@/constants/filters";
 import { MultiSelect } from "@/components/common/ui/MultiSelect";
-import { RangeFilter } from "@/components/common/ui/RangeFilter";
+import type { RangeValue } from "@/components/common/ui/ValueRangeFilter";
+import { ValueRangeFilter } from "@/components/common/ui/ValueRangeFilter";
 import { DateRangeFilter } from "@/components/common/ui/DateRangeFilter";
 import { useFilterOptions } from "@/hooks/api/useFilterOptions";
 import { LoadingSpinner } from "@/components/common/ui/LoadingSpinner";
-import type { RangeValue } from "@/components/common/ui/RangeFilter";
 import { Earth, Landmark, LocateFixed, Radar } from "lucide-react";
 
 interface FilterPanelProps {
@@ -83,7 +83,7 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
                         </div>
                         
                         <div className="col-span-1 sm:col-span-1 md:col-span-1 lg:col-span-1">
-                            <RangeFilter
+                            <ValueRangeFilter
                                 label="Value"
                                 type="currency"
                                 value={filters.valueRange || FILTER_LIMITS.GRANT_VALUE}

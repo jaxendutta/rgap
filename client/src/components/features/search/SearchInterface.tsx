@@ -140,21 +140,22 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
         (newFilters: typeof DEFAULT_FILTER_STATE) => {
             setFilters(newFilters);
 
-            // Only trigger filter-based search if not in initial state
-            if (!isInitialState) {
-                // Use a slight delay to ensure state is updated
-                setTimeout(() => {
-                    onSearch({
-                        searchTerms,
-                        filters: newFilters,
-                    });
+            // Always trigger search immediately on filter changes
+            // removing the isInitialState condition
+            setTimeout(() => {
+                onSearch({
+                    searchTerms,
+                    filters: newFilters,
+                });
 
-                    // Update last searched values
-                    setLastSearchedFilters(newFilters);
-                }, 0);
-            }
+                // Update last searched values
+                setLastSearchedFilters(newFilters);
+                setSearchTermsChanged(false);
+                setFiltersChanged(false);
+                setShowBanner(false);
+            }, 0);
         },
-        [onSearch, searchTerms, isInitialState]
+        [onSearch, searchTerms]
     );
 
     // Handle filter removal
@@ -174,41 +175,43 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
 
             setFilters(newFilters);
 
-            // Only trigger filter-based search if not in initial state
-            if (!isInitialState) {
-                // Use a slight delay to ensure state is updated
-                setTimeout(() => {
-                    onSearch({
-                        searchTerms,
-                        filters: newFilters,
-                    });
+            // Always trigger search immediately on filter changes
+            // removing the isInitialState condition
+            setTimeout(() => {
+                onSearch({
+                    searchTerms,
+                    filters: newFilters,
+                });
 
-                    // Update last searched values
-                    setLastSearchedFilters(newFilters);
-                }, 0);
-            }
+                // Update last searched values
+                setLastSearchedFilters(newFilters);
+                setSearchTermsChanged(false);
+                setFiltersChanged(false);
+                setShowBanner(false);
+            }, 0);
         },
-        [filters, onSearch, searchTerms, isInitialState]
+        [filters, onSearch, searchTerms]
     );
 
     // Handle clear all filters
     const handleClearFilters = useCallback(() => {
         setFilters(DEFAULT_FILTER_STATE);
 
-        // Only trigger filter-based search if not in initial state
-        if (!isInitialState) {
-            // Use a slight delay to ensure state is updated
-            setTimeout(() => {
-                onSearch({
-                    searchTerms,
-                    filters: DEFAULT_FILTER_STATE,
-                });
+        // Always trigger search immediately on filter changes
+        // removing the isInitialState condition
+        setTimeout(() => {
+            onSearch({
+                searchTerms,
+                filters: DEFAULT_FILTER_STATE,
+            });
 
-                // Update last searched values
-                setLastSearchedFilters(DEFAULT_FILTER_STATE);
-            }, 0);
-        }
-    }, [onSearch, searchTerms, isInitialState]);
+            // Update last searched values
+            setLastSearchedFilters(DEFAULT_FILTER_STATE);
+            setSearchTermsChanged(false);
+            setFiltersChanged(false);
+            setShowBanner(false);
+        }, 0);
+    }, [onSearch, searchTerms]);
 
     // Handle selecting a popular search term
     const handlePopularSearchSelect = (
