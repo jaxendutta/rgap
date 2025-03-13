@@ -72,9 +72,9 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
                 </div>
             ) : (
                 filterOptions && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {/* All 6 filters in one grid */}
-                        <div className="col-span-1 sm:col-span-1 md:col-span-1 lg:col-span-1">
+                        <div className="col-span-2 sm:col-span-1 md:col-span-1 lg:col-span-1">
                             <DateRangeFilter
                                 label={"Date Range"}
                                 value={filters.dateRange || FILTER_LIMITS.DATE_VALUE}
@@ -82,7 +82,7 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
                             />
                         </div>
                         
-                        <div className="col-span-1 sm:col-span-1 md:col-span-1 lg:col-span-1">
+                        <div className="col-span-2 sm:col-span-1 md:col-span-1 lg:col-span-1">
                             <ValueRangeFilter
                                 label="Value"
                                 type="currency"
