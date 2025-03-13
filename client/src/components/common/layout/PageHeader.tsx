@@ -22,7 +22,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({
             {breadcrumbs && <div className="mb-2">{breadcrumbs}</div>}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+                    <h1 className="text-xl lg:text-3xl font-semibold text-gray-900">
                         {title}
                     </h1>
                     {subtitle && (
