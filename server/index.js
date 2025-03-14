@@ -35,6 +35,7 @@ app.use("/search", require("./routes/searchRoutes"));
 app.use("/grants", require("./routes/grantRoutes"));
 app.use("/recipients", require("./routes/recipientRoutes"));
 app.use("/institutes", require("./routes/instituteRoutes"));
+app.use("/save", require("./routes/saveRoutes"));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
