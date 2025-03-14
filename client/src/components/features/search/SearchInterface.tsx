@@ -7,8 +7,9 @@ import {
     SlidersHorizontal,
     AlertCircle,
     Sparkles,
+    LucideIcon,
 } from "lucide-react";
-import { LucideIcon } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/ui/Button";
 import { Card } from "@/components/common/ui/Card";
 import { FilterPanel } from "@/components/features/filter/FilterPanel";
@@ -35,6 +36,7 @@ export interface SearchInterfaceProps {
     onSearch: (values: {
         searchTerms: Record<string, string>;
         filters: typeof DEFAULT_FILTER_STATE;
+        userId?: number;
     }) => void;
     onBookmark?: () => void;
     isBookmarked?: boolean;
@@ -54,6 +56,9 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
     isInitialState = true,
     className,
 }) => {
+    // Get the current user
+    const { user } = useAuth();
+
     // Current search terms
     const [searchTerms, setSearchTerms] = useState<Record<string, string>>(
         fields.reduce((acc, field) => {
@@ -251,10 +256,11 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
         // Close panels
         setActivePanelType("none");
 
-        // Call the search handler
+        // Call the search handler with the user ID
         onSearch({
             searchTerms,
             filters,
+            userId: user?.user_id, // Include this
         });
     };
 

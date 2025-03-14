@@ -2,6 +2,7 @@
 DELIMITER $
 DROP PROCEDURE IF EXISTS sp_grant_search$
 CREATE PROCEDURE sp_grant_search(
+    IN p_user_id INT UNSIGNED,
     IN p_recipient_term VARCHAR(255),
     IN p_institute_term VARCHAR(255),
     IN p_grant_term VARCHAR(255),
@@ -38,9 +39,9 @@ BEGIN
     -- Main conditions setup
     SET @main_conditions = CONCAT(
         "WHERE ", @date_condition,  
-        IF(p_recipient_term IS NOT NULL, CONCAT(" AND r.legal_name LIKE '%", p_recipient_term, "%'"), ""),
-        IF(p_institute_term IS NOT NULL, CONCAT(" AND i.name LIKE '%", p_institute_term, "%'"), ""),
-        IF(p_grant_term IS NOT NULL, CONCAT(" AND rg.agreement_title_en LIKE '%", p_grant_term, "%'"), ""),
+        IF(p_recipient_term IS NOT NULL AND p_recipient_term != '', CONCAT(" AND r.legal_name LIKE '%", p_recipient_term, "%'"), ""),
+        IF(p_institute_term IS NOT NULL AND p_institute_term != '', CONCAT(" AND i.name LIKE '%", p_institute_term, "%'"), ""),
+        IF(p_grant_term IS NOT NULL AND p_grant_term != '', CONCAT(" AND rg.agreement_title_en LIKE '%", p_grant_term, "%'"), ""),
         " AND rg.agreement_value BETWEEN ", p_value_min, " AND ", p_value_max
     );
     
@@ -53,9 +54,9 @@ BEGIN
     -- Subquery conditions setup
     SET @sub_conditions = CONCAT(
         "WHERE ", @sub_date_condition,  
-        IF(p_recipient_term IS NOT NULL, CONCAT(" AND tr.legal_name LIKE '%", p_recipient_term, "%'"), ""),
-        IF(p_institute_term IS NOT NULL, CONCAT(" AND ti.name LIKE '%", p_institute_term, "%'"), ""),
-        IF(p_grant_term IS NOT NULL, CONCAT(" AND t.agreement_title_en LIKE '%", p_grant_term, "%'"), ""),
+        IF(p_recipient_term IS NOT NULL AND p_recipient_term != '', CONCAT(" AND tr.legal_name LIKE '%", p_recipient_term, "%'"), ""),
+        IF(p_institute_term IS NOT NULL AND p_institute_term != '', CONCAT(" AND ti.name LIKE '%", p_institute_term, "%'"), ""),
+        IF(p_grant_term IS NOT NULL AND p_grant_term != '', CONCAT(" AND t.agreement_title_en LIKE '%", p_grant_term, "%'"), ""),
         " AND t.agreement_value BETWEEN ", p_value_min, " AND ", p_value_max
     );
     
@@ -153,6 +154,8 @@ BEGIN
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
     
+    SET v_total_count = @v_total_count;
+
     -- Define the sorting clause
     SET @order_clause = IF(
         p_sort_field = 'value',
@@ -221,11 +224,56 @@ BEGIN
         OFFSET ", v_offset);
     
     -- Return the total count first
-    SELECT IFNULL(@v_total_count, 0) AS total_count;
+    SELECT v_total_count AS total_count;
     
     -- Execute the main query
     PREPARE stmt FROM @main_query;
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
-END $$
+    
+    -- At the end, after returning results, log the search
+    -- Only if we're on the first page and there's at least one non-empty search term
+    IF p_page = 1 AND (
+        (p_recipient_term IS NOT NULL AND p_recipient_term != '') OR
+        (p_institute_term IS NOT NULL AND p_institute_term != '') OR
+        (p_grant_term IS NOT NULL AND p_grant_term != '') OR
+        -- Check if any filter arrays have elements
+        JSON_LENGTH(p_agencies) > 0 OR
+        JSON_LENGTH(p_countries) > 0 OR
+        JSON_LENGTH(p_provinces) > 0 OR
+        JSON_LENGTH(p_cities) > 0 OR
+        -- Check if date range is non-default
+        (p_from_date IS NOT NULL AND p_from_date != '1990-01-01') OR
+        (p_to_date IS NOT NULL AND p_to_date != CURRENT_DATE()) OR
+        -- Check if value range is non-default
+        (p_value_min IS NOT NULL AND p_value_min > 0) OR
+        (p_value_max IS NOT NULL AND p_value_max < 200000000)
+    ) THEN
+        -- Create a JSON object with all the filter values
+        SET @filter_json = JSON_OBJECT(
+            'dateRange', JSON_OBJECT(
+                'from', p_from_date,
+                'to', p_to_date
+            ),
+            'valueRange', JSON_OBJECT(
+                'min', p_value_min,
+                'max', p_value_max
+            ),
+            'agencies', p_agencies,
+            'countries', p_countries,
+            'provinces', p_provinces,
+            'cities', p_cities
+        );
+        
+        -- Call the search history procedure to log this search
+        CALL sp_create_search_history(
+            p_user_id, -- Can be NULL for anonymous searches
+            p_recipient_term,
+            p_grant_term,
+            p_institute_term,
+            @filter_json,
+            v_total_count -- The total count of results
+        );
+    END IF;
+END $
 DELIMITER ;

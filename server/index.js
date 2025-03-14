@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const { config } = require("../config/ports");
 const pool = require("./config/db");
-
+const session = require("express-session");
 const app = express();
 
 // Enhanced CORS configuration
@@ -18,6 +18,20 @@ app.use(
         ],
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true,
+    })
+);
+
+// Configure session middleware
+app.use(
+    session({
+        secret: "your-session-secret",
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            secure: process.env.NODE_ENV === "production", // Only use secure in production
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000, // 1 day
+        }
     })
 );
 

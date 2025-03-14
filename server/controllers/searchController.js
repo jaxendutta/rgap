@@ -28,9 +28,11 @@ const searchGrants = async (req, res) => {
             filters = {},
             sortConfig = {},
             pagination = { page: 1, pageSize: 20 },
+            userId = null, // Get userID from request if provided
         } = req.body;
 
         console.log("Received request:", {
+            userId, // Log the user ID for tracking (or null)
             searchTerms,
             filters,
             sortConfig,
@@ -81,6 +83,7 @@ const searchGrants = async (req, res) => {
 
         // Create the query parameters array with proper order matching the stored procedure
         const queryParams = [
+            userId, // p_user_id
             searchTerms.recipient || null, // p_recipient_term
             searchTerms.institute || null, // p_institute_term
             searchTerms.grant || null, // p_grant_term
@@ -103,7 +106,7 @@ const searchGrants = async (req, res) => {
 
         // Call the stored procedure with the correct parameter order
         const [results] = await pool.query(
-            "CALL sp_grant_search(?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), CAST(? AS JSON), CAST(? AS JSON), CAST(? AS JSON), ?, ?, ?, ?)",
+            "CALL sp_grant_search(?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), CAST(? AS JSON), CAST(? AS JSON), CAST(? AS JSON), ?, ?, ?, ?)",
             queryParams
         );
 

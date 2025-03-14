@@ -1,5 +1,10 @@
 // src/hooks/api/useGrants.ts
-import { useInfiniteQuery, useQuery, InfiniteData } from "@tanstack/react-query";
+import {
+    useInfiniteQuery,
+    useQuery,
+    InfiniteData,
+} from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 import axios from "axios";
 import portConfig from "../../../../config/ports.json";
 import { Grant } from "@/types/models";
@@ -11,23 +16,26 @@ const API = axios.create({
         process.env.VITE_API_URL ||
         `http://localhost:${portConfig.defaults.server}`,
     timeout: 15000,
+    withCredentials: true,
 });
 
 // Configure retry logic for specific error codes
 API.interceptors.response.use(
-    response => response,
+    (response) => response,
     async (error) => {
         // If we get a 409 Conflict from the server (temporary table issue)
         if (error.response?.status === 409 && error.response?.data?.retryable) {
-            console.log("Received retryable error, attempting to retry the request...");
-            
+            console.log(
+                "Received retryable error, attempting to retry the request..."
+            );
+
             // Wait a short delay before retrying
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
             // Retry the request
             return API(error.config);
         }
-        
+
         // For all other errors, just reject the promise
         return Promise.reject(error);
     }
@@ -54,8 +62,7 @@ const cleanFilters = (filters: typeof DEFAULT_FILTER_STATE) => {
     return {
         dateRange: {
             from:
-                filters.dateRange?.from ??
-                DEFAULT_FILTER_STATE.dateRange.from,
+                filters.dateRange?.from ?? DEFAULT_FILTER_STATE.dateRange.from,
             to: filters.dateRange?.to ?? DEFAULT_FILTER_STATE.dateRange.to,
         },
         valueRange: {
@@ -115,6 +122,9 @@ export function useGrantSearch(params: GrantSearchParams) {
 export function useInfiniteGrantSearch(
     params: Omit<GrantSearchParams, "pagination">
 ) {
+    // Get the user context
+    const { user } = useAuth();
+    
     return useInfiniteQuery<SearchResponse, Error, InfiniteData<SearchResponse>>({
         queryKey: grantKeys.infiniteSearch(params),
         queryFn: async ({ pageParam }) => {
@@ -127,6 +137,7 @@ export function useInfiniteGrantSearch(
                         page: pageParam as number,
                         pageSize: 10, // Load 10 items per page
                     },
+                    userId: user?.user_id || null, // Add the user ID if available
                 };
 
                 console.log("Sending infinite search request:", {
@@ -162,7 +173,7 @@ export function useInfiniteGrantSearch(
             // Otherwise, return the next page number
             return lastPage.metadata.page + 1;
         },
-        retry: 3,  // Retry up to 3 times
+        retry: 3, // Retry up to 3 times
         retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000), // Exponential backoff
         staleTime: 30000,
         gcTime: 5 * 60 * 1000,

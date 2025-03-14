@@ -55,31 +55,45 @@ const loginUser = async (req, res) => {
     try {
         // Get user from database using stored procedure
         const [rowsets] = await pool.query("CALL sp_login(?)", [email]);
-        
+
         // The stored procedure returns a resultset array, first element contains the rows
         const rows = rowsets[0];
-        
+
         // Check if the user exists
         if (!rows || rows.length === 0) {
-            return res.status(401).json({ message: "Invalid email or password." });
+            return res
+                .status(401)
+                .json({ message: "Invalid email or password." });
         }
 
         // Check if the password is correct
         const user = rows[0];
-        const validPassword = await bcrypt.compare(password, user.password_hash);
+        const validPassword = await bcrypt.compare(
+            password,
+            user.password_hash
+        );
 
         // If the password is invalid, return an error
         if (!validPassword) {
-            return res.status(401).json({ message: "Invalid email or password." });
-        }
+            return res
+                .status(401)
+                .json({ message: "Invalid email or password." });
+        } else {
+            // Store user info in session
+            req.session.user = {
+                user_id: user.user_id,
+                email: user.email,
+                name: user.name,
+            };
 
-        // Return successful response
-        return res.status(200).json({
-            user_id: user.user_id,
-            email: user.email,
-            name: user.name,
-            searches: [], // You can populate this from your searches table if needed
-        });
+            // Return successful response
+            return res.status(200).json({
+                user_id: user.user_id,
+                email: user.email,
+                name: user.name,
+                searches: [], // You can populate this from your searches table if needed
+            });
+        }
     } catch (error) {
         console.error("Error during login:", error);
         return res.status(500).json({
