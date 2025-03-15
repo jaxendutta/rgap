@@ -27,11 +27,19 @@ export const signupUser = async (req, res) => {
                 .json({ message: "User creation failed. No ID returned." });
         }
 
-        // Return the user ID, email, and name
+        // Get the inserted user data
         const insertedUser = rows[0][0];
-        return res
-            .status(201)
-            .json({ user_id: insertedUser.user_id, email, name });
+        const userData = {
+            user_id: insertedUser.user_id,
+            email,
+            name,
+        };
+
+        // Store user data in session
+        req.session.user = userData;
+
+        // Return the user data
+        return res.status(201).json(userData);
     } catch (error) {
         console.error("Error during signup:", error);
 
@@ -80,12 +88,30 @@ export const loginUser = async (req, res) => {
                 .json({ message: "Invalid email or password." });
         }
 
-        // Return successful response
-        return res.status(200).json({
+        // Create user data object (excluding sensitive info)
+        const userData = {
             user_id: user.user_id,
             email: user.email,
             name: user.name,
-            searches: [], // You can populate this from your searches table if needed
+        };
+
+        // Store user data in session
+        req.session.user = userData;
+
+        // Set a session cookie
+        req.session.save((err) => {
+            if (err) {
+                console.error("Session save error:", err);
+                return res.status(500).json({
+                    message: "Error saving session. Please try again.",
+                });
+            }
+
+            // Return successful response with user data
+            return res.status(200).json({
+                ...userData,
+                searches: [], // You can populate this from your searches table if needed
+            });
         });
     } catch (error) {
         console.error("Error during login:", error);
@@ -95,12 +121,40 @@ export const loginUser = async (req, res) => {
     }
 };
 
+export const logout = async (req, res) => {
+    // Destroy session
+    req.session.destroy((err) => {
+        if (err) {
+            console.error("Error destroying session:", err);
+            return res.status(500).json({
+                message: "Error logging out. Please try again.",
+            });
+        }
+
+        // Clear the session cookie
+        res.clearCookie("connect.sid");
+
+        // Return success message
+        res.status(200).json({ message: "Logged out successfully" });
+    });
+};
+
 export const deleteAccount = async (req, res) => {
     const { userId } = req.params;
 
     try {
         // Call the stored procedure to delete the user
         await pool.query("CALL sp_delete_user(?)", [userId]);
+
+        // Also destroy the session
+        req.session.destroy((err) => {
+            if (err) {
+                console.error(
+                    "Error destroying session after account deletion:",
+                    err
+                );
+            }
+        });
 
         return res.status(200).json({
             message: "Account successfully deleted",
