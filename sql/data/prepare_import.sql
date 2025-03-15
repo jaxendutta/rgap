@@ -15,7 +15,7 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
-/* Create temporary table for data import */
+/* Create temporary table for data import with optimized structure */
 CREATE TABLE temp_grants (
     _id VARCHAR(50),
     ref_number VARCHAR(50),
@@ -56,5 +56,10 @@ CREATE TABLE temp_grants (
     additional_information_fr TEXT,
     org VARCHAR(5),
     owner_org_title VARCHAR(100),
-    year VARCHAR(4)
-);
+    year VARCHAR(4),
+    KEY (ref_number, amendment_number),
+    KEY (recipient_legal_name),
+    KEY (research_organization_name),
+    KEY (org),
+    KEY (prog_name_en)
+) ENGINE=InnoDB;

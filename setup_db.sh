@@ -166,7 +166,7 @@ print_status "Loading ${DATA_SOURCE} data..."
 case "$DATA_SOURCE" in
     "full"|"prod")
         # Use the processed directory for full/production data
-        DATA_DIR="${SCRIPT_DIR}/data/processed"
+        DATA_DIR="${SCRIPT_DIR}/data/production"
         DATA_DESC="full"
         ;;
     "filtered")
