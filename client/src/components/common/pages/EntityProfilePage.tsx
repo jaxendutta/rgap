@@ -3,6 +3,7 @@ import { useState } from "react";
 import Tabs, { TabItem } from "@/components/common/ui/Tabs";
 import LoadingState from "@/components/common/ui/LoadingState";
 import ErrorState from "@/components/common/ui/ErrorState";
+import PageContainer from "../layout/PageContainer";
 
 export interface EntityProfilePageProps {
     // Core data and state
@@ -52,7 +53,7 @@ const EntityProfilePage = ({
     // Handle the error state
     if (isError) {
         return (
-            <div className="max-w-7xl mx-auto p-4 lg:p-6">
+            <PageContainer>
                 <ErrorState
                     title={`Error Loading ${entityTypeLabel}`}
                     message={
@@ -64,25 +65,25 @@ const EntityProfilePage = ({
                     size="lg"
                     onBack={() => window.history.back()}
                 />
-            </div>
+            </PageContainer>
         );
     }
 
     // Handle the loading state
     if (isLoading || !entity) {
         return (
-            <div className="max-w-7xl mx-auto p-4 lg:p-6 h-64">
+            <PageContainer>
                 <LoadingState
                     title={`Loading ${entityTypeLabel} details...`}
                     fullHeight
                     size="lg"
                 />
-            </div>
+            </PageContainer>
         );
     }
 
     return (
-        <div className="max-w-7xl mx-auto p-1 lg:p-6 space-y-6">
+        <PageContainer>
             {/* Header with profile and quick stats */}
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
                 {/* Top section with entity details */}
@@ -108,7 +109,7 @@ const EntityProfilePage = ({
                 {/* Tab content */}
                 <div className="p-4 lg:p-6">{renderTabContent(activeTab)}</div>
             </div>
-        </div>
+        </PageContainer>
     );
 };
 

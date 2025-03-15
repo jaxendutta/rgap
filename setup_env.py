@@ -18,14 +18,8 @@ class RGAPEnvironmentSetup:
         self.is_windows = platform.system() == "Windows"
         self.package_groups = {
             "Core": ["pandas", "numpy"],
-            "Visualization": ["matplotlib", "seaborn", "plotly"],
-            "Jupyter": ["jupyter", "notebook", "ipykernel"],
-            "Web": ["requests", "aiohttp", "urllib3"],
-            "Data Formats": ["python-dotenv", "openpyxl", "PyYAML"],
-            "Testing": ["pytest", "pytest-cov"],
-            "Database": ["mysqlclient", "SQLAlchemy"],
-            "Utilities": ["tqdm", "python-dateutil", "pytz", "py7zr"],
-            "Optional": ["jupyterlab"]
+            "Web": ["requests", "urllib3"],
+            "Utilities": ["tqdm", "ipython"],
         }
         self.total_packages = sum(len(packages) for packages in self.package_groups.values())
         self.cache_file = self.env_dir / ".package_cache.json"
@@ -35,12 +29,8 @@ class RGAPEnvironmentSetup:
         print(f"{" "*4}==> Creating directory structure...", end=' ', flush=True)
         
         directories = [
-            "data/raw",
-            "data/processed",
+            "data/production",
             "data/sample",
-            "notebooks/exploratory",
-            "notebooks/reports",
-            "tests",
             "client",
             "server",
             "sql",

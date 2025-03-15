@@ -7,10 +7,13 @@ export const formatCurrency = (value: number): string => {
     }).format(value);
 };
 
-export const formatDate = (dateString: string): string => {
-    if (!dateString) return "N/A";
+export const formatDate = (date: Date | string): string => {
+    if (!date) return "N/A";
     try {
-        return new Date(dateString).toLocaleDateString();
+        if (typeof date === "string") {
+            date = new Date(date);
+        }
+        return new Date(date).toLocaleDateString();
     } catch (e) {
         return "Invalid Date";
     }

@@ -1,6 +1,7 @@
 import pandas as pd
+import numpy as np
 import requests
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional
 from pathlib import Path
 import logging
 import argparse
@@ -14,6 +15,10 @@ import signal
 import sys
 from datetime import datetime
 import concurrent.futures
+import subprocess
+import gzip
+import tempfile
+from IPython.display import display
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -75,7 +80,7 @@ class Fetcher:
         self.config = config or FetcherConfig()
         self._setup_directories()
         self.timestamp = time.strftime("%Y%m%d_%H%M%S")
-        self.metadata_file = self.processed_dir / "dataset_metadata.json"
+        self.metadata_file = self.production_dir / "dataset_metadata.json"
         self._setup_signal_handlers()
         self.interrupted = False
         
@@ -100,9 +105,11 @@ class Fetcher:
         """Set up necessary directories for data storage"""
         self.data_dir = self.config.ROOT / 'data'
         self.raw_dir = self.data_dir / "raw"
-        self.processed_dir = self.data_dir / "processed"
-        
-        for dir_path in [self.data_dir, self.raw_dir, self.processed_dir]:
+        self.production_dir = self.data_dir / "production"
+        self.sample_dir = self.data_dir / "sample"
+        self.filtered_dir = self.data_dir / "filtered"
+               
+        for dir_path in [self.data_dir, self.raw_dir, self.production_dir]:
             dir_path.mkdir(parents=True, exist_ok=True)
             
     def _save_metadata(self, metadata: Dict) -> None:
@@ -161,13 +168,13 @@ class Fetcher:
     
     def _get_latest_dataset_file(self) -> Optional[Path]:
         """Find the most recent dataset file"""
-        pattern = str(self.processed_dir / "data_*.csv")
+        pattern = str(self.production_dir / "data_*.csv")
         files = glob.glob(pattern)
         
         if not files:
             # Also check for compressed files
-            pattern_gz = str(self.processed_dir / "data_*.csv.gz")
-            pattern_7z = str(self.processed_dir / "data_*.7z")
+            pattern_gz = str(self.production_dir / "data_*.csv.gz")
+            pattern_7z = str(self.production_dir / "data_*.7z")
             files = glob.glob(pattern_gz) + glob.glob(pattern_7z)
             if not files:
                 return None
@@ -190,8 +197,6 @@ class Fetcher:
         if method == '7z':
             try:
                 # Try to use 7zip if available
-                import subprocess
-                
                 compressed_path = file_path.with_suffix('.7z')
                 print(f"Compressing file with 7z: {file_path.name} -> {compressed_path.name}")
                 print("This may take a while but will result in better compression...")
@@ -242,8 +247,6 @@ class Fetcher:
             # Default to gzip
             try:
                 # Try gzip as it's most commonly available
-                import gzip
-                
                 compressed_path = file_path.with_suffix('.csv.gz')
                 
                 print(f"==> Compressing file with gzip: {file_path.name} -> {compressed_path.name}")
@@ -396,9 +399,6 @@ class Fetcher:
                     elif latest_file.suffix == '.7z':
                         print("    --> Reading 7z compressed file...")
                         # Need to extract it first
-                        import subprocess
-                        import tempfile
-                        
                         with tempfile.TemporaryDirectory() as tmpdirname:
                             subprocess.run(['7z', 'e', str(latest_file), f'-o{tmpdirname}', '-y'], 
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -585,19 +585,46 @@ class Fetcher:
         # Convert records to DataFrame
         if all_records:
             total_count = len(all_records)
-            print(f"\n==> Processing {total_count:,} records total across all agencies...")
+            print(f"\n==> Processing {total_count:,} records across all agencies...")
             
             # Create DataFrame
             df = pd.DataFrame(all_records)
             
-            # Add the 'org' column - uppercase English version
+            # Add the 'org' column with uppercase English version of owner_org
             if 'owner_org' in df.columns:
-                df['org'] = df['owner_org'].map(self.config.orgs)
-            else:
-                print("Warning: 'owner_org' column not found")
-                df['org'] = None
+                df['owner_org'] = df['owner_org'].map(self.config.orgs)
             
-            # Add the 'year' column from agreement_start_date
+            # Rename owner_org_title to org_title if it exists
+            if 'owner_org_title' in df.columns:
+                df.rename(columns={'owner_org': 'org', 'owner_org_title': 'org_title'}, inplace=True)
+
+            if 'research_organization_name' in df.columns:
+                # First replace with spaces on both sides
+                df['research_organization_name'] = df['research_organization_name'].str.replace(
+                    r'\s*([|/\\])\s*', r' \1 ', regex=True)
+                
+                # Then clean up any double spaces that might have been created
+                df['research_organization_name'] = df['research_organization_name'].str.replace(
+                    r'\s{2,}', ' ', regex=True)
+                
+                # Trim leading and trailing whitespace
+                df['research_organization_name'] = df['research_organization_name'].str.strip()
+
+            if 'recipient_city' in df.columns:
+                # First apply title case to all city names
+                df['recipient_city'] = df['recipient_city'].str.title()
+                
+                # Fix apostrophes (capitalize letter after apostrophe EXCEPT for possessive 's)
+                df['recipient_city'] = df['recipient_city'].str.replace(
+                    r"'(\w)(?!\s|$)", lambda m: "'" + m.group(1).upper(), regex=True)
+                
+                # Fix possessive 's to ensure it stays lowercase
+                df['recipient_city'] = df['recipient_city'].str.replace(r"'S\b", "'s", regex=True)
+                
+                # Ensure hyphenated parts are all capitalized
+                df['recipient_city'] = df['recipient_city'].str.replace(
+                    r"-(\w)", lambda m: "-" + m.group(1).upper(), regex=True)# Add the 'year' column from agreement_start_date
+
             if 'agreement_start_date' in df.columns:
                 df['year'] = df['agreement_start_date'].str.extract(r'^(\d{4})')
             else:
@@ -615,7 +642,7 @@ class Fetcher:
                 print("  📢 DATASET STATUS: Processing fresh download of dataset (not modified since last fetch)")
             
             # Save the complete dataset with timestamp
-            master_file = self.processed_dir / f"data_{self.timestamp}.csv"
+            master_file = self.production_dir / f"data_{self.timestamp}.csv"
             print(f"  ==> Saving dataset to {master_file}...")
             df.to_csv(master_file, index=False)
             print(f"      ✓ Saved: {master_file}")
@@ -741,6 +768,115 @@ class Fetcher:
         latest_amendments = df.sort_values('amendment_number').groupby('ref_number').last()
         return latest_amendments.reset_index()
 
+    def create_sample_dataset(fetcher, sample_size=5000):
+        """
+        Creates a truly random sample dataset from the full dataset with representation across years.
+        
+        Args:
+            fetcher: The Fetcher instance
+            sample_size: Number of records to include in the sample
+            
+        Returns:
+            DataFrame containing the sampled data
+        """
+        print("📊 Creating a representative sample dataset...")
+        
+        # Get the full dataset
+        full_df = fetcher._fetch_data_via_api(force_refresh=False)
+        
+        if full_df.empty:
+            print("❌ Failed to retrieve any data for sampling")
+            return pd.DataFrame()
+        
+        print(f"→ Source dataset has {len(full_df):,} total records")
+        
+        # Explicitly set the random seed for reproducibility
+        np.random.seed(42)
+        
+        # Check if 'year' column exists and has valid data
+        if 'year' in full_df.columns and not full_df['year'].isna().all():
+            print("→ Using stratified sampling to ensure representation across years")
+            
+            # Get all available years
+            years = full_df['year'].dropna().astype(str).unique()
+            valid_years = [y for y in years if y.isdigit()]
+            
+            if len(valid_years) > 0:
+                print(f"→ Dataset contains {len(valid_years)} different years")
+                
+                # Determine how many samples to take from each year
+                samples_per_year = sample_size // len(valid_years)
+                extra_samples = sample_size % len(valid_years)
+                
+                # Create empty list to hold samples from each year
+                samples = []
+                
+                # For each year, take a random sample
+                for year in valid_years:
+                    year_data = full_df[full_df['year'] == year]
+                    
+                    # Determine sample size for this year
+                    year_sample_size = min(samples_per_year, len(year_data))
+                    
+                    # Add extra sample to the first few years if needed
+                    if extra_samples > 0:
+                        year_sample_size += 1
+                        extra_samples -= 1
+                        
+                    # Skip if no data for this year
+                    if year_sample_size <= 0 or len(year_data) == 0:
+                        continue
+                    
+                    # Take a random sample for this year
+                    year_sample = year_data.sample(n=year_sample_size, random_state=np.random.randint(10000))
+                    samples.append(year_sample)
+                    
+                    print(f"  ✓ Added {len(year_sample):,} records from year {year}")
+                    
+                # Combine all the samples
+                if samples:
+                    sampled_df = pd.concat(samples, ignore_index=True)
+                    print(f"\n✅ Created stratified sample with {len(sampled_df):,} records across {len(valid_years)} years")
+                else:
+                    # Fallback to simple random sampling
+                    print("⚠️ Failed to create stratified sample, falling back to random sampling")
+                    sampled_df = full_df.sample(n=min(sample_size, len(full_df)), random_state=42)
+            else:
+                # No valid years found, use random sampling
+                print("⚠️ No valid years found in dataset, using random sampling")
+                sampled_df = full_df.sample(n=min(sample_size, len(full_df)), random_state=42)
+        else:
+            # No year column, use random sampling
+            print("→ Year data not available, using random sampling")
+            sampled_df = full_df.sample(n=min(sample_size, len(full_df)), random_state=42)
+        
+        # Shuffle the final DataFrame to ensure randomness
+        sampled_df = sampled_df.sample(frac=1, random_state=42).reset_index(drop=True)
+        
+        # Print summary statistics about the sample
+        print(f"\n📊 Sample Dataset Summary:")
+        print(f"  • Total records: {len(sampled_df):,}")
+        
+        # Show agency distribution if available
+        if 'org' in sampled_df.columns:
+            org_counts = sampled_df['org'].value_counts()
+            print("\n  Agency distribution:")
+            for agency, count in org_counts.items():
+                print(f"    • {agency}: {count:,} records ({count/len(sampled_df)*100:.1f}%)")
+        
+        # Show year distribution if available  
+        if 'year' in sampled_df.columns:
+            year_counts = sampled_df['year'].value_counts().sort_index()
+            print("\n  Year distribution (top years):")
+            for year, count in year_counts.head(10).items():
+                if pd.notna(year):
+                    print(f"    • {year}: {count:,} records ({count/len(sampled_df)*100:.1f}%)")
+            
+            if len(year_counts) > 10:
+                print(f"    • ... and {len(year_counts) - 10} more years")
+        
+        return sampled_df
+
     def _print_dataset_summary(self, df: pd.DataFrame) -> None:
         """Print summary statistics of the dataset"""
         print('\nDataset Summary')
@@ -819,7 +955,6 @@ class Fetcher:
 
         if display_table:
             try:
-                from IPython.display import display
                 display(data.style.format({
                     '# of Grants': '{:,}',
                     'Total Funding ($)': '${:,.2f}',
@@ -874,7 +1009,6 @@ class Fetcher:
 
         if display_table:
             try:
-                from IPython.display import display
                 display(combined_data.style.format({
                     'Total ($)': '${:,.2f}',
                     'CIHR (%)': '{:,.2f}%',
@@ -910,7 +1044,6 @@ class Fetcher:
 
         if display_table:
             try:
-                from IPython.display import display
                 display(data.style.format({
                     'Total Funding ($)': '${:,.2f}',
                     'Average Funding ($)': '${:,.2f}',
@@ -949,7 +1082,6 @@ class Fetcher:
 
         if display_table:
             try:
-                from IPython.display import display
                 display(data.style.format('{:,}'))
             except ImportError:
                 print(data)
@@ -995,7 +1127,7 @@ class Fetcher:
             year_range += f"_{year_end}"
             
         # Create the output file path
-        output_file = self.processed_dir / f"data_{self.timestamp}_{year_range}.csv"
+        output_file = self.filtered_dir / f"data_{self.timestamp}_{year_range}.csv"
         
         try:
             # Save the data
@@ -1023,8 +1155,11 @@ class Fetcher:
 
 def main():
     parser = argparse.ArgumentParser(description="Fetch and process tri-agency grant data")
-    parser.add_argument('--year-start', type=int, required=True, help='Start year (inclusive)')
+    parser.add_argument('--year-start', type=int, help='Start year (inclusive)')
     parser.add_argument('--year-end', type=int, help='End year (inclusive)')
+    parser.add_argument('--all', action='store_true', help='Fetch all available data (ignores year parameters)')
+    parser.add_argument('--sample', action='store_true', help='Create a smaller representative sample dataset')
+    parser.add_argument('--sample-size', type=int, default=5000, help='Number of records to include in sample (default: 5000)')
     parser.add_argument('--force-refresh', action='store_true', help='Force a fresh data collection')
     parser.add_argument('--show', action='store_true', help='Show analysis results')
     parser.add_argument('--top', type=int, default=10, help='Number of top recipients to display')
@@ -1041,21 +1176,40 @@ def main():
     # Start time
     start_time = time.time()
     
-    # Handle single agency fetch if specified
-    if args.agency:
+    # Handle the sampling option
+    if args.sample:
+        print("🚚 Creating a sample dataset...")
+        df = Fetcher.create_sample_dataset(fetcher, sample_size=args.sample_size)
+    # If --all is specified, fetch all data without year filtering
+    elif args.all:
+        print("🚚 Fetching ALL available data without year filtering...")
+        # Call _fetch_data_via_api directly to avoid year filtering
+        df = fetcher._fetch_data_via_api(force_refresh=args.force_refresh)
+        if args.agency and not df.empty:
+            # Filter by agency if specified
+            print(f"Filtering for agency: {args.agency}")
+            df = df[df['org'] == args.agency.upper()]
+            print(f"✓ Found {len(df):,} records for {args.agency}")
+    # Otherwise use the normal year-based fetch
+    elif args.agency and args.year_start:
         print(f"Fetching data for {args.agency} from {args.year_start}-{args.year_end or args.year_start}")
         df = fetcher.fetch_org_year(
             args.agency, 
             str(args.year_start), 
             force_refresh=args.force_refresh
         )
-    else:
-        # Fetch data for all agencies
+    elif args.year_start:
+        # Fetch data for all agencies with year range
         df = fetcher.fetch_all_orgs(
             args.year_start, 
             args.year_end or args.year_start, 
             force_refresh=args.force_refresh
         )
+    else:
+        # No parameters specified, show help
+        parser.print_help()
+        print("\nERROR: You must specify either --all, --sample, or --year-start")
+        return
     
     # Check if we have data
     if df.empty:
@@ -1067,16 +1221,45 @@ def main():
     print("Running data analysis...")
     analysis_results = fetcher.analyze_grants(df, top=args.top, show=args.show)
     
-    # Save year range data if requested
+    # Save data if specified
     if args.save:
         print("\n" + "="*40)
-        print("Saving year range data...")
-        saved_file = fetcher.save_year_range_data(df, args.year_start, args.year_end or args.year_start)
-    elif args.year_start != (args.year_end or args.year_start) or args.agency:
-        # Ask if user wants to save this filtered dataset
-        save_data = input(f"\nWould you like to save the {'agency-specific' if args.agency else 'year range'} data? (y/n): ").lower().strip() == 'y'
-        if save_data:
-            saved_file = fetcher.save_year_range_data(df, args.year_start, args.year_end or args.year_start)
+        if args.sample:
+            output_folder = fetcher.sample_dir
+            output_label = "sample"
+        elif args.all:
+            output_folder = fetcher.production_dir
+            output_label = ""
+        else:
+            output_folder = fetcher.filtered_dir
+            output_label = f"{args.year_start}-{args.year_end or args.year_start}"
+            if args.agency:
+                output_label = f"{args.agency}-{output_label}"
+        
+        # Remove any trailing underscore from output_label
+        output_label = output_label.rstrip('_')
+        
+        print(f"Saving data to CSV...")
+        # Ensure the output label isn't empty, and doesn't have unnecessary underscores
+        final_label = f"_{output_label}" if output_label else ""
+        output_file = output_folder / f"data_{fetcher.timestamp}{final_label}.csv"
+        
+        try:
+            # Save the data
+            print(f"Saving to {output_file}...")
+            df.to_csv(output_file, index=False)
+            print(f"✅ Saved {len(df):,} records to {output_file}")
+            
+            # Compress if specified
+            if args.compress:
+                try:
+                    compressed_file = fetcher._compress_file(output_file, args.compress)
+                    if compressed_file != output_file:
+                        print(f"✅ Compressed file: {compressed_file.name}")
+                except Exception as e:
+                    print(f"Compression failed: {e}")
+        except Exception as e:
+            print(f"Error saving data: {e}")
     
     # Report execution time
     end_time = time.time()
@@ -1091,11 +1274,11 @@ def main():
         print(f"  df = pd.read_csv('{latest_file}')")
     
     print("\nOther useful commands:")
-    print(f"  python fetcher.py --year-start {args.year_start} --show  # Show analysis results")
-    print(f"  python fetcher.py --year-start {args.year_start} --save  # Save year range data")
-    print(f"  python fetcher.py --year-start {args.year_start} --compress 7z  # Use 7z compression")
-    if not args.agency:
-        print(f"  python fetcher.py --year-start {args.year_start} --agency NSERC  # Fetch only NSERC data")
+    print(f"  python fetcher.py --all --force-refresh  # Fetch all data with fresh download")
+    print(f"  python fetcher.py --sample --save  # Create and save a sample dataset")
+    print(f"  python fetcher.py --sample --sample-size 10000  # Create a larger sample")
+    print(f"  python fetcher.py --all --agency NSERC  # Fetch all NSERC data")
+    print(f"  python fetcher.py --all --save --compress 7z  # Save and compress all data")
     print()
 
 if __name__ == "__main__":

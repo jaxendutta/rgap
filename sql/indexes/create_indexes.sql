@@ -5,7 +5,7 @@ USE rgap;
 CREATE INDEX idx_grant_ref ON ResearchGrant(ref_number, amendment_number);
 CREATE INDEX idx_grant_dates ON ResearchGrant(agreement_start_date, agreement_end_date);
 CREATE INDEX idx_grant_value ON ResearchGrant(agreement_value);
-CREATE INDEX idx_grant_owner ON ResearchGrant(owner_org);
+CREATE INDEX idx_grant_owner ON ResearchGrant(org);
 CREATE INDEX idx_grant_recipient ON ResearchGrant(recipient_id);
 CREATE INDEX idx_grant_program ON ResearchGrant(prog_id);
 

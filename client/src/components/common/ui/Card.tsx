@@ -22,7 +22,7 @@ const Card = ({
     return (
         <div
             className={cn(
-                "bg-white rounded-lg",
+                "bg-white rounded-xl shadow-sm",
                 disableOverflow && "overflow-hidden",
                 variant === "default" && "border border-gray-200",
                 variant === "outline" && "border-2 border-gray-300",

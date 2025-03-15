@@ -7,8 +7,9 @@ import {
     SlidersHorizontal,
     AlertCircle,
     Sparkles,
+    LucideIcon,
 } from "lucide-react";
-import { LucideIcon } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/ui/Button";
 import { Card } from "@/components/common/ui/Card";
 import { FilterPanel } from "@/components/features/filter/FilterPanel";
@@ -18,7 +19,7 @@ import {
     PopularSearchesPanel,
     SearchCategory,
 } from "@/components/features/search/PopularSearchesPanel";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/utils/cn";
 import { SearchField } from "@/components/common/ui/SearchField";
 
@@ -35,6 +36,7 @@ export interface SearchInterfaceProps {
     onSearch: (values: {
         searchTerms: Record<string, string>;
         filters: typeof DEFAULT_FILTER_STATE;
+        userId?: number;
     }) => void;
     onBookmark?: () => void;
     isBookmarked?: boolean;
@@ -54,6 +56,9 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
     isInitialState = true,
     className,
 }) => {
+    // Get the current user
+    const { user } = useAuth();
+
     // Current search terms
     const [searchTerms, setSearchTerms] = useState<Record<string, string>>(
         fields.reduce((acc, field) => {
@@ -140,21 +145,22 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
         (newFilters: typeof DEFAULT_FILTER_STATE) => {
             setFilters(newFilters);
 
-            // Only trigger filter-based search if not in initial state
-            if (!isInitialState) {
-                // Use a slight delay to ensure state is updated
-                setTimeout(() => {
-                    onSearch({
-                        searchTerms,
-                        filters: newFilters,
-                    });
+            // Always trigger search immediately on filter changes
+            // removing the isInitialState condition
+            setTimeout(() => {
+                onSearch({
+                    searchTerms,
+                    filters: newFilters,
+                });
 
-                    // Update last searched values
-                    setLastSearchedFilters(newFilters);
-                }, 0);
-            }
+                // Update last searched values
+                setLastSearchedFilters(newFilters);
+                setSearchTermsChanged(false);
+                setFiltersChanged(false);
+                setShowBanner(false);
+            }, 0);
         },
-        [onSearch, searchTerms, isInitialState]
+        [onSearch, searchTerms]
     );
 
     // Handle filter removal
@@ -166,49 +172,51 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                 (newFilters[type] as string[]) = (
                     newFilters[type] as string[]
                 ).filter((v) => v !== value);
-            } else if (type === "yearRange") {
-                newFilters.yearRange = DEFAULT_FILTER_STATE.yearRange;
+            } else if (type === "dateRange") {
+                newFilters.dateRange = DEFAULT_FILTER_STATE.dateRange;
             } else if (type === "valueRange") {
                 newFilters.valueRange = DEFAULT_FILTER_STATE.valueRange;
             }
 
             setFilters(newFilters);
 
-            // Only trigger filter-based search if not in initial state
-            if (!isInitialState) {
-                // Use a slight delay to ensure state is updated
-                setTimeout(() => {
-                    onSearch({
-                        searchTerms,
-                        filters: newFilters,
-                    });
+            // Always trigger search immediately on filter changes
+            // removing the isInitialState condition
+            setTimeout(() => {
+                onSearch({
+                    searchTerms,
+                    filters: newFilters,
+                });
 
-                    // Update last searched values
-                    setLastSearchedFilters(newFilters);
-                }, 0);
-            }
+                // Update last searched values
+                setLastSearchedFilters(newFilters);
+                setSearchTermsChanged(false);
+                setFiltersChanged(false);
+                setShowBanner(false);
+            }, 0);
         },
-        [filters, onSearch, searchTerms, isInitialState]
+        [filters, onSearch, searchTerms]
     );
 
     // Handle clear all filters
     const handleClearFilters = useCallback(() => {
         setFilters(DEFAULT_FILTER_STATE);
 
-        // Only trigger filter-based search if not in initial state
-        if (!isInitialState) {
-            // Use a slight delay to ensure state is updated
-            setTimeout(() => {
-                onSearch({
-                    searchTerms,
-                    filters: DEFAULT_FILTER_STATE,
-                });
+        // Always trigger search immediately on filter changes
+        // removing the isInitialState condition
+        setTimeout(() => {
+            onSearch({
+                searchTerms,
+                filters: DEFAULT_FILTER_STATE,
+            });
 
-                // Update last searched values
-                setLastSearchedFilters(DEFAULT_FILTER_STATE);
-            }, 0);
-        }
-    }, [onSearch, searchTerms, isInitialState]);
+            // Update last searched values
+            setLastSearchedFilters(DEFAULT_FILTER_STATE);
+            setSearchTermsChanged(false);
+            setFiltersChanged(false);
+            setShowBanner(false);
+        }, 0);
+    }, [onSearch, searchTerms]);
 
     // Handle selecting a popular search term
     const handlePopularSearchSelect = (
@@ -248,10 +256,11 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
         // Close panels
         setActivePanelType("none");
 
-        // Call the search handler
+        // Call the search handler with the user ID
         onSearch({
             searchTerms,
             filters,
+            userId: user?.user_id, // Include this
         });
     };
 
@@ -315,11 +324,11 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                             }
                             icon={Sparkles}
                             onClick={() => togglePanel("popular")}
-                            className={
+                            className={cn(
                                 activePanelType === "popular"
-                                    ? "bg-blue-600 hover:bg-blue-700"
-                                    : ""
-                            }
+                                    ? "bg-blue-100 hover:bg-blue-100 rounded-full text-blue-600 border border-blue-300"
+                                    : "shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:rounded-full"
+                            )}
                         >
                             <span>
                                 Popular
@@ -338,11 +347,11 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                         }
                         icon={SlidersHorizontal}
                         onClick={() => togglePanel("filters")}
-                        className={
+                        className={cn(
                             activePanelType === "filters"
-                                ? "bg-blue-600 hover:bg-blue-700"
-                                : ""
-                        }
+                                ? "bg-blue-100 hover:bg-blue-100 rounded-full text-blue-600 border border-blue-300"
+                                : "shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:rounded-full"
+                        )}
                     >
                         <span className="hidden lg:inline">Filters</span>
                     </Button>
@@ -355,7 +364,11 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                             variant="secondary"
                             icon={isBookmarked ? BookmarkCheck : BookmarkPlus}
                             onClick={onBookmark}
-                            className={isBookmarked ? "text-blue-600" : ""}
+                            className={cn(
+                                isBookmarked
+                                    ? "bg-blue-100 hover:bg-blue-100 rounded-full text-blue-600 border border-blue-300"
+                                    : "shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:rounded-full"
+                            )}
                         >
                             <span className="hidden lg:inline">Bookmark</span>
                         </Button>
@@ -373,21 +386,37 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
             </div>
 
             {/* Panels Area */}
-            <div className="transition-all duration-300 ease-in-out mt-4 relative">
-                {activePanelType === "filters" && (
-                    <Card className="p-4 mb-4">
-                        <FilterPanel
-                            filters={filters}
-                            onChange={handleFilterChange}
-                        />
-                    </Card>
-                )}
+            <div className="transition-all duration-800 ease-in-out mt-4 relative">
+                <AnimatePresence>
+                    {activePanelType === "filters" && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <Card className="p-4 mb-4">
+                                <FilterPanel
+                                    filters={filters}
+                                    onChange={handleFilterChange}
+                                />
+                            </Card>
+                        </motion.div>
+                    )}
 
-                {activePanelType === "popular" && (
-                    <PopularSearchesPanel
-                        onSelect={handlePopularSearchSelect}
-                    />
-                )}
+                    {activePanelType === "popular" && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <PopularSearchesPanel
+                                onSelect={handlePopularSearchSelect}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Filter Tags */}

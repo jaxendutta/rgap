@@ -17,6 +17,9 @@ import EmptyState from "@/components/common/ui/EmptyState";
 import ErrorState from "@/components/common/ui/ErrorState";
 import { Institute, Recipient } from "@/types/models";
 import { cn } from "@/utils/cn";
+import { useAllBookmarks, useToggleBookmark } from "@/hooks/api/useBookmarks";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNotification } from "@/components/features/notifications/NotificationProvider";
 
 interface EntitiesGridPageProps {
     entityType: EntityType;
@@ -45,7 +48,15 @@ const EntitiesGridPage = ({
     // State for search query
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearching, setIsSearching] = useState(false);
-    const [bookmarkedIds, setBookmarkedIds] = useState<number[]>([]);
+    //const [bookmarkedIds, setBookmarkedIds] = useState<number[]>([]);
+
+    const { user } = useAuth();
+    const user_id = user?.user_id;
+
+    const { data: bookmarkedIds = [], isLoading: isLoadingBookmarks, isError: isGetBookmarksError, } = useAllBookmarks(entityType, user_id,);
+    const toggleBookmarkMutation = useToggleBookmark(entityType);
+
+    const { showNotification } = useNotification();
 
     // Setup intersection observer for infinite loading
     const { ref, inView } = useInView({
@@ -90,12 +101,14 @@ const EntitiesGridPage = ({
     // Check if we're in a loading state
     const isLoading =
         (infiniteQuery.isLoading && !infiniteQuery.data) ||
-        (isSearching && searchQuery$.isLoading);
+        (isSearching && searchQuery$.isLoading) ||
+        (isLoadingBookmarks);
 
     // Check for errors
     const isError =
         (infiniteQuery.isError && !isSearching) ||
-        (isSearching && searchQuery$.isError);
+        (isSearching && searchQuery$.isError) ||
+        (isGetBookmarksError);
 
     const error = isSearching ? searchQuery$.error : infiniteQuery.error;
 
@@ -128,13 +141,19 @@ const EntitiesGridPage = ({
 
     // Handle bookmarks
     const toggleBookmark = (id: number) => {
-        setBookmarkedIds((prev) =>
-            prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-        );
-
-        if (onBookmark) {
-            onBookmark(id);
+        if (!user_id) {
+            showNotification(
+                "You must be logged in to bookmark.",
+                "error",
+            );
+            return;
         }
+        const isBookmarked = bookmarkedIds.includes(id);
+        //console.log(`toggleBookmark: isBookmarked:${isBookmarked}`);
+        //console.log(bookmarkedIds)
+        
+        // Trigger the mutation
+        toggleBookmarkMutation.mutate({ user_id: user_id, entity_id: id, isBookmarked });
     };
 
     return (
@@ -148,7 +167,7 @@ const EntitiesGridPage = ({
             />
 
             {/* Search Bar */}
-            <div className="mb-6 flex flex-col lg:flex-row gap-2">
+            <div className="mb-6 flex gap-2">
                 <div className="flex-1">
                     <SearchField
                         icon={Search}
@@ -165,7 +184,7 @@ const EntitiesGridPage = ({
                         onClick={handleSearch}
                         className="bg-gray-900 hover:bg-gray-800 flex-1 lg:flex-auto rounded-full"
                     >
-                        Search
+                        <span className="hidden lg:flex">Search</span>
                     </Button>
                     {isSearching && (
                         <Button
@@ -240,10 +259,10 @@ const EntitiesGridPage = ({
                     primaryAction={
                         isSearching
                             ? {
-                                  label: "Clear Search",
-                                  onClick: clearSearch,
-                                  icon: X,
-                              }
+                                label: "Clear Search",
+                                onClick: clearSearch,
+                                icon: X,
+                            }
                             : undefined
                     }
                 />

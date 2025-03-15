@@ -54,8 +54,7 @@ CREATE TABLE temp_grants (
     expected_results_fr TEXT,
     additional_information_en TEXT,
     additional_information_fr TEXT,
-    owner_org VARCHAR(20),
+    org VARCHAR(5),
     owner_org_title VARCHAR(100),
-    org VARCHAR(10),
     year VARCHAR(4)
 );

@@ -1,25 +1,23 @@
 -- File: sql/data/import_data.sql
+SET FOREIGN_KEY_CHECKS = 0;
+SET SESSION MAX_EXECUTION_TIME = 300000; -- 5 minutes timeout
 
--- Insert Organizations first
-INSERT IGNORE INTO Organization (owner_org, org_title, abbreviation)
+-- Insert Organizations first, rename owner_org_title to org_title
+INSERT IGNORE INTO Organization (org, org_title)
 SELECT DISTINCT 
-    owner_org,
-    owner_org_title,
-    org
+    org,
+    owner_org_title
 FROM temp_grants
-WHERE owner_org IS NOT NULL AND org IS NOT NULL;
+WHERE org IS NOT NULL;
 
 -- Insert Programs with a simpler ID format for safety
-INSERT IGNORE INTO Program (prog_id, name_en, name_fr, purpose_en, purpose_fr, naics_identifier)
+INSERT IGNORE INTO Program (name_en, purpose_en, naics_identifier)
 SELECT DISTINCT
-    CONCAT('PROG_', SUBSTRING(MD5(COALESCE(prog_name_en, 'Unknown')), 1, 8)),
     prog_name_en,
-    prog_name_fr,
     prog_purpose_en,
-    prog_purpose_fr,
     naics_identifier
 FROM temp_grants
-WHERE prog_name_en IS NOT NULL OR prog_name_fr IS NOT NULL;
+WHERE prog_name_en IS NOT NULL;
 
 -- Insert Institutes with all location data
 INSERT IGNORE INTO Institute (
@@ -80,8 +78,38 @@ LEFT JOIN Institute i ON
     i.name = COALESCE(NULLIF(TRIM(tg.research_organization_name), ''), 'Unknown Institution')
 WHERE recipient_legal_name IS NOT NULL;
 
--- Insert Grants with proper relationships
-INSERT INTO ResearchGrant (
+-- Create a temporary table to handle duplicates correctly
+CREATE TEMPORARY TABLE IF NOT EXISTS temp_grants_deduped AS
+SELECT 
+    tg.ref_number,
+    tg.amendment_number,
+    tg.amendment_date,
+    tg.agreement_type,
+    tg.agreement_number,
+    tg.agreement_value,
+    tg.foreign_currency_type,
+    tg.foreign_currency_value,
+    tg.agreement_start_date,
+    tg.agreement_end_date,
+    tg.agreement_title_en,
+    tg.agreement_title_fr,
+    tg.description_en,
+    tg.description_fr,
+    tg.expected_results_en,
+    tg.expected_results_fr,
+    tg.org,
+    r.recipient_id,
+    p.prog_id,
+    ROW_NUMBER() OVER (PARTITION BY tg.ref_number, COALESCE(tg.amendment_number, '0') ORDER BY tg.agreement_value DESC) as rn
+FROM temp_grants tg
+LEFT JOIN Recipient r ON 
+    r.legal_name = COALESCE(NULLIF(TRIM(tg.recipient_legal_name), ''), 'Unknown')
+LEFT JOIN Program p ON 
+    p.name_en = tg.prog_name_en
+WHERE tg.ref_number IS NOT NULL;
+
+-- Insert Grants with proper relationships using the deduplicated data
+INSERT IGNORE INTO ResearchGrant (
     ref_number,
     amendment_number,
     amendment_date,
@@ -98,51 +126,44 @@ INSERT INTO ResearchGrant (
     description_fr,
     expected_results_en,
     expected_results_fr,
-    owner_org,
     org,
     recipient_id,
     prog_id
 )
 SELECT 
-    tg.ref_number,
-    tg.amendment_number,
+    ref_number,
+    COALESCE(amendment_number, '0'),  -- Use '0' for NULL amendment numbers
     CASE 
-        WHEN tg.amendment_date REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN STR_TO_DATE(tg.amendment_date, '%Y-%m-%d')
+        WHEN amendment_date REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN STR_TO_DATE(amendment_date, '%Y-%m-%d')
         ELSE NULL 
     END,
-    tg.agreement_type,
-    tg.agreement_number,
-    CAST(NULLIF(REGEXP_REPLACE(tg.agreement_value, '[^0-9.]', ''), '') AS DECIMAL(15,2)),
-    tg.foreign_currency_type,
-    CAST(NULLIF(REGEXP_REPLACE(tg.foreign_currency_value, '[^0-9.]', ''), '') AS DECIMAL(15,2)),
+    agreement_type,
+    agreement_number,
+    CAST(NULLIF(REGEXP_REPLACE(COALESCE(agreement_value, '0'), '[^0-9.]', ''), '') AS DECIMAL(15,2)),
+    foreign_currency_type,
+    CAST(NULLIF(REGEXP_REPLACE(COALESCE(foreign_currency_value, '0'), '[^0-9.]', ''), '') AS DECIMAL(15,2)),
     CASE 
-        WHEN tg.agreement_start_date REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN STR_TO_DATE(tg.agreement_start_date, '%Y-%m-%d')
+        WHEN agreement_start_date REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN STR_TO_DATE(agreement_start_date, '%Y-%m-%d')
         ELSE NULL 
     END,
     CASE 
-        WHEN tg.agreement_end_date REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN STR_TO_DATE(tg.agreement_end_date, '%Y-%m-%d')
+        WHEN agreement_end_date REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN STR_TO_DATE(agreement_end_date, '%Y-%m-%d')
         ELSE NULL 
     END,
-    tg.agreement_title_en,
-    tg.agreement_title_fr,
-    tg.description_en,
-    tg.description_fr,
-    tg.expected_results_en,
-    tg.expected_results_fr,
-    tg.owner_org,
-    tg.org,
-    -- Fix the recipient matching based on legal name only
-    (SELECT r.recipient_id 
-     FROM Recipient r 
-     WHERE r.legal_name = COALESCE(NULLIF(TRIM(tg.recipient_legal_name), ''), 'Unknown')
-     LIMIT 1),
-    -- Handle potential missing programs
-    (SELECT p.prog_id
-     FROM Program p 
-     WHERE p.prog_id = CONCAT('PROG_', SUBSTRING(MD5(COALESCE(tg.prog_name_en, 'Unknown')), 1, 8))
-     LIMIT 1)
-FROM temp_grants tg
-WHERE tg.ref_number IS NOT NULL;
+    agreement_title_en,
+    agreement_title_fr,
+    description_en,
+    description_fr,
+    expected_results_en,
+    expected_results_fr,
+    org,
+    recipient_id,
+    prog_id
+FROM temp_grants_deduped
+WHERE rn = 1;  -- Only take the first row for each ref_number and amendment_number combination
+
+-- Drop the temporary table
+DROP TEMPORARY TABLE IF EXISTS temp_grants_deduped;
 
 -- Debug info - print count of grants loaded
 SELECT COUNT(*) AS 'Grants Loaded' FROM ResearchGrant;

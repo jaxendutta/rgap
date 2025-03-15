@@ -4,10 +4,10 @@ DROP PROCEDURE IF EXISTS sp_get_filter_options$$
 CREATE PROCEDURE sp_get_filter_options()
 BEGIN
     -- Get distinct agencies (from Organization table)
-    SELECT DISTINCT abbreviation
+    SELECT DISTINCT org
     FROM Organization
-    WHERE abbreviation IS NOT NULL AND abbreviation != ''
-    ORDER BY abbreviation;
+    WHERE org IS NOT NULL AND org != ''
+    ORDER BY org;
 
     -- Get distinct countries (from Institute table)
     SELECT DISTINCT country

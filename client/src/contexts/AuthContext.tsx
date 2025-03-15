@@ -27,12 +27,31 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
 
-    // On mount, try to load user data from localStorage
+    // On mount, try to load user data from localStorage AND check session
     useEffect(() => {
+        // Check for saved user in localStorage
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
             setUser(JSON.parse(storedUser));
         }
+
+        // Also check if there's an active session with the server
+        const checkSession = async () => {
+            try {
+                const response = await fetch("/auth/session", {
+                    credentials: "include", // Important for sending cookies
+                });
+                if (response.ok) {
+                    const userData = await response.json();
+                    setUser(userData);
+                    localStorage.setItem("user", JSON.stringify(userData));
+                }
+            } catch (error) {
+                console.error("Error checking session:", error);
+            }
+        };
+
+        checkSession();
     }, []);
 
     const login = (userData: User) => {

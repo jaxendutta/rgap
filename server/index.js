@@ -1,8 +1,12 @@
 // server/index.js
-const express = require("express");
-const cors = require("cors");
-const { config } = require("../config/ports");
-const pool = require("./config/db");
+import cors from "cors";
+import express, { json } from "express";
+import session from "express-session";
+import { config } from "../config/ports.js";
+import authRoutes from "./routes/authRoutes.js";
+import searchRoutes from "./routes/searchRoutes.js";
+import recipientRoutes from "./routes/recipientRoutes.js";
+import instituteRoutes from "./routes/instituteRoutes.js";
 
 const app = express();
 
@@ -12,17 +16,29 @@ app.use(
         origin: [
             `http://localhost:${
                 process.env.CLIENT_PORT || config.defaults.client
-            }`,
-            "http://localhost:3000", // Default React port
-            "http://127.0.0.1:3000", // Alternative localhost
+            }`
         ],
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true,
     })
 );
 
+// Configure session middleware
+app.use(
+    session({
+        secret: "your-session-secret",
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+            secure: process.env.NODE_ENV === "production", // Only use secure in production
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000, // 1 day
+        }
+    })
+);
+
 // Body parsing middleware
-app.use(express.json());
+app.use(json());
 
 // Basic health check endpoint
 app.get("/health", (req, res) => {
@@ -30,11 +46,11 @@ app.get("/health", (req, res) => {
 });
 
 // Routes
-app.use("/auth", require("./routes/authRoutes"));
-app.use("/search", require("./routes/searchRoutes"));
-app.use("/grants", require("./routes/grantRoutes"));
-app.use("/recipients", require("./routes/recipientRoutes"));
-app.use("/institutes", require("./routes/instituteRoutes"));
+app.use("/auth", authRoutes);
+app.use("/search", searchRoutes);
+app.use("/recipients", recipientRoutes);
+app.use("/institutes", instituteRoutes);
+app.use("/save", require("./routes/saveRoutes"));
 app.use("/search-history", require("./routes/searchHistoryRoutes"));
 
 // Error handling middleware

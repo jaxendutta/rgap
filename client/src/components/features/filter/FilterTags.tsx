@@ -1,12 +1,19 @@
-// src/components/common/ui/FilterTags.tsx
+// src/components/features/filter/FilterTags.tsx
 import { X } from "lucide-react";
-import { GrantSearchParams } from "@/services/api/grants";
-import { formatCurrency } from "@/utils/format";
-import { FILTER_LIMITS } from "@/constants/filters";
+import { formatDate, formatCurrency } from "@/utils/format";
+import { FILTER_LIMITS, DEFAULT_FILTER_STATE } from "@/constants/filters";
+
+type FilterKey =
+    | "dateRange"
+    | "valueRange"
+    | "agencies"
+    | "countries"
+    | "provinces"
+    | "cities";
 
 interface FilterTagsProps {
-    filters: GrantSearchParams["filters"];
-    onRemove: (type: keyof GrantSearchParams["filters"], value: string) => void;
+    filters: typeof DEFAULT_FILTER_STATE;
+    onRemove: (type: FilterKey, value: string) => void;
     onClearAll: () => void;
 }
 
@@ -20,16 +27,18 @@ export const FilterTags = ({
         filters.valueRange &&
         (filters.valueRange.min > FILTER_LIMITS.GRANT_VALUE.MIN ||
             filters.valueRange.max < FILTER_LIMITS.GRANT_VALUE.MAX);
-    const hasYearRangeFilter =
-        filters.yearRange &&
-        (filters.yearRange.start > FILTER_LIMITS.YEAR.MIN ||
-            filters.yearRange.end < FILTER_LIMITS.YEAR.MAX);
+
+    const hasDateRangeFilter =
+        filters.dateRange &&
+        (filters.dateRange.from > DEFAULT_FILTER_STATE.dateRange.from ||
+            filters.dateRange.to < DEFAULT_FILTER_STATE.dateRange.to);
+
     const hasFilters =
         filters.agencies.length > 0 ||
         filters.countries.length > 0 ||
         filters.provinces.length > 0 ||
         filters.cities.length > 0 ||
-        hasYearRangeFilter ||
+        hasDateRangeFilter ||
         hasValueRangeFilter;
 
     if (!hasFilters) return null;
@@ -48,16 +57,20 @@ export const FilterTags = ({
                 </button>
             </div>
             <div className="flex flex-wrap gap-2">
-                {hasYearRangeFilter && (
+                {hasDateRangeFilter && (
                     <FilterTag
-                        label={`Years: ${filters.yearRange.start}-${filters.yearRange.end}`}
-                        onRemove={() => onRemove("yearRange", "")}
+                        filterKey="Dates"
+                        filterValue={`${formatDate(
+                            filters.dateRange.from
+                        )} → ${formatDate(filters.dateRange.to)}`}
+                        onRemove={() => onRemove("dateRange", "")}
                     />
                 )}
 
                 {hasValueRangeFilter && (
                     <FilterTag
-                        label={`Value: ${formatCurrency(
+                        filterKey="Value"
+                        filterValue={`${formatCurrency(
                             filters.valueRange.min
                         )} - ${formatCurrency(filters.valueRange.max)}`}
                         onRemove={() => onRemove("valueRange", "")}
@@ -67,7 +80,8 @@ export const FilterTags = ({
                 {filters.agencies.map((agency) => (
                     <FilterTag
                         key={agency}
-                        label={`Agency: ${agency}`}
+                        filterKey="Agency"
+                        filterValue={agency}
                         onRemove={() => onRemove("agencies", agency)}
                     />
                 ))}
@@ -75,7 +89,8 @@ export const FilterTags = ({
                 {filters.countries.map((country) => (
                     <FilterTag
                         key={country}
-                        label={`Country: ${country}`}
+                        filterKey="Country"
+                        filterValue={country}
                         onRemove={() => onRemove("countries", country)}
                     />
                 ))}
@@ -83,7 +98,8 @@ export const FilterTags = ({
                 {filters.provinces.map((province) => (
                     <FilterTag
                         key={province}
-                        label={`Province: ${province}`}
+                        filterKey="Province"
+                        filterValue={province}
                         onRemove={() => onRemove("provinces", province)}
                     />
                 ))}
@@ -91,7 +107,8 @@ export const FilterTags = ({
                 {filters.cities.map((city) => (
                     <FilterTag
                         key={city}
-                        label={`City: ${city}`}
+                        filterKey="City"
+                        filterValue={city}
                         onRemove={() => onRemove("cities", city)}
                     />
                 ))}
@@ -101,13 +118,16 @@ export const FilterTags = ({
 };
 
 interface FilterTagProps {
-    label: string;
+    filterKey: string;
+    filterValue: string;
     onRemove: () => void;
 }
 
-const FilterTag = ({ label, onRemove }: FilterTagProps) => (
+const FilterTag = ({ filterKey, filterValue, onRemove }: FilterTagProps) => (
     <span className="inline-flex items-center px-2 py-1 text-sm bg-gray-100 rounded-md">
-        {label}
+        <span className="font-medium">{filterKey}</span>
+        <span className="text-gray-400 mx-1.5">|</span>
+        {filterValue}
         <button
             onClick={onRemove}
             className="ml-1 p-0.5 hover:bg-gray-200 rounded"

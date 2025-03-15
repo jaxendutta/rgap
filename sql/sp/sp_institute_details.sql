@@ -14,11 +14,11 @@ BEGIN
         COALESCE(AVG(rg.agreement_value), 0) as avg_funding,
         MIN(rg.agreement_start_date) as first_grant_date,
         MAX(rg.agreement_start_date) as latest_grant_date,
-        COUNT(DISTINCT o.abbreviation) as funding_agencies_count
+        COUNT(DISTINCT o.org) as funding_agencies_count
     FROM Institute i
     LEFT JOIN Recipient r ON i.institute_id = r.institute_id
     LEFT JOIN ResearchGrant rg ON r.recipient_id = rg.recipient_id
-    LEFT JOIN Organization o ON rg.owner_org = o.owner_org
+    LEFT JOIN Organization o ON rg.org = o.org
     WHERE i.institute_id = p_institute_id
     GROUP BY i.institute_id;
 
@@ -39,7 +39,7 @@ BEGIN
     SELECT
         rg.*,
         r.legal_name as recipient_name,
-        o.abbreviation as org,
+        o.org as org,
         o.org_title,
         p.name_en as prog_title_en,  -- Standardized field name
         p.name_en as program_name,   -- Also include as program_name for backward compatibility
@@ -59,7 +59,7 @@ BEGIN
         ) AS amendments_history
     FROM ResearchGrant rg
     JOIN Recipient r ON rg.recipient_id = r.recipient_id
-    JOIN Organization o ON rg.owner_org = o.owner_org
+    JOIN Organization o ON rg.org = o.org
     LEFT JOIN Program p ON rg.prog_id = p.prog_id
     JOIN (
         SELECT 
@@ -76,7 +76,7 @@ BEGIN
     -- Get funding history by year and agency with improved details
     SELECT 
         YEAR(rg.agreement_start_date) as year,
-        o.abbreviation as agency,
+        o.org as agency,
         COUNT(rg.grant_id) as grant_count,
         SUM(rg.agreement_value) as total_value,
         AVG(rg.agreement_value) as avg_value,
@@ -84,10 +84,10 @@ BEGIN
         COUNT(DISTINCT r.recipient_id) as recipient_count
     FROM ResearchGrant rg
     JOIN Recipient r ON rg.recipient_id = r.recipient_id
-    JOIN Organization o ON rg.owner_org = o.owner_org
+    JOIN Organization o ON rg.org = o.org
     LEFT JOIN Program p ON rg.prog_id = p.prog_id
     WHERE r.institute_id = p_institute_id
-    GROUP BY YEAR(rg.agreement_start_date), o.abbreviation
+    GROUP BY YEAR(rg.agreement_start_date), o.org
     ORDER BY year, agency;
 END$$
 DELIMITER ;

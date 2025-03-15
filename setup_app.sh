@@ -16,8 +16,37 @@ DATA_SIZE="sample"
 while [[ $# -gt 0 ]]; do
     key="$1"
     case $key in
+    # New combined data option that takes a value
+    --data)
+        shift
+        if [[ $# -gt 0 ]]; then
+            case "$1" in
+            full|prod)
+                DATA_SIZE="full"
+                ;;
+            filtered)
+                DATA_SIZE="filtered"
+                ;;
+            sample)
+                DATA_SIZE="sample"
+                ;;
+            *)
+                print_warning "Unknown data option: $1. Using 'sample' instead."
+                DATA_SIZE="sample"
+                ;;
+            esac
+            shift
+        else
+            print_warning "--data option requires a value (full, filtered, or sample). Using 'sample'."
+        fi
+        ;;
+    # For backwards compatibility
     --full)
         DATA_SIZE="full"
+        shift
+        ;;
+    --filtered)
+        DATA_SIZE="filtered"
         shift
         ;;
     --non-interactive)
@@ -212,25 +241,40 @@ print_status "Setting up database..."
 if [ "$INTERACTIVE" = true ]; then
     echo
     echo "Database setup options:"
-    echo "1) Use sample data (~35K records, faster setup)"
-    echo "2) Use full dataset (~170K records, comprehensive but slower)"
+    echo "1) Use sample data (35K+ records, faster setup)"
+    echo "2) Use filtered dataset (subset with specific criteria)"
+    echo "3) Use full dataset (231K+ records, comprehensive but slower)"
     echo
-    read -p "Choose an option [1/2] (default: 1): " data_choice
+    read -p "Choose an option [1/2/3] (default: 1): " data_choice
 
-    if [ "$data_choice" = "2" ]; then
-        DATA_SIZE="full"
-        print_status "Using full dataset. This may take several minutes to load."
-    else
-        print_status "Using sample dataset for faster setup."
-    fi
+    case $data_choice in
+        3)
+            DATA_SIZE="full"
+            print_status "Using full dataset. This may take several minutes to load."
+            ;;
+        2)
+            DATA_SIZE="filtered"
+            print_status "Using filtered dataset for specific analysis."
+            ;;
+        *)
+            DATA_SIZE="sample"
+            print_status "Using sample dataset for faster setup."
+            ;;
+    esac
 fi
 
 # Pass the data size parameter to setup_db.sh
-if [ "$DATA_SIZE" = "full" ]; then
-    ./setup_db.sh --full
-else
-    ./setup_db.sh --sample
-fi
+case $DATA_SIZE in
+    full|prod)
+        ./setup_db.sh --full
+        ;;
+    filtered)
+        ./setup_db.sh --filtered
+        ;;
+    *)
+        ./setup_db.sh --sample
+        ;;
+esac
 
 if [ $? -ne 0 ]; then
     print_error "Database setup failed. Check the errors and try again."
@@ -287,7 +331,6 @@ echo $CLIENT_PID > "$SCRIPT_DIR/.client.pid"
 print_success "Application started successfully!"
 print_status "Opening client in your default browser..."
 sleep 3
-xdg-open "http://localhost:$CLIENT_PORT" 2>/dev/null || open "http://localhost:$CLIENT_PORT" 2>/dev/null || print_warning "Couldn't open browser automatically. Please open http://localhost:$CLIENT_PORT manually."
 
 print
 print_status "To stop the application:"

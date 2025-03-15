@@ -238,8 +238,8 @@ print_section "1" "Environment Check"
 
 # Export MySQL related paths
 export MYSQL_DIR="$SCRIPT_DIR/mysql"
-export MYSQL_VERSION="mysql-8.0.36-linux-glibc2.28-x86_64"
-export MYSQL_BIN="$MYSQL_DIR/$MYSQL_VERSION/bin"
+export MYSQL_VERSION="8.0.41"
+export MYSQL_BIN="$MYSQL_DIR/mysql-$MYSQL_VERSION/bin"
 
 # Source port configuration
 source "$SCRIPT_DIR/config/get_port_config.sh"
@@ -276,27 +276,6 @@ if [ $node_exit_code -ne 0 ]; then
     cleanup_on_error
     return 1
 fi
-
-# Install RGAP package in development mode
-print_section "5" "Project Setup"
-{
-    print_status "Installing RGAP package in development mode..."
-    pip install -e . --quiet 2>&1
-    pip_exit_code=$?
-
-    if [ $pip_exit_code -ne 0 ]; then
-        print_error "Error occurred while installing RGAP package."
-    fi
-
-    if [ $pip_exit_code -ne 0 ]; then
-        cleanup_on_error
-        return 1
-    fi
-    print_success "RGAP project package installed successfully"
-
-    # Mark environment as initialized
-    touch "$VENV_PATH/.initialized"
-} 2>&1 | tee >(log_with_no_color >>$LOG_FILE)
 
 print_header "Ready to Use"
 print "${BLUE}To set-up the RGAP Virtual Environment in any terminal, run this script again:${NC}"

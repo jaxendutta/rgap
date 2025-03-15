@@ -1,56 +1,49 @@
-// src/components/features/grants/FilterPanel.tsx
-import { FILTER_LIMITS } from "@/constants/filters";
+// src/components/features/filter/FilterPanel.tsx
+import { DEFAULT_FILTER_STATE, FILTER_LIMITS } from "@/constants/filters";
 import { MultiSelect } from "@/components/common/ui/MultiSelect";
-import { RangeFilter } from "@/components/common/ui/RangeFilter";
+import type { RangeValue } from "@/components/common/ui/ValueRangeFilter";
+import { ValueRangeFilter } from "@/components/common/ui/ValueRangeFilter";
+import { DateRangeFilter } from "@/components/common/ui/DateRangeFilter";
 import { useFilterOptions } from "@/hooks/api/useFilterOptions";
-import type { GrantSearchParams } from "@/types/search";
 import { LoadingSpinner } from "@/components/common/ui/LoadingSpinner";
+import { Earth, Landmark, LocateFixed, Radar } from "lucide-react";
 
 interface FilterPanelProps {
-    filters: {
-        yearRange: { start: number; end: number };
-        valueRange: { min: number; max: number };
-        agencies: string[];
-        countries: string[];
-        provinces: string[];
-        cities: string[];
-    };
-    onChange: (filters: {
-        yearRange: { start: number; end: number };
-        valueRange: { min: number; max: number };
-        agencies: string[];
-        countries: string[];
-        provinces: string[];
-        cities: string[];
-    }) => void;
+    filters: typeof DEFAULT_FILTER_STATE;
+    onChange: (filters: typeof DEFAULT_FILTER_STATE) => void;
 }
 
 export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
     const { data: filterOptions, isLoading, error } = useFilterOptions();
 
-    const handleRangeChange = (
-        type: "yearRange" | "valueRange",
-        range: { min: number; max: number }
+    const handleDateRangeChange = (
+        range: typeof DEFAULT_FILTER_STATE.dateRange
     ) => {
-        if (type === "yearRange") {
-            onChange({
-                ...filters,
-                yearRange: {
-                    start: range.min,
-                    end: range.max,
-                },
-            });
-        } else {
-            onChange({
-                ...filters,
-                valueRange: range,
-            });
-        }
+        onChange({
+            ...filters,
+            dateRange: range,
+        });
+    };
+
+    const handleValueRangeChange = (range: RangeValue) => {
+        onChange({
+            ...filters,
+            valueRange: {
+                min:
+                    typeof range.min === "number"
+                        ? range.min
+                        : range.min.getTime(),
+                max:
+                    typeof range.max === "number"
+                        ? range.max
+                        : range.max.getTime(),
+            },
+        });
     };
 
     const handleMultiSelectChange = (
         field: keyof Pick<
-            GrantSearchParams["filters"],
+            typeof filters,
             "agencies" | "countries" | "provinces" | "cities"
         >,
         values: string[]
@@ -72,41 +65,35 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
     return (
         <div>
             <div className="text-xl font-medium mb-4">Filters</div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-                <RangeFilter
-                    label="Year"
-                    type="year"
-                    value={{
-                        min:
-                            Number(filters.yearRange?.start) ||
-                            FILTER_LIMITS.YEAR.MIN,
-                        max:
-                            Number(filters.yearRange?.end) ||
-                            FILTER_LIMITS.YEAR.MAX,
-                    }}
-                    onChange={(range) => handleRangeChange("yearRange", range)}
-                />
 
-                <RangeFilter
-                    label="Value"
-                    type="currency"
-                    value={
-                        filters.valueRange || {
-                            min: FILTER_LIMITS.GRANT_VALUE.MIN,
-                            max: FILTER_LIMITS.GRANT_VALUE.MAX,
-                        }
-                    }
-                    onChange={(range) => handleRangeChange("valueRange", range)}
-                />
-
-                {isLoading ? (
-                    <div className="col-span-full flex justify-center items-center py-4">
-                        <LoadingSpinner size="lg" />
-                    </div>
-                ) : (
-                    filterOptions && (
-                        <>
+            {isLoading ? (
+                <div className="flex justify-center items-center py-4">
+                    <LoadingSpinner size="lg" />
+                </div>
+            ) : (
+                filterOptions && (
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* All 6 filters in one grid */}
+                        <div className="col-span-2 sm:col-span-1 md:col-span-1 lg:col-span-1">
+                            <DateRangeFilter
+                                label={"Date Range"}
+                                value={filters.dateRange || FILTER_LIMITS.DATE_VALUE}
+                                onChange={handleDateRangeChange}
+                            />
+                        </div>
+                        
+                        <div className="col-span-2 sm:col-span-1 md:col-span-1 lg:col-span-1">
+                            <ValueRangeFilter
+                                label="Value"
+                                type="currency"
+                                value={filters.valueRange || FILTER_LIMITS.GRANT_VALUE}
+                                onChange={handleValueRangeChange}
+                            />
+                        </div>
+                        
+                        <div className="col-span-1 sm:col-span-1 md:col-span-1 lg:col-span-1">
                             <MultiSelect
+                                icon={Landmark}
                                 label="Agencies"
                                 options={filterOptions.agencies || []}
                                 values={filters.agencies || []}
@@ -114,8 +101,11 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
                                     handleMultiSelectChange("agencies", values)
                                 }
                             />
+                        </div>
 
+                        <div className="col-span-1 sm:col-span-1 md:col-span-1 lg:col-span-1">
                             <MultiSelect
+                                icon={Earth}
                                 label="Countries"
                                 options={filterOptions.countries || []}
                                 values={filters.countries || []}
@@ -123,28 +113,34 @@ export const FilterPanel = ({ filters, onChange }: FilterPanelProps) => {
                                     handleMultiSelectChange("countries", values)
                                 }
                             />
+                        </div>
 
+                        <div className="col-span-1 sm:col-span-1 md:col-span-1 lg:col-span-1">
                             <MultiSelect
                                 label="Provinces"
+                                icon={Radar}
                                 options={filterOptions.provinces || []}
                                 values={filters.provinces || []}
                                 onChange={(values) =>
                                     handleMultiSelectChange("provinces", values)
                                 }
                             />
+                        </div>
 
+                        <div className="col-span-1 sm:col-span-1 md:col-span-1 lg:col-span-1">
                             <MultiSelect
                                 label="Cities"
+                                icon={LocateFixed}
                                 options={filterOptions.cities || []}
                                 values={filters.cities || []}
                                 onChange={(values) =>
                                     handleMultiSelectChange("cities", values)
                                 }
                             />
-                        </>
-                    )
-                )}
-            </div>
+                        </div>
+                    </div>
+                )
+            )}
         </div>
     );
 };

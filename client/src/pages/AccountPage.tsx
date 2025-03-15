@@ -12,6 +12,9 @@ import {
     Calendar,
     Search,
     PackageOpen,
+    Trash2,
+    AlertCircle,
+    X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/common/ui/Card";
@@ -25,6 +28,7 @@ import portConfig from "../../../config/ports.json";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
 import PageContainer from "@/components/common/layout/PageContainer";
 import PageHeader from "@/components/common/layout/PageHeader";
+import { useUser } from "@/hooks/api/useUser";
 
 type SortField = "date" | "results";
 type SortDirection = "asc" | "desc";
@@ -229,10 +233,69 @@ export default function AccountPage() {
         navigate("/");
     };
 
+    const { deleteAccount } = useUser();
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [confirmEmail, setConfirmEmail] = useState("");
+    const [emailError, setEmailError] = useState("");
+
+    const handleDeleteAccount = async () => {
+        if (!user) return;
+
+        // Verify email matches
+        if (confirmEmail !== user.email) {
+            setEmailError("Email does not match your account");
+            return;
+        }
+
+        try {
+            setIsDeleting(true);
+            const success = await deleteAccount(user.user_id);
+
+            if (success) {
+                logout(); // Clear current user data
+                showNotification(
+                    "Your account has been successfully deleted",
+                    "info"
+                );
+                navigate("/");
+            } else {
+                showNotification(
+                    "Failed to delete your account. Please try again.",
+                    "error"
+                );
+            }
+        } catch (error) {
+            console.error("Error deleting account:", error);
+            showNotification("An error occurred. Please try again.", "error");
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteModal(false);
+            setConfirmEmail("");
+        }
+    };
+
+    // Add a function to open the modal
+    const openDeleteModal = () => {
+        setShowDeleteModal(true);
+        setConfirmEmail("");
+        setEmailError("");
+    };
+
+    // Add a function to close the modal
+    const closeDeleteModal = () => {
+        setShowDeleteModal(false);
+        setConfirmEmail("");
+        setEmailError("");
+    };
+
     return (
         <PageContainer>
             {/* Header */}
-            <PageHeader title="Account Settings" subtitle="Manage your account settings here." />
+            <PageHeader
+                title="Account Settings"
+                subtitle="Manage your account settings here."
+            />
 
             {/* Tabs */}
             <div className="flex space-x-2 lg:space-x-4">
@@ -312,7 +375,6 @@ export default function AccountPage() {
                             </div>
                         </Card>
                     )}
-
                     {/* Security Settings */}
                     {activeTab === "security" && (
                         <Card className="p-6 space-y-6">
@@ -427,7 +489,6 @@ export default function AccountPage() {
                             </div>
                         </Card>
                     )}
-
                     {/* Search History */}
                     {activeTab === "history" && (
                     <Card className="p-4 lg:p-6">
@@ -485,25 +546,166 @@ export default function AccountPage() {
                     {/* Logout Confirmation */}
                     {activeTab === "logout" && (
                         <Card className="p-6 border-red-200 bg-red-50">
-                            <div className="space-y-4">
-                                <h2 className="text-2xl font-medium text-gray-900">
-                                    You're about to sign out!
-                                </h2>
-                                <p className="text-gray-700">
-                                    Are you sure you want to sign out?
-                                </p>
-                                <div className="flex justify-end">
-                                    <Button
-                                        variant="primary"
-                                        onClick={handleLogout}
-                                        className="bg-red-600 hover:bg-red-700"
-                                        icon={LogOut}
-                                    >
-                                        Sign Out
-                                    </Button>
+                            <div className="space-y-6">
+                                {/* Sign Out Section */}
+                                <div className="space-y-4">
+                                    <h2 className="text-2xl font-medium text-gray-900">
+                                        You're about to sign out!
+                                    </h2>
+                                    <p className="text-gray-700">
+                                        Are you sure you want to sign out?
+                                    </p>
+                                    <div className="flex justify-end">
+                                        <Button
+                                            variant="primary"
+                                            onClick={handleLogout}
+                                            className="bg-red-600 hover:bg-red-700"
+                                            icon={LogOut}
+                                        >
+                                            Sign Out
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {/* Divider */}
+                                <div className="border-t border-red-300"></div>
+
+                                {/* Delete Account Section */}
+                                <div className="space-y-4 mt-6">
+                                    <h2 className="text-xl font-medium text-gray-900">
+                                        Delete Your Account
+                                    </h2>
+                                    <div className="bg-white rounded-md p-4 border border-red-300">
+                                        <div className="flex items-start">
+                                            <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 mr-2" />
+                                            <div>
+                                                <p className="text-gray-700">
+                                                    Deleting your account will:
+                                                </p>
+                                                <ul className="list-disc list-inside mt-2 text-gray-600 space-y-1">
+                                                    <li>
+                                                        Permanently remove your
+                                                        account information
+                                                    </li>
+                                                    <li>
+                                                        Anonymize all your
+                                                        search history
+                                                    </li>
+                                                    <li>
+                                                        Remove your bookmarks
+                                                    </li>
+                                                    <li>
+                                                        This action cannot be
+                                                        undone
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <Button
+                                            variant="outline"
+                                            onClick={openDeleteModal}
+                                            className="border-red-300 text-red-600 hover:bg-red-50"
+                                            icon={Trash2}
+                                        >
+                                            Delete Account
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </Card>
+                    )}
+
+                    {/* Delete Account Modal */}
+                    {showDeleteModal && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-lg max-w-md w-full shadow-xl p-6 relative">
+                                {/* Close button */}
+                                <button
+                                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                                    onClick={closeDeleteModal}
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+
+                                {/* Modal content */}
+                                <div className="space-y-4">
+                                    <div className="text-center">
+                                        <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                                            <Trash2 className="h-6 w-6 text-red-600" />
+                                        </div>
+                                        <h3 className="text-xl font-medium text-gray-900">
+                                            Delete Account Confirmation
+                                        </h3>
+                                    </div>
+
+                                    <div className="border border-red-200 bg-red-50 rounded-md p-4 text-sm">
+                                        <p className="text-red-700 font-medium">
+                                            Warning: This action cannot be
+                                            undone.
+                                        </p>
+                                        <p className="mt-1 text-gray-700">
+                                            Your account will be permanently
+                                            deleted, and all your personal data
+                                            will be removed. Your search history
+                                            will be anonymized.
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label
+                                            htmlFor="confirm-email"
+                                            className="block text-sm font-medium text-gray-700"
+                                        >
+                                            Please enter your email (
+                                            {user?.email}) to confirm:
+                                        </label>
+                                        <input
+                                            id="confirm-email"
+                                            type="email"
+                                            value={confirmEmail}
+                                            onChange={(e) => {
+                                                setConfirmEmail(e.target.value);
+                                                setEmailError("");
+                                            }}
+                                            className={`w-full px-3 py-2 border ${
+                                                emailError
+                                                    ? "border-red-500"
+                                                    : "border-gray-300"
+                                            } rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                            placeholder="Enter your email"
+                                        />
+                                        {emailError && (
+                                            <p className="text-red-500 text-xs mt-1">
+                                                {emailError}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="flex justify-end gap-3 pt-4 border-t">
+                                        <Button
+                                            variant="outline"
+                                            onClick={closeDeleteModal}
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            variant="primary"
+                                            onClick={handleDeleteAccount}
+                                            className="bg-red-600 hover:bg-red-700 text-white"
+                                            icon={Trash2}
+                                            isLoading={isDeleting}
+                                            disabled={
+                                                confirmEmail !== user?.email
+                                            }
+                                        >
+                                            Permanently Delete Account
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </motion.div>
             </AnimatePresence>

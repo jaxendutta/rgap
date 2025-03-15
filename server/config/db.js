@@ -1,5 +1,5 @@
 // server/config/db.js
-const mysql = require("mysql2/promise");
+import { createPool } from "mysql2/promise";
 
 // Database configuration
 const dbConfig = {
@@ -22,7 +22,7 @@ console.log("Database config:", {
     password: "[REDACTED]",
 });
 
-const pool = mysql.createPool(dbConfig);
+const pool = createPool(dbConfig);
 
 // Test query to verify connection and data
 async function verifyDatabaseSetup() {
@@ -39,7 +39,7 @@ async function verifyDatabaseSetup() {
             SELECT COUNT(*) as count 
             FROM ResearchGrant rg 
             JOIN Recipient r ON rg.recipient_id = r.recipient_id 
-            JOIN Organization o ON rg.owner_org = o.owner_org 
+            JOIN Organization o ON rg.org = o.org 
             LIMIT 1
         `);
         console.log("Join query test successful");
@@ -55,4 +55,4 @@ async function verifyDatabaseSetup() {
 verifyDatabaseSetup();
 
 // Export configured pool
-module.exports = pool;
+export default pool;

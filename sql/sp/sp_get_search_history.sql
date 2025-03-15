@@ -7,7 +7,6 @@ CREATE PROCEDURE sp_get_search_history(
 BEGIN
     SELECT 
         history_id,
-        quick_search,
         search_recipient,
         search_grant,
         search_institution,

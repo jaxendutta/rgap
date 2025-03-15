@@ -25,10 +25,11 @@ import {
     CalendarDays,
     Layers,
     LineChart,
-    Building,
     Hourglass,
     Calendar1,
-    GraduationCap
+    GraduationCap,
+    Landmark,
+    BookmarkCheck
 } from "lucide-react";
 import { formatSentenceCase } from "@/utils/format";
 import { cn } from "@/utils/cn";
@@ -48,10 +49,11 @@ import {
 
 interface GrantCardProps {
     grant: Grant;
+    isBookmarked?: boolean;
     onBookmark?: () => void;
 }
 
-export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
+export const GrantCard = ({ grant, isBookmarked, onBookmark }: GrantCardProps) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [activeTab, setActiveTab] = useState<
         "details" | "versions" | "funding"
@@ -84,10 +86,10 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
     // Sort amendments by number (descending - most recent first)
     const sortedAmendments = hasAmendments
         ? [...(grant.amendments_history || [])].sort((a, b) => {
-              const numA = parseInt(a.amendment_number);
-              const numB = parseInt(b.amendment_number);
-              return numB - numA;
-          })
+            const numA = parseInt(a.amendment_number);
+            const numB = parseInt(b.amendment_number);
+            return numB - numA;
+        })
         : [];
 
     // Format funding data for charts
@@ -188,8 +190,8 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
         },
         {
             icon: Calendar,
-            text: `${formatDate(grant.agreement_start_date)} → ${formatDate(
-                grant.agreement_end_date
+            text: `${formatDate(new Date(grant.agreement_start_date))} → ${formatDate(
+                new Date(grant.agreement_end_date)
             )}`,
         },
         {
@@ -199,7 +201,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                 grant.agreement_end_date
             ),
         },
-        { icon: Building, text: grant.org },
+        { icon: Landmark, text: grant.org },
     ].filter((tag) => !tag.hide);
 
     // Custom tooltip for the charts
@@ -254,7 +256,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                                 <span className="inline-flex">
                                     <GraduationCap className="h-5 w-5 mt-1 mr-1.5" />
                                     {grant.legal_name}
-                                    <ArrowUpRight className="inline-block h-4 w-4 ml-1 mt-1.5 lg:opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all" />
+                                    <ArrowUpRight className="inline-block h-4 w-4 ml-1 mt-2.5 lg:mt-1.5 lg:opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all" />
                                 </span>
                             </Link>
 
@@ -275,9 +277,19 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                                 {onBookmark && (
                                     <button
                                         onClick={onBookmark}
-                                        className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                                        className={cn("focus:outline-none",
+                                            isBookmarked
+                                                ? "text-blue-600 hover:text-blue-700"
+                                                : "text-gray-400 hover:text-gray-600")}
+                                        aria-label={
+                                            isBookmarked ? "Remove bookmark" : "Add bookmark"
+                                        }
                                     >
-                                        <BookmarkPlus className="h-5 w-5" />
+                                        {isBookmarked ? (
+                                            <BookmarkCheck className="h-5 w-5" />
+                                        ) : (
+                                            <BookmarkPlus className="h-5 w-5" />
+                                        )}
                                     </button>
                                 )}
                             </div>
@@ -313,8 +325,8 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                             >
                                 {hasTitle
                                     ? formatSentenceCase(
-                                          grant.agreement_title_en
-                                      )
+                                        grant.agreement_title_en
+                                    )
                                     : "No Agreement Title Record Found"}
                             </Tag>
                         </TagGroup>
@@ -350,7 +362,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                         >
                             <History className="h-3 w-3 mr-1" />
                             {typeof amendmentNumber === "number" &&
-                            amendmentNumber > 0
+                                amendmentNumber > 0
                                 ? `Latest Amendment: ${amendmentNumber}`
                                 : "Original"}{" "}
                             • {sortedAmendments.length} versions
@@ -597,10 +609,10 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                                                 </span>
                                                 <span className="col-span-7 text-gray-800 break-words">
                                                     {grant.org}
-                                                    {grant.owner_org_title && (
+                                                    {grant.org_title && (
                                                         <span className="block text-gray-500 text-xs mt-1">
                                                             {
-                                                                grant.owner_org_title
+                                                                grant.org_title
                                                             }
                                                         </span>
                                                     )}

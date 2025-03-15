@@ -23,12 +23,16 @@ DATA_SOURCE="sample"  # Default to sample data
 while [[ $# -gt 0 ]]; do
   key="$1"
   case $key in
-    --full)
+    --full|--prod)
       DATA_SOURCE="full"
       shift
       ;;
     --sample)
       DATA_SOURCE="sample"
+      shift
+      ;;
+    --filtered)
+      DATA_SOURCE="filtered"
       shift
       ;;
     *)
@@ -147,14 +151,6 @@ for dir in "${DIRS[@]}"; do
     fi
 done
 
-print_status "Fixing schema compatibility..."
-mysql --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap < "${SQL_ROOT}/data/fix_schema.sql" 2>>"$LOG_FILE"
-if [ $? -ne 0 ]; then
-    print_error "Failed to fix schema compatibility"
-    exit 1
-fi
-
-# Special handling for data loading
 print_status "Loading data preparation scripts..."
 {
     # Run data preparation SQL
@@ -164,71 +160,95 @@ print_status "Loading data preparation scripts..."
     exit 1
 }
 
-# After the schema files are run and before the data import
-print_status "Fixing database collations..."
-mysql --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap <"${SQL_ROOT}/data/fix_collations.sql" 2>>"$LOG_FILE"
-if [ $? -ne 0 ]; then
-    print_error "Failed to fix collations. Check the logs for details."
-    cat "$LOG_FILE" | tail -n 20
-    exit 1
-fi
-
 print_status "Loading ${DATA_SOURCE} data..."
 
-# Determine which data file to use
-if [ "$DATA_SOURCE" = "full" ]; then
-    # Find the most recent data file in the processed directory
-    PROCESSED_DIR="${SCRIPT_DIR}/data/processed"
+# Determine which data directory to use based on DATA_SOURCE
+case "$DATA_SOURCE" in
+    "full"|"prod")
+        # Use the processed directory for full/production data
+        DATA_DIR="${SCRIPT_DIR}/data/processed"
+        DATA_DESC="full"
+        ;;
+    "filtered")
+        # Use the filtered directory for filtered data
+        DATA_DIR="${SCRIPT_DIR}/data/filtered"
+        DATA_DESC="filtered"
+        ;;
+    *)
+        # Default to sample data
+        DATA_DIR="${SCRIPT_DIR}/data/sample"
+        DATA_DESC="sample"
+        ;;
+esac
+
+# Check if the selected data directory exists
+if [ ! -d "$DATA_DIR" ]; then
+    print_error "${DATA_DESC} data directory not found at ${DATA_DIR}"
+    if [ "$DATA_SOURCE" = "filtered" ]; then
+        print_status "The filtered dataset directory doesn't exist. You may need to create it first."
+        print_status "Falling back to sample dataset..."
+        DATA_DIR="${SCRIPT_DIR}/data/sample"
+        DATA_DESC="sample"
+        DATA_SOURCE="sample"
+    elif [ "$DATA_SOURCE" = "full" ] || [ "$DATA_SOURCE" = "prod" ]; then
+        print_status "Falling back to sample dataset..."
+        DATA_DIR="${SCRIPT_DIR}/data/sample"
+        DATA_DESC="sample"
+        DATA_SOURCE="sample"
+    fi
     
-    # Check if processed directory exists
-    if [ ! -d "$PROCESSED_DIR" ]; then
-        print_error "Processed data directory not found at ${PROCESSED_DIR}"
+    # If even the sample directory doesn't exist, exit with error
+    if [ ! -d "$DATA_DIR" ]; then
+        print_error "Sample data directory not found at ${DATA_DIR}"
         exit 1
     fi
+fi
+
+# Find the most recent data file in the selected directory
+# First try to find a 7z file
+SAMPLE_DATA_7Z=$(find "$DATA_DIR" -name "data_*.7z" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
+
+# If no 7z file, try to find a csv.gz file
+if [ -z "$SAMPLE_DATA_7Z" ]; then
+    SAMPLE_DATA_7Z=$(find "$DATA_DIR" -name "data_*.csv.gz" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
+fi
+
+# If still no file, try to find a plain csv file
+if [ -z "$SAMPLE_DATA_7Z" ]; then
+    SAMPLE_DATA_7Z=$(find "$DATA_DIR" -name "data_*.csv" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
+fi
+
+# Check if we found a data file
+if [ -z "$SAMPLE_DATA_7Z" ]; then
+    print_error "No ${DATA_DESC} dataset found in ${DATA_DIR}"
     
-    # Find the most recent 7z file
-    SAMPLE_DATA_7Z=$(find "$PROCESSED_DIR" -name "data_*.7z" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
-    
-    # If no 7z file, try to find a csv.gz file
-    if [ -z "$SAMPLE_DATA_7Z" ]; then
-        SAMPLE_DATA_7Z=$(find "$PROCESSED_DIR" -name "data_*.csv.gz" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
-    fi
-    
-    # If still no file, try to find a plain csv file
-    if [ -z "$SAMPLE_DATA_7Z" ]; then
-        SAMPLE_DATA_7Z=$(find "$PROCESSED_DIR" -name "data_*.csv" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
-    fi
-    
-    if [ -z "$SAMPLE_DATA_7Z" ]; then
-        print_error "No full dataset found in ${PROCESSED_DIR}"
+    # If not using sample already, try falling back to sample
+    if [ "$DATA_SOURCE" != "sample" ]; then
         print_status "Falling back to sample dataset..."
-        DATA_SOURCE="sample"
+        DATA_DIR="${SCRIPT_DIR}/data/sample"
+        SAMPLE_DATA_7Z=$(find "$DATA_DIR" -name "data_*.7z" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
+        
+        if [ -z "$SAMPLE_DATA_7Z" ]; then
+            SAMPLE_DATA_7Z=$(find "$DATA_DIR" -name "data_*.csv.gz" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
+        fi
+        
+        if [ -z "$SAMPLE_DATA_7Z" ]; then
+            SAMPLE_DATA_7Z=$(find "$DATA_DIR" -name "data_*.csv" -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -n 1)
+        fi
+        
+        if [ -z "$SAMPLE_DATA_7Z" ]; then
+            print_error "No fallback sample dataset found either. Please ensure data files exist."
+            exit 1
+        else
+            print_status "Using sample dataset: $(basename "$SAMPLE_DATA_7Z")"
+            DATA_DESC="sample"
+        fi
     else
-        print_status "Using full dataset: $(basename "$SAMPLE_DATA_7Z")"
+        print_error "No sample dataset found. Please ensure data files exist."
+        exit 1
     fi
 else
-    # Use the sample data file
-    SAMPLE_DATA_7Z="${SCRIPT_DIR}/data/sample/data_2019.7z"
-    
-    # If the 7z file doesn't exist, check for csv or csv.gz
-    if [ ! -f "$SAMPLE_DATA_7Z" ]; then
-        SAMPLE_DATA_CSV="${SCRIPT_DIR}/data/sample/data_2019.csv"
-        SAMPLE_DATA_CSV_GZ="${SCRIPT_DIR}/data/sample/data_2019.csv.gz"
-        
-        if [ -f "$SAMPLE_DATA_CSV" ]; then
-            SAMPLE_DATA_7Z="$SAMPLE_DATA_CSV"
-        elif [ -f "$SAMPLE_DATA_CSV_GZ" ]; then
-            SAMPLE_DATA_7Z="$SAMPLE_DATA_CSV_GZ"
-        else
-            print_error "Sample data file not found. Checked for:"
-            print_error "  - ${SAMPLE_DATA_7Z}"
-            print_error "  - ${SAMPLE_DATA_CSV}"
-            print_error "  - ${SAMPLE_DATA_CSV_GZ}"
-            exit 1
-        fi
-    fi
-    
-    print_status "Using sample dataset: $(basename "$SAMPLE_DATA_7Z")"
+    print_status "Using ${DATA_DESC} dataset: $(basename "$SAMPLE_DATA_7Z")"
 fi
 
 # Create temporary directory for extraction
@@ -463,4 +483,4 @@ print "• Database Name: rgap"
 print "• Username: rgap_user"
 print "• Password: 12345"
 print "• Socket: ${USER_MYSQL_DIR}/run/mysql.sock"
-print "• Data Source: ${DATA_SOURCE} (${TOTAL_ROWS} records)"
+print "• Data Source: ${DATA_DESC} (${TOTAL_ROWS} records)"

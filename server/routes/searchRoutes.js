@@ -1,9 +1,12 @@
 // server/routes/searchRoutes.js
-const express = require('express');
-const router = express.Router();
-const { searchGrants, getFilterOptions } = require('../controllers/searchController');
+import { Router } from "express";
+const router = Router();
+import {
+    searchGrants,
+    getFilterOptions,
+} from "../controllers/searchController.js";
 
-router.post('/', searchGrants);
-router.get('/filter-options', getFilterOptions);
+router.post("/", searchGrants);
+router.get("/filter-options", getFilterOptions);
 
-module.exports = router;
+export default router;

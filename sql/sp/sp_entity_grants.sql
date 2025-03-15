@@ -25,7 +25,7 @@ BEGIN
         FROM ResearchGrant rg
         JOIN Recipient r ON rg.recipient_id = r.recipient_id
         JOIN Institute i ON r.institute_id = i.institute_id
-        JOIN Organization org ON rg.owner_org = org.owner_org
+        JOIN Organization o ON rg.org = o.org
         WHERE 1=1';
     
     -- Add filters based on provided parameters
@@ -52,8 +52,8 @@ BEGIN
             i.city,
             i.province,
             i.country,
-            org.abbreviation AS org,
-            org.org_title AS owner_org_title,
+            o.org,
+            o.org_title,
             p.name_en AS prog_title_en,
             p.name_en AS program_name,
             p.purpose_en AS program_purpose,
@@ -73,7 +73,7 @@ BEGIN
         FROM ResearchGrant rg
         JOIN Recipient r ON rg.recipient_id = r.recipient_id
         JOIN Institute i ON r.institute_id = i.institute_id
-        JOIN Organization org ON rg.owner_org = org.owner_org
+        JOIN Organization o ON rg.org = o.org
         LEFT JOIN Program p ON rg.prog_id = p.prog_id
         JOIN (
             SELECT 
@@ -81,7 +81,7 @@ BEGIN
                 MAX(CAST(t.amendment_number AS UNSIGNED)) AS latest_amendment
             FROM ResearchGrant t
             JOIN Recipient tr ON t.recipient_id = tr.recipient_id
-            JOIN Organization org2 ON t.owner_org = org2.owner_org
+            JOIN Organization o2 ON t.org = o2.org
             WHERE 1=1
     ';
     

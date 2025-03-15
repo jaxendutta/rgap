@@ -89,7 +89,7 @@ export default function HomePage() {
                         Comprehensive Data
                     </h3>
                     <p className="mt-2 text-base text-gray-500">
-                        Access and analyze over 170,000 research grants from
+                        Access and analyze over 231,000 research grants from
                         NSERC, CIHR, and SSHRC.
                     </p>
                 </Card>

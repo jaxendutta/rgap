@@ -1,50 +1,75 @@
 // src/components/common/ui/RangeFilter.tsx
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown } from "lucide-react";
-import { FILTER_LIMITS } from "@/constants/filters";
+import {
+    ChevronDown,
+    Calendar,
+    CircleDollarSign,
+    LucideIcon,
+} from "lucide-react";
 import { cn } from "@/utils/cn";
 
-export interface RangeValue {
-    min: number;
-    max: number;
+// Generic range type that can work with both dates and numbers
+export interface Range<T> {
+    min: T;
+    max: T;
 }
 
-export interface RangeFilterProps {
+// Base props for all range filter components
+export interface RangeFilterProps<T> {
     label: string;
-    type: "currency" | "year";
-    value: RangeValue;
-    onChange: (value: RangeValue) => void;
+    icon?: LucideIcon;
+    value: Range<T>;
+    onChange: (value: Range<T>) => void;
+    formatValue: (val: T) => string;
+    parseValue?: (rawValue: string) => T | null;
+    quickRanges: Array<{
+        label: string;
+        min: T;
+        max: T;
+    }>;
+    limitMin: T;
+    limitMax: T;
+    inputType?: "text" | "date" | "number"; // Type of input field to render
+    inputLabels?: { min: string; max: string }; // Custom labels for min/max fields
+    className?: string;
 }
 
-export const RangeFilter = ({
+export function RangeFilter<T>({
     label,
-    type,
+    icon: Icon,
     value,
     onChange,
-}: RangeFilterProps) => {
+    formatValue,
+    parseValue,
+    quickRanges,
+    limitMin,
+    limitMax,
+    inputType = "text",
+    inputLabels = { min: "Minimum", max: "Maximum" },
+    className,
+}: RangeFilterProps<T>) {
     const [isOpen, setIsOpen] = useState(false);
-    const [localValue, setLocalValue] = useState(value);
+    const [localValue, setLocalValue] = useState<Range<T>>(value);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Get limits based on type
-    const limits =
-        type === "currency" ? FILTER_LIMITS.GRANT_VALUE : FILTER_LIMITS.YEAR;
+    // Get default icon based on type
+    const DefaultIcon =
+        typeof value.min === "number" || typeof value.min === "string"
+            ? CircleDollarSign
+            : Calendar;
 
-    const formatValue = (val: number) => {
-        if (type === "currency") {
-            return new Intl.NumberFormat("en-CA", {
-                style: "currency",
-                currency: "CAD",
-                maximumFractionDigits: 0,
-            }).format(val);
-        }
-        return val.toString();
-    };
+    const FinalIcon = Icon || DefaultIcon;
 
+    // Format display value
     const displayValue =
-        value.min === limits.MIN && value.max === limits.MAX
+        value.min === limitMin && value.max === limitMax
             ? "Any"
             : `${formatValue(value.min)} - ${formatValue(value.max)}`;
+
+    // Update local state when props change
+    useEffect(() => {
+        setLocalValue(value);
+    }, [value]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -60,42 +85,16 @@ export const RangeFilter = ({
             document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Get quick ranges based on type
-    const quickRanges =
-        type === "year"
-            ? [
-                  {
-                      label: "Last 5 years",
-                      min: new Date().getFullYear() - 4,
-                      max: new Date().getFullYear(),
-                  },
-                  {
-                      label: "Last 10 years",
-                      min: new Date().getFullYear() - 9,
-                      max: new Date().getFullYear(),
-                  },
-                  { label: "All time", min: limits.MIN, max: limits.MAX },
-              ]
-            : [
-                  { label: "Under $50k", min: 0, max: 50_000 },
-                  { label: "$50k - $200k", min: 50_000, max: 200_000 },
-                  { label: "$200k - $1M", min: 200_000, max: 1_000_000 },
-                  { label: "Over $1M", min: 1_000_000, max: limits.MAX },
-                  { label: "All values", min: limits.MIN, max: limits.MAX },
-              ];
-
-    const handleInputChange = (input: "min" | "max", rawValue: string) => {
-        const cleanValue = rawValue.replace(/[^0-9.]/g, "");
-        const numValue = Number(cleanValue);
-
-        if (!isNaN(numValue)) {
-            setLocalValue((prev) => ({
-                ...prev,
-                [input]:
-                    input === "min"
-                        ? Math.min(numValue, value.max)
-                        : Math.max(numValue, value.min),
-            }));
+    // Generic input handler
+    const handleValueChange = (field: "min" | "max", rawValue: string) => {
+        if (parseValue) {
+            const parsedValue = parseValue(rawValue);
+            if (parsedValue !== null) {
+                setLocalValue((prev) => ({
+                    ...prev,
+                    [field]: parsedValue,
+                }));
+            }
         }
     };
 
@@ -104,8 +103,34 @@ export const RangeFilter = ({
         setIsOpen(false);
     };
 
+    // Handle selecting a quick range
+    const handleQuickRangeSelect = (range: { min: T; max: T }) => {
+        // Update the local value
+        setLocalValue({
+            min: range.min,
+            max: range.max,
+        });
+
+        // Call the onChange handler immediately
+        onChange({
+            min: range.min,
+            max: range.max,
+        });
+
+        // Close the dropdown
+        setIsOpen(false);
+
+        // Force a small delay before letting the change propagate
+        // This helps ensure the parent component has time to update its state
+        setTimeout(() => {
+            // This is a trick to make sure the browser has time to process the state change
+            // before the user might click elsewhere
+            document.body.click();
+        }, 50);
+    };
+
     return (
-        <div className="relative" ref={dropdownRef}>
+        <div className={cn("relative", className)} ref={dropdownRef}>
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
@@ -115,8 +140,9 @@ export const RangeFilter = ({
                 )}
             >
                 <span className="flex items-center gap-2">
-                    <span className="font-medium">{label}:</span>
-                    <span className="text-gray-600">{displayValue}</span>
+                    <FinalIcon className="h-4 w-4 text-gray-500" />
+                    <span className="font-medium">{label}</span>
+                    <span className="text-gray-600 italic">{displayValue}</span>
                 </span>
                 <ChevronDown
                     className={cn(
@@ -127,20 +153,16 @@ export const RangeFilter = ({
             </button>
 
             {isOpen && (
-                <div className="absolute z-10 w-72 mt-1 bg-white rounded-lg shadow-lg border">
+                <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border">
                     <div className="p-4">
                         <div className="mb-4 space-y-1">
                             {quickRanges.map((range) => (
                                 <button
                                     key={range.label}
                                     className="w-full px-2 py-1.5 text-left text-sm hover:bg-gray-50 rounded"
-                                    onClick={() => {
-                                        onChange({
-                                            min: range.min,
-                                            max: range.max,
-                                        });
-                                        setIsOpen(false);
-                                    }}
+                                    onClick={() =>
+                                        handleQuickRangeSelect(range)
+                                    }
                                 >
                                     {range.label}
                                 </button>
@@ -148,39 +170,80 @@ export const RangeFilter = ({
                         </div>
 
                         <div className="border-t pt-4">
-                            <div className="flex items-center justify-between gap-4">
-                                <div>
+                            {/* Input fields based on inputType */}
+                            <div className="flex items-center justify-between space-x-2">
+                                <div className="flex-1">
                                     <label className="block text-sm text-gray-600 mb-1">
-                                        Minimum
+                                        {inputLabels.min}
                                     </label>
-                                    <input
-                                        type="text"
-                                        value={formatValue(localValue.min)}
-                                        onChange={(e) =>
-                                            handleInputChange(
-                                                "min",
-                                                e.target.value
-                                            )
-                                        }
-                                        className="w-full px-3 py-1.5 text-sm border rounded-md"
-                                    />
+                                    {inputType === "date" ? (
+                                        <input
+                                            type="date"
+                                            value={
+                                                localValue.min instanceof Date
+                                                    ? (localValue.min as Date)
+                                                          .toISOString()
+                                                          .split("T")[0]
+                                                    : String(localValue.min)
+                                            }
+                                            onChange={(e) =>
+                                                handleValueChange(
+                                                    "min",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="w-full px-3 py-1.5 text-sm border rounded-md"
+                                        />
+                                    ) : (
+                                        <input
+                                            type={inputType}
+                                            value={formatValue(localValue.min)}
+                                            onChange={(e) =>
+                                                handleValueChange(
+                                                    "min",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="w-full px-3 py-1.5 text-sm border rounded-md"
+                                        />
+                                    )}
                                 </div>
-                                <span className="text-gray-500 mt-6">to</span>
-                                <div>
+
+                                <div className="flex-1">
                                     <label className="block text-sm text-gray-600 mb-1">
-                                        Maximum
+                                        {inputLabels.max}
                                     </label>
-                                    <input
-                                        type="text"
-                                        value={formatValue(localValue.max)}
-                                        onChange={(e) =>
-                                            handleInputChange(
-                                                "max",
-                                                e.target.value
-                                            )
-                                        }
-                                        className="w-full px-3 py-1.5 text-sm border rounded-md"
-                                    />
+                                    {inputType === "date" ? (
+                                        <input
+                                            type="date"
+                                            value={
+                                                localValue.max instanceof Date
+                                                    ? (localValue.max as Date)
+                                                          .toISOString()
+                                                          .split("T")[0]
+                                                    : String(localValue.max)
+                                            }
+                                            onChange={(e) =>
+                                                handleValueChange(
+                                                    "max",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="w-full px-3 py-1.5 text-sm border rounded-md"
+                                        />
+                                    ) : (
+                                        <input
+                                            type={inputType}
+                                            value={formatValue(localValue.max)}
+                                            onChange={(e) =>
+                                                handleValueChange(
+                                                    "max",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="w-full px-3 py-1.5 text-sm border rounded-md"
+                                        />
+                                    )}
                                 </div>
                             </div>
 
@@ -196,4 +259,4 @@ export const RangeFilter = ({
             )}
         </div>
     );
-};
+}
