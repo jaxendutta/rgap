@@ -54,6 +54,7 @@ app.use("/search", searchRoutes);
 app.use("/recipients", recipientRoutes);
 app.use("/institutes", instituteRoutes);
 app.use("/save", saveRoutes);
+app.use("/search-history", require("./routes/searchHistoryRoutes"));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

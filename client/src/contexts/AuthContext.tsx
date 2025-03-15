@@ -17,10 +17,11 @@ interface User {
 }
 
 interface AuthContextType {
-    user: User | null;
-    login: (userData: User) => void;
-    logout: () => void;
-    isLoading: boolean;
+  user: User | null;
+  login: (userData: User) => void;
+  logout: () => void;
+  updateUser: (updates: Partial<User>) => void;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -81,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem("user", JSON.stringify(userData));
     };
 
-    const logout = async () => {
+  const logout = async () => {
         try {
             // Try to call logout endpoint
             const baseurl =
@@ -96,16 +97,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error("Error during logout:", error);
         } finally {
             // Clear local state regardless of server response
-            setUser(null);
-            localStorage.removeItem("user");
+        setUser(null);
+        localStorage.removeItem('user');
+  };
+};
+  // Update the current user with new fields
+  const updateUser = (updates: Partial<User>) => {
+    if (!user) return;
+    const updatedUser = { ...user, ...updates };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
         }
-    };
+ 
 
-    return (
-        <AuthContext.Provider value={{ user, login, logout, isLoading }}>
-            {children}
-        </AuthContext.Provider>
-    );
+  return (
+    <AuthContext.Provider value={{ user, login, logout, updateUser, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = (): AuthContextType => {

@@ -6,6 +6,8 @@ import {
     loginUser,
     logout,
     deleteAccount,
+    updateUserProfile, 
+    updateUserPassword
 } from "../controllers/authController.js";
 
 // Auth routes
@@ -13,6 +15,8 @@ router.post("/signup", signupUser);
 router.post("/login", loginUser);
 router.post("/logout", logout);
 router.delete("/delete-account/:userId", deleteAccount);
+router.put('/update-profile', updateUserProfile);
+router.put('/update-password', updateUserPassword);
 
 // Session check endpoint
 router.get("/session", (req, res) => {

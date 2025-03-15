@@ -113,6 +113,10 @@ funding patterns, institutional success rates, and research investment trends ac
    ```bash
    ./setup_mysql.sh
    ```
+4. Start the application
+   ```bash
+   ./setup_app.sh
+   ```
 
 This will:
 - Set up a local MySQL instance

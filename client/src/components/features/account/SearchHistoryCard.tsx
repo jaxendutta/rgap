@@ -12,32 +12,40 @@ import { Button } from "@/components/common/ui/Button";
 import { Card } from "@/components/common/ui/Card";
 import { FilterTag } from "@/components/features/filter/FilterTag";
 import { formatCurrency } from "@/utils/format";
-import type { SearchHistory } from "@/types/models";
 import type { GrantSearchParams } from "@/types/search";
 import { FILTER_LIMITS, DEFAULT_FILTER_STATE } from "@/constants/filters";
 
+export interface SearchHistory {
+  history_id: number;
+  timestamp: Date;
+  search_params: GrantSearchParams;
+  results: number;
+}
+
 interface SearchHistoryCardProps {
-    search: SearchHistory;
-    onRerun: (params: GrantSearchParams) => void;
+  search: SearchHistory;
+  onRerun: (params: GrantSearchParams) => void;
+  onDelete: (historyId: number) => void;
 }
 
 export const SearchHistoryCard = ({
-    search,
-    onRerun,
+  search,
+  onRerun,
+  onDelete,
 }: SearchHistoryCardProps) => {
-    // Filter out empty search terms
-    const searchTerms = Object.entries(search.search_params.searchTerms)
-        .filter(([_, value]) => value !== "")
-        .map(([key, value]) => ({
-            key,
-            value,
-            icon:
-                key === "recipient"
-                    ? GraduationCap
-                    : key === "institute"
-                    ? University
-                    : BookMarked,
-        }));
+  // Extract search terms from the search_params object, filtering out empty values
+  const searchTerms = Object.entries(search.search_params.searchTerms)
+    .filter(([_, value]) => value !== '')
+    .map(([key, value]) => ({
+      key,
+      value,
+      icon:
+        key === 'recipient'
+          ? GraduationCap
+          : key === 'institute'
+          ? University
+          : BookMarked,
+    }));
 
     // Filter out empty filter values
     const activeFilters = Object.entries(search.search_params.filters).filter(
@@ -157,16 +165,15 @@ export const SearchHistoryCard = ({
                 return null;
             })}
 
-            {/* Action Button */}
-            <div className="flex justify-end">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onRerun(search.search_params)}
-                >
-                    Run Search
-                </Button>
-            </div>
-        </Card>
-    );
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={() => onRerun(search.search_params)}>
+          Run Search
+        </Button>
+        <Button variant="destructive" size="sm" onClick={() => onDelete(search.history_id)}>
+          Delete
+        </Button>
+      </div>
+    </Card>
+  );
 };
