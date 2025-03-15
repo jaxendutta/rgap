@@ -1,19 +1,440 @@
 // src/pages/BookmarksPage.tsx
-import { useState } from "react";
-import { BookMarked, University, GraduationCap, Search } from "lucide-react";
-import { clsx } from "clsx";
+import { useState, useEffect } from "react";
+import {
+    BookMarked,
+    University,
+    GraduationCap,
+    Search,
+    PackageOpen,
+    LogIn,
+    RefreshCw,
+    XCircle,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import PageContainer from "@/components/common/layout/PageContainer";
 import PageHeader from "@/components/common/layout/PageHeader";
+import { Button } from "@/components/common/ui/Button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAllBookmarks, useToggleBookmark } from "@/hooks/api/useBookmarks";
+import EntityCard from "@/components/common/ui/EntityCard";
+import { GrantCard } from "@/components/features/grants/GrantCard";
+import { useNotification } from "@/components/features/notifications/NotificationProvider";
+import { SearchHistoryCard } from "@/components/features/account/SearchHistoryCard";
+import LoadingState from "@/components/common/ui/LoadingState";
+import EmptyState from "@/components/common/ui/EmptyState";
+import ErrorState from "@/components/common/ui/ErrorState";
+import { BookmarkType } from "@/types/bookmark";
+import { cn } from "@/utils/cn";
+import { Grant, Institute, Recipient, SearchHistory } from "@/types/models";
+import { useInstitutes } from "@/hooks/api/useInstitutes";
+import { useRecipients } from "@/hooks/api/useRecipients";
 
+// Define the tab structure with correct bookmark types
 const tabs = [
-    { name: "Grants", icon: BookMarked },
-    { name: "Institutes", icon: University },
-    { name: "Recipients", icon: GraduationCap },
-    { name: "Searches", icon: Search },
+    { name: "Grants", icon: BookMarked, type: "grant" as BookmarkType },
+    { name: "Institutes", icon: University, type: "institute" as BookmarkType },
+    {
+        name: "Recipients",
+        icon: GraduationCap,
+        type: "recipient" as BookmarkType,
+    },
+    {
+        name: "Searches",
+        icon: Search,
+        type: "search" as BookmarkType,
+    },
 ];
 
 export const BookmarksPage = () => {
+    const navigate = useNavigate();
+    const { user } = useAuth();
+    const { showNotification } = useNotification();
     const [activeTab, setActiveTab] = useState("Grants");
+    const [bookmarkedItems, setBookmarkedItems] = useState<
+        (Grant | Institute | Recipient | SearchHistory)[]
+    >([]);
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+    const [detailsError, setDetailsError] = useState<string | null>(null);
+
+    // Get data for Institutes using the hook
+    const { data: institutesData, isLoading: isLoadingInstitutes } =
+        useInstitutes(1, 100);
+
+    // Get data for Recipients using the hook
+    const { data: recipientsData, isLoading: isLoadingRecipients } =
+        useRecipients(1, 100);
+
+    // Get the active tab type for the bookmark API
+    const activeTabType =
+        tabs.find((tab) => tab.name === activeTab)?.type || "grant";
+
+    // Use the hook to get bookmarked item IDs
+    const {
+        data: bookmarkedIds = [],
+        isLoading: isLoadingBookmarks,
+        isError: isBookmarksError,
+        error: bookmarksError,
+        refetch: refetchBookmarks,
+    } = useAllBookmarks(activeTabType, user?.user_id);
+
+    // Set up toggle bookmark mutation
+    const toggleBookmarkMutation = useToggleBookmark(activeTabType);
+
+    // Process bookmarked items based on the active tab and filter from loaded data
+    useEffect(() => {
+        if (isLoadingBookmarks || bookmarkedIds.length === 0) {
+            setBookmarkedItems([]);
+            return;
+        }
+
+        setIsLoadingDetails(true);
+        setDetailsError(null);
+
+        try {
+            // Process items based on the tab type
+            switch (activeTabType) {
+                case "grant":
+                    // For grants, we'd typically fetch from API since we need latest data
+                    // For now, use placeholders until we can implement a proper grant details hook
+                    const grantItems = bookmarkedIds.map((id) => {
+                        return {
+                            grant_id: id,
+                            ref_number: `G-${id}`,
+                            recipient_id: 1,
+                            legal_name: "Grant Recipient",
+                            research_organization_name: "Research Institution",
+                            agreement_value: 100000,
+                            agreement_start_date: new Date().toISOString(),
+                            agreement_end_date: new Date(
+                                new Date().setFullYear(
+                                    new Date().getFullYear() + 1
+                                )
+                            ).toISOString(),
+                            agreement_title_en: "Research Grant",
+                            org: "NSERC",
+                        } as Grant;
+                    });
+                    setBookmarkedItems(grantItems);
+                    break;
+
+                case "institute":
+                    // Filter institutes from the loaded data
+                    if (institutesData && institutesData.data) {
+                        const instituteItems = institutesData.data.filter(
+                            (institute) =>
+                                bookmarkedIds.includes(institute.institute_id)
+                        );
+                        setBookmarkedItems(instituteItems);
+                    }
+                    break;
+
+                case "recipient":
+                    // Filter recipients from the loaded data
+                    if (recipientsData && recipientsData.data) {
+                        const recipientItems = recipientsData.data.filter(
+                            (recipient) =>
+                                bookmarkedIds.includes(recipient.recipient_id)
+                        );
+                        setBookmarkedItems(recipientItems);
+                    }
+                    break;
+
+                case "search":
+                    // For saved searches, create placeholder search history objects
+                    const searchItems = bookmarkedIds.map((id) => {
+                        return {
+                            id,
+                            timestamp: new Date(),
+                            search_params: {
+                                searchTerms: {
+                                    recipient: "Sample Recipient",
+                                    institute: "Sample Institute",
+                                    grant: "Sample Grant",
+                                },
+                                filters: {},
+                                sortConfig: {
+                                    field: "date",
+                                    direction: "desc",
+                                },
+                            },
+                            results: Math.floor(Math.random() * 100) + 1,
+                        } as SearchHistory;
+                    });
+                    setBookmarkedItems(searchItems);
+                    break;
+            }
+        } catch (error) {
+            console.error("Error processing bookmarked items:", error);
+            setDetailsError(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to load bookmark details"
+            );
+        } finally {
+            setIsLoadingDetails(false);
+        }
+    }, [
+        bookmarkedIds,
+        activeTabType,
+        institutesData,
+        recipientsData,
+        isLoadingBookmarks,
+    ]);
+
+    // Handle toggling a bookmark
+    const handleToggleBookmark = (id: number) => {
+        if (!user?.user_id) {
+            showNotification(
+                "You must be logged in to manage bookmarks",
+                "error"
+            );
+            return;
+        }
+
+        toggleBookmarkMutation.mutate(
+            {
+                user_id: user.user_id,
+                entity_id: id,
+                isBookmarked: true, // Since we're on the bookmarks page, we're removing bookmarks
+            },
+            {
+                onSuccess: () => {
+                    // Remove the item from the local state immediately for better UX
+                    setBookmarkedItems((current) =>
+                        current.filter((item) => {
+                            if (
+                                activeTabType === "grant" &&
+                                "grant_id" in item
+                            ) {
+                                return item.grant_id !== id;
+                            } else if (
+                                activeTabType === "institute" &&
+                                "institute_id" in item
+                            ) {
+                                return item.institute_id !== id;
+                            } else if (
+                                activeTabType === "recipient" &&
+                                "recipient_id" in item
+                            ) {
+                                return item.recipient_id !== id;
+                            }
+                            return true;
+                        })
+                    );
+
+                    showNotification("Bookmark removed", "success");
+                },
+            }
+        );
+    };
+
+    // If user is not logged in, show sign-in prompt
+    if (!user) {
+        return (
+            <PageContainer>
+                <PageHeader
+                    title="Bookmarks"
+                    subtitle="Sign in to view and manage your bookmarks."
+                />
+
+                <div className="flex flex-col items-center justify-center p-10 bg-white rounded-lg border shadow-sm">
+                    <PackageOpen className="h-16 w-16 text-gray-400 mb-4" />
+                    <h3 className="text-xl font-medium text-gray-900 mb-2">
+                        Sign in to use bookmarks
+                    </h3>
+                    <p className="text-gray-600 mb-6 max-w-md text-center">
+                        You need to be signed in to save and view bookmarks.
+                        Sign in or create an account to get started.
+                    </p>
+                    <Button
+                        variant="primary"
+                        icon={LogIn}
+                        onClick={() => navigate("/auth")}
+                    >
+                        Sign In
+                    </Button>
+                </div>
+            </PageContainer>
+        );
+    }
+
+    // Render bookmarked entities based on the active tab
+    const renderBookmarkedItems = () => {
+        // Show appropriate loading state
+        if (
+            isLoadingBookmarks ||
+            (activeTabType === "institute" && isLoadingInstitutes) ||
+            (activeTabType === "recipient" && isLoadingRecipients) ||
+            isLoadingDetails
+        ) {
+            return (
+                <LoadingState
+                    title={`Loading your bookmarked ${activeTab.toLowerCase()}...`}
+                    message="Please wait while we fetch your saved items."
+                    fullHeight
+                    size="md"
+                />
+            );
+        }
+
+        if (isBookmarksError) {
+            return (
+                <ErrorState
+                    title="Error Loading Bookmarks"
+                    message={
+                        bookmarksError instanceof Error
+                            ? bookmarksError.message
+                            : "Failed to load your bookmarks."
+                    }
+                    onRetry={() => refetchBookmarks()}
+                    size="md"
+                    icon={XCircle}
+                />
+            );
+        }
+
+        if (detailsError) {
+            return (
+                <ErrorState
+                    title="Error Loading Details"
+                    message={detailsError}
+                    onRetry={() => refetchBookmarks()}
+                    size="md"
+                    icon={XCircle}
+                />
+            );
+        }
+
+        if (bookmarkedIds.length === 0) {
+            return (
+                <EmptyState
+                    title={`No bookmarked ${activeTab.toLowerCase()}`}
+                    message={`You haven't saved any ${activeTab.toLowerCase()} yet. Browse and click the bookmark icon to save items for later.`}
+                    primaryAction={{
+                        label:
+                            activeTab === "Grants"
+                                ? "Browse Grants"
+                                : activeTab === "Institutes"
+                                ? "Browse Institutes"
+                                : activeTab === "Recipients"
+                                ? "Browse Recipients"
+                                : "Search",
+                        onClick: () =>
+                            navigate(
+                                activeTab === "Grants"
+                                    ? "/search"
+                                    : activeTab === "Institutes"
+                                    ? "/institutes"
+                                    : activeTab === "Recipients"
+                                    ? "/recipients"
+                                    : "/search"
+                            ),
+                        icon: Search,
+                    }}
+                    size="md"
+                />
+            );
+        }
+
+        if (bookmarkedItems.length === 0) {
+            // This should only happen if we have IDs but couldn't load the details
+            return (
+                <div className="flex flex-col items-center justify-center p-8 bg-white rounded-lg border shadow-sm">
+                    <RefreshCw className="h-12 w-12 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        No details available
+                    </h3>
+                    <p className="text-gray-600 mb-6 max-w-md text-center">
+                        We found your bookmarks, but couldn't load the details.
+                        This might be a temporary issue.
+                    </p>
+                    <Button
+                        variant="primary"
+                        icon={RefreshCw}
+                        onClick={() => refetchBookmarks()}
+                    >
+                        Try Again
+                    </Button>
+                </div>
+            );
+        }
+
+        // Render for searches tab
+        if (activeTabType === "search") {
+            return (
+                <div className="space-y-4">
+                    {bookmarkedItems.map((item) => {
+                        if ("id" in item && "search_params" in item) {
+                            return (
+                                <SearchHistoryCard
+                                    key={item.id}
+                                    search={item as SearchHistory}
+                                    onRerun={(params) =>
+                                        navigate("/search", {
+                                            state: { searchParams: params },
+                                        })
+                                    }
+                                />
+                            );
+                        }
+                        return null;
+                    })}
+                </div>
+            );
+        }
+
+        // Render the grid of bookmarked items for other tab types
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {bookmarkedItems.map((item) => {
+                    // Render different entity cards based on the active tab
+                    if (activeTabType === "grant" && "grant_id" in item) {
+                        return (
+                            <GrantCard
+                                key={item.grant_id}
+                                grant={item as Grant}
+                                isBookmarked={true}
+                                onBookmark={() =>
+                                    handleToggleBookmark(item.grant_id || 0)
+                                }
+                            />
+                        );
+                    } else if (
+                        activeTabType === "institute" &&
+                        "institute_id" in item
+                    ) {
+                        return (
+                            <EntityCard
+                                key={item.institute_id}
+                                entity={item as Institute}
+                                entityType="institute"
+                                isBookmarked={true}
+                                onBookmark={() =>
+                                    handleToggleBookmark(item.institute_id || 0)
+                                }
+                            />
+                        );
+                    } else if (
+                        activeTabType === "recipient" &&
+                        "recipient_id" in item
+                    ) {
+                        return (
+                            <EntityCard
+                                key={item.recipient_id}
+                                entity={item as Recipient}
+                                entityType="recipient"
+                                isBookmarked={true}
+                                onBookmark={() =>
+                                    handleToggleBookmark(item.recipient_id || 0)
+                                }
+                            />
+                        );
+                    }
+                    return null;
+                })}
+            </div>
+        );
+    };
 
     return (
         <PageContainer>
@@ -33,10 +454,10 @@ export const BookmarksPage = () => {
                         <button
                             key={tab.name}
                             onClick={() => setActiveTab(tab.name)}
-                            className={clsx(
+                            className={cn(
                                 "w-full flex items-center py-3 rounded-lg transition-all duration-200 gap-0.5 lg:gap-2",
                                 isActive
-                                    ? "bg-gray-900 text-white"
+                                    ? "bg-gray-900 text-white hover:bg-gray-800"
                                     : "bg-gray-100 text-gray-700 hover:bg-gray-200",
                                 "flex-col lg:flex-row",
                                 "px-2 lg:px-4",
@@ -51,28 +472,7 @@ export const BookmarksPage = () => {
             </div>
 
             {/* Tab Content */}
-            <div className="mt-6">
-                {activeTab === "Grants" && (
-                    <div className="text-gray-500">
-                        No bookmarked grants yet.
-                    </div>
-                )}
-                {activeTab === "Institutes" && (
-                    <div className="text-gray-500">
-                        No bookmarked research institutes yet.
-                    </div>
-                )}
-                {activeTab === "Recipients" && (
-                    <div className="text-gray-500">
-                        No bookmarked recipients yet.
-                    </div>
-                )}
-                {activeTab === "Searches" && (
-                    <div className="text-gray-500">
-                        No bookmarked searches yet.
-                    </div>
-                )}
-            </div>
+            <div className="mt-6">{renderBookmarkedItems()}</div>
         </PageContainer>
     );
 };

@@ -55,7 +55,6 @@ const GrantsList: React.FC<GrantsListProps> = ({
     initialSortConfig = { field: "date", direction: "desc" },
     emptyMessage = "No grants found.",
     contextData = {},
-    onBookmark,
     showVisualization = true,
     visualizationInitiallyVisible = false,
     viewContext = "search",
@@ -187,40 +186,52 @@ const GrantsList: React.FC<GrantsListProps> = ({
     // Get total bookmarks
     const { user } = useAuth();
     const user_id = user?.user_id;
-    const { data: bookmarkedIds = [], isLoading: isLoadingBookmarks, isError: isGetBookmarksError, } = useAllBookmarks("grant", user_id,);
-    const toggleBookmarkMutation = useToggleBookmark("grant");
+    const bookmarkType = "grant";
+
+    const {
+        data: bookmarkedIds = [],
+    } = useAllBookmarks(bookmarkType, user_id);
+    const toggleBookmarkMutation = useToggleBookmark(bookmarkType);
 
     // Use notification to show bookmark status
     const { showNotification } = useNotification();
 
     // Handle bookmarks
     const toggleBookmark = (id: number) => {
-        if (!user_id) {
+        if (!user || !user.user_id) {
             showNotification(
-                "You must be logged in to bookmark.",
-                "error",
+                "You must be logged in to bookmark grants",
+                "error"
             );
             return;
         }
+
         const isBookmarked = bookmarkedIds.includes(id);
-        //console.log(`toggleBookmark: isBookmarked:${isBookmarked}`);
-        //console.log(bookmarkedIds)
-        
+
         // Trigger the mutation
-        toggleBookmarkMutation.mutate({ user_id: user_id, entity_id: id, isBookmarked });
+        toggleBookmarkMutation.mutate({
+            user_id: user.user_id,
+            entity_id: id,
+            isBookmarked,
+        });
     };
+
     // Render grant item
     const renderGrantItem = (grant: Grant) => (
         <GrantCard
             grant={grant}
-            isBookmarked={grant.grant_id? bookmarkedIds.includes(grant.grant_id) : false}
+            isBookmarked={
+                grant.grant_id ? bookmarkedIds.includes(grant.grant_id) : false
+            }
             onBookmark={() => grant.grant_id && toggleBookmark(grant.grant_id)}
         />
     );
 
     // Key extractor for grants - ensure unique keys by combining multiple identifiers
     const keyExtractor = (grant: Grant, index: number) =>
-        `grant-${grant.grant_id || ''}-${grant.ref_number || ''}-${grant.amendment_number || '0'}-idx${index}`;
+        `grant-${grant.grant_id || ""}-${grant.ref_number || ""}-${
+            grant.amendment_number || "0"
+        }-idx${index}`;
 
     // Visualization component - pass all available grant data, not just the visible ones
     // Use the prepareGrantsForVisualization function to ensure data quality

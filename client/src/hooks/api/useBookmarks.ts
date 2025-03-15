@@ -2,8 +2,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import portConfig from "../../../../config/ports.json";
-import { EntityType } from "@/components/common/ui/EntityCard";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
+import { BookmarkType } from "@/types/bookmark";
 
 const API = axios.create({
     baseURL:
@@ -36,12 +36,12 @@ API.interceptors.response.use(
 
 export const bookmarkKeys = {
     all: ["bookmarks"] as const,
-    type: (bookmarkType: "grant" | EntityType) =>
+    type: (bookmarkType: BookmarkType) =>
         [...bookmarkKeys.all, bookmarkType] as const,
 };
 
 export function useAllBookmarks(
-    bookmarkType: "grant" | EntityType,
+    bookmarkType: BookmarkType,
     user_id: number | undefined | null
 ) {
     return useQuery({
@@ -53,6 +53,16 @@ export function useAllBookmarks(
             }
 
             try {
+                // Special handling for search bookmarks since there's no endpoint yet
+                if (bookmarkType === "search") {
+                    // Return empty array for now or mock data if needed
+                    // In a production app, you would implement the server endpoint
+                    console.log(
+                        "Search bookmarks functionality not implemented on server yet"
+                    );
+                    return [];
+                }
+
                 const response = await API.get<number[]>(
                     `/save/${bookmarkType}/id/${user_id}`
                 );
@@ -83,7 +93,7 @@ interface ToggleBookmarkVariables {
     isBookmarked: boolean;
 }
 
-export function useToggleBookmark(bookmarkType: "grant" | EntityType) {
+export function useToggleBookmark(bookmarkType: BookmarkType) {
     const queryClient = useQueryClient();
     const { showNotification } = useNotification();
 
@@ -94,6 +104,18 @@ export function useToggleBookmark(bookmarkType: "grant" | EntityType) {
         { prevBookmarks: number[]; queryKey: (string | number)[] }
     >({
         mutationFn: async ({ user_id, entity_id, isBookmarked }) => {
+            // Special handling for search bookmarks
+            if (bookmarkType === "search") {
+                // This is a placeholder since the search bookmark API is not implemented yet
+                console.log(
+                    `Would ${
+                        isBookmarked ? "remove" : "add"
+                    } search bookmark ${entity_id}`
+                );
+                // In a real app, we would implement the API call
+                return;
+            }
+
             if (isBookmarked) {
                 // Remove bookmark
                 await API.delete(`/save/${bookmarkType}/${entity_id}`, {

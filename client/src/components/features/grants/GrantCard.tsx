@@ -29,7 +29,7 @@ import {
     Calendar1,
     GraduationCap,
     Landmark,
-    BookmarkCheck
+    BookmarkCheck,
 } from "lucide-react";
 import { formatSentenceCase } from "@/utils/format";
 import { cn } from "@/utils/cn";
@@ -46,6 +46,8 @@ import {
     BarChart,
     Cell,
 } from "recharts";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNotification } from "@/components/features/notifications/NotificationProvider";
 
 interface GrantCardProps {
     grant: Grant;
@@ -53,7 +55,11 @@ interface GrantCardProps {
     onBookmark?: () => void;
 }
 
-export const GrantCard = ({ grant, isBookmarked, onBookmark }: GrantCardProps) => {
+export const GrantCard = ({
+    grant,
+    isBookmarked,
+    onBookmark,
+}: GrantCardProps) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [activeTab, setActiveTab] = useState<
         "details" | "versions" | "funding"
@@ -86,11 +92,14 @@ export const GrantCard = ({ grant, isBookmarked, onBookmark }: GrantCardProps) =
     // Sort amendments by number (descending - most recent first)
     const sortedAmendments = hasAmendments
         ? [...(grant.amendments_history || [])].sort((a, b) => {
-            const numA = parseInt(a.amendment_number);
-            const numB = parseInt(b.amendment_number);
-            return numB - numA;
-        })
+              const numA = parseInt(a.amendment_number);
+              const numB = parseInt(b.amendment_number);
+              return numB - numA;
+          })
         : [];
+
+    const { user } = useAuth();
+    const { showNotification } = useNotification();
 
     // Format funding data for charts
     const prepareFundingChartData = () => {
@@ -190,9 +199,9 @@ export const GrantCard = ({ grant, isBookmarked, onBookmark }: GrantCardProps) =
         },
         {
             icon: Calendar,
-            text: `${formatDate(new Date(grant.agreement_start_date))} → ${formatDate(
-                new Date(grant.agreement_end_date)
-            )}`,
+            text: `${formatDate(
+                new Date(grant.agreement_start_date)
+            )} → ${formatDate(new Date(grant.agreement_end_date))}`,
         },
         {
             icon: Hourglass,
@@ -239,6 +248,20 @@ export const GrantCard = ({ grant, isBookmarked, onBookmark }: GrantCardProps) =
         return null;
     };
 
+    const handleBookmarkClick = () => {
+        if (!user || !user.user_id) {
+            showNotification(
+                "You must have an account and be logged in to bookmark grants!",
+                "error"
+            );
+            return;
+        }
+
+        if (onBookmark) {
+            onBookmark();
+        }
+    };
+
     return (
         <Card isHoverable className="p-4 transition-all duration-300">
             <div>
@@ -276,13 +299,17 @@ export const GrantCard = ({ grant, isBookmarked, onBookmark }: GrantCardProps) =
                                 </span>
                                 {onBookmark && (
                                     <button
-                                        onClick={onBookmark}
-                                        className={cn("focus:outline-none",
+                                        onClick={handleBookmarkClick}
+                                        className={cn(
+                                            "focus:outline-none",
                                             isBookmarked
                                                 ? "text-blue-600 hover:text-blue-700"
-                                                : "text-gray-400 hover:text-gray-600")}
+                                                : "text-gray-400 hover:text-gray-600"
+                                        )}
                                         aria-label={
-                                            isBookmarked ? "Remove bookmark" : "Add bookmark"
+                                            isBookmarked
+                                                ? "Remove bookmark"
+                                                : "Add bookmark"
                                         }
                                     >
                                         {isBookmarked ? (
@@ -325,8 +352,8 @@ export const GrantCard = ({ grant, isBookmarked, onBookmark }: GrantCardProps) =
                             >
                                 {hasTitle
                                     ? formatSentenceCase(
-                                        grant.agreement_title_en
-                                    )
+                                          grant.agreement_title_en
+                                      )
                                     : "No Agreement Title Record Found"}
                             </Tag>
                         </TagGroup>
@@ -362,7 +389,7 @@ export const GrantCard = ({ grant, isBookmarked, onBookmark }: GrantCardProps) =
                         >
                             <History className="h-3 w-3 mr-1" />
                             {typeof amendmentNumber === "number" &&
-                                amendmentNumber > 0
+                            amendmentNumber > 0
                                 ? `Latest Amendment: ${amendmentNumber}`
                                 : "Original"}{" "}
                             • {sortedAmendments.length} versions
@@ -611,9 +638,7 @@ export const GrantCard = ({ grant, isBookmarked, onBookmark }: GrantCardProps) =
                                                     {grant.org}
                                                     {grant.org_title && (
                                                         <span className="block text-gray-500 text-xs mt-1">
-                                                            {
-                                                                grant.org_title
-                                                            }
+                                                            {grant.org_title}
                                                         </span>
                                                     )}
                                                 </span>

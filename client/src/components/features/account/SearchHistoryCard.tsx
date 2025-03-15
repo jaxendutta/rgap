@@ -12,15 +12,9 @@ import { Button } from "@/components/common/ui/Button";
 import { Card } from "@/components/common/ui/Card";
 import { FilterTag } from "@/components/features/filter/FilterTag";
 import { formatCurrency } from "@/utils/format";
+import type { SearchHistory } from "@/types/models";
 import type { GrantSearchParams } from "@/types/search";
 import { FILTER_LIMITS, DEFAULT_FILTER_STATE } from "@/constants/filters";
-
-interface SearchHistory {
-    id: number;
-    timestamp: Date;
-    search_params: GrantSearchParams;
-    results: number;
-}
 
 interface SearchHistoryCardProps {
     search: SearchHistory;
