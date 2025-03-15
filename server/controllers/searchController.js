@@ -1,7 +1,7 @@
 // server/controllers/searchController.js
-import pool from "../config/db.js";
+import { pool } from "../config/db.js";
 
-const getFilterOptions = async (req, res) => {
+export const getFilterOptions = async (req, res) => {
     try {
         // Use the stored procedure for filter options
         const [results] = await pool.query("CALL sp_get_filter_options()");
@@ -21,7 +21,7 @@ const getFilterOptions = async (req, res) => {
     }
 };
 
-const searchGrants = async (req, res) => {
+export const searchGrants = async (req, res) => {
     try {
         const {
             searchTerms = {},
@@ -188,5 +188,3 @@ const searchGrants = async (req, res) => {
         });
     }
 };
-
-export { searchGrants, getFilterOptions };

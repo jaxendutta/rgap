@@ -34,6 +34,7 @@ data/production/*
 data/filtered/*
 data/sample/*
 !data/sample/data_sample.7z
+!data/production/data_production.7z
 
 # Logs
 *.log

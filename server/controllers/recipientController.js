@@ -1,10 +1,10 @@
 // server/controllers/recipientController.js
-import pool from "../config/db.js";
+import { pool } from "../config/db.js";
 
 /**
  * Get all recipients with basic information
  */
-const getAllRecipients = async (req, res) => {
+export const getAllRecipients = async (req, res) => {
     try {
         // Apply pagination parameters if provided
         const page = parseInt(req.query.page) || 1;
@@ -69,7 +69,7 @@ const getAllRecipients = async (req, res) => {
 /**
  * Get detailed information about a specific recipient
  */
-const getRecipientById = async (req, res) => {
+export const getRecipientById = async (req, res) => {
     try {
         const recipientId = req.params.id;
 
@@ -124,7 +124,7 @@ const getRecipientById = async (req, res) => {
 /**
  * Get grants for a specific recipient
  */
-const getRecipientGrants = async (req, res) => {
+export const getRecipientGrants = async (req, res) => {
     try {
         const recipientId = req.params.id;
         const page = parseInt(req.query.page) || 1;
@@ -166,7 +166,7 @@ const getRecipientGrants = async (req, res) => {
 /**
  * Helper function to process funding history data for visualization
  */
-const processFundingHistory = (fundingHistory) => {
+export const processFundingHistory = (fundingHistory) => {
     // Group by year
     const yearMap = new Map();
 
@@ -190,7 +190,7 @@ const processFundingHistory = (fundingHistory) => {
 /**
  * Search recipients by name or organization
  */
-const searchRecipients = async (req, res) => {
+export const searchRecipients = async (req, res) => {
     try {
         const { term } = req.query;
         const page = parseInt(req.query.page) || 1;
@@ -263,11 +263,4 @@ const searchRecipients = async (req, res) => {
             details: error.message,
         });
     }
-};
-
-export {
-    getAllRecipients,
-    getRecipientById,
-    getRecipientGrants,
-    searchRecipients,
 };

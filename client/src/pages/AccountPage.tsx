@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     User,
-    Save,
     History,
     LogOut,
     Eye,
@@ -22,7 +21,6 @@ import { Button } from "@/components/common/ui/Button";
 import { SortButton } from "@/components/common/ui/SortButton";
 import { SearchHistoryCard } from "@/components/features/account/SearchHistoryCard";
 import { cn } from "@/utils/cn";
-import MockupMessage from "../components/common/messages/mockup";
 import { useAuth } from "@/contexts/AuthContext";
 import portConfig from "../../../config/ports.json";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";

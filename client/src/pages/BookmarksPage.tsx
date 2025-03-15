@@ -143,7 +143,7 @@ export const BookmarksPage = () => {
                     // For saved searches, create placeholder search history objects
                     const searchItems = bookmarkedIds.map((id) => {
                         return {
-                            id,
+                            history_id: id,
                             timestamp: new Date(),
                             search_params: {
                                 searchTerms: {
@@ -367,12 +367,21 @@ export const BookmarksPage = () => {
                         if ("id" in item && "search_params" in item) {
                             return (
                                 <SearchHistoryCard
-                                    key={item.id}
+                                    key={item.history_id}
                                     search={item as SearchHistory}
                                     onRerun={(params) =>
                                         navigate("/search", {
                                             state: { searchParams: params },
                                         })
+                                    }
+                                    onDelete={(historyId) =>
+                                        setBookmarkedItems((current) =>
+                                            current.filter(
+                                                (item) =>
+                                                    (item as SearchHistory).history_id !==
+                                                    historyId
+                                            )
+                                        )
                                     }
                                 />
                             );

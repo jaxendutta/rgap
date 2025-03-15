@@ -1,6 +1,6 @@
 // server/controllers/authController.js
-import pool from "../config/db.js";
-import bcrypt from "bcrypt";
+import { pool } from "../config/db.js";
+import { hash, compare } from "bcrypt";
 
 export const signupUser = async (req, res) => {
     const { name, email, password, confirmPassword } = req.body;
@@ -12,7 +12,7 @@ export const signupUser = async (req, res) => {
 
         // Hash the password
         const saltRounds = 10;
-        const password_hash = await bcrypt.hash(password, saltRounds);
+        const password_hash = await hash(password, saltRounds);
 
         const [rows] = await pool.query("CALL sp_create_user(?, ?, ?)", [
             email,
@@ -76,7 +76,7 @@ export const loginUser = async (req, res) => {
 
         // Check if the password is correct
         const user = rows[0];
-        const validPassword = await bcrypt.compare(
+        const validPassword = await compare(
             password,
             user.password_hash
         );
@@ -123,7 +123,7 @@ export const loginUser = async (req, res) => {
 
 
 // Update profile information
-const updateUserProfile = async (req, res) => {
+export const updateUserProfile = async (req, res) => {
     const { user_id, email, name } = req.body;
     try {
       const [rows] = await pool.query('CALL sp_update_user_profile(?, ?, ?)', [user_id, email, name]);
@@ -137,7 +137,7 @@ const updateUserProfile = async (req, res) => {
     }
 };
 
-const updateUserPassword = async (req, res) => {
+export const updateUserPassword = async (req, res) => {
     const { user_id, currentPassword, newPassword } = req.body;
     try {
       // Check that required fields are provided
@@ -153,14 +153,14 @@ const updateUserPassword = async (req, res) => {
       const storedHash = userRows[0].password_hash;
   
       // Verify the current password
-      const isValid = await bcrypt.compare(currentPassword, storedHash);
+      const isValid = await compare(currentPassword, storedHash);
       if (!isValid) {
         return res.status(401).json({ message: "Invalid current password." });
       }
   
       // Hash the new password
       const saltRounds = 10;
-      const new_password_hash = await bcrypt.hash(newPassword, saltRounds);
+      const new_password_hash = await hash(newPassword, saltRounds);
   
       // Update the password using the stored procedure
       const [rows] = await pool.query("CALL sp_update_user_password(?, ?)", [user_id, new_password_hash]);
@@ -221,6 +221,3 @@ export const deleteAccount = async (req, res) => {
         });
     }
 };
-
-  
-module.exports = { signupUser, loginUser, updateUserProfile, updateUserPassword, deleteAccount };

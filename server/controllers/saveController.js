@@ -1,5 +1,5 @@
 // src/controllers/saveController.js
-import pool from "../config/db.js";
+import { pool } from "../config/db.js";
 
 /*
  * Save a specific grant to a specif user's bookmarks
