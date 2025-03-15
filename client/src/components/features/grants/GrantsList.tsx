@@ -4,9 +4,7 @@ import { Calendar, DollarSign } from "lucide-react";
 import { Grant } from "@/types/models";
 import { GrantCard } from "./GrantCard";
 import { UseInfiniteQueryResult } from "@tanstack/react-query";
-import EntityList from "@/components/common/ui/EntityList";
-import { SortConfig } from "@/types/search";
-import { useSortGrant } from "@/hooks/api/useGrants";
+import EntityList, { SortConfig } from "@/components/common/ui/EntityList";
 import {
     TrendVisualizer,
     ViewContext,
@@ -62,7 +60,6 @@ const GrantsList: React.FC<GrantsListProps> = ({
 }) => {
     // Local sort state (used in direct data mode)
     const [sortConfig, setSortConfig] = useState<SortConfig>(initialSortConfig);
-    const [sortedGrants, setSortedGrants] = useState<Grant[]>([]);
 
     // State for visualization
     const [isVisualizationVisible, setIsVisualizationVisible] = useState(
@@ -76,33 +73,14 @@ const GrantsList: React.FC<GrantsListProps> = ({
     ];
 
     // Handle local sorting for direct data mode
-    const sortQuery = useSortGrant(sortConfig, 1, 20);
-    
-    React.useEffect(() => {
-        if (sortConfig) {
-            console.log("🔵 触发 API 调用:", sortConfig);
-            sortQuery.refetch().then((result) => {
-                if (result.data) {
-                    setSortedGrants(result.data); 
-                }
-            });
-        }
-    }, [sortConfig]);
-
     const handleSortChange = (newSortConfig: SortConfig) => {
-            
-        setSortConfig((prevConfig) => {
-            // console.log("旧的 sortConfig:", prevConfig);
-            // console.log("更新后的 sortConfig:", newSortConfig);
-            return newSortConfig;
-        });
+        setSortConfig(newSortConfig);
+
         // If consumer provided an onSortChange callback, call it
-        
         if (onSortChange) {
             onSortChange(newSortConfig);
         }
     };
-
 
     // Get all grants, not just the visible ones
     const getAllGrants = useMemo((): Grant[] => {
@@ -175,7 +153,6 @@ const GrantsList: React.FC<GrantsListProps> = ({
     }, [getAllGrants, contextData]);
 
     // For direct data mode, sort the grants according to config
-    /*
     const sortedGrantsToDisplay = useMemo(() => {
         if (infiniteQuery) {
             // In infinite query mode, the API handles sorting
@@ -198,11 +175,6 @@ const GrantsList: React.FC<GrantsListProps> = ({
             }
         });
     }, [getGrantsToDisplay, infiniteQuery, sortConfig]);
-    */
-    const sortedGrantsToDisplay = useMemo(() => {
-        return sortedGrants.length > 0 ? sortedGrants : getGrantsToDisplay;
-    }, [sortedGrants, getGrantsToDisplay]);
-
 
     // Get total count for display
     const totalCount =

@@ -9,13 +9,13 @@ import EmptyState from "./EmptyState";
 import ErrorState from "./ErrorState";
 import { UseInfiniteQueryResult } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { useSortGrant } from "@/hooks/api/useGrants";
-import { SortConfig } from "@/types/search";  
 
 export type SortDirection = "asc" | "desc";
 
-
-
+export interface SortConfig {
+    field: string;
+    direction: SortDirection;
+}
 
 interface EntityListProps<T> {
     // Content props
@@ -88,8 +88,6 @@ function EntityList<T>({
         }
     }, [inView, infiniteQuery, hasNextPage, isFetchingNextPage]);
 
-    const sortQuery = useSortGrant(sortConfig, 1, 20);
-
     // Handle sort change
     const handleSortChange = (field: string) => {
         const newSortConfig = {
@@ -99,8 +97,8 @@ function EntityList<T>({
                     ? "asc"
                     : "desc",
         } as SortConfig;
+
         onSortChange(newSortConfig);
-        sortQuery.refetch();
     };
 
     // Handle error state

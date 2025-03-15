@@ -52,13 +52,3 @@ export const searchGrants = async (searchTerms: any, filters: any, sortConfig: a
     throw error;
   }
 };
-
-export const sortGrants = async (sortField: string, sortDirection: string, page: number, pageSize: number) => {
-  try {
-    const response = await API.post('/search/sort', { sortField, sortDirection, page, pageSize });
-    return replaceNulls(response.data.data);
-  } catch (error: any) {
-    console.error("sort request failed", error.response?.data || error.message);
-    throw error;
-  }
-}

@@ -148,37 +148,4 @@ const searchGrants = async (req, res) => {
     }
 };
 
-const sortGrants = async (req, res) => {
-    try {
-        const { sortField, sortDirection, page, pageSize } = req.body;
-        console.log("Sorting grants:", { sortField, sortDirection, page, pageSize });
-
-        const [sortedResults] = await pool.query(
-            "CALL sp_sort_grant(?, ?, ?, ?)",
-            [sortField || "date", sortDirection || "desc", pageSize, page]
-        );
-        const sortedData = sortedResults[0] || [];
-
-        // Process the results to convert amendment_history from JSON string to actual array
-        const processedResults = sortedData.map((row) => ({
-            ...row,
-            agreement_value: row.latest_value,
-            amendment_number: row.latest_amendment_number,
-            amendment_date: row.latest_amendment_date,
-            amendments_history:
-                typeof row.amendments_history === "string"
-                    ? JSON.parse(row.amendments_history)
-                    : row.amendments_history || [],
-        }));
-
-        res.json({
-            success: true,
-            data: processedResults,
-        });
-    } catch (error) {
-        console.error("Error sorting grants:", error);
-        res.status(500).json({ success: false, message: "Sorting failed", error });
-    }
-};
-
-module.exports = { searchGrants, getFilterOptions, sortGrants };
+module.exports = { searchGrants, getFilterOptions };

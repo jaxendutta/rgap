@@ -32,7 +32,7 @@ class RGAPEnvironmentSetup:
 
     def create_directory_structure(self):
         """Create the basic project directory structure"""
-        print(f"{' ' * 4}==> Creating directory structure...", end=' ', flush=True)
+        print(f"{" "*4}==> Creating directory structure...", end=' ', flush=True)
         
         directories = [
             "data/raw",
@@ -137,10 +137,10 @@ class RGAPEnvironmentSetup:
     def setup_virtualenv(self):
         """Create a Python virtual environment and update pip if needed"""
         if self.env_dir.exists():
-            print(f"{' ' * 4}Virtual environment already exists")
+            print(f"{" "*4}Virtual environment already exists")
             return
 
-        print(f"{' ' * 4}==> Setting up virtual environment...", end=' ', flush=True)
+        print(f"{" "*4}==> Setting up virtual environment...", end=' ', flush=True)
         try:
             # Update pip first
             subprocess.run([
@@ -172,7 +172,7 @@ class RGAPEnvironmentSetup:
     def install_package(self, package: str, count: int):
         """Install a single package"""
         pip_path = self.get_pip_path()
-        print(f"{' ' * 8}--> [{count}/{self.total_packages}] Installing {package}...", end=' ', flush=True)
+        print(f"{" "*8}--> [{count}/{self.total_packages}] Installing {package}...", end=' ', flush=True)
         try:
             subprocess.run(
                 [pip_path, "install", "-q", package],
@@ -199,11 +199,11 @@ class RGAPEnvironmentSetup:
 
     def install_packages(self):
         """Install all required packages with progress tracking"""
-        print(f"{' ' * 4}==> Installing packages...")
+        print(f"{" "*4}==> Installing packages...")
         current_count = 0
         
         for group_name, packages in self.package_groups.items():
-            print(f"{' ' * 6}==> {group_name} packages:")
+            print(f"{" "*6}==> {group_name} packages:")
             for package in packages:
                 current_count += 1
                 if not self.install_package(package, current_count):
