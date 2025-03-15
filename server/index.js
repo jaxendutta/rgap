@@ -7,6 +7,7 @@ import authRoutes from "./routes/authRoutes.js";
 import searchRoutes from "./routes/searchRoutes.js";
 import recipientRoutes from "./routes/recipientRoutes.js";
 import instituteRoutes from "./routes/instituteRoutes.js";
+import saveRoutes from "./routes/saveRoutes.js";
 
 const app = express();
 
@@ -50,7 +51,7 @@ app.use("/auth", authRoutes);
 app.use("/search", searchRoutes);
 app.use("/recipients", recipientRoutes);
 app.use("/institutes", instituteRoutes);
-app.use("/save", require("./routes/saveRoutes"));
+app.use("/save", saveRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
