@@ -23,8 +23,8 @@ CREATE TABLE BookmarkedRecipients (
 
 CREATE TABLE BookmarkedInstitutes(
     bookmark_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    institute_id INT NOT NULL,    
+    user_id INT UNSIGNED NOT NULL,
+    institute_id INT UNSIGNED NOT NULL,    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id, institute_id),
     FOREIGN KEY (user_id) REFERENCES User(user_id),
