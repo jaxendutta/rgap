@@ -21,6 +21,8 @@ import { Button } from "@/components/common/ui/Button";
 import Tag, { TagGroup } from "@/components/common/ui/Tag";
 import { Institute, Recipient } from "@/types/models";
 import { cn } from "@/utils/cn";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNotification } from "@/components/features/notifications/NotificationProvider";
 
 export type EntityType = "institute" | "recipient";
 
@@ -55,6 +57,8 @@ const EntityCard = ({
     className,
 }: EntityCardProps) => {
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const { showNotification } = useNotification();
 
     // Type guards to distinguish between institute and recipient
     const isInstitute = (): boolean => {
@@ -102,41 +106,20 @@ const EntityCard = ({
         : null;
     const latestDate = latestGrantDate ?? entity.latest_grant_date;
 
-    // Handle error state
-    if (isError) {
-        return (
-            <Card className={cn("p-4 border-red-200 bg-red-50", className)}>
-                <div className="flex flex-col items-center justify-center p-4 text-center">
-                    <p className="text-red-600 mb-4">{errorMessage}</p>
-                    <div className="flex space-x-2">
-                        <Button
-                            variant="outline"
-                            icon={ChevronLeft}
-                            onClick={() =>
-                                navigate(
-                                    `/${
-                                        entityType === "institute"
-                                            ? "institutes"
-                                            : "recipients"
-                                    }`
-                                )
-                            }
-                        >
-                            Back to{" "}
-                            {entityType === "institute"
-                                ? "Institutes"
-                                : "Recipients"}
-                        </Button>
-                        {onRetry && (
-                            <Button variant="primary" onClick={onRetry}>
-                                Try Again
-                            </Button>
-                        )}
-                    </div>
-                </div>
-            </Card>
-        );
-    }
+    // Handle login check for bookmarking
+    const handleBookmarkClick = () => {
+        if (!user || !user.user_id) {
+            showNotification(
+                "You must be logged in to bookmark items",
+                "error"
+            );
+            return;
+        }
+
+        if (onBookmark) {
+            onBookmark();
+        }
+    };
 
     // Handle error state
     if (isError) {
@@ -266,7 +249,7 @@ const EntityCard = ({
 
                 {onBookmark && (
                     <button
-                        onClick={onBookmark}
+                        onClick={handleBookmarkClick}
                         className={cn(
                             "p-1 rounded-full transition-colors hover:bg-gray-50 flex-shrink-0",
                             isBookmarked
