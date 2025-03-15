@@ -1,10 +1,10 @@
 // server/controllers/instituteController.js
-import pool from "../config/db.js";
+import { pool } from "../config/db.js";
 
 /**
  * Get all institutes with basic information, pagination included
  */
-const getAllInstitutes = async (req, res) => {
+export const getAllInstitutes = async (req, res) => {
     try {
         // Apply pagination parameters if provided
         const page = parseInt(req.query.page) || 1;
@@ -45,7 +45,7 @@ const getAllInstitutes = async (req, res) => {
 /**
  * Get detailed information about a specific institute
  */
-const getInstituteById = async (req, res) => {
+export const getInstituteById = async (req, res) => {
     try {
         const instituteId = req.params.id;
 
@@ -122,7 +122,7 @@ const getInstituteById = async (req, res) => {
 /**
  * Get grants for a specific institute
  */
-const getInstituteGrants = async (req, res) => {
+export const getInstituteGrants = async (req, res) => {
     try {
         const instituteId = req.params.id;
         const page = parseInt(req.query.page) || 1;
@@ -164,7 +164,7 @@ const getInstituteGrants = async (req, res) => {
 /**
  * Get recipients for a specific institute
  */
-const getInstituteRecipients = async (req, res) => {
+export const getInstituteRecipients = async (req, res) => {
     try {
         const instituteId = req.params.id;
         const page = parseInt(req.query.page) || 1;
@@ -211,7 +211,7 @@ const getInstituteRecipients = async (req, res) => {
 /**
  * Search institutes by name
  */
-const searchInstitutes = async (req, res) => {
+export const searchInstitutes = async (req, res) => {
     try {
         const { term } = req.query;
         const page = parseInt(req.query.page) || 1;
@@ -265,7 +265,7 @@ const searchInstitutes = async (req, res) => {
 /**
  * Helper function to process funding history data for visualization
  */
-const processFundingHistory = (fundingHistory) => {
+export const processFundingHistory = (fundingHistory) => {
     // Group by year
     const yearMap = new Map();
 
@@ -284,12 +284,4 @@ const processFundingHistory = (fundingHistory) => {
 
     // Convert to array and sort by year
     return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
-};
-
-export {
-    getAllInstitutes,
-    getInstituteById,
-    getInstituteGrants,
-    getInstituteRecipients,
-    searchInstitutes,
 };

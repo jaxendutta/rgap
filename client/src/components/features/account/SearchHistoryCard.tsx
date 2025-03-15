@@ -14,13 +14,7 @@ import { FilterTag } from "@/components/features/filter/FilterTag";
 import { formatCurrency } from "@/utils/format";
 import type { GrantSearchParams } from "@/types/search";
 import { FILTER_LIMITS, DEFAULT_FILTER_STATE } from "@/constants/filters";
-
-export interface SearchHistory {
-  history_id: number;
-  timestamp: Date;
-  search_params: GrantSearchParams;
-  results: number;
-}
+import type { SearchHistory } from "@/types/models";
 
 interface SearchHistoryCardProps {
   search: SearchHistory;

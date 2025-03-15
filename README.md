@@ -1,7 +1,20 @@
 # Research Grant Analytics Platform (RGAP)
 <img src="client/public/rgap.svg" alt="RGAP Logo" width="200" height="200">
 
-## Up to now, all changes are updated in branch develop, please navigate to branch develop :))
+# Milestone 2 Updates
+Quick guide on how to run?
+In the terminal:
+1. source setup_env.sh
+2. ./setup_mysql.sh
+3. ./setup_app.sh
+
+Current features supported:
+All 5 basic features:
+1. user creation/deletion
+2. user login/management
+3. user search history
+4. bookmark
+5. sorting
 
 ## Table of Contents
 - [Research Grant Analytics Platform (RGAP)](#research-grant-analytics-platform-rgap)

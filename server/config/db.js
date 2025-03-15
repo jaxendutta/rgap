@@ -22,7 +22,7 @@ console.log("Database config:", {
     password: "[REDACTED]",
 });
 
-const pool = createPool(dbConfig);
+export const pool = createPool(dbConfig);
 
 // Test query to verify connection and data
 async function verifyDatabaseSetup() {
@@ -53,6 +53,3 @@ async function verifyDatabaseSetup() {
 
 // This will verify the database is properly set up on server start
 verifyDatabaseSetup();
-
-// Export configured pool
-export default pool;

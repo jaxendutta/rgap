@@ -8,6 +8,7 @@ import searchRoutes from "./routes/searchRoutes.js";
 import recipientRoutes from "./routes/recipientRoutes.js";
 import instituteRoutes from "./routes/instituteRoutes.js";
 import saveRoutes from "./routes/saveRoutes.js";
+import searchHistoryRoutes from "./routes/searchHistoryRoutes.js";
 
 const app = express();
 
@@ -54,7 +55,7 @@ app.use("/search", searchRoutes);
 app.use("/recipients", recipientRoutes);
 app.use("/institutes", instituteRoutes);
 app.use("/save", saveRoutes);
-app.use("/search-history", require("./routes/searchHistoryRoutes"));
+app.use("/search-history", searchHistoryRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

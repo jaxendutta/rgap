@@ -96,7 +96,7 @@ export interface Grant {
 
 // Search History
 export interface SearchHistory {
-    id: number;
+    history_id: number;
     timestamp: Date;
     search_params: GrantSearchParams;
     results: number;
