@@ -1,6 +1,8 @@
 # Research Grant Analytics Platform (RGAP)
 <img src="client/public/rgap.svg" alt="RGAP Logo" width="200" height="200">
 
+# Up to now, all changes are updated in branch develop, please navigate to branch develop :))
+
 ## Table of Contents
 - [Research Grant Analytics Platform (RGAP)](#research-grant-analytics-platform-rgap)
   - [Table of Contents](#table-of-contents)
