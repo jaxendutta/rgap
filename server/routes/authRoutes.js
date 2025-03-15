@@ -1,19 +1,36 @@
 // server/routes/authRoutes.js
-const express = require('express');
-const router = express.Router();
-const { signupUser, loginUser, updateUserProfile, updateUserPassword, deleteAccount } = require('../controllers/authController');
+import { Router } from "express";
+const router = Router();
+import {
+    signupUser,
+    loginUser,
+    logout,
+    deleteAccount,
+    updateUserProfile, 
+    updateUserPassword
+} from "../controllers/authController.js";
 
 // Auth routes
-router.post('/signup', signupUser);
-router.post('/login', loginUser);
+router.post("/signup", signupUser);
+router.post("/login", loginUser);
+router.post("/logout", logout);
 router.delete("/delete-account/:userId", deleteAccount);
 router.put('/update-profile', updateUserProfile);
 router.put('/update-password', updateUserPassword);
+
+// Session check endpoint
 router.get("/session", (req, res) => {
+    // Log request cookies and session for debugging
+    console.log("Session check - cookies:", req.headers.cookie);
+    console.log("Session check - session:", req.session);
+
+    // Check if session exists and has user data
     if (req.session && req.session.user) {
         return res.json(req.session.user);
     }
+
+    // No valid session found, return 401
     return res.status(401).json({ message: "Not authenticated" });
 });
 
-module.exports = router;
+export default router;

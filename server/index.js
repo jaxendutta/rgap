@@ -11,30 +11,32 @@ import saveRoutes from "./routes/saveRoutes.js";
 
 const app = express();
 
-// Enhanced CORS configuration
+// Enhanced CORS configuration to allow credentials
 app.use(
     cors({
         origin: [
             `http://localhost:${
                 process.env.CLIENT_PORT || config.defaults.client
-            }`
+            }`,
         ],
         methods: ["GET", "POST", "PUT", "DELETE"],
-        credentials: true,
+        credentials: true, // Important for cookies/session
     })
 );
 
-// Configure session middleware
+// Configure session middleware with more options
 app.use(
     session({
-        secret: "your-session-secret",
+        name: "rgap.sid", // Custom session ID name for clarity
+        secret: "your-session-secret", // In production, use a strong, environment-based secret
         resave: false,
         saveUninitialized: false,
         cookie: {
             secure: process.env.NODE_ENV === "production", // Only use secure in production
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000, // 1 day
-        }
+            sameSite: "lax", // Helps with CSRF protection
+        },
     })
 );
 
@@ -75,7 +77,7 @@ app.listen(PORT, () => {
 });
 
 app.get("/", (req, res) => {
-    const serverPort = process.env.PORT || DEFAULTS.server;
+    const serverPort = process.env.PORT || config.defaults.server;
     res.send(`
         <h1>Welcome to the RGAP Server</h1>
         <p>This server provides the following endpoints:</p>
