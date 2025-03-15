@@ -50,6 +50,7 @@ app.use("/auth", authRoutes);
 app.use("/search", searchRoutes);
 app.use("/recipients", recipientRoutes);
 app.use("/institutes", instituteRoutes);
+app.use("/save", require("./routes/saveRoutes"));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

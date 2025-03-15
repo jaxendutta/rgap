@@ -28,7 +28,8 @@ import {
     Hourglass,
     Calendar1,
     GraduationCap,
-    Landmark
+    Landmark,
+    BookmarkCheck
 } from "lucide-react";
 import { formatSentenceCase } from "@/utils/format";
 import { cn } from "@/utils/cn";
@@ -48,10 +49,11 @@ import {
 
 interface GrantCardProps {
     grant: Grant;
+    isBookmarked?: boolean;
     onBookmark?: () => void;
 }
 
-export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
+export const GrantCard = ({ grant, isBookmarked, onBookmark }: GrantCardProps) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [activeTab, setActiveTab] = useState<
         "details" | "versions" | "funding"
@@ -84,10 +86,10 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
     // Sort amendments by number (descending - most recent first)
     const sortedAmendments = hasAmendments
         ? [...(grant.amendments_history || [])].sort((a, b) => {
-              const numA = parseInt(a.amendment_number);
-              const numB = parseInt(b.amendment_number);
-              return numB - numA;
-          })
+            const numA = parseInt(a.amendment_number);
+            const numB = parseInt(b.amendment_number);
+            return numB - numA;
+        })
         : [];
 
     // Format funding data for charts
@@ -275,9 +277,19 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                                 {onBookmark && (
                                     <button
                                         onClick={onBookmark}
-                                        className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                                        className={cn("focus:outline-none",
+                                            isBookmarked
+                                                ? "text-blue-600 hover:text-blue-700"
+                                                : "text-gray-400 hover:text-gray-600")}
+                                        aria-label={
+                                            isBookmarked ? "Remove bookmark" : "Add bookmark"
+                                        }
                                     >
-                                        <BookmarkPlus className="h-5 w-5" />
+                                        {isBookmarked ? (
+                                            <BookmarkCheck className="h-5 w-5" />
+                                        ) : (
+                                            <BookmarkPlus className="h-5 w-5" />
+                                        )}
                                     </button>
                                 )}
                             </div>
@@ -313,8 +325,8 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                             >
                                 {hasTitle
                                     ? formatSentenceCase(
-                                          grant.agreement_title_en
-                                      )
+                                        grant.agreement_title_en
+                                    )
                                     : "No Agreement Title Record Found"}
                             </Tag>
                         </TagGroup>
@@ -350,7 +362,7 @@ export const GrantCard = ({ grant, onBookmark }: GrantCardProps) => {
                         >
                             <History className="h-3 w-3 mr-1" />
                             {typeof amendmentNumber === "number" &&
-                            amendmentNumber > 0
+                                amendmentNumber > 0
                                 ? `Latest Amendment: ${amendmentNumber}`
                                 : "Original"}{" "}
                             • {sortedAmendments.length} versions
