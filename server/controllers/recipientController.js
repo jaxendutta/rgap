@@ -1,5 +1,5 @@
 // server/controllers/recipientController.js
-const pool = require("../config/db");
+import pool from "../config/db.js";
 
 /**
  * Get all recipients with basic information
@@ -129,11 +129,11 @@ const getRecipientGrants = async (req, res) => {
         const recipientId = req.params.id;
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 20;
-        const sortField = req.query.sortField || 'date';
-        const sortDirection = req.query.sortDirection || 'desc';
+        const sortField = req.query.sortField || "date";
+        const sortDirection = req.query.sortDirection || "desc";
 
         const [results] = await pool.query(
-            'CALL sp_entity_grants(?, NULL, ?, ?, ?, ?)',
+            "CALL sp_entity_grants(?, NULL, ?, ?, ?, ?)",
             [recipientId, sortField, sortDirection, pageSize, page]
         );
 
@@ -265,7 +265,7 @@ const searchRecipients = async (req, res) => {
     }
 };
 
-module.exports = {
+export {
     getAllRecipients,
     getRecipientById,
     getRecipientGrants,

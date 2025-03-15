@@ -1,5 +1,5 @@
 // server/controllers/searchController.js
-const pool = require("../config/db");
+import pool from "../config/db.js";
 
 const getFilterOptions = async (req, res) => {
     try {
@@ -189,4 +189,4 @@ const searchGrants = async (req, res) => {
     }
 };
 
-module.exports = { searchGrants, getFilterOptions };
+export { searchGrants, getFilterOptions };

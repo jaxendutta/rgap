@@ -1,21 +1,27 @@
 // server/routes/instituteRoutes.js
-const express = require("express");
-const router = express.Router();
-const instituteController = require("../controllers/instituteController");
+import { Router } from "express";
+const router = Router();
+import {
+    getAllInstitutes,
+    getInstituteById,
+    getInstituteGrants,
+    getInstituteRecipients,
+    searchInstitutes,
+} from "../controllers/instituteController.js";
 
 // GET all institutes with pagination
-router.get("/", instituteController.getAllInstitutes);
+router.get("/", getAllInstitutes);
 
 // GET a specific institute by ID
-router.get("/:id", instituteController.getInstituteById);
+router.get("/:id", getInstituteById);
 
 // GET grants for a specific institute
-router.get("/:id/grants", instituteController.getInstituteGrants);
+router.get("/:id/grants", getInstituteGrants);
 
 // GET recipients for a specific institute
-router.get("/:id/recipients", instituteController.getInstituteRecipients);
+router.get("/:id/recipients", getInstituteRecipients);
 
 // Search institutes by name
-router.get("/search", instituteController.searchInstitutes);
+router.get("/search", searchInstitutes);
 
-module.exports = router;
+export default router;

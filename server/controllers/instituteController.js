@@ -1,5 +1,5 @@
 // server/controllers/instituteController.js
-const pool = require("../config/db");
+import pool from "../config/db.js";
 
 /**
  * Get all institutes with basic information, pagination included
@@ -48,20 +48,22 @@ const getAllInstitutes = async (req, res) => {
 const getInstituteById = async (req, res) => {
     try {
         const instituteId = req.params.id;
-        
+
         // Check if the instituteId is valid
         if (!instituteId || isNaN(parseInt(instituteId))) {
             return res.status(400).json({
                 error: "Invalid institute ID",
-                details: "The institute ID must be a valid number."
+                details: "The institute ID must be a valid number.",
             });
         }
 
         // Parse the ID to ensure it's a number
         const parsedId = parseInt(instituteId);
-        
+
         // Use the stored procedure to get comprehensive institute details
-        const [results] = await pool.query("CALL sp_institute_details(?)", [parsedId]);
+        const [results] = await pool.query("CALL sp_institute_details(?)", [
+            parsedId,
+        ]);
 
         // The stored procedure returns multiple result sets
         if (!results[0] || results[0].length === 0) {
@@ -125,11 +127,11 @@ const getInstituteGrants = async (req, res) => {
         const instituteId = req.params.id;
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 20;
-        const sortField = req.query.sortField || 'date';
-        const sortDirection = req.query.sortDirection || 'desc';
+        const sortField = req.query.sortField || "date";
+        const sortDirection = req.query.sortDirection || "desc";
 
         const [results] = await pool.query(
-            'CALL sp_entity_grants(NULL, ?, ?, ?, ?, ?)',
+            "CALL sp_entity_grants(NULL, ?, ?, ?, ?, ?)",
             [instituteId, sortField, sortDirection, pageSize, page]
         );
 
@@ -284,7 +286,7 @@ const processFundingHistory = (fundingHistory) => {
     return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
 };
 
-module.exports = {
+export {
     getAllInstitutes,
     getInstituteById,
     getInstituteGrants,

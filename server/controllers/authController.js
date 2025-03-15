@@ -1,8 +1,8 @@
 // server/controllers/authController.js
-const pool = require("../config/db");
-const bcrypt = require("bcrypt");
+import pool from "../config/db.js";
+import bcrypt from "bcrypt";
 
-const signupUser = async (req, res) => {
+export const signupUser = async (req, res) => {
     const { name, email, password, confirmPassword } = req.body;
     try {
         // Check if the passwords match
@@ -50,7 +50,7 @@ const signupUser = async (req, res) => {
     }
 };
 
-const loginUser = async (req, res) => {
+export const loginUser = async (req, res) => {
     const { email, password } = req.body;
     try {
         // Get user from database using stored procedure
@@ -78,22 +78,15 @@ const loginUser = async (req, res) => {
             return res
                 .status(401)
                 .json({ message: "Invalid email or password." });
-        } else {
-            // Store user info in session
-            req.session.user = {
-                user_id: user.user_id,
-                email: user.email,
-                name: user.name,
-            };
-
-            // Return successful response
-            return res.status(200).json({
-                user_id: user.user_id,
-                email: user.email,
-                name: user.name,
-                searches: [], // You can populate this from your searches table if needed
-            });
         }
+
+        // Return successful response
+        return res.status(200).json({
+            user_id: user.user_id,
+            email: user.email,
+            name: user.name,
+            searches: [], // You can populate this from your searches table if needed
+        });
     } catch (error) {
         console.error("Error during login:", error);
         return res.status(500).json({
@@ -102,4 +95,22 @@ const loginUser = async (req, res) => {
     }
 };
 
-module.exports = { signupUser, loginUser };
+export const deleteAccount = async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        // Call the stored procedure to delete the user
+        await pool.query("CALL sp_delete_user(?)", [userId]);
+
+        return res.status(200).json({
+            message: "Account successfully deleted",
+        });
+    } catch (error) {
+        console.error("Error deleting account:", error);
+
+        return res.status(500).json({
+            message: "Failed to delete account. Please try again later.",
+            details: error.message,
+        });
+    }
+};
