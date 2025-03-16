@@ -6,7 +6,7 @@ CREATE TABLE ResearchGrant (
     grant_id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     ref_number VARCHAR(50),
     amendment_number VARCHAR(10),
-    UNIQUE (ref_number, amendment_number),
+    UNIQUE KEY idx_ref_amend (ref_number, amendment_number),
     amendment_date DATE,
     agreement_type VARCHAR(50),
     agreement_number VARCHAR(50),
@@ -24,7 +24,11 @@ CREATE TABLE ResearchGrant (
     org VARCHAR(5),
     recipient_id INT UNSIGNED,
     prog_id INT UNSIGNED,
+    KEY idx_agreement_date (agreement_start_date, agreement_end_date),
+    KEY idx_agreement_value (agreement_value),
+    KEY idx_org (org),
+    KEY idx_recipient (recipient_id),
     FOREIGN KEY (recipient_id) REFERENCES Recipient(recipient_id),
     FOREIGN KEY (org) REFERENCES Organization(org),
     FOREIGN KEY (prog_id) REFERENCES Program(prog_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

@@ -1,4 +1,4 @@
--- File: sql/data/prepare_import.sql
+-- File: rgap/sql/data/prepare_import.sql
 /* Drop if exists with error handling */
 SET @sql = (SELECT IF(
     EXISTS(
@@ -15,7 +15,7 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
-/* Create temporary table for data import with optimized structure */
+/* Create temporary table for data import with minimal indexes */
 CREATE TABLE temp_grants (
     _id VARCHAR(50),
     ref_number VARCHAR(50),
@@ -57,9 +57,6 @@ CREATE TABLE temp_grants (
     org VARCHAR(5),
     owner_org_title VARCHAR(100),
     year VARCHAR(4),
-    KEY (ref_number, amendment_number),
-    KEY (recipient_legal_name),
-    KEY (research_organization_name),
-    KEY (org),
-    KEY (prog_name_en)
-) ENGINE=InnoDB;
+    INDEX idx_ref (ref_number),
+    INDEX idx_org_name (research_organization_name(50))
+);
