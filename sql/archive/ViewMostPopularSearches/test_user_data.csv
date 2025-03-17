@@ -1,6 +1,0 @@
-user_id,email,name,password_hash,created_at
-1,alice@example.com,Alice,$2y$10$ABCDEFabcdef1234567890,2025-02-06 10:00:00
-2,bob@example.com,Bob,$2y$10$GHIJKLghijkl7890123456,2025-02-06 10:05:00
-3,charlie@example.com,Charlie,$2y$10$MNOPQRmnopqr3456789012,2025-02-06 10:10:00
-4,diana@example.com,Diana,$2y$10$STUVWXstuvwx9012345678,2025-02-06 10:15:00
-5,edward@example.com,Edward,$2y$10$YZabcdYZabcd5678901234,2025-02-06 10:20:00
