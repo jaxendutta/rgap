@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/common/ui/Button";
 import { Card } from "@/components/common/ui/Card";
-import { FilterTag } from "@/components/features/filter/FilterTag";
+import { FilterTag } from "@/components/features/filter/FilterTags";
 import { formatCurrency } from "@/utils/format";
 import type { GrantSearchParams } from "@/types/search";
 import { FILTER_LIMITS, DEFAULT_FILTER_STATE } from "@/constants/filters";

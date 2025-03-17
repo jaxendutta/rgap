@@ -305,7 +305,7 @@ mv "${SAMPLE_DATA}.fixed" "$SAMPLE_DATA"
 TOTAL_ROWS=$(wc -l < "$SAMPLE_DATA" | awk '{print $1-1}')  # Subtract 1 for header
 print_status "Preparing to load ${TOTAL_ROWS} records..."
 
-# Create a load file with special handling for embedded newlines
+# Create a load file with special handling for embedded newlines and column mapping
 LOAD_SQL="${TMP_DIR}/load_data_runtime.sql"
 cat >"$LOAD_SQL" <<EOF
 SET SESSION character_set_client = utf8mb4;
@@ -316,7 +316,7 @@ SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Important: Using FIELDS ENCLOSED BY '"' to properly handle embedded newlines
+-- Using column mapping to skip French fields and agreement_type
 LOAD DATA LOCAL INFILE '${SAMPLE_DATA}'
 INTO TABLE temp_grants
 CHARACTER SET utf8mb4
@@ -324,7 +324,49 @@ FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 ESCAPED BY '\\\\'
 LINES TERMINATED BY '\n'
-IGNORE 1 ROWS;
+IGNORE 1 ROWS
+(
+    _id,
+    ref_number,
+    amendment_number,
+    amendment_date,
+    @dummy_agreement_type,       -- Skip agreement_type
+    recipient_type,
+    recipient_business_number,
+    recipient_legal_name,
+    recipient_operating_name,
+    research_organization_name,
+    recipient_country,
+    recipient_province,
+    recipient_city,
+    recipient_postal_code,
+    federal_riding_name_en,
+    @dummy_riding_name_fr,       -- Skip federal_riding_name_fr
+    federal_riding_number,
+    prog_name_en,
+    @dummy_prog_name_fr,         -- Skip prog_name_fr
+    prog_purpose_en,
+    @dummy_prog_purpose_fr,      -- Skip prog_purpose_fr
+    agreement_title_en,
+    @dummy_agreement_title_fr,   -- Skip agreement_title_fr
+    agreement_number,
+    agreement_value,
+    foreign_currency_type,
+    foreign_currency_value,
+    agreement_start_date,
+    agreement_end_date,
+    coverage,
+    description_en,
+    @dummy_description_fr,       -- Skip description_fr
+    naics_identifier,
+    expected_results_en,
+    @dummy_expected_results_fr,  -- Skip expected_results_fr
+    additional_information_en,
+    @dummy_additional_information_fr,  -- Skip additional_information_fr
+    org,
+    owner_org_title,
+    year
+);
 
 SET FOREIGN_KEY_CHECKS = 1;
 EOF

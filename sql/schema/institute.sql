@@ -11,6 +11,5 @@ CREATE TABLE Institute (
     city VARCHAR(100),
     postal_code VARCHAR(10),
     riding_name_en VARCHAR(100),
-    riding_name_fr VARCHAR(100),
     riding_number VARCHAR(10)
 );

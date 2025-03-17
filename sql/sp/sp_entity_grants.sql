@@ -55,8 +55,7 @@ BEGIN
             o.org,
             o.org_title,
             p.name_en AS prog_title_en,
-            p.name_en AS program_name,
-            p.purpose_en AS program_purpose,
+            p.purpose_en AS prog_purpose_en,
             (
                 SELECT JSON_ARRAYAGG(
                     JSON_OBJECT(

@@ -26,7 +26,6 @@ BEGIN
         ref_number VARCHAR(50),
         latest_amendment_number VARCHAR(10),
         latest_amendment_date DATE,
-        agreement_type VARCHAR(50),
         agreement_number VARCHAR(50),
         latest_value DECIMAL(15,2),
         foreign_currency_type VARCHAR(3),

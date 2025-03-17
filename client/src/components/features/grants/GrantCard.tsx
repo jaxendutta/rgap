@@ -31,9 +31,7 @@ import {
     Landmark,
     BookmarkCheck,
     BookOpen,
-    ClipboardList,
 } from "lucide-react";
-import { formatSentenceCase } from "@/utils/format";
 import { cn } from "@/utils/cn";
 import Tag, { TagGroup } from "@/components/common/ui/Tag";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,15 +54,11 @@ export const GrantCard = ({
         "details" | "versions" | "funding"
     >("details");
 
-    // Check if agreement title is empty or null
-    const hasTitle =
-        grant.agreement_title_en && grant.agreement_title_en.trim() !== "";
+    // Check if a field has a value
+    const hasValue = (field: keyof Grant) =>
+        !!grant[field] && (grant[field] as unknown as string).trim() !== "";
 
     // Check for optional fields existence before use
-    const hasDescription =
-        !!grant.description_en && grant.description_en.trim() !== "";
-    const hasExpectedResults =
-        !!grant.expected_results_en && grant.expected_results_en.trim() !== "";
     const hasForeignCurrency =
         !!grant.foreign_currency_type &&
         !!grant.foreign_currency_value &&
@@ -269,15 +263,13 @@ export const GrantCard = ({
                                 pill={true}
                                 variant="default"
                                 className={cn(
-                                    !hasTitle && "text-gray-400 italic",
+                                    !hasValue("agreement_title_en") &&
+                                        "text-gray-400 italic",
                                     "w-full lg:w-auto"
                                 )}
                             >
-                                {hasTitle
-                                    ? formatSentenceCase(
-                                          grant.agreement_title_en
-                                      )
-                                    : "No Agreement Title Record Found"}
+                                {grant.agreement_title_en ||
+                                    "No Agreement Title Record Found"}
                             </Tag>
                         </TagGroup>
 
@@ -314,7 +306,7 @@ export const GrantCard = ({
                             {typeof amendmentNumber === "number" &&
                             amendmentNumber > 0
                                 ? `Latest Amendment: ${amendmentNumber}`
-                                : "Original"}{" "}
+                                : "Original"}
                             • {sortedAmendments.length} versions
                         </button>
 
@@ -481,30 +473,37 @@ export const GrantCard = ({
 
                                             <div className="grid grid-cols-12 gap-2">
                                                 <span className="col-span-5 text-gray-500 self-start">
-                                                    Current Version
+                                                    Program
                                                 </span>
                                                 <span
-                                                    className={cn(
-                                                        "col-span-7 font-medium",
-                                                        amendmentNumber > 0
-                                                            ? "text-amber-600"
-                                                            : "text-gray-800"
-                                                    )}
+                                                    className={
+                                                        hasValue(
+                                                            "prog_title_en"
+                                                        )
+                                                            ? "col-span-7 text-gray-800"
+                                                            : "col-span-7 text-gray-400 italic"
+                                                    }
                                                 >
-                                                    {amendmentNumber > 0
-                                                        ? `Amendment ${amendmentNumber}`
-                                                        : "Original Agreement"}
+                                                    {grant.prog_title_en ||
+                                                        "Not specified"}
                                                 </span>
                                             </div>
 
                                             <div className="grid grid-cols-12 gap-2">
                                                 <span className="col-span-5 text-gray-500 self-start">
-                                                    Program
+                                                    Agreement Title
                                                 </span>
-                                                <span className="col-span-7 text-gray-800">
-                                                    {formatSentenceCase(
-                                                        grant.agreement_title_en
-                                                    )}
+                                                <span
+                                                    className={
+                                                        hasValue(
+                                                            "agreement_title_en"
+                                                        )
+                                                            ? "col-span-7 text-gray-800"
+                                                            : "col-span-7 text-gray-400 italic"
+                                                    }
+                                                >
+                                                    {grant.agreement_title_en ||
+                                                        "Not specified"}
                                                 </span>
                                             </div>
 
@@ -522,6 +521,7 @@ export const GrantCard = ({
                                             )}
                                         </div>
                                     </div>
+
                                     {/* Financial Summary */}
                                     <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
                                         <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-center">
@@ -554,6 +554,24 @@ export const GrantCard = ({
 
                                             <div className="grid grid-cols-12 gap-2">
                                                 <span className="col-span-5 text-gray-500 self-start">
+                                                    Current Version
+                                                </span>
+                                                <span
+                                                    className={cn(
+                                                        "col-span-7",
+                                                        amendmentNumber > 0
+                                                            ? "text-amber-600"
+                                                            : "text-gray-800"
+                                                    )}
+                                                >
+                                                    {amendmentNumber > 0
+                                                        ? `Amendment ${amendmentNumber}`
+                                                        : "Original Agreement"}
+                                                </span>
+                                            </div>
+
+                                            <div className="grid grid-cols-12 gap-2">
+                                                <span className="col-span-5 text-gray-500 self-start">
                                                     Funding Agency
                                                 </span>
                                                 <span className="col-span-7 text-gray-800 break-words">
@@ -574,7 +592,7 @@ export const GrantCard = ({
                                                     <span className="col-span-7 text-gray-800">
                                                         {
                                                             grant.foreign_currency_type
-                                                        }{" "}
+                                                        }
                                                         {grant.foreign_currency_value?.toLocaleString()}
                                                     </span>
                                                 </div>
@@ -597,90 +615,6 @@ export const GrantCard = ({
                                                         </span>
                                                     </div>
                                                 )}
-                                        </div>
-                                    </div>
-
-                                    {/* Program Information */}
-                                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
-                                        <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-center">
-                                            <BookOpen className="h-4 w-4 mr-1.5 text-blue-600" />
-                                            Program Information
-                                        </h3>
-                                        <div className="text-sm space-y-1">
-                                            <div className="grid grid-cols-12 gap-2">
-                                                <span className="col-span-5 text-gray-500 self-start">
-                                                    Program Name
-                                                </span>
-                                                <span
-                                                    className={
-                                                        grant.prog_title_en
-                                                            ? "col-span-7 text-gray-800"
-                                                            : "col-span-7 text-gray-400 italic"
-                                                    }
-                                                >
-                                                    {grant.prog_title_en ||
-                                                        "Not specified"}
-                                                </span>
-                                            </div>
-
-                                            <div className="grid grid-cols-12 gap-2">
-                                                <span className="col-span-5 text-gray-500 self-start">
-                                                    Program Purpose
-                                                </span>
-                                                <span
-                                                    className={
-                                                        grant.program_purpose
-                                                            ? "col-span-7 text-gray-800"
-                                                            : "col-span-7 text-gray-400 italic"
-                                                    }
-                                                >
-                                                    {grant.program_purpose ||
-                                                        "Not specified"}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {/* Agreement Information */}
-                                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
-                                        <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-center">
-                                            <ClipboardList className="h-4 w-4 mr-1.5 text-blue-600" />
-                                            Agreement Information
-                                        </h3>
-                                        <div className="text-sm space-y-1">
-                                            <div className="grid grid-cols-12 gap-2">
-                                                <span className="col-span-5 text-gray-500 self-start">
-                                                    Agreement Title
-                                                </span>
-                                                <span
-                                                    className={
-                                                        hasTitle
-                                                            ? "col-span-7 text-gray-800"
-                                                            : "col-span-7 text-gray-400 italic"
-                                                    }
-                                                >
-                                                    {hasTitle
-                                                        ? formatSentenceCase(
-                                                              grant.agreement_title_en
-                                                          )
-                                                        : "Not specified"}
-                                                </span>
-                                            </div>
-
-                                            <div className="grid grid-cols-12 gap-2">
-                                                <span className="col-span-5 text-gray-500 self-start">
-                                                    Description
-                                                </span>
-                                                <span
-                                                    className={
-                                                        grant.description_en
-                                                            ? "col-span-7 text-gray-800"
-                                                            : "col-span-7 text-gray-400 italic"
-                                                    }
-                                                >
-                                                    {grant.description_en ||
-                                                        "Not specified"}
-                                                </span>
-                                            </div>
                                         </div>
                                     </div>
 
@@ -869,26 +803,61 @@ export const GrantCard = ({
                                             </div>
                                         </div>
                                     </div>
-                                    {/* Description */}
-                                    {hasDescription && (
-                                        <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
-                                            <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-center">
-                                                <FileEdit className="h-4 w-4 mr-1.5 text-blue-600" />
-                                                Description
-                                            </h3>
-                                            <div className="text-sm text-gray-700 leading-relaxed">
-                                                <p>{grant.description_en}</p>
-                                            </div>
+
+                                    {/* Program Information */}
+                                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
+                                        <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-start">
+                                            <BookOpen className="h-4 w-4 mt-0.5 mr-1.5 flex-shrink-0 text-blue-600" />
+                                            {hasValue("prog_title_en")
+                                                ? "Program: " +
+                                                  grant.prog_title_en
+                                                : "Program Information"}
+                                        </h3>
+                                        <div className="text-sm text-gray-700">
+                                            <span
+                                                className={
+                                                    hasValue("prog_purpose_en")
+                                                        ? "col-span-7 text-gray-800"
+                                                        : "col-span-7 text-gray-400 italic"
+                                                }
+                                            >
+                                                {grant.prog_purpose_en ||
+                                                    "Program purpose not specified"}
+                                            </span>
                                         </div>
-                                    )}
+                                    </div>
+
+                                    {/* Description */}
+                                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
+                                        <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-start">
+                                            <FileEdit className="h-4 w-4 mt-0.5 mr-1.5 flex-shrink-0 text-blue-600" />
+                                            {hasValue("agreement_title_en")
+                                                ? "Agreement: " +
+                                                  grant.agreement_title_en
+                                                : "Agreement Description"}
+                                        </h3>
+                                        <div className="text-sm text-gray-700">
+                                            <span
+                                                className={
+                                                    hasValue("description_en")
+                                                        ? "col-span-7 text-gray-800"
+                                                        : "col-span-7 text-gray-400 italic"
+                                                }
+                                            >
+                                                {grant.description_en ||
+                                                    "Agreement description not specified"}
+                                            </span>
+                                        </div>
+                                    </div>
+
                                     {/* Expected Results */}
-                                    {hasExpectedResults && (
+                                    {hasValue("expected_results_en") && (
                                         <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
                                             <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-center">
                                                 <AlertCircle className="h-4 w-4 mr-1.5 text-blue-600" />
                                                 Expected Results
                                             </h3>
-                                            <div className="text-sm text-gray-700 leading-relaxed">
+                                            <div className="text-sm text-gray-700">
                                                 <p>
                                                     {grant.expected_results_en}
                                                 </p>
@@ -1170,7 +1139,8 @@ export const GrantCard = ({
                                         Funding Overview
                                     </h3>
 
-                                    {hasAmendments && sortedAmendments.length > 1 ? (
+                                    {hasAmendments &&
+                                    sortedAmendments.length > 1 ? (
                                         <div className="grid grid-cols-3 gap-2 lg:gap-4 lg:text-sm text-center">
                                             <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
                                                 <p className="text-gray-500 text-xs">
@@ -1209,10 +1179,10 @@ export const GrantCard = ({
                                                             ].agreement_value
                                                             ? "text-green-600"
                                                             : grant.agreement_value <
-                                                            sortedAmendments[
-                                                                sortedAmendments.length -
-                                                                    1
-                                                            ].agreement_value
+                                                              sortedAmendments[
+                                                                  sortedAmendments.length -
+                                                                      1
+                                                              ].agreement_value
                                                             ? "text-amber-600"
                                                             : "text-gray-900"
                                                     )}
@@ -1264,7 +1234,7 @@ export const GrantCard = ({
                                                 for this grant.
                                             </p>
                                             <p>
-                                                Current value:{" "}
+                                                Current value:
                                                 {formatCurrency(
                                                     grant.agreement_value
                                                 )}
@@ -1274,18 +1244,19 @@ export const GrantCard = ({
                                 </div>
 
                                 {/* TrendVisualizer for Funding History */}
-                                {hasAmendments && sortedAmendments.length > 1 && (
-                                    <TrendVisualizer
-                                        grants={[grant]}
-                                        amendmentsHistory={sortedAmendments}
-                                        viewContext="custom"
-                                        height={250}
-                                        initialChartType={"line"}
-                                        initialMetricType="funding"
-                                        availableGroupings={["amendment"]}
-                                        className="mt-4"
-                                    />
-                                )}
+                                {hasAmendments &&
+                                    sortedAmendments.length > 1 && (
+                                        <TrendVisualizer
+                                            grants={[grant]}
+                                            amendmentsHistory={sortedAmendments}
+                                            viewContext="custom"
+                                            height={250}
+                                            initialChartType={"line"}
+                                            initialMetricType="funding"
+                                            availableGroupings={["amendment"]}
+                                            className="mt-4"
+                                        />
+                                    )}
                             </div>
                         )}
                     </div>

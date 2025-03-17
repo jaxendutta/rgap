@@ -177,7 +177,6 @@ BEGIN
             rg.ref_number,
             rg.amendment_number AS latest_amendment_number,
             rg.amendment_date AS latest_amendment_date,
-            rg.agreement_type,
             rg.agreement_number,
             rg.agreement_value AS latest_value,
             rg.foreign_currency_type,
@@ -198,7 +197,8 @@ BEGIN
             rg.org,
             o.org_title,
             rg.prog_id,
-            p.name_en,
+            p.name_en AS prog_title_en,
+            p.purpose_en AS prog_purpose_en,
             (
                 SELECT JSON_ARRAYAGG(
                     JSON_OBJECT(

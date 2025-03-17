@@ -32,9 +32,8 @@ BEGIN
         rg.*,
         o.org as org,
         o.org_title,
-        p.name_en as prog_title_en,  -- Standardized field name
-        p.name_en as program_name,   -- Also include as program_name for backward compatibility
-        p.purpose_en as program_purpose,
+        p.name_en as prog_title_en,
+        p.purpose_en as prog_purpose_en,
         (
             SELECT JSON_ARRAYAGG(
                 JSON_OBJECT(

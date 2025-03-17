@@ -28,7 +28,6 @@ INSERT IGNORE INTO Institute (
     city,
     postal_code,
     riding_name_en,
-    riding_name_fr,
     riding_number
 )
 SELECT DISTINCT
@@ -46,7 +45,6 @@ SELECT DISTINCT
     recipient_city,
     recipient_postal_code,
     federal_riding_name_en,
-    federal_riding_name_fr,
     federal_riding_number
 FROM temp_grants
 WHERE research_organization_name IS NOT NULL;
@@ -78,26 +76,34 @@ LEFT JOIN Institute i ON
     i.name = COALESCE(NULLIF(TRIM(tg.research_organization_name), ''), 'Unknown Institution')
 WHERE recipient_legal_name IS NOT NULL;
 
--- Now, let's simplify the grants import by using a minimal insert with just essential fields
--- This focuses on getting the basic data loaded without complex transformations
 INSERT IGNORE INTO ResearchGrant (
     ref_number,
     amendment_number,
-    agreement_type,
+    amendment_date,
     agreement_number,
     agreement_value,
+    foreign_currency_type,
+    foreign_currency_value,
     agreement_start_date,
     agreement_end_date,
     agreement_title_en,
+    description_en,
+    expected_results_en,
     org,
-    recipient_id
+    recipient_id,
+    prog_id
 )
 SELECT DISTINCT
     tg.ref_number,
     COALESCE(tg.amendment_number, '0'),
-    tg.agreement_type,
+    CASE 
+        WHEN tg.amendment_date REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN STR_TO_DATE(tg.amendment_date, '%Y-%m-%d')
+        ELSE NULL 
+    END,
     tg.agreement_number,
     CAST(NULLIF(REGEXP_REPLACE(COALESCE(tg.agreement_value, '0'), '[^0-9.]', ''), '') AS DECIMAL(15,2)),
+    tg.foreign_currency_type,
+    CAST(NULLIF(REGEXP_REPLACE(COALESCE(tg.foreign_currency_value, '0'), '[^0-9.]', ''), '') AS DECIMAL(15,2)),
     CASE 
         WHEN tg.agreement_start_date REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN STR_TO_DATE(tg.agreement_start_date, '%Y-%m-%d')
         ELSE NULL 
@@ -107,11 +113,16 @@ SELECT DISTINCT
         ELSE NULL 
     END,
     tg.agreement_title_en,
+    tg.description_en,
+    tg.expected_results_en,
     tg.org,
-    r.recipient_id
+    r.recipient_id,
+    p.prog_id
 FROM temp_grants tg
 LEFT JOIN Recipient r ON 
     r.legal_name = COALESCE(NULLIF(TRIM(tg.recipient_legal_name), ''), 'Unknown')
+LEFT JOIN Program p ON
+    p.name_en = tg.prog_name_en
 WHERE tg.ref_number IS NOT NULL;
 
 -- Debug info - print count of grants loaded

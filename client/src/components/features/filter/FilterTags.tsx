@@ -1,7 +1,9 @@
 // src/components/features/filter/FilterTags.tsx
-import { X } from "lucide-react";
+import React from "react";
+import { X, LucideIcon } from "lucide-react";
 import { formatDate, formatCurrency } from "@/utils/format";
 import { FILTER_LIMITS, DEFAULT_FILTER_STATE } from "@/constants/filters";
+import { cn } from "@/utils/cn";
 
 type FilterKey =
     | "dateRange"
@@ -11,17 +13,71 @@ type FilterKey =
     | "provinces"
     | "cities";
 
-interface FilterTagsProps {
+// FilterTag Component
+export interface FilterTagProps {
+    icon?: LucideIcon;
+    label: string;
+    value: string | string[];
+    className?: string;
+    size?: "sm" | "md";
+    onRemove?: () => void;
+}
+
+export const FilterTag: React.FC<FilterTagProps> = ({
+    icon: Icon,
+    label,
+    value,
+    className,
+    size = "md",
+    onRemove,
+}) => {
+    const sizes = {
+        sm: "px-2 py-1 text-xs",
+        md: "px-3 py-1.5 text-sm",
+    };
+
+    const iconSizes = {
+        sm: "h-3 w-3",
+        md: "h-4 w-4",
+    };
+
+    return (
+        <span
+            className={cn(
+                "inline-flex items-center rounded-md bg-gray-100 text-gray-700 gap-1.5",
+                sizes[size],
+                className
+            )}
+        >
+            {Icon && <Icon className={iconSizes[size]} />}
+            {label && <span className="font-medium">{label}:</span>}
+            <span className="truncate">
+                {Array.isArray(value) ? value.join(", ") : value}
+            </span>
+            {onRemove && (
+                <button
+                    onClick={onRemove}
+                    className="ml-1 p-0.5 hover:bg-gray-200 rounded"
+                >
+                    <X className="w-3 h-3" />
+                </button>
+            )}
+        </span>
+    );
+};
+
+// FilterTags Component
+export interface FilterTagsProps {
     filters: typeof DEFAULT_FILTER_STATE;
     onRemove: (type: FilterKey, value: string) => void;
     onClearAll: () => void;
 }
 
-export const FilterTags = ({
+export const FilterTags: React.FC<FilterTagsProps> = ({
     filters,
     onRemove,
     onClearAll,
-}: FilterTagsProps) => {
+}) => {
     // Check if any filters are active
     const hasValueRangeFilter =
         filters.valueRange &&
@@ -58,7 +114,7 @@ export const FilterTags = ({
             </div>
             <div className="flex flex-wrap gap-2">
                 {hasDateRangeFilter && (
-                    <FilterTag
+                    <SimpleFilterTag
                         filterKey="Dates"
                         filterValue={`${formatDate(
                             filters.dateRange.from
@@ -68,7 +124,7 @@ export const FilterTags = ({
                 )}
 
                 {hasValueRangeFilter && (
-                    <FilterTag
+                    <SimpleFilterTag
                         filterKey="Value"
                         filterValue={`${formatCurrency(
                             filters.valueRange.min
@@ -78,7 +134,7 @@ export const FilterTags = ({
                 )}
 
                 {filters.agencies.map((agency) => (
-                    <FilterTag
+                    <SimpleFilterTag
                         key={agency}
                         filterKey="Agency"
                         filterValue={agency}
@@ -87,7 +143,7 @@ export const FilterTags = ({
                 ))}
 
                 {filters.countries.map((country) => (
-                    <FilterTag
+                    <SimpleFilterTag
                         key={country}
                         filterKey="Country"
                         filterValue={country}
@@ -96,7 +152,7 @@ export const FilterTags = ({
                 ))}
 
                 {filters.provinces.map((province) => (
-                    <FilterTag
+                    <SimpleFilterTag
                         key={province}
                         filterKey="Province"
                         filterValue={province}
@@ -105,7 +161,7 @@ export const FilterTags = ({
                 ))}
 
                 {filters.cities.map((city) => (
-                    <FilterTag
+                    <SimpleFilterTag
                         key={city}
                         filterKey="City"
                         filterValue={city}
@@ -117,13 +173,17 @@ export const FilterTags = ({
     );
 };
 
-interface FilterTagProps {
+interface SimpleFilterTagProps {
     filterKey: string;
     filterValue: string;
     onRemove: () => void;
 }
 
-const FilterTag = ({ filterKey, filterValue, onRemove }: FilterTagProps) => (
+const SimpleFilterTag = ({
+    filterKey,
+    filterValue,
+    onRemove,
+}: SimpleFilterTagProps) => (
     <span className="inline-flex items-center px-2 py-1 text-sm bg-gray-100 rounded-md">
         <span className="font-medium">{filterKey}</span>
         <span className="text-gray-400 mx-1.5">|</span>
@@ -136,3 +196,5 @@ const FilterTag = ({ filterKey, filterValue, onRemove }: FilterTagProps) => (
         </button>
     </span>
 );
+
+export default FilterTags;

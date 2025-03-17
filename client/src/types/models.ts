@@ -23,7 +23,6 @@ export interface Recipient {
     country?: string;
     postal_code?: string;
     riding_name_en?: string;
-    riding_name_fr?: string;
     riding_number?: string;
     grants_count?: number;
     total_funding?: number;
@@ -40,7 +39,6 @@ export interface Institute {
     country?: string;
     postal_code?: string;
     riding_name_en?: string;
-    riding_name_fr?: string;
     riding_number?: string;
     total_recipients?: number;
     total_grants?: number;
@@ -55,7 +53,6 @@ export interface Grant {
     ref_number: string;
     amendment_number?: string;
     amendment_date?: string;
-    agreement_type?: string;
     agreement_number?: string;
     agreement_value: number;
     foreign_currency_type?: string;
@@ -63,11 +60,8 @@ export interface Grant {
     agreement_start_date: string;
     agreement_end_date: string;
     agreement_title_en: string;
-    agreement_title_fr?: string;
     description_en?: string;
-    description_fr?: string;
     expected_results_en?: string;
-    expected_results_fr?: string;
 
     // Recipient information
     recipient_id: number;
@@ -87,7 +81,7 @@ export interface Grant {
     // Program information
     prog_id?: string;
     prog_title_en?: string;
-    program_purpose?: string; // Purpose of the program
+    prog_purpose_en?: string; // Purpose of the program
 
     // Amendment history
     amendments_history?: GrantAmendment[];
