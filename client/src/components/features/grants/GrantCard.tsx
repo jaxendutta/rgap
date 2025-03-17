@@ -30,24 +30,15 @@ import {
     GraduationCap,
     Landmark,
     BookmarkCheck,
+    BookOpen,
+    ClipboardList,
 } from "lucide-react";
 import { formatSentenceCase } from "@/utils/format";
 import { cn } from "@/utils/cn";
 import Tag, { TagGroup } from "@/components/common/ui/Tag";
-import {
-    LineChart as RechartsLineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    Bar,
-    BarChart,
-    Cell,
-} from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
+import { TrendVisualizer } from "../visualizations/TrendVisualizer";
 
 interface GrantCardProps {
     grant: Grant;
@@ -64,7 +55,6 @@ export const GrantCard = ({
     const [activeTab, setActiveTab] = useState<
         "details" | "versions" | "funding"
     >("details");
-    const [chartType, setChartType] = useState<"line" | "bar">("line");
 
     // Check if agreement title is empty or null
     const hasTitle =
@@ -101,56 +91,6 @@ export const GrantCard = ({
     const { user } = useAuth();
     const { showNotification } = useNotification();
 
-    // Format funding data for charts
-    const prepareFundingChartData = () => {
-        if (!hasAmendments) return [];
-
-        // Create a reversed copy (chronological order) for the chart
-        const chronologicalAmendments = [...sortedAmendments].reverse();
-
-        return chronologicalAmendments.map((amendment, index) => {
-            // Create a more detailed date representation using both month and year
-            const date = new Date(
-                amendment.amendment_date || amendment.agreement_start_date
-            );
-            const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1)
-                .toString()
-                .padStart(2, "0")}`;
-
-            const versionLabel =
-                amendment.amendment_number === "0"
-                    ? "Original"
-                    : `Amendment ${amendment.amendment_number}`;
-
-            // Include formatted display date for tooltip
-            const displayDate = formatDate(
-                amendment.amendment_date || amendment.agreement_start_date
-            );
-
-            // Calculate percentage change from previous version
-            let percentChange = 0;
-            if (index > 0) {
-                const previousValue =
-                    chronologicalAmendments[index - 1].agreement_value;
-                percentChange =
-                    ((amendment.agreement_value - previousValue) /
-                        previousValue) *
-                    100;
-            }
-
-            return {
-                name: formattedDate,
-                value: amendment.agreement_value,
-                version: versionLabel,
-                index: index,
-                percentChange: percentChange.toFixed(1),
-                displayDate: displayDate,
-            };
-        });
-    };
-
-    const fundingChartData = prepareFundingChartData();
-
     // Function to render funding change indicator
     const renderChangeIndicator = (current: number, previous: number) => {
         const diff = current - previous;
@@ -176,7 +116,7 @@ export const GrantCard = ({
         );
     };
 
-    // Create metadata tags
+    // Metadata tags for the grant
     const metadataTags = [
         { icon: Database, text: grant.ref_number },
         {
@@ -199,54 +139,37 @@ export const GrantCard = ({
         },
         {
             icon: Calendar,
-            text: `${formatDate(
-                new Date(grant.agreement_start_date)
-            )} → ${formatDate(new Date(grant.agreement_end_date))}`,
+            text: `${formatDate(new Date(grant.agreement_start_date))} → ${
+                grant.agreement_end_date
+                    ? formatDate(new Date(grant.agreement_end_date))
+                    : "N/A"
+            }`,
         },
         {
             icon: Hourglass,
-            text: formatDateDiff(
-                grant.agreement_start_date,
-                grant.agreement_end_date
-            ),
+            text: (() => {
+                // If no end date or end date is same/before start date
+                if (!grant.agreement_end_date) {
+                    return "One-time payment";
+                }
+
+                const start = new Date(grant.agreement_start_date);
+                const end = new Date(grant.agreement_end_date);
+
+                // Check if it's a one-time payment
+                if (end.getTime() <= start.getTime()) {
+                    return "One-time payment";
+                }
+
+                // Otherwise show the normal duration
+                return formatDateDiff(
+                    grant.agreement_start_date,
+                    grant.agreement_end_date
+                );
+            })(),
         },
         { icon: Landmark, text: grant.org },
     ].filter((tag) => !tag.hide);
-
-    // Custom tooltip for the charts
-    const CustomTooltip = ({ active, payload }: any) => {
-        if (active && payload && payload.length) {
-            return (
-                <div className="bg-white p-3 border border-gray-200 rounded-md shadow-md">
-                    <p className="font-medium text-sm">
-                        {payload[0].payload.version}
-                    </p>
-                    <p className="text-sm text-gray-700">
-                        {payload[0].payload.displayDate}
-                    </p>
-                    <p className="text-sm font-medium">
-                        {formatCurrency(payload[0].value)}
-                    </p>
-                    {payload[0].payload.percentChange !== "0.0" && (
-                        <p
-                            className={cn(
-                                "text-xs mt-1",
-                                Number(payload[0].payload.percentChange) > 0
-                                    ? "text-green-600"
-                                    : "text-amber-600"
-                            )}
-                        >
-                            {Number(payload[0].payload.percentChange) > 0
-                                ? "+"
-                                : ""}
-                            {payload[0].payload.percentChange}% from previous
-                        </p>
-                    )}
-                </div>
-            );
-        }
-        return null;
-    };
 
     const handleBookmarkClick = () => {
         if (!user || !user.user_id) {
@@ -383,7 +306,7 @@ export const GrantCard = ({
                         <button
                             onClick={() => {
                                 setIsExpanded(true);
-                                setActiveTab("versions");
+                                setActiveTab("funding");
                             }}
                             className="inline-flex items-center bg-blue-50 hover:bg-blue-100 transition-colors text-blue-700 text-xs font-medium rounded-full px-2.5 py-1"
                         >
@@ -599,7 +522,6 @@ export const GrantCard = ({
                                             )}
                                         </div>
                                     </div>
-
                                     {/* Financial Summary */}
                                     <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
                                         <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-center">
@@ -678,6 +600,90 @@ export const GrantCard = ({
                                         </div>
                                     </div>
 
+                                    {/* Program Information */}
+                                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
+                                        <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-center">
+                                            <BookOpen className="h-4 w-4 mr-1.5 text-blue-600" />
+                                            Program Information
+                                        </h3>
+                                        <div className="text-sm space-y-1">
+                                            <div className="grid grid-cols-12 gap-2">
+                                                <span className="col-span-5 text-gray-500 self-start">
+                                                    Program Name
+                                                </span>
+                                                <span
+                                                    className={
+                                                        grant.prog_title_en
+                                                            ? "col-span-7 text-gray-800"
+                                                            : "col-span-7 text-gray-400 italic"
+                                                    }
+                                                >
+                                                    {grant.prog_title_en ||
+                                                        "Not specified"}
+                                                </span>
+                                            </div>
+
+                                            <div className="grid grid-cols-12 gap-2">
+                                                <span className="col-span-5 text-gray-500 self-start">
+                                                    Program Purpose
+                                                </span>
+                                                <span
+                                                    className={
+                                                        grant.program_purpose
+                                                            ? "col-span-7 text-gray-800"
+                                                            : "col-span-7 text-gray-400 italic"
+                                                    }
+                                                >
+                                                    {grant.program_purpose ||
+                                                        "Not specified"}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* Agreement Information */}
+                                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
+                                        <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-center">
+                                            <ClipboardList className="h-4 w-4 mr-1.5 text-blue-600" />
+                                            Agreement Information
+                                        </h3>
+                                        <div className="text-sm space-y-1">
+                                            <div className="grid grid-cols-12 gap-2">
+                                                <span className="col-span-5 text-gray-500 self-start">
+                                                    Agreement Title
+                                                </span>
+                                                <span
+                                                    className={
+                                                        hasTitle
+                                                            ? "col-span-7 text-gray-800"
+                                                            : "col-span-7 text-gray-400 italic"
+                                                    }
+                                                >
+                                                    {hasTitle
+                                                        ? formatSentenceCase(
+                                                              grant.agreement_title_en
+                                                          )
+                                                        : "Not specified"}
+                                                </span>
+                                            </div>
+
+                                            <div className="grid grid-cols-12 gap-2">
+                                                <span className="col-span-5 text-gray-500 self-start">
+                                                    Description
+                                                </span>
+                                                <span
+                                                    className={
+                                                        grant.description_en
+                                                            ? "col-span-7 text-gray-800"
+                                                            : "col-span-7 text-gray-400 italic"
+                                                    }
+                                                >
+                                                    {grant.description_en ||
+                                                        "Not specified"}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     {/* Timeline */}
                                     <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
                                         <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-center">
@@ -695,7 +701,6 @@ export const GrantCard = ({
                                                     )}
                                                 </span>
                                             </div>
-
                                             <div className="grid grid-cols-12 gap-2">
                                                 <span className="col-span-5 text-gray-500 self-start">
                                                     End Date
@@ -714,15 +719,31 @@ export const GrantCard = ({
                                                 <span className="col-span-7 text-gray-800">
                                                     {(() => {
                                                         try {
-                                                            // Calculate duration in months
+                                                            // Check if start and end dates are the same or if end date is missing
                                                             const start =
                                                                 new Date(
                                                                     grant.agreement_start_date
                                                                 );
+                                                            if (
+                                                                !grant.agreement_end_date
+                                                            ) {
+                                                                return "One-time payment";
+                                                            }
+
                                                             const end =
                                                                 new Date(
                                                                     grant.agreement_end_date
                                                                 );
+
+                                                            // If same day or end date is before start date (data error)
+                                                            if (
+                                                                end.getTime() <=
+                                                                start.getTime()
+                                                            ) {
+                                                                return "One-time payment";
+                                                            }
+
+                                                            // Continue with normal duration calculation for multi-day grants
                                                             const diffMonths =
                                                                 (end.getFullYear() -
                                                                     start.getFullYear()) *
@@ -766,7 +787,7 @@ export const GrantCard = ({
                                                                 }`;
                                                             }
                                                         } catch (e) {
-                                                            return "Unknown";
+                                                            return "Unknown duration";
                                                         }
                                                     })()}
                                                 </span>
@@ -848,7 +869,6 @@ export const GrantCard = ({
                                             </div>
                                         </div>
                                     </div>
-
                                     {/* Description */}
                                     {hasDescription && (
                                         <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
@@ -861,7 +881,6 @@ export const GrantCard = ({
                                             </div>
                                         </div>
                                     )}
-
                                     {/* Expected Results */}
                                     {hasExpectedResults && (
                                         <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
@@ -1151,8 +1170,7 @@ export const GrantCard = ({
                                         Funding Overview
                                     </h3>
 
-                                    {hasAmendments &&
-                                    sortedAmendments.length > 1 ? (
+                                    {hasAmendments && sortedAmendments.length > 1 ? (
                                         <div className="grid grid-cols-3 gap-2 lg:gap-4 lg:text-sm text-center">
                                             <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
                                                 <p className="text-gray-500 text-xs">
@@ -1191,10 +1209,10 @@ export const GrantCard = ({
                                                             ].agreement_value
                                                             ? "text-green-600"
                                                             : grant.agreement_value <
-                                                              sortedAmendments[
-                                                                  sortedAmendments.length -
-                                                                      1
-                                                              ].agreement_value
+                                                            sortedAmendments[
+                                                                sortedAmendments.length -
+                                                                    1
+                                                            ].agreement_value
                                                             ? "text-amber-600"
                                                             : "text-gray-900"
                                                     )}
@@ -1255,289 +1273,19 @@ export const GrantCard = ({
                                     )}
                                 </div>
 
-                                {/* Chart type toggle */}
-                                {hasAmendments &&
-                                    sortedAmendments.length > 1 && (
-                                        <div className="flex justify-end mb-4">
-                                            <div
-                                                className="inline-flex rounded-md shadow-sm"
-                                                role="group"
-                                            >
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setChartType("line")
-                                                    }
-                                                    className={cn(
-                                                        "px-3 py-1 text-xs font-medium border border-gray-200 rounded-l-lg",
-                                                        chartType === "line"
-                                                            ? "bg-gray-100 text-gray-900"
-                                                            : "bg-white text-gray-500 hover:bg-gray-50"
-                                                    )}
-                                                >
-                                                    Line Chart
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setChartType("bar")
-                                                    }
-                                                    className={cn(
-                                                        "px-3 py-1 text-xs font-medium border border-gray-200 rounded-r-lg",
-                                                        chartType === "bar"
-                                                            ? "bg-gray-100 text-gray-900"
-                                                            : "bg-white text-gray-500 hover:bg-gray-50"
-                                                    )}
-                                                >
-                                                    Bar Chart
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                {/* Enhanced funding visualization with actual line/bar charts */}
-                                {hasAmendments &&
-                                    sortedAmendments.length > 1 && (
-                                        <div className="mt-6 px-1">
-                                            {/* Recharts chart visualization */}
-                                            <div className="h-64 md:h-80">
-                                                <ResponsiveContainer
-                                                    width="100%"
-                                                    height="100%"
-                                                >
-                                                    {chartType === "line" ? (
-                                                        <RechartsLineChart
-                                                            data={
-                                                                fundingChartData
-                                                            }
-                                                            margin={{
-                                                                top: 10,
-                                                                right: 30,
-                                                                left: 0,
-                                                                bottom: 20,
-                                                            }}
-                                                        >
-                                                            <CartesianGrid
-                                                                strokeDasharray="3 3"
-                                                                stroke="#f0f0f0"
-                                                            />
-                                                            <XAxis
-                                                                dataKey="name"
-                                                                tickLine={false}
-                                                                axisLine={{
-                                                                    stroke: "#e5e7eb",
-                                                                }}
-                                                                tick={{
-                                                                    fontSize: 11,
-                                                                }}
-                                                                tickFormatter={(
-                                                                    value
-                                                                ) => {
-                                                                    // Show month and year instead of just year
-                                                                    const parts =
-                                                                        value.split(
-                                                                            "-"
-                                                                        );
-                                                                    const year =
-                                                                        parts[0];
-                                                                    const month =
-                                                                        parts[1];
-                                                                    return `${month}/${year.slice(
-                                                                        2
-                                                                    )}`;
-                                                                }}
-                                                                angle={-30}
-                                                            />
-                                                            <YAxis
-                                                                tickFormatter={(
-                                                                    value
-                                                                ) => {
-                                                                    const millions =
-                                                                        value /
-                                                                        1000000;
-                                                                    if (
-                                                                        millions >=
-                                                                        1
-                                                                    ) {
-                                                                        return `${millions.toFixed(
-                                                                            1
-                                                                        )}M`;
-                                                                    } else {
-                                                                        const thousands =
-                                                                            value /
-                                                                            1000;
-                                                                        return `${thousands.toFixed(
-                                                                            0
-                                                                        )}k`;
-                                                                    }
-                                                                }}
-                                                                tickLine={false}
-                                                                axisLine={{
-                                                                    stroke: "#e5e7eb",
-                                                                }}
-                                                                tick={{
-                                                                    fontSize: 11,
-                                                                }}
-                                                                width={50}
-                                                            />
-                                                            <Tooltip
-                                                                content={
-                                                                    <CustomTooltip />
-                                                                }
-                                                            />
-                                                            <Line
-                                                                type="monotone"
-                                                                dataKey="value"
-                                                                stroke="#2563eb"
-                                                                strokeWidth={2}
-                                                                dot={{
-                                                                    r: 6,
-                                                                    fill: "#2563eb",
-                                                                    strokeWidth: 0,
-                                                                }}
-                                                                activeDot={{
-                                                                    r: 8,
-                                                                    fill: "#2563eb",
-                                                                    strokeWidth: 0,
-                                                                }}
-                                                            />
-                                                        </RechartsLineChart>
-                                                    ) : (
-                                                        <BarChart
-                                                            data={
-                                                                fundingChartData
-                                                            }
-                                                            margin={{
-                                                                top: 10,
-                                                                right: 30,
-                                                                left: 0,
-                                                                bottom: 20,
-                                                            }}
-                                                        >
-                                                            <CartesianGrid
-                                                                strokeDasharray="3 3"
-                                                                stroke="#f0f0f0"
-                                                            />
-                                                            <XAxis
-                                                                dataKey="name"
-                                                                tickLine={false}
-                                                                axisLine={{
-                                                                    stroke: "#e5e7eb",
-                                                                }}
-                                                                tick={{
-                                                                    fontSize: 11,
-                                                                }}
-                                                                tickFormatter={(
-                                                                    value
-                                                                ) => {
-                                                                    // Show month and year instead of just year
-                                                                    const parts =
-                                                                        value.split(
-                                                                            "-"
-                                                                        );
-                                                                    const year =
-                                                                        parts[0];
-                                                                    const month =
-                                                                        parts[1];
-                                                                    return `${month}/${year.slice(
-                                                                        2
-                                                                    )}`;
-                                                                }}
-                                                                angle={-30}
-                                                            />
-                                                            <YAxis
-                                                                tickFormatter={(
-                                                                    value
-                                                                ) => {
-                                                                    const millions =
-                                                                        value /
-                                                                        1000000;
-                                                                    if (
-                                                                        millions >=
-                                                                        1
-                                                                    ) {
-                                                                        return `${millions.toFixed(
-                                                                            1
-                                                                        )}M`;
-                                                                    } else {
-                                                                        const thousands =
-                                                                            value /
-                                                                            1000;
-                                                                        return `${thousands.toFixed(
-                                                                            0
-                                                                        )}k`;
-                                                                    }
-                                                                }}
-                                                                tickLine={false}
-                                                                axisLine={{
-                                                                    stroke: "#e5e7eb",
-                                                                }}
-                                                                tick={{
-                                                                    fontSize: 11,
-                                                                }}
-                                                                width={50}
-                                                            />
-                                                            <Tooltip
-                                                                content={
-                                                                    <CustomTooltip />
-                                                                }
-                                                            />
-                                                            <Bar
-                                                                dataKey="value"
-                                                                fill="#3b82f6"
-                                                                radius={[
-                                                                    4, 4, 0, 0,
-                                                                ]}
-                                                            >
-                                                                {fundingChartData.map(
-                                                                    (
-                                                                        _,
-                                                                        index
-                                                                    ) => (
-                                                                        <Cell
-                                                                            key={`cell-${index}`}
-                                                                            fill={
-                                                                                index ===
-                                                                                0
-                                                                                    ? "#3b82f6" // First (original)
-                                                                                    : index ===
-                                                                                      fundingChartData.length -
-                                                                                          1
-                                                                                    ? "#10b981" // Last (current)
-                                                                                    : "#f59e0b" // Middle (amendments)
-                                                                            }
-                                                                        />
-                                                                    )
-                                                                )}
-                                                            </Bar>
-                                                        </BarChart>
-                                                    )}
-                                                </ResponsiveContainer>
-                                            </div>
-
-                                            {/* Legend */}
-                                            <div className="flex justify-center space-x-6 mt-4">
-                                                <div className="flex items-center">
-                                                    <div className="w-3 h-3 bg-blue-500 rounded mr-2"></div>
-                                                    <span className="text-xs text-gray-600">
-                                                        Original
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <div className="w-3 h-3 bg-amber-500 rounded mr-2"></div>
-                                                    <span className="text-xs text-gray-600">
-                                                        Amendments
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <div className="w-3 h-3 bg-green-500 rounded mr-2"></div>
-                                                    <span className="text-xs text-gray-600">
-                                                        Current
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+                                {/* TrendVisualizer for Funding History */}
+                                {hasAmendments && sortedAmendments.length > 1 && (
+                                    <TrendVisualizer
+                                        grants={[grant]}
+                                        amendmentsHistory={sortedAmendments}
+                                        viewContext="custom"
+                                        height={250}
+                                        initialChartType={"line"}
+                                        initialMetricType="funding"
+                                        availableGroupings={["amendment"]}
+                                        className="mt-4"
+                                    />
+                                )}
                             </div>
                         )}
                     </div>

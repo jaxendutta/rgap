@@ -87,7 +87,6 @@ export interface Grant {
     // Program information
     prog_id?: string;
     prog_title_en?: string;
-    program_name?: string; // Alias for prog_title_en for backward compatibility
     program_purpose?: string; // Purpose of the program
 
     // Amendment history

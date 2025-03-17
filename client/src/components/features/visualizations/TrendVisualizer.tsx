@@ -6,7 +6,7 @@ import { Card } from "@/components/common/ui/Card";
 import { Dropdown } from "@/components/common/ui/Dropdown";
 import DataChart from "./DataChart";
 import { cn } from "@/utils/cn";
-import { getCategoryColor } from "@/utils/chartColors";
+import { AMENDMENT_COLORS, getCategoryColor } from "@/utils/chartColors";
 import { prepareGrantsForVisualization } from "@/utils/chartDataTransforms";
 
 export type ChartType = "line" | "bar-stacked" | "bar-grouped";
@@ -19,13 +19,25 @@ export type GroupingDimension =
     | "recipient"
     | "institute"
     | "program"
-    | "year";
+    | "year"
+    | "amendment";
 
 export type ViewContext = "search" | "recipient" | "institute" | "custom";
+
+export interface GrantAmendment {
+    amendment_number: string;
+    amendment_date: string;
+    agreement_value: number;
+    agreement_start_date: string;
+    agreement_end_date: string;
+}
 
 interface AdvancedVisualizationProps {
     // The grants data to visualize
     grants: Grant[];
+
+    // Optional amendments history to visualize (for single grant view)
+    amendmentsHistory?: GrantAmendment[];
 
     // Configuration props
     viewContext?: ViewContext;
@@ -63,6 +75,7 @@ const DEFAULT_INSTITUTE_GROUPINGS: GroupingDimension[] = [
 
 export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
     grants,
+    amendmentsHistory,
     viewContext = "search",
     initialChartType = "bar-stacked",
     initialMetricType = "funding",
@@ -73,10 +86,19 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
     className,
     title,
 }) => {
-    // Determine available groupings based on context if not explicitly provided
-    const groupingOptions = useMemo(() => {
-        if (availableGroupings) return availableGroupings;
+    // If amendmentsHistory is provided, we're visualizing a single grant's amendments
+    const isAmendmentView = !!amendmentsHistory && amendmentsHistory.length > 1;
 
+    // Add "amendment" to available groupings if we have amendment history
+    const effectiveAvailableGroupings = useMemo(() => {
+        if (isAmendmentView) {
+            return ["amendment"];
+        }
+        return availableGroupings || getDefaultGroupings();
+    }, [isAmendmentView, availableGroupings]);
+
+    // Determine available groupings based on context if not explicitly provided
+    function getDefaultGroupings(): GroupingDimension[] {
         switch (viewContext) {
             case "recipient":
                 return DEFAULT_RECIPIENT_GROUPINGS;
@@ -86,13 +108,15 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
             default:
                 return DEFAULT_SEARCH_GROUPINGS;
         }
-    }, [viewContext, availableGroupings]);
+    }
 
     // Initialize state with defaults appropriate for the context
     const [chartType, setChartType] = useState<ChartType>(initialChartType);
     const [metricType, setMetricType] = useState<MetricType>(initialMetricType);
     const [groupingDimension, setGroupingDimension] =
-        useState<GroupingDimension>(initialGrouping || groupingOptions[0]);
+        useState<GroupingDimension>(
+            initialGrouping || effectiveAvailableGroupings[0] as GroupingDimension
+        );
 
     // Generate display options for the dropdown
     const groupingDisplayOptions = useMemo(() => {
@@ -105,31 +129,161 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
             institute: "Institution",
             program: "Program",
             year: "Year",
+            amendment: "Amendment Version",
         };
 
-        return groupingOptions.map((option) => ({
+        return effectiveAvailableGroupings.map((option) => ({
             value: option,
-            label: displayLabels[option],
+            label: displayLabels[option as GroupingDimension],
         }));
-    }, [groupingOptions]);
+    }, [effectiveAvailableGroupings]);
 
     // Process grants to ensure all needed fields are properly formatted
     const processedGrants = useMemo(() => {
         return prepareGrantsForVisualization(grants);
     }, [grants]);
 
+    // Prepare data for amendment visualization if needed
+    const amendmentChartData = useMemo(() => {
+        if (!isAmendmentView) return null;
+
+        // Create chronological order for the chart (oldest to newest)
+        const chronologicalAmendments = [...amendmentsHistory].sort((a, b) => {
+            const numA = parseInt(a.amendment_number);
+            const numB = parseInt(b.amendment_number);
+            return numA - numB;
+        });
+
+        // For line chart format, use a single "Funding" category
+        if (chartType === "line") {
+            return chronologicalAmendments.map((amendment, index) => {
+                // Create a date representation
+                const date = new Date(
+                    amendment.amendment_date || amendment.agreement_start_date
+                );
+                const formattedDate = `${date.getFullYear()}-${(
+                    date.getMonth() + 1
+                )
+                    .toString()
+                    .padStart(2, "0")}`;
+
+                // Create label - "Original" for amendment 0, otherwise "Amendment X"
+                const versionLabel =
+                    amendment.amendment_number === "0"
+                        ? "Original"
+                        : `Amendment ${amendment.amendment_number}`;
+
+                // Calculate percentage change from previous version
+                let percentChange = 0;
+                if (index > 0) {
+                    const previousValue =
+                        chronologicalAmendments[index - 1].agreement_value;
+                    percentChange =
+                        ((amendment.agreement_value - previousValue) /
+                            previousValue) *
+                        100;
+                }
+
+                return {
+                    year: formattedDate, // Use year for the x-axis key
+                    Funding: amendment.agreement_value, // Use a single 'Funding' category for line chart
+                    value: amendment.agreement_value, // For direct value access
+                    version: versionLabel, // Store version label for reference
+                    percentChange: percentChange, // Store the percent change
+                    displayDate: formattedDate, // For tooltip
+                    amendmentNumber: amendment.amendment_number, // For coloring
+                };
+            });
+        }
+        // For bar chart format, use separate categories for each amendment
+        else {
+            return chronologicalAmendments.map((amendment, index) => {
+                // Create a date representation
+                const date = new Date(
+                    amendment.amendment_date || amendment.agreement_start_date
+                );
+                const formattedDate = `${date.getFullYear()}-${(
+                    date.getMonth() + 1
+                )
+                    .toString()
+                    .padStart(2, "0")}`;
+
+                // Create label - "Original" for amendment 0, otherwise "Amendment X"
+                const versionLabel =
+                    amendment.amendment_number === "0"
+                        ? "Original"
+                        : `Amendment ${amendment.amendment_number}`;
+
+                // Calculate percentage change from previous version
+                let percentChange = 0;
+                if (index > 0) {
+                    const previousValue =
+                        chronologicalAmendments[index - 1].agreement_value;
+                    percentChange =
+                        ((amendment.agreement_value - previousValue) /
+                            previousValue) *
+                        100;
+                }
+
+                return {
+                    year: formattedDate, // Use year for the x-axis key
+                    [versionLabel]: amendment.agreement_value, // Use version label as the category
+                    value: amendment.agreement_value, // For direct value access
+                    version: versionLabel, // Store version label for reference
+                    percentChange: percentChange, // Store the percent change
+                    displayDate: formattedDate, // For tooltip
+                    amendmentNumber: amendment.amendment_number, // For coloring
+                };
+            });
+        }
+    }, [amendmentsHistory, isAmendmentView, chartType]);
+
     // Prepare data for visualization based on the selected options
     const chartData = useMemo(() => {
-        if (!processedGrants || processedGrants.length === 0) return { data: [], categories: [] };
+        // If we're showing amendments, use that data directly
+        if (isAmendmentView && amendmentChartData) {
+            // For line charts, we use a single "Funding" category
+            if (chartType === "line") {
+                return {
+                    data: amendmentChartData,
+                    categories: ["Funding"],
+                };
+            }
+            // For bar charts, each amendment is its own category
+            else {
+                const categories = amendmentChartData.map((item) => {
+                    const versionKey = Object.keys(item).find(
+                        (key) =>
+                            key !== "year" &&
+                            key !== "version" &&
+                            key !== "percentChange" &&
+                            key !== "displayDate" &&
+                            key !== "value" &&
+                            key !== "amendmentNumber" &&
+                            key !== "Funding" // Exclude the Funding key we added for line charts
+                    );
+                    return versionKey || "";
+                });
+
+                return {
+                    data: amendmentChartData,
+                    categories: categories.filter(Boolean),
+                };
+            }
+        }
+
+        // Otherwise process the regular grants data
+        if (!processedGrants || processedGrants.length === 0)
+            return { data: [], categories: [] };
 
         const yearMap = new Map();
         const uniqueCategories = new Set<string>();
 
         // Group data by year and the selected dimension
         processedGrants.forEach((grant) => {
-            // Extract year from the grant (already validated in prepareGrantsForVisualization)
+            // Extract year from the grant
             const year = new Date(grant.agreement_start_date).getFullYear();
-            const grantValue = grant.agreement_value; // Already normalized to a number
+            const grantValue = grant.agreement_value;
 
             // Determine the category value based on the selected dimension
             let categoryValue: string;
@@ -150,14 +304,13 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                     categoryValue = grant.legal_name || "Unknown";
                     break;
                 case "institute":
-                    categoryValue = grant.research_organization_name || "Unknown";
+                    categoryValue =
+                        grant.research_organization_name || "Unknown";
                     break;
                 case "program":
-                    // We've already normalized program_name in prepareGrantsForVisualization
-                    categoryValue = grant.agreement_title_en || "Unknown";
+                    categoryValue = grant.prog_title_en || "Unknown";
                     break;
                 case "year":
-                    // When grouping by year, use a single "Value" category
                     categoryValue = "Value";
                     break;
                 default:
@@ -177,7 +330,8 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
             // Update the data based on the metric type
             if (metricType === "funding") {
                 // Sum funding values
-                yearData[categoryValue] = (yearData[categoryValue] || 0) + grantValue;
+                yearData[categoryValue] =
+                    (yearData[categoryValue] || 0) + grantValue;
             } else {
                 // Count grants
                 yearData[categoryValue] = (yearData[categoryValue] || 0) + 1;
@@ -192,7 +346,7 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
         // If we have too many categories for readability, limit them
         const categories = Array.from(uniqueCategories);
 
-        // For recipient and institute dimensions, limit to top 10 by value
+        // For recipient and institute dimensions, limit to top 8 by value
         if (
             (groupingDimension === "recipient" ||
                 groupingDimension === "institute") &&
@@ -244,38 +398,56 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
         }
 
         return { data: result, categories: Array.from(uniqueCategories) };
-    }, [processedGrants, groupingDimension, metricType]);
+    }, [
+        processedGrants,
+        groupingDimension,
+        metricType,
+        isAmendmentView,
+        amendmentChartData,
+    ]);
 
     // Render nothing if no data
-    if (!grants || grants.length === 0) {
+    if ((!grants || grants.length === 0) && !isAmendmentView) {
         return null;
     }
 
     // Generate title for the chart
     const chartTitle =
-        title ||
-        `${metricType === "funding" ? "Funding" : "Grant"} Trends by `;
+        title || `${metricType === "funding" ? "Funding" : "Grant"} Trends by `;
+
+    // Special title for amendment view
+    const effectiveTitle = isAmendmentView
+        ? "Grant Amendment History"
+        : `${chartTitle}${
+              groupingDisplayOptions.find(
+                  (opt) => opt.value === groupingDimension
+              )?.label || ""
+          }`;
 
     return (
         <Card className={cn("p-6", className)}>
             {/* Header with controls */}
             <div className="flex flex-col lg:flex-row items-center justify-between gap-3 mb-4">
                 <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap">
-                    <h3 className="text-lg lg:text-lg font-medium whitespace-nowrap">{chartTitle}</h3>
-                    {/* Dropdown for dimension selection */}
-                    <Dropdown
-                        value={groupingDimension}
-                        options={groupingDisplayOptions}
-                        onChange={(value) =>
-                            setGroupingDimension(value as GroupingDimension)
-                        }
-                        className="min-w-[150px]"
-                    />
+                    <h3 className="text-lg lg:text-lg font-medium whitespace-nowrap">
+                        {effectiveTitle}
+                    </h3>
+                    {/* Dropdown for dimension selection - only show if not amendment view */}
+                    {!isAmendmentView && (
+                        <Dropdown
+                            value={groupingDimension}
+                            options={groupingDisplayOptions}
+                            onChange={(value) =>
+                                setGroupingDimension(value as GroupingDimension)
+                            }
+                            className="min-w-[150px]"
+                        />
+                    )}
                 </div>
 
                 <div className="flex items-center justify-between w-full py-2 lg:py-0 lg:gap-3 lg:justify-end">
-                    {/* Metric type toggle (if multiple metrics available) */}
-                    {availableMetrics.length > 1 && (
+                    {/* Metric type toggle (if multiple metrics available and not in amendment view) */}
+                    {availableMetrics.length > 1 && !isAmendmentView && (
                         <div className="flex rounded-md shadow-sm">
                             <button
                                 onClick={() => setMetricType("funding")}
@@ -362,6 +534,8 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                         categories={chartData.categories}
                         height={height}
                         stacked={chartType === "bar-stacked"}
+                        // Special option for amendment view to format x-axis differently
+                        isAmendmentView={isAmendmentView}
                     />
                 </div>
             ) : (
@@ -373,23 +547,35 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
             {/* Legend for top categories */}
             {chartData.categories.length > 0 && (
                 <div className="flex flex-wrap justify-center mt-4 gap-3">
-                    {chartData.categories.map((category, index) => (
-                        <div
-                            key={category}
-                            className="flex items-center text-xs"
-                        >
-                            <span
-                                className="w-3 h-3 rounded-full mr-1.5"
-                                style={{
-                                    backgroundColor: getCategoryColor(
-                                        category,
-                                        index
-                                    ),
-                                }}
-                            />
-                            <span className="text-gray-600">{category}</span>
-                        </div>
-                    ))}
+                    {isAmendmentView
+                        ? Object.entries(AMENDMENT_COLORS).map(([key, color], index) => (
+                            <div className="flex items-center text-xs" key={index}>
+                                <span
+                                    className="w-3 h-3 rounded-full mr-1.5"
+                                    style={{
+                                        backgroundColor: color,
+                                    }}
+                                />
+                                <span className="text-gray-600">{key}</span>
+                            </div>
+                        ))
+                        : chartData.categories.map((category, index) => (
+                            <div
+                                key={category}
+                                className="flex items-center text-xs"
+                            >
+                                <span
+                                    className="w-3 h-3 rounded-full mr-1.5"
+                                    style={{
+                                        backgroundColor: getCategoryColor(
+                                            category,
+                                            index
+                                        ),
+                                    }}
+                                />
+                                <span className="text-gray-600">{category}</span>
+                            </div>
+                        ))}
                 </div>
             )}
         </Card>

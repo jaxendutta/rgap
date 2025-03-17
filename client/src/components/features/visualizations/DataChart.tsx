@@ -11,9 +11,11 @@ import {
     Tooltip,
     Legend,
     ResponsiveContainer,
+    Cell,
 } from "recharts";
 import { ChartDataPoint, formatChartValue } from "@/utils/chartDataTransforms";
-import { getCategoryColor } from "@/utils/chartColors";
+import { getCategoryColor, AMENDMENT_COLORS } from "@/utils/chartColors";
+import CustomTooltip from "./CustomTooltip";
 
 export interface DataChartProps {
     data: ChartDataPoint[];
@@ -26,56 +28,8 @@ export interface DataChartProps {
     showGrid?: boolean;
     title?: string;
     className?: string;
+    isAmendmentView?: boolean; // New prop for amendment visualizations
 }
-
-interface CustomTooltipProps {
-    active?: boolean;
-    payload?: any[];
-    label?: string;
-    dataType: "funding" | "counts";
-}
-
-// Custom tooltip component
-const CustomTooltip: React.FC<CustomTooltipProps> = ({
-    active,
-    payload,
-    label,
-    dataType,
-}) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="bg-white p-3 border border-gray-200 rounded-md shadow-md">
-                <p className="font-medium text-sm">{label}</p>
-                <div className="mt-2 space-y-1">
-                    {payload.map((entry: any, index: number) => (
-                        <p
-                            key={index}
-                            className="text-sm flex items-center gap-2"
-                        >
-                            <span
-                                className="h-3 w-3 rounded-full"
-                                style={{ backgroundColor: entry.color }}
-                            />
-                            <span>
-                                {entry.name}:{" "}
-                                {dataType === "funding"
-                                    ? new Intl.NumberFormat("en-CA", {
-                                          style: "currency",
-                                          currency: "CAD",
-                                          maximumFractionDigits: 0,
-                                      }).format(entry.value)
-                                    : `${Math.round(entry.value)} ${
-                                          entry.value === 1 ? "grant" : "grants"
-                                      }`}
-                            </span>
-                        </p>
-                    ))}
-                </div>
-            </div>
-        );
-    }
-    return null;
-};
 
 export const DataChart: React.FC<DataChartProps> = ({
     data,
@@ -88,7 +42,22 @@ export const DataChart: React.FC<DataChartProps> = ({
     showGrid = true,
     title,
     className,
+    isAmendmentView = false,
 }) => {
+    // Special formatting for amendment dates
+    const formatXAxis = (value: string) => {
+        if (isAmendmentView && value.includes("-")) {
+            // For amendment dates, format as MM/YY
+            const parts = value.split("-");
+            if (parts.length >= 2) {
+                const year = parts[0];
+                const month = parts[1];
+                return `${month}/${year.slice(2)}`;
+            }
+        }
+        return value;
+    };
+
     return (
         <div className={className}>
             {title && <h3 className="text-md font-medium mb-3">{title}</h3>}
@@ -110,6 +79,8 @@ export const DataChart: React.FC<DataChartProps> = ({
                                 tickLine={false}
                                 axisLine={{ stroke: "#e5e7eb" }}
                                 tick={{ fontSize: 11 }}
+                                tickFormatter={formatXAxis}
+                                angle={isAmendmentView ? -30 : 0}
                             />
                             <YAxis
                                 tickFormatter={(value) =>
@@ -120,7 +91,9 @@ export const DataChart: React.FC<DataChartProps> = ({
                                 tick={{ fontSize: 11 }}
                             />
                             <Tooltip
-                                content={<CustomTooltip dataType={dataType} />}
+                                content={
+                                    <CustomTooltip chartMetric={dataType} />
+                                }
                             />
                             {showLegend && <Legend />}
 
@@ -132,11 +105,50 @@ export const DataChart: React.FC<DataChartProps> = ({
                                     name={category}
                                     stroke={getCategoryColor(category, index)}
                                     strokeWidth={2}
-                                    dot={{
-                                        r: 4,
-                                        fill: getCategoryColor(category, index),
-                                        strokeWidth: 0,
-                                    }}
+                                    dot={
+                                        isAmendmentView
+                                            ? // For amendment view, customize each dot based on version
+                                              ({ cx, cy, payload }) => {
+                                                  // Determine color based on amendment number
+                                                  let color =
+                                                      AMENDMENT_COLORS.Original;
+
+                                                  if (
+                                                      payload?.amendmentNumber ===
+                                                      "0"
+                                                  ) {
+                                                      color =
+                                                          AMENDMENT_COLORS.Original;
+                                                  } else {
+                                                      // If it's the last dot, use green, otherwise amber
+                                                      const isLast =
+                                                          +payload?.amendmentNumber ===
+                                                          data.length - 1;
+                                                      color = isLast
+                                                          ? AMENDMENT_COLORS.Final
+                                                          : AMENDMENT_COLORS.Amendment;
+                                                  }
+
+                                                  return (
+                                                      <circle
+                                                          cx={cx}
+                                                          cy={cy}
+                                                          r={5}
+                                                          fill={color}
+                                                          stroke="none"
+                                                      />
+                                                  );
+                                              }
+                                            : // Standard dots for regular charts
+                                              {
+                                                  r: 4,
+                                                  fill: getCategoryColor(
+                                                      category,
+                                                      index
+                                                  ),
+                                                  strokeWidth: 0,
+                                              }
+                                    }
                                     activeDot={{
                                         r: 6,
                                         stroke: getCategoryColor(
@@ -168,6 +180,8 @@ export const DataChart: React.FC<DataChartProps> = ({
                                 tickLine={false}
                                 axisLine={{ stroke: "#e5e7eb" }}
                                 tick={{ fontSize: 11 }}
+                                tickFormatter={formatXAxis}
+                                angle={isAmendmentView ? -30 : 0}
                             />
                             <YAxis
                                 tickFormatter={(value) =>
@@ -178,25 +192,69 @@ export const DataChart: React.FC<DataChartProps> = ({
                                 tick={{ fontSize: 11 }}
                             />
                             <Tooltip
-                                content={<CustomTooltip dataType={dataType} />}
+                                content={
+                                    <CustomTooltip chartMetric={dataType} />
+                                }
                             />
                             {showLegend && <Legend />}
 
-                            {categories.map((category, index) => (
-                                <Bar
-                                    key={category}
-                                    dataKey={category}
-                                    name={category}
-                                    stackId={stacked ? "a" : undefined}
-                                    fill={getCategoryColor(category, index)}
-                                    // Add rounded corners for bars
-                                    radius={
-                                        stacked ? [0, 0, 0, 0] : [4, 4, 0, 0]
-                                    }
-                                    // Make bars slightly transparent in grouped mode for better visual distinction
-                                    fillOpacity={stacked ? 1 : 0.9}
-                                />
-                            ))}
+                            {categories.map((category, index) => {
+                                // For amendment view, we'll use special colors based on the version
+                                const isAmendmentBar = isAmendmentView;
+
+                                // Regular bar element
+                                return (
+                                    <Bar
+                                        key={category}
+                                        dataKey={category}
+                                        name={category}
+                                        stackId={stacked ? "a" : undefined}
+                                        fill={getCategoryColor(category, index)}
+                                        // Add rounded corners for bars
+                                        radius={
+                                            stacked
+                                                ? [0, 0, 0, 0]
+                                                : [4, 4, 0, 0]
+                                        }
+                                        // Make bars slightly transparent in grouped mode for better visual distinction
+                                        fillOpacity={stacked ? 1 : 0.9}
+                                    >
+                                        {/* For amendment view, color code bars based on version */}
+                                        {isAmendmentBar &&
+                                            data.map((_, i) => {
+                                                let color =
+                                                    AMENDMENT_COLORS.Original;
+
+                                                // Original is blue, amendments are amber, current is green
+                                                if (
+                                                    category.includes(
+                                                        "Original"
+                                                    )
+                                                ) {
+                                                    color =
+                                                        AMENDMENT_COLORS.Original;
+                                                } else if (
+                                                    category.includes(
+                                                        "Amendment"
+                                                    )
+                                                ) {
+                                                    const isLatestAmendment =
+                                                        i === data.length - 1;
+                                                    color = isLatestAmendment
+                                                        ? AMENDMENT_COLORS.Final
+                                                        : AMENDMENT_COLORS.Amendment;
+                                                }
+
+                                                return (
+                                                    <Cell
+                                                        key={`cell-${i}`}
+                                                        fill={color}
+                                                    />
+                                                );
+                                            })}
+                                    </Bar>
+                                );
+                            })}
                         </BarChart>
                     )}
                 </ResponsiveContainer>

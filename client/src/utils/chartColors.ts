@@ -16,6 +16,12 @@ export const DEFAULT_CHART_COLORS = [
     "#be185d", // pink
 ];
 
+export const AMENDMENT_COLORS = {
+    Original: "#3b82f6",
+    Amendment: "#f59e0b",
+    Final: "#10b981"
+};
+
 export const getCategoryColor = (category: string, index: number): string => {
     return (
         AGENCY_COLORS[category] ||
