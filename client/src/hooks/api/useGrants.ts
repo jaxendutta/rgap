@@ -6,18 +6,12 @@ import {
 } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import axios from "axios";
-import portConfig from "../../../../config/ports.json";
 import { Grant } from "@/types/models";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import { GrantSearchParams, SearchResponse } from "@/types/search";
+import createAPI from '@/utils/api';
 
-const API = axios.create({
-    baseURL:
-        process.env.VITE_API_URL ||
-        `http://localhost:${portConfig.defaults.server}`,
-    timeout: 15000,
-    withCredentials: true,
-});
+const API = createAPI(15000); // Use 15000ms timeout
 
 // Configure retry logic for specific error codes
 API.interceptors.response.use(

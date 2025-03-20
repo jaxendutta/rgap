@@ -1,15 +1,9 @@
 // src/hooks/api/useInstitutes.ts
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import axios from "axios";
-import portConfig from "../../../../config/ports.json";
 import { Grant } from "@/types/models";
+import createAPI from '@/utils/api';
 
-const API = axios.create({
-    baseURL:
-        process.env.VITE_API_URL ||
-        `http://localhost:${portConfig.defaults.server}`,
-    timeout: 10000,
-});
+const API = createAPI(); // Use default 10000ms timeout
 
 // Query key factory
 export const instituteKeys = {

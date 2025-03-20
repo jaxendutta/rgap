@@ -1,14 +1,8 @@
 // src/hooks/api/useFilterOptions.ts
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import portConfig from "../../../../config/ports.json";
+import createAPI from '@/utils/api';
 
-const API = axios.create({
-    baseURL:
-        process.env.VITE_API_URL ||
-        `http://localhost:${portConfig.defaults.server}`,
-    timeout: 5000,
-});
+const API = createAPI(5000); // Use 5000ms timeout
 
 interface FilterOptions {
     agencies: string[];

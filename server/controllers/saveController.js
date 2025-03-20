@@ -134,10 +134,10 @@ export const saveRecipient = async (req, res) => {
         );
 
         if (ifSaved.length) {
-            console.log("Bookmark has already existed.");
+            console.log(`Recipient ${recipient_id} has already existed as a bookmark.`);
             return res
                 .status(204)
-                .json({ message: `Bookmark has already existed.` });
+                .json({ message: `Bookmark ${recipient_id} has already existed as a bookmark.` });
         }
 
         const [save] = await pool.query(
@@ -145,7 +145,7 @@ export const saveRecipient = async (req, res) => {
             [user_id, recipient_id]
         );
 
-        console.log("Recipient's bookmark is added.");
+        console.log(`Recipient ${recipient_id} bookmarked by user ${user_id}`);
         res.status(201).json(save);
     } catch (error) {
         res.status(409).json({ message: error.message });
@@ -166,7 +166,7 @@ export const deleteSavedRecipient = async (req, res) => {
         );
 
         if (!ifSaved.length) {
-            console.log("Bookmark doesn't existed.");
+            console.log("Bookmark does not exist.");
             return res.status(409).json("Bookmark does not exist.");
         }
 
@@ -175,7 +175,7 @@ export const deleteSavedRecipient = async (req, res) => {
             [recipient_id, user_id]
         );
 
-        console.log("Recipient's bookmark is deleted.");
+        console.log(`Recipient ${recipient_id} unbookmarked by user ${user_id}`);
         return res.status(200).json(deleted);
     } catch (error) {
         return res.status(409).json({ message: error.message });
@@ -264,7 +264,7 @@ export const saveInstitute = async (req, res) => {
             [user_id, institute_id]
         );
 
-        console.log("Institute's bookmark is added.");
+        console.log(`Institute ${institute_id} bookmarked by user ${user_id}.`);
         res.status(201).json(save);
     } catch (error) {
         res.status(409).json({ message: error.message });
@@ -294,7 +294,7 @@ export const deleteSavedInstitute = async (req, res) => {
             [institute_id, user_id]
         );
 
-        console.log("Institute's bookmark is deleted.");
+        console.log(`Institute ${institute_id} unbookmarked by user ${user_id}.`);
         return res.status(200).json(deleted);
     } catch (error) {
         return res.status(409).json({ message: error.message });

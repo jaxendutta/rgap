@@ -1,4 +1,5 @@
 {
+  "name": "server",
   "type": "module",
   "scripts": {
     "start": "node index.js",
@@ -9,7 +10,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "mysql2": "^3.12.0"
+    "express-session": "^1.18.1",
+    "mysql2": "^3.14.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

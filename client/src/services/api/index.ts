@@ -1,11 +1,7 @@
-import axios from 'axios';
-import portConfig from '../../../../config/ports.json';
+// src/services/api/index.ts
+import createAPI from '@/utils/api';
 
-const url = process.env.VITE_API_URL || `http://localhost:${portConfig.defaults.server}`;
-const API = axios.create({
-    baseURL: url,
-    timeout: 5000,
-});
+const API = createAPI(5000); // Use 5000ms timeout
 
 // Error interceptor
 API.interceptors.response.use(

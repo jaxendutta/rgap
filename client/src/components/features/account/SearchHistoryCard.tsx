@@ -11,18 +11,10 @@ import { formatCurrency } from "@/utils/format";
 import { FILTER_LIMITS } from "@/constants/filters";
 import { GrantSearchParams } from "@/types/search";
 import Tag from "@/components/common/ui/Tag";
+import { SearchHistory } from "@/types/models";
 
 interface SearchHistoryCardProps {
-    search: {
-        history_id: number;
-        search_recipient?: string;
-        search_grant?: string;
-        search_institution?: string;
-        search_filters?: string | any;
-        search_time: string;
-        result_count: number;
-        saved: boolean;
-    };
+    search: SearchHistory;
     onRerun: (params: any) => void;
     onDelete: (historyId: number) => void;
 }
@@ -38,13 +30,13 @@ export const SearchHistoryCard = ({
     const searchTerms = [
         {
             key: "recipient",
-            value: search.search_recipient,
+            value: search.search_params.searchTerms.recipient,
             icon: GraduationCap,
         },
-        { key: "grant", value: search.search_grant, icon: BookMarked },
+        { key: "grant", value: search.search_params.searchTerms.grant, icon: BookMarked },
         {
             key: "institute",
-            value: search.search_institution,
+            value: search.search_params.searchTerms.institute,
             icon: University,
         },
     ].filter((item) => item.value && item.value.trim() !== "");
@@ -52,10 +44,10 @@ export const SearchHistoryCard = ({
     // Parse search filters from JSON if needed
     let filters: any = {};
     try {
-        if (typeof search.search_filters === "string") {
-            filters = JSON.parse(search.search_filters);
-        } else if (search.search_filters) {
-            filters = search.search_filters;
+        if (typeof search.search_params.filters === "string") {
+            filters = JSON.parse(search.search_params.filters);
+        } else if (search.search_params.filters) {
+            filters = search.search_params.filters;
         }
     } catch (e) {
         console.error("Error parsing search filters:", e);
@@ -132,9 +124,9 @@ export const SearchHistoryCard = ({
     // Create search params object for rerunning the search
     const searchParams: GrantSearchParams = {
         searchTerms: {
-            recipient: search.search_recipient || "",
-            grant: search.search_grant || "",
-            institute: search.search_institution || "",
+            recipient: search.search_params.searchTerms.recipient || "",
+            grant: search.search_params.searchTerms.grant || "",
+            institute: search.search_params.searchTerms.institute || "",
         },
         filters: filters,
         sortConfig: { field: "date", direction: "desc" },
@@ -146,7 +138,7 @@ export const SearchHistoryCard = ({
             <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-gray-500">
                 <div className="flex items-center gap-2">
                     <Search className="h-4 w-4" />
-                    <span>{formatDate(timestamp)}</span>
+                    <span>{formatDate(timestamp.toISOString())}</span>
                     <span>•</span>
                     <span>{new Date(timestamp).toLocaleTimeString()}</span>
                 </div>

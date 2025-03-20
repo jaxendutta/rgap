@@ -1,16 +1,11 @@
 // src/hooks/api/useBookmarks.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import portConfig from "../../../../config/ports.json";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
 import { BookmarkType } from "@/types/bookmark";
+import createAPI from '@/utils/api';
+import { formatSentenceCase } from "@/utils/format";
 
-const API = axios.create({
-    baseURL:
-        process.env.VITE_API_URL ||
-        `http://localhost:${portConfig.defaults.server}`,
-    timeout: 15000,
-});
+const API = createAPI(15000); // Increase timeout to 15 seconds
 
 // Configure retry logic for specific error codes
 API.interceptors.response.use(
@@ -160,8 +155,8 @@ export function useToggleBookmark(bookmarkType: BookmarkType) {
         onSuccess: (_, { isBookmarked }) => {
             showNotification(
                 isBookmarked
-                    ? "Bookmark removed successfully!"
-                    : "Saved to bookmarks!",
+                    ? `${formatSentenceCase(bookmarkType)} removed from bookmarks!`
+                    : `${formatSentenceCase(bookmarkType)} bookmarked!`,
                 "success"
             );
         },

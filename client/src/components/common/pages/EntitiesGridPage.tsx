@@ -40,7 +40,6 @@ const EntitiesGridPage = ({
     subtitle,
     useInfiniteEntities,
     useSearchEntities,
-    onBookmark,
     searchPlaceholder = "Search by name...",
     emptyMessage = "No entities found.",
     searchEmptyMessage = "No entities match your search.",

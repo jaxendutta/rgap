@@ -144,12 +144,12 @@ export const BookmarksPage = () => {
                     const searchItems = bookmarkedIds.map((id) => {
                         return {
                             history_id: id,
-                            timestamp: new Date(),
+                            search_time: new Date(),
                             search_params: {
                                 searchTerms: {
-                                    recipient: "Sample Recipient",
-                                    institute: "Sample Institute",
-                                    grant: "Sample Grant",
+                                    recipient: "Recipient Name",
+                                    institute: "Institute Name",
+                                    grant: "Grant Title",
                                 },
                                 filters: {},
                                 sortConfig: {
@@ -157,7 +157,6 @@ export const BookmarksPage = () => {
                                     direction: "desc",
                                 },
                             },
-                            results: Math.floor(Math.random() * 100) + 1,
                         } as SearchHistory;
                     });
                     setBookmarkedItems(searchItems);
@@ -221,8 +220,6 @@ export const BookmarksPage = () => {
                             return true;
                         })
                     );
-
-                    showNotification("Bookmark removed", "success");
                 },
             }
         );

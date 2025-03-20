@@ -17,11 +17,11 @@ interface User {
 }
 
 interface AuthContextType {
-  user: User | null;
-  login: (userData: User) => void;
-  logout: () => void;
-  updateUser: (updates: Partial<User>) => void;
-  isLoading: boolean;
+    user: User | null;
+    login: (userData: User) => void;
+    logout: () => void;
+    updateUser: (updates: Partial<User>) => void;
+    isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,17 +35,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const initAuth = async () => {
             setIsLoading(true);
 
-            // Check for saved user in localStorage
+            // First check for saved user in localStorage
             const storedUser = localStorage.getItem("user");
+            let parsedUser = null;
+
             if (storedUser) {
                 try {
-                    setUser(JSON.parse(storedUser));
+                    parsedUser = JSON.parse(storedUser);
+                    // Set the user immediately from localStorage to prevent flash of logged out state
+                    setUser(parsedUser);
                 } catch (e) {
                     console.error("Error parsing stored user:", e);
+                    localStorage.removeItem("user"); // Clean up invalid data
                 }
             }
 
-            // Also check if there's an active session with the server
+            // Then try to verify the session with the server
             try {
                 const baseurl =
                     process.env.VITE_API_URL ||
@@ -55,20 +60,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     credentials: "include", // Important for sending cookies
                 });
 
-                // Only proceed if we get a successful response
+                // If server session is valid, use that data
                 if (response.ok) {
                     const userData = await response.json();
                     setUser(userData);
                     localStorage.setItem("user", JSON.stringify(userData));
                 } else if (response.status === 401) {
-                    // If we're not authenticated but have local storage data, clear it
-                    localStorage.removeItem("user");
-                    setUser(null);
+                    // If we get 401 Unauthorized, but still have localStorage data
+                    // Consider the user logged in with localStorage data
+                    if (parsedUser) {
+                        console.warn(
+                            "Server session unavailable, using local credentials"
+                        );
+                    } else {
+                        // Only clear if we have no localStorage data
+                        setUser(null);
+                    }
                 }
-                // Other status codes might indicate server issues
             } catch (error) {
                 console.error("Error checking session:", error);
-                // Keep using local storage data if available on network error
+                // Keep using localStorage data on network error
             } finally {
                 setIsLoading(false);
             }
@@ -82,7 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem("user", JSON.stringify(userData));
     };
 
-  const logout = async () => {
+    const logout = async () => {
         try {
             // Try to call logout endpoint
             const baseurl =
@@ -97,24 +108,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error("Error during logout:", error);
         } finally {
             // Clear local state regardless of server response
-        setUser(null);
-        localStorage.removeItem('user');
-  };
-};
-  // Update the current user with new fields
-  const updateUser = (updates: Partial<User>) => {
-    if (!user) return;
-    const updatedUser = { ...user, ...updates };
-    setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
+            setUser(null);
+            localStorage.removeItem("user");
         }
- 
+    };
 
-  return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, isLoading }}>
-      {children}
-    </AuthContext.Provider>
-  );
+    // Update the current user with new fields
+    const updateUser = (updates: Partial<User>) => {
+        if (!user) return;
+        const updatedUser = { ...user, ...updates };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+    };
+
+    return (
+        <AuthContext.Provider
+            value={{ user, login, logout, updateUser, isLoading }}
+        >
+            {children}
+        </AuthContext.Provider>
+    );
 };
 
 export const useAuth = (): AuthContextType => {

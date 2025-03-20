@@ -284,7 +284,7 @@ print "  source $(basename "${BASH_SOURCE[0]}")\n"
 print "${GREEN}Environment setup complete!${NC}"
 print "${BLUE}You can now run:"
 print "  1.${NC} source setup_env.sh ${BLUE}(to activate the virtual environment on the terminal)"
-print "  2.${NC} ./setup_mysql.sh    ${BLUE}(to install and setup MySQL 8.0.36 for Linux -> first time only)"
+print "  2.${NC} ./setup_mysql.sh    ${BLUE}(to install and setup MySQL 8.0 for Linux -> first time only)"
 print "  3.${NC} ./setup_app.sh      ${BLUE}(to start the application)\n"
 
 # Calculate and display execution time
