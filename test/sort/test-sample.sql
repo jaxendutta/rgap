@@ -1,5 +1,5 @@
 CREATE TEMPORARY TABLE IF NOT EXISTS temp_grant_search_results (
-        ref_number VARCHAR(50),
+        ref_number VARCHAR(20),
         latest_amendment_number VARCHAR(10),
         latest_amendment_date DATE,
         agreement_type VARCHAR(50),

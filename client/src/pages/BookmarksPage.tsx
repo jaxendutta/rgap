@@ -1,5 +1,5 @@
 // src/pages/BookmarksPage.tsx
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
     BookMarked,
     University,
@@ -70,36 +70,15 @@ export const BookmarksPage = () => {
     } = useAllBookmarks(activeTabType, user?.user_id);
 
     // Use specific hooks for each entity type
+    const bookmarkedGrants: Grant[] = [];
+
     const { data: institutesByIds, isLoading: isLoadingInstitutesByIds } =
         useInstitutesByIds(activeTabType === "institute" ? bookmarkedIds : []);
 
     const { data: recipientsByIds = [], isLoading: isLoadingRecipientsByIds } =
         useRecipientsByIds(activeTabType === "recipient" ? bookmarkedIds : []);
 
-    // For search history data - since we don't have a real API, we'll create mock data
-    const searchHistoryItems = useMemo(() => {
-        if (activeTabType !== "search" || !bookmarkedIds.length) return [];
-
-        return bookmarkedIds.map(
-            (id: number) =>
-                ({
-                    history_id: id,
-                    search_time: new Date(),
-                    search_params: {
-                        searchTerms: {
-                            recipient: "Recipient Name",
-                            institute: "Institute Name",
-                            grant: "Grant Title",
-                        },
-                        filters: {},
-                        sortConfig: {
-                            field: "date",
-                            direction: "desc",
-                        },
-                    },
-                } as SearchHistory)
-        );
-    }, [activeTabType, bookmarkedIds]);
+    const searchHistoryItems: SearchHistory[] = [];
 
     // Set up toggle bookmark mutation
     const toggleBookmarkMutation = useToggleBookmark(activeTabType);
@@ -119,25 +98,7 @@ export const BookmarksPage = () => {
             switch (activeTabType) {
                 case "grant":
                     // For grants, use placeholders or fetch from API
-                    const grantItems = bookmarkedIds.map((id: number) => {
-                        return {
-                            grant_id: id,
-                            ref_number: `G-${id}`,
-                            recipient_id: 1,
-                            legal_name: "Grant Recipient",
-                            research_organization_name: "Research Institution",
-                            agreement_value: 100000,
-                            agreement_start_date: new Date().toISOString(),
-                            agreement_end_date: new Date(
-                                new Date().setFullYear(
-                                    new Date().getFullYear() + 1
-                                )
-                            ).toISOString(),
-                            agreement_title_en: "Research Grant",
-                            org: "NSERC",
-                        } as Grant;
-                    });
-                    setBookmarkedItems(grantItems);
+                    setBookmarkedItems(bookmarkedGrants);
                     break;
 
                 case "recipient":
@@ -154,10 +115,10 @@ export const BookmarksPage = () => {
                     );
                     break;
 
-                    case "search":
-                        setBookmarkedItems(searchHistoryItems);
-                        break;
-                }
+                case "search":
+                    setBookmarkedItems(searchHistoryItems);
+                    break;
+            }
         } catch (error) {
             console.error("Error processing bookmarked items:", error);
             setDetailsError(

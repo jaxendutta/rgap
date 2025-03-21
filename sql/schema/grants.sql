@@ -4,7 +4,7 @@ USE rgap;
 DROP TABLE IF EXISTS ResearchGrant;
 CREATE TABLE ResearchGrant (
     grant_id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    ref_number VARCHAR(50),
+    ref_number VARCHAR(20),
     amendment_number VARCHAR(10),
     UNIQUE KEY idx_ref_amend (ref_number, amendment_number),
     amendment_date DATE,

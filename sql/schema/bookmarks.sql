@@ -1,32 +1,31 @@
 -- File: sql/schema/bookmarks.sql
 USE rgap;
 
+-- BookmarkedGrants
 CREATE TABLE BookmarkedGrants (
-    bookmark_id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     user_id INT UNSIGNED NOT NULL,
-    grant_id INT UNSIGNED NOT NULL,
-    UNIQUE (user_id, grant_id),
+    ref_number VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES User(user_id),
-    FOREIGN KEY (grant_id) REFERENCES ResearchGrant(grant_id)
+    PRIMARY KEY (user_id, ref_number),
+    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
 );
 
+-- BookmarkedRecipients
 CREATE TABLE BookmarkedRecipients (
-    bookmark_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT UNSIGNED NOT NULL,
     recipient_id INT UNSIGNED NOT NULL,    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (user_id, recipient_id),
-    FOREIGN KEY (user_id) REFERENCES User(user_id),
-    FOREIGN KEY (recipient_id) REFERENCES Recipient(recipient_id)
+    PRIMARY KEY (user_id, recipient_id),
+    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (recipient_id) REFERENCES Recipient(recipient_id) ON DELETE CASCADE
 );
 
-CREATE TABLE BookmarkedInstitutes(
-    bookmark_id INT AUTO_INCREMENT PRIMARY KEY,
+-- BookmarkedInstitutes
+CREATE TABLE BookmarkedInstitutes (
     user_id INT UNSIGNED NOT NULL,
     institute_id INT UNSIGNED NOT NULL,    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (user_id, institute_id),
-    FOREIGN KEY (user_id) REFERENCES User(user_id),
-    FOREIGN KEY (institute_id) REFERENCES Institute(institute_id)
+    PRIMARY KEY (user_id, institute_id),
+    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (institute_id) REFERENCES Institute(institute_id) ON DELETE CASCADE
 );
