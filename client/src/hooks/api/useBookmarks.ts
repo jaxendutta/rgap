@@ -58,13 +58,26 @@ export function useAllBookmarks(
                     return [];
                 }
 
-                const response = await API.get<number[]>(
+                const response = await API.get(
                     `/save/${bookmarkType}/id/${user_id}`
                 );
-                // Convert object to array of numbers (entity IDs)
-                const idsArray = response.data.map(
-                    (entry) => Object.values(entry)[0] as number
-                );
+                
+                // Correctly extract IDs with proper type handling
+                const idsArray = response.data.map((entry: any) => {
+                    // For TypeScript safety, we need to use any type here
+                    if (bookmarkType === "recipient" && 'recipient_id' in entry) {
+                        return entry.recipient_id as number;
+                    } else if (bookmarkType === "grant" && 'grant_id' in entry) {
+                        return entry.grant_id as number;
+                    } else if (bookmarkType === "institute" && 'institute_id' in entry) {
+                        return entry.institute_id as number;
+                    } else {
+                        // Fallback to getting the first value
+                        return Object.values(entry)[0] as number;
+                    }
+                });
+                
+                console.log(`Extracted ${bookmarkType} IDs:`, idsArray);
                 return idsArray;
             } catch (error) {
                 console.error(

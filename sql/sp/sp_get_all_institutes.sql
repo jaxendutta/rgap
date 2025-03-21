@@ -17,8 +17,8 @@ BEGIN
     -- Get paginated institutes with stats
     SELECT 
         i.*,
-        COUNT(DISTINCT r.recipient_id) as recipients_count,
-        COUNT(DISTINCT rg.grant_id) as grants_count,
+        COUNT(DISTINCT r.recipient_id) as recipient_count,
+        COUNT(DISTINCT rg.grant_id) as grant_count,
         COALESCE(SUM(rg.agreement_value), 0) as total_funding,
         MAX(rg.agreement_start_date) as latest_grant_date
     FROM 

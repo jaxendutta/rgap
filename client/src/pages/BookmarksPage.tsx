@@ -1,5 +1,5 @@
 // src/pages/BookmarksPage.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
     BookMarked,
     University,
@@ -26,8 +26,8 @@ import ErrorState from "@/components/common/ui/ErrorState";
 import { BookmarkType } from "@/types/bookmark";
 import { cn } from "@/utils/cn";
 import { Grant, Institute, Recipient, SearchHistory } from "@/types/models";
-import { useInstitutes } from "@/hooks/api/useInstitutes";
-import { useRecipients } from "@/hooks/api/useRecipients";
+import { useInstitutesByIds } from "@/hooks/api/useInstitutes";
+import { useRecipientsByIds } from "@/hooks/api/useRecipients";
 
 // Define the tab structure with correct bookmark types
 const tabs = [
@@ -56,14 +56,6 @@ export const BookmarksPage = () => {
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
     const [detailsError, setDetailsError] = useState<string | null>(null);
 
-    // Get data for Institutes using the hook
-    const { data: institutesData, isLoading: isLoadingInstitutes } =
-        useInstitutes(1, 100);
-
-    // Get data for Recipients using the hook
-    const { data: recipientsData, isLoading: isLoadingRecipients } =
-        useRecipients(1, 100);
-
     // Get the active tab type for the bookmark API
     const activeTabType =
         tabs.find((tab) => tab.name === activeTab)?.type || "grant";
@@ -76,6 +68,38 @@ export const BookmarksPage = () => {
         error: bookmarksError,
         refetch: refetchBookmarks,
     } = useAllBookmarks(activeTabType, user?.user_id);
+
+    // Use specific hooks for each entity type
+    const { data: institutesByIds, isLoading: isLoadingInstitutesByIds } =
+        useInstitutesByIds(activeTabType === "institute" ? bookmarkedIds : []);
+
+    const { data: recipientsByIds = [], isLoading: isLoadingRecipientsByIds } =
+        useRecipientsByIds(activeTabType === "recipient" ? bookmarkedIds : []);
+
+    // For search history data - since we don't have a real API, we'll create mock data
+    const searchHistoryItems = useMemo(() => {
+        if (activeTabType !== "search" || !bookmarkedIds.length) return [];
+
+        return bookmarkedIds.map(
+            (id: number) =>
+                ({
+                    history_id: id,
+                    search_time: new Date(),
+                    search_params: {
+                        searchTerms: {
+                            recipient: "Recipient Name",
+                            institute: "Institute Name",
+                            grant: "Grant Title",
+                        },
+                        filters: {},
+                        sortConfig: {
+                            field: "date",
+                            direction: "desc",
+                        },
+                    },
+                } as SearchHistory)
+        );
+    }, [activeTabType, bookmarkedIds]);
 
     // Set up toggle bookmark mutation
     const toggleBookmarkMutation = useToggleBookmark(activeTabType);
@@ -94,9 +118,8 @@ export const BookmarksPage = () => {
             // Process items based on the tab type
             switch (activeTabType) {
                 case "grant":
-                    // For grants, we'd typically fetch from API since we need latest data
-                    // For now, use placeholders until we can implement a proper grant details hook
-                    const grantItems = bookmarkedIds.map((id) => {
+                    // For grants, use placeholders or fetch from API
+                    const grantItems = bookmarkedIds.map((id: number) => {
                         return {
                             grant_id: id,
                             ref_number: `G-${id}`,
@@ -117,51 +140,24 @@ export const BookmarksPage = () => {
                     setBookmarkedItems(grantItems);
                     break;
 
-                case "institute":
-                    // Filter institutes from the loaded data
-                    if (institutesData && institutesData.data) {
-                        const instituteItems = institutesData.data.filter(
-                            (institute) =>
-                                bookmarkedIds.includes(institute.institute_id)
-                        );
-                        setBookmarkedItems(instituteItems);
-                    }
-                    break;
-
                 case "recipient":
-                    // Filter recipients from the loaded data
-                    if (recipientsData && recipientsData.data) {
-                        const recipientItems = recipientsData.data.filter(
-                            (recipient) =>
-                                bookmarkedIds.includes(recipient.recipient_id)
-                        );
-                        setBookmarkedItems(recipientItems);
-                    }
+                    // Use the data from our recipientsByIds hook
+                    setBookmarkedItems(
+                        Array.isArray(recipientsByIds) ? recipientsByIds : []
+                    );
                     break;
 
-                case "search":
-                    // For saved searches, create placeholder search history objects
-                    const searchItems = bookmarkedIds.map((id) => {
-                        return {
-                            history_id: id,
-                            search_time: new Date(),
-                            search_params: {
-                                searchTerms: {
-                                    recipient: "Recipient Name",
-                                    institute: "Institute Name",
-                                    grant: "Grant Title",
-                                },
-                                filters: {},
-                                sortConfig: {
-                                    field: "date",
-                                    direction: "desc",
-                                },
-                            },
-                        } as SearchHistory;
-                    });
-                    setBookmarkedItems(searchItems);
+                case "institute":
+                    // Use the data from our institutesByIds hook
+                    setBookmarkedItems(
+                        Array.isArray(institutesByIds) ? institutesByIds : []
+                    );
                     break;
-            }
+
+                    case "search":
+                        setBookmarkedItems(searchHistoryItems);
+                        break;
+                }
         } catch (error) {
             console.error("Error processing bookmarked items:", error);
             setDetailsError(
@@ -175,8 +171,8 @@ export const BookmarksPage = () => {
     }, [
         bookmarkedIds,
         activeTabType,
-        institutesData,
-        recipientsData,
+        institutesByIds,
+        recipientsByIds,
         isLoadingBookmarks,
     ]);
 
@@ -260,8 +256,8 @@ export const BookmarksPage = () => {
         // Show appropriate loading state
         if (
             isLoadingBookmarks ||
-            (activeTabType === "institute" && isLoadingInstitutes) ||
-            (activeTabType === "recipient" && isLoadingRecipients) ||
+            (activeTabType === "institute" && isLoadingInstitutesByIds) ||
+            (activeTabType === "recipient" && isLoadingRecipientsByIds) ||
             isLoadingDetails
         ) {
             return (
@@ -375,7 +371,8 @@ export const BookmarksPage = () => {
                                         setBookmarkedItems((current) =>
                                             current.filter(
                                                 (item) =>
-                                                    (item as SearchHistory).history_id !==
+                                                    (item as SearchHistory)
+                                                        .history_id !==
                                                     historyId
                                             )
                                         )

@@ -97,12 +97,12 @@ const EntityCard = ({
     const grants =
         grantsCount ??
         (entityType === "recipient"
-            ? (entity as Recipient).grants_count
-            : (entity as Institute).total_grants) ??
+            ? (entity as Recipient).grant_count
+            : (entity as Institute).grant_count) ??
         0;
     const funding = totalFunding ?? entity.total_funding ?? 0;
     const recipients = isInstitute()
-        ? recipientsCount ?? (entity as Institute).total_recipients ?? 0
+        ? recipientsCount ?? (entity as Institute).recipient_count ?? 0
         : null;
     const latestDate = latestGrantDate ?? entity.latest_grant_date;
 

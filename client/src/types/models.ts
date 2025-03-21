@@ -16,17 +16,19 @@ export interface Recipient {
     legal_name: string;
     institute_id: number;
     research_organization_name?: string;
+    institute_type?: string;
     type?: string;
     recipient_type?: string;
     city?: string;
     province?: string;
     country?: string;
     postal_code?: string;
-    riding_name_en?: string;
-    riding_number?: string;
-    grants_count?: number;
+    grant_count?: number;
     total_funding?: number;
+    avg_funding?: number;
+    first_grant_date?: string;
     latest_grant_date?: string;
+    funding_agencies_count?: number;
 }
 
 // Institute
@@ -40,11 +42,13 @@ export interface Institute {
     postal_code?: string;
     riding_name_en?: string;
     riding_number?: string;
-    total_recipients?: number;
-    total_grants?: number;
+    recipient_count?: number;
+    grant_count?: number;
     total_funding?: number;
+    avg_funding: number;
     first_grant_date?: string;
     latest_grant_date?: string;
+    funding_agencies_count?: number;
 }
 
 // Grant

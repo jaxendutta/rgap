@@ -35,14 +35,14 @@ export const RecipientsList = ({
     // Define sort options
     const sortOptions = [
         { field: "total_funding", label: "Funding", icon: DollarSign },
-        { field: "grants_count", label: "Grants", icon: Users },
+        { field: "grant_count", label: "Grants", icon: Users },
     ];
 
     // Fetch data with infinite query
     const infiniteQuery = useInfiniteInstituteRecipients(
         instituteId,
         initialPageSize,
-        sortConfig.field as "total_funding" | "grants_count",
+        sortConfig.field as "total_funding" | "grant_count",
         sortConfig.direction
     );
 
@@ -66,7 +66,7 @@ export const RecipientsList = ({
         const recipientData = recipients.map(recipient => ({
             ...recipient,
             // Ensure we have proper data types
-            grants_count: Number(recipient.grants_count) || 0,
+            grant_count: Number(recipient.grant_count) || 0,
             total_funding: Number(recipient.total_funding) || 0,
             // Add required properties for the visualizer
             recipient_id: recipient.recipient_id,
@@ -94,7 +94,7 @@ export const RecipientsList = ({
                     </Link>
                     <div className="text-sm text-gray-500 flex items-center">
                         <BookMarked className="h-4 w-4 mr-1.5 flex-shrink-0" />
-                        {recipient.grants_count} grants
+                        {recipient.grant_count} grants
                     </div>
                 </div>
                 <div className="text-right">

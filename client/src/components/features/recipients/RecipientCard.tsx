@@ -16,23 +16,10 @@ import { formatCurrency } from "@/utils/format";
 import { Card } from "@/components/common/ui/Card";
 import Tag, { TagGroup } from "@/components/common/ui/Tag";
 import { cn } from "@/utils/cn";
+import { Recipient } from "@/types/models";
 
 export interface RecipientCardProps {
-    recipient: {
-        recipient_id: number;
-        legal_name: string;
-        institute_id?: number;
-        research_organization_name?: string;
-        type?: string;
-        recipient_type?: string;
-        city?: string;
-        province?: string;
-        country?: string;
-        grants_count?: number;
-        total_funding?: number;
-        first_grant_date?: string;
-        latest_grant_date?: string;
-    };
+    recipient: Recipient;
     isBookmarked?: boolean;
     onBookmark?: () => void;
     className?: string;
@@ -45,7 +32,7 @@ export const RecipientCard: React.FC<RecipientCardProps> = ({
     className,
 }) => {
     const total_funding = recipient.total_funding || 0;
-    const grants_count = recipient.grants_count || 0;
+    const grant_count = recipient.grant_count || 0;
 
     // Format recipient type for display
     const formattedType = recipient.recipient_type
@@ -154,8 +141,8 @@ export const RecipientCard: React.FC<RecipientCardProps> = ({
                     <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm">
                         <BookMarked className="h-4 w-4 mr-1.5 text-blue-600 dark:text-blue-500" />
                         <span>
-                            {grants_count}{" "}
-                            {grants_count === 1 ? "grant" : "grants"}
+                            {grant_count}{" "}
+                            {grant_count === 1 ? "grant" : "grants"}
                         </span>
                     </div>
                 </div>

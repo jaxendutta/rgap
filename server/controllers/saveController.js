@@ -1,108 +1,160 @@
 // src/controllers/saveController.js
 import { pool } from "../config/db.js";
 
-/*
- * Save a specific grant to a specif user's bookmarks
+/**
+ * Generic function to handle bookmark operations for different entity types
+ * @param {string} entityType - The type of entity being bookmarked ('grant', 'recipient', 'institute')
+ * @param {number} entityId - The ID of the entity to bookmark
+ * @param {number} userId - The user ID
+ * @param {boolean} isDelete - Whether this is a delete operation
+ * @returns {Object} Result of the database operation
  */
+async function handleBookmark(entityType, entityId, userId, isDelete = false) {
+    // Define table and column names based on entity type
+    const tableMap = {
+        grant: { table: "BookmarkedGrants", column: "grant_id" },
+        recipient: { table: "BookmarkedRecipients", column: "recipient_id" },
+        institute: { table: "BookmarkedInstitutes", column: "institute_id" },
+    };
+
+    const { table, column } = tableMap[entityType];
+
+    // Check if user exists
+    const [userExists] = await pool.query(
+        "SELECT 1 FROM User WHERE user_id = ?",
+        [userId]
+    );
+
+    if (!userExists.length) {
+        throw new Error(`User with ID ${userId} does not exist`);
+    }
+
+    // Check if bookmark exists
+    const [bookmarkExists] = await pool.query(
+        `SELECT 1 FROM ${table} WHERE ${column} = ? AND user_id = ?`,
+        [entityId, userId]
+    );
+
+    if (isDelete) {
+        // Delete operation
+        if (!bookmarkExists.length) {
+            throw new Error(`Bookmark does not exist`);
+        }
+
+        const [result] = await pool.query(
+            `DELETE FROM ${table} WHERE ${column} = ? AND user_id = ?`,
+            [entityId, userId]
+        );
+
+        return result;
+    } else {
+        // Create operation
+        if (bookmarkExists.length) {
+            return { alreadyExists: true };
+        }
+
+        const [result] = await pool.query(
+            `INSERT INTO ${table} (user_id, ${column}) VALUES(?, ?)`,
+            [userId, entityId]
+        );
+
+        return result;
+    }
+}
+
+/**
+ * Get bookmarked entity IDs for a user
+ * @param {string} entityType - The type of entity ('grant', 'recipient', 'institute')
+ * @param {number} userId - The user ID
+ * @returns {Array} Array of entity IDs
+ */
+async function getBookmarkedIds(entityType, userId) {
+    const tableMap = {
+        grant: { table: "BookmarkedGrants", column: "grant_id" },
+        recipient: { table: "BookmarkedRecipients", column: "recipient_id" },
+        institute: { table: "BookmarkedInstitutes", column: "institute_id" },
+    };
+
+    const { table, column } = tableMap[entityType];
+
+    // Check if user exists
+    const [userExists] = await pool.query(
+        "SELECT 1 FROM User WHERE user_id = ?",
+        [userId]
+    );
+
+    if (!userExists.length) {
+        throw new Error(`User with ID ${userId} does not exist`);
+    }
+
+    const [results] = await pool.query(
+        `SELECT ${column} FROM ${table} WHERE user_id = ?`,
+        [userId]
+    );
+
+    return results;
+}
+
+// Grant Controllers
 export const saveGrant = async (req, res) => {
     try {
         const { grant_id } = req.params;
         const { user_id } = req.body;
 
-        const [ifSaved] = await pool.query(
-            "SELECT * FROM BookmarkedGrants WHERE grant_id = ? AND user_id = ?",
-            [grant_id, user_id]
-        );
+        const result = await handleBookmark("grant", grant_id, user_id);
 
-        if (ifSaved.length) {
-            console.log("Bookmark has already existed.");
-            return res
-                .status(204)
-                .json({ message: `Bookmark has already existed.` });
+        if (result.alreadyExists) {
+            console.log(
+                `Grant ${grant_id} already bookmarked by user ${user_id}`
+            );
+            return res.status(204).json({ message: `Bookmark already exists` });
         }
 
-        const [save] = await pool.query(
-            "INSERT INTO BookmarkedGrants (user_id, grant_id) VALUES(?, ?)",
-            [user_id, grant_id]
-        );
-
-        console.log("Grant's bookmark is added.");
-        res.status(201).json(save);
+        console.log(`Grant ${grant_id} bookmarked by user ${user_id}`);
+        res.status(201).json(result);
     } catch (error) {
+        console.error(`Error bookmarking grant: ${error.message}`);
         res.status(409).json({ message: error.message });
     }
 };
 
-/*
- * Delete a specific grant bookmark
- */
 export const deleteSavedGrant = async (req, res) => {
     try {
         const { grant_id } = req.params;
         const { user_id } = req.body;
 
-        const [ifSaved] = await pool.query(
-            "SELECT * FROM BookmarkedGrants WHERE grant_id = ? AND user_id = ?",
-            [grant_id, user_id]
-        );
+        const result = await handleBookmark("grant", grant_id, user_id, true);
 
-        if (!ifSaved.length) {
-            console.log("Bookmark doesn't existed.");
-            return res.status(409).json("Bookmark does not exist.");
-        }
-
-        const [deleted] = await pool.query(
-            "DELETE FROM BookmarkedGrants WHERE grant_id = ? AND user_id = ?",
-            [grant_id, user_id]
-        );
-
-        console.log("Grant's bookmark is deleted.");
-        return res.status(200).json(deleted);
+        console.log(`Grant ${grant_id} unbookmarked by user ${user_id}`);
+        res.status(200).json(result);
     } catch (error) {
-        return res.status(409).json({ message: error.message });
-    }
-};
-
-/*
- * Get all saved grant bookmark ids
- */
-export const getSavedGrantIds = async (req, res) => {
-    try {
-        const { user_id } = req.params;
-
-        const [ifUserExist] = await pool.query(
-            "SELECT * FROM User WHERE user_id = ?",
-            [user_id]
-        );
-
-        if (!ifUserExist.length) {
-            return res.status(409).json({ message: `User does not exist` });
-        }
-
-        const [results] = await pool.query(
-            "SELECT grant_id FROM BookmarkedGrants WHERE user_id = ?",
-            [user_id]
-        );
-
-        res.status(200).json(results);
-    } catch (error) {
+        console.error(`Error deleting grant bookmark: ${error.message}`);
         res.status(409).json({ message: error.message });
     }
 };
 
-/*
- * Get all saved grant information (incomplete)
- */
+export const getSavedGrantIds = async (req, res) => {
+    try {
+        const { user_id } = req.params;
+        const results = await getBookmarkedIds("grant", user_id);
+        res.status(200).json(results);
+    } catch (error) {
+        console.error(`Error getting bookmarked grant IDs: ${error.message}`);
+        res.status(409).json({ message: error.message });
+    }
+};
+
 export const getSavedGrant = async (req, res) => {
     try {
         const { user_id } = req.params;
 
-        const [ifUserExist] = await pool.query(
-            "SELECT * FROM User WHERE user_id = ?",
+        // Check if user exists
+        const [userExists] = await pool.query(
+            "SELECT 1 FROM User WHERE user_id = ?",
             [user_id]
         );
 
-        if (!ifUserExist.length) {
+        if (!userExists.length) {
             return res.status(409).json({ message: `User does not exist` });
         }
 
@@ -116,85 +168,80 @@ export const getSavedGrant = async (req, res) => {
 
         res.status(200).json(results);
     } catch (error) {
+        console.error(`Error getting saved grants: ${error.message}`);
         res.status(409).json({ message: error.message });
     }
 };
 
-/*
- * Save a specific recipient to a specif user's bookmarks
- */
+// Recipient Controllers
 export const saveRecipient = async (req, res) => {
     try {
         const { recipient_id } = req.params;
         const { user_id } = req.body;
 
-        const [ifSaved] = await pool.query(
-            "SELECT * FROM BookmarkedRecipients WHERE recipient_id = ? AND user_id = ?",
-            [recipient_id, user_id]
-        );
+        const result = await handleBookmark("recipient", recipient_id, user_id);
 
-        if (ifSaved.length) {
-            console.log(`Recipient ${recipient_id} has already existed as a bookmark.`);
-            return res
-                .status(204)
-                .json({ message: `Bookmark ${recipient_id} has already existed as a bookmark.` });
+        if (result.alreadyExists) {
+            console.log(
+                `Recipient ${recipient_id} already bookmarked by user ${user_id}`
+            );
+            return res.status(204).json({ message: `Bookmark already exists` });
         }
 
-        const [save] = await pool.query(
-            "INSERT INTO BookmarkedRecipients (user_id, recipient_id) VALUES(?, ?)",
-            [user_id, recipient_id]
-        );
-
         console.log(`Recipient ${recipient_id} bookmarked by user ${user_id}`);
-        res.status(201).json(save);
+        res.status(201).json(result);
     } catch (error) {
+        console.error(`Error bookmarking recipient: ${error.message}`);
         res.status(409).json({ message: error.message });
     }
 };
 
-/*
- * Delete a specific recipient bookmark
- */
 export const deleteSavedRecipient = async (req, res) => {
     try {
         const { recipient_id } = req.params;
         const { user_id } = req.body;
 
-        const [ifSaved] = await pool.query(
-            "SELECT * FROM BookmarkedRecipients WHERE recipient_id = ? AND user_id = ?",
-            [recipient_id, user_id]
+        const result = await handleBookmark(
+            "recipient",
+            recipient_id,
+            user_id,
+            true
         );
 
-        if (!ifSaved.length) {
-            console.log("Bookmark does not exist.");
-            return res.status(409).json("Bookmark does not exist.");
-        }
-
-        const [deleted] = await pool.query(
-            "DELETE FROM BookmarkedRecipients WHERE recipient_id = ? AND user_id = ?",
-            [recipient_id, user_id]
+        console.log(
+            `Recipient ${recipient_id} unbookmarked by user ${user_id}`
         );
-
-        console.log(`Recipient ${recipient_id} unbookmarked by user ${user_id}`);
-        return res.status(200).json(deleted);
+        res.status(200).json(result);
     } catch (error) {
-        return res.status(409).json({ message: error.message });
+        console.error(`Error deleting recipient bookmark: ${error.message}`);
+        res.status(409).json({ message: error.message });
     }
 };
 
-/*
- * Get all saved recipient information (incomplete)
- */
+export const getSavedRecipientIds = async (req, res) => {
+    try {
+        const { user_id } = req.params;
+        const results = await getBookmarkedIds("recipient", user_id);
+        res.status(200).json(results);
+    } catch (error) {
+        console.error(
+            `Error getting bookmarked recipient IDs: ${error.message}`
+        );
+        res.status(409).json({ message: error.message });
+    }
+};
+
 export const getSavedRecipient = async (req, res) => {
     try {
         const { user_id } = req.params;
 
-        const [ifUserExist] = await pool.query(
-            "SELECT * FROM User WHERE user_id = ?",
+        // Check if user exists
+        const [userExists] = await pool.query(
+            "SELECT 1 FROM User WHERE user_id = ?",
             [user_id]
         );
 
-        if (!ifUserExist.length) {
+        if (!userExists.length) {
             return res.status(409).json({ message: `User does not exist` });
         }
 
@@ -208,112 +255,80 @@ export const getSavedRecipient = async (req, res) => {
 
         res.status(200).json(results);
     } catch (error) {
+        console.error(`Error getting saved recipients: ${error.message}`);
         res.status(409).json({ message: error.message });
     }
 };
 
-/*
- * Get all saved recipient bookmark ids
- */
-export const getSavedRecipientIds = async (req, res) => {
-    try {
-        const { user_id } = req.params;
-
-        const [ifUserExist] = await pool.query(
-            "SELECT * FROM User WHERE user_id = ?",
-            [user_id]
-        );
-
-        if (!ifUserExist.length) {
-            return res.status(409).json({ message: `User does not exist` });
-        }
-
-        const [results] = await pool.query(
-            "SELECT recipient_id FROM BookmarkedRecipients WHERE user_id = ?",
-            [user_id]
-        );
-
-        res.status(200).json(results);
-    } catch (error) {
-        res.status(409).json({ message: error.message });
-    }
-};
-
-/*
- * Save a specific institute to a specif user's bookmarks
- */
+// Institute Controllers
 export const saveInstitute = async (req, res) => {
     try {
         const { institute_id } = req.params;
         const { user_id } = req.body;
 
-        const [ifSaved] = await pool.query(
-            "SELECT * FROM BookmarkedInstitutes WHERE institute_id = ? AND user_id = ?",
-            [institute_id, user_id]
-        );
+        const result = await handleBookmark("institute", institute_id, user_id);
 
-        if (ifSaved.length) {
-            console.log("Bookmark has already existed.");
-            return res
-                .status(204)
-                .json({ message: `Bookmark has already existed.` });
+        if (result.alreadyExists) {
+            console.log(
+                `Institute ${institute_id} already bookmarked by user ${user_id}`
+            );
+            return res.status(204).json({ message: `Bookmark already exists` });
         }
 
-        const [save] = await pool.query(
-            "INSERT INTO BookmarkedInstitutes (user_id, institute_id) VALUES(?, ?)",
-            [user_id, institute_id]
-        );
-
-        console.log(`Institute ${institute_id} bookmarked by user ${user_id}.`);
-        res.status(201).json(save);
+        console.log(`Institute ${institute_id} bookmarked by user ${user_id}`);
+        res.status(201).json(result);
     } catch (error) {
+        console.error(`Error bookmarking institute: ${error.message}`);
         res.status(409).json({ message: error.message });
     }
 };
 
-/*
- * Delete a specific institute bookmark
- */
 export const deleteSavedInstitute = async (req, res) => {
     try {
         const { institute_id } = req.params;
         const { user_id } = req.body;
 
-        const [ifSaved] = await pool.query(
-            "SELECT * FROM BookmarkedInstitutes WHERE institute_id = ? AND user_id = ?",
-            [institute_id, user_id]
+        const result = await handleBookmark(
+            "institute",
+            institute_id,
+            user_id,
+            true
         );
 
-        if (!ifSaved.length) {
-            console.log("Bookmark doesn't existed.");
-            return res.status(409).json("Bookmark does not exist.");
-        }
-
-        const [deleted] = await pool.query(
-            "DELETE FROM BookmarkedInstitutes WHERE institute_id = ? AND user_id = ?",
-            [institute_id, user_id]
+        console.log(
+            `Institute ${institute_id} unbookmarked by user ${user_id}`
         );
-
-        console.log(`Institute ${institute_id} unbookmarked by user ${user_id}.`);
-        return res.status(200).json(deleted);
+        res.status(200).json(result);
     } catch (error) {
-        return res.status(409).json({ message: error.message });
+        console.error(`Error deleting institute bookmark: ${error.message}`);
+        res.status(409).json({ message: error.message });
     }
 };
 
-/*
- * Get all saved institutes information (incomplete)
- */
+export const getSavedInstituteIds = async (req, res) => {
+    try {
+        const { user_id } = req.params;
+        const results = await getBookmarkedIds("institute", user_id);
+        res.status(200).json(results);
+    } catch (error) {
+        console.error(
+            `Error getting bookmarked institute IDs: ${error.message}`
+        );
+        res.status(409).json({ message: error.message });
+    }
+};
+
 export const getSavedInstitute = async (req, res) => {
     try {
         const { user_id } = req.params;
 
-        const [ifUserExist] = await pool.query(
-            "SELECT * FROM User WHERE user_id = ?",
+        // Check if user exists
+        const [userExists] = await pool.query(
+            "SELECT 1 FROM User WHERE user_id = ?",
             [user_id]
         );
 
-        if (!ifUserExist.length) {
+        if (!userExists.length) {
             return res.status(409).json({ message: `User does not exist` });
         }
 
@@ -327,33 +342,7 @@ export const getSavedInstitute = async (req, res) => {
 
         res.status(200).json(results);
     } catch (error) {
-        res.status(409).json({ message: error.message });
-    }
-};
-
-/*
- * Get all saved institute bookmark ids
- */
-export const getSavedInstituteIds = async (req, res) => {
-    try {
-        const { user_id } = req.params;
-
-        const [ifUserExist] = await pool.query(
-            "SELECT * FROM User WHERE user_id = ?",
-            [user_id]
-        );
-
-        if (!ifUserExist.length) {
-            return res.status(409).json({ message: `User does not exist` });
-        }
-
-        const [results] = await pool.query(
-            "SELECT institute_id FROM BookmarkedInstitutes WHERE user_id = ?",
-            [user_id]
-        );
-
-        res.status(200).json(results);
-    } catch (error) {
+        console.error(`Error getting saved institutes: ${error.message}`);
         res.status(409).json({ message: error.message });
     }
 };

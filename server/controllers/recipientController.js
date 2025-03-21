@@ -9,42 +9,18 @@ export const getAllRecipients = async (req, res) => {
         // Apply pagination parameters if provided
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 20;
-        const offset = (page - 1) * pageSize;
 
-        // Get total count for pagination metadata
-        const [countResult] = await pool.query(
-            `SELECT COUNT(*) as total FROM Recipient`
-        );
-        const totalCount = countResult[0].total;
+        // Use stored procedure for getting recipients with stats
+        const [results] = await pool.query("CALL sp_get_all_recipients(?, ?)", [
+            page,
+            pageSize,
+        ]);
 
-        // Query recipients with their organization info and grant counts
-        const [recipients] = await pool.query(
-            `SELECT 
-                r.recipient_id,
-                r.legal_name,
-                r.type,
-                r.recipient_type,
-                r.institute_id,
-                i.name AS research_organization_name,
-                i.city,
-                i.province,
-                i.country,
-                COUNT(DISTINCT rg.grant_id) AS grant_count,
-                COALESCE(SUM(rg.agreement_value), 0) AS total_funding,
-                MAX(rg.agreement_start_date) AS latest_grant_date
-            FROM 
-                Recipient r
-            LEFT JOIN 
-                Institute i ON r.institute_id = i.institute_id
-            LEFT JOIN 
-                ResearchGrant rg ON r.recipient_id = rg.recipient_id
-            GROUP BY 
-                r.recipient_id
-            ORDER BY 
-                total_funding DESC
-            LIMIT ? OFFSET ?`,
-            [pageSize, offset]
-        );
+        // First result contains total count
+        const totalCount = results[0][0].total_count;
+
+        // Second result contains recipients data
+        const recipients = results[1] || [];
 
         res.json({
             message: "Recipients retrieved successfully",

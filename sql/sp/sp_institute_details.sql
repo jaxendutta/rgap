@@ -25,7 +25,7 @@ BEGIN
     -- Get institute's recipients with funding info
     SELECT
         r.*,
-        COUNT(DISTINCT rg.grant_id) as grants_count,
+        COUNT(DISTINCT rg.grant_id) as grant_count,
         COALESCE(SUM(rg.agreement_value), 0) as total_funding,
         MIN(rg.agreement_start_date) as first_grant_date,
         MAX(rg.agreement_start_date) as latest_grant_date

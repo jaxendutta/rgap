@@ -14,7 +14,7 @@ BEGIN
         i.province,
         i.country,
         i.postal_code,
-        COUNT(DISTINCT rg.grant_id) as total_grants,
+        COUNT(DISTINCT rg.grant_id) as grant_count,
         COALESCE(SUM(rg.agreement_value), 0) as total_funding,
         COALESCE(AVG(rg.agreement_value), 0) as avg_funding,
         MIN(rg.agreement_start_date) as first_grant_date,
