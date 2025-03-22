@@ -1,7 +1,8 @@
 // src/pages/SearchPage.tsx
-import { useState } from "react";
+import { useState, useEffect} from "react";
 import { FileSearch2, University, UserSearch } from "lucide-react";
 import { useInfiniteGrantSearch } from "@/hooks/api/useGrants";
+import { useLocation } from "react-router-dom";
 import GrantsList from "@/components/features/grants/GrantsList";
 import type { GrantSortConfig as SortConfig } from "@/types/search";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
@@ -36,6 +37,42 @@ export const SearchPage = () => {
 
     // Initialize infinite query
     const infiniteQueryResult = useInfiniteGrantSearch(searchParams);
+
+    // React Router: read the location for "params" query
+    const location = useLocation();
+
+    // Handle rerun logic: if `params` query param exists, parse & apply
+    useEffect(() => {
+        const urlParams = new URLSearchParams(location.search);
+        const serializedParams = urlParams.get("params");
+        if (serializedParams) {
+        try {
+            const parsed: GrantSearchParams = JSON.parse(decodeURIComponent(serializedParams));
+
+            // Only apply the fields that exist in our data model
+            if (parsed.searchTerms) {
+            setSearchTerms({
+                recipient: parsed.searchTerms.recipient || "",
+                institute: parsed.searchTerms.institute || "",
+                grant: parsed.searchTerms.grant || "",
+            });
+            }
+            if (parsed.filters) {
+            setFilters((prev) => ({ ...prev, ...parsed.filters }));
+            }
+
+            // Once we have data, we can assume it's not initial state
+            setIsInitialState(false);
+
+            // Refetch with updated parameters
+            setTimeout(() => {
+            infiniteQueryResult.refetch();
+            }, 0);
+        } catch (err) {
+            console.error("Failed to parse search params from URL:", err);
+        }
+        }
+    }, [location.search]);
 
     const handleSearch = (params: {
         searchTerms: Record<string, string>;

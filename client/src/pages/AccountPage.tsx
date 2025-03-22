@@ -127,7 +127,10 @@ export default function AccountPage() {
     };
 
     const handleRerunSearch = (searchParams: any) => {
-        navigate("/search", { state: { searchParams } });
+        // Serialize the searchParams object into a query string parameter.
+        const serializedParams = encodeURIComponent(JSON.stringify(searchParams));
+        // Navigate to the search page with the serialized search parameters in the URL.
+        navigate(`/search?params=${serializedParams}`);
     };
 
     // Handle deletion of a search history entry
