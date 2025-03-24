@@ -173,6 +173,7 @@ BEGIN
             rg.agreement_title_en,
             rg.description_en,
             rg.expected_results_en,
+            rg.additional_information_en,
             r.legal_name,
             i.name AS research_organization_name,
             i.institute_id,

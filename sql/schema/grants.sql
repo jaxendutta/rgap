@@ -16,6 +16,7 @@ CREATE TABLE ResearchGrant (
     agreement_title_en TEXT,
     description_en TEXT,
     expected_results_en TEXT,
+    additional_information_en TEXT,
     org VARCHAR(5),
     recipient_id INT UNSIGNED,
     prog_id INT UNSIGNED,

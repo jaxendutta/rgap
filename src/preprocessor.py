@@ -624,17 +624,19 @@ class ProcessingPipeline:
             'city_pipe': 0,
             'complex_parentheses': 0,
             'trailing_parentheses': 0,
-            'unbalanced_parentheses': 0
+            'unbalanced_parentheses': 0,
+            'unneeded_the': 0
         }
         
         # STEP 1: Clean recipient names with complex pattern handling
         # First, handle the complex case like "last_name, first_name (anglicized_name) (research_org)"
         # We want to extract the last parenthesized content as the organization
         complex_pattern = r'^(.*?)\s*(\([^\(\)]*\))\s*(\([^\(\)]*\))$'
+        complex_pattern_for_contains = r'^.*?\s*\([^\(\)]*\)\s*\([^\(\)]*\)$'  # Non-capturing version
         
         # Find rows matching the complex pattern
         if recipient_col in result_df.columns:
-            mask_complex = result_df[recipient_col].str.contains(complex_pattern, regex=True, na=False)
+            mask_complex = result_df[recipient_col].str.contains(complex_pattern_for_contains, regex=True, na=False)
             
             if mask_complex.any():
                 # Extract components - base name, middle parentheses, and last parentheses
@@ -667,22 +669,72 @@ class ProcessingPipeline:
             mask_parentheses = result_df[recipient_col].str.contains(contains_parentheses_pattern, regex=True, na=False)
             
             if mask_parentheses.any():
-                # Extract the recipient name (before parentheses)
-                result_df.loc[mask_parentheses, 'temp_recipient'] = result_df.loc[mask_parentheses, recipient_col].str.extract(extract_parentheses_pattern)[0]
+                # Extract both parts
+                extracted = result_df.loc[mask_parentheses, recipient_col].str.extract(extract_parentheses_pattern)
                 
-                # Extract the research org name (inside parentheses)
-                result_df.loc[mask_parentheses, 'temp_org'] = result_df.loc[mask_parentheses, recipient_col].str.extract(extract_parentheses_pattern)[1]
-                
-                # Only update research org if it's missing
-                update_mask = mask_parentheses & result_df[research_org_col].isna()
-                if update_mask.any():
-                    result_df.loc[update_mask, research_org_col] = result_df.loc[update_mask, 'temp_org']
-                
-                # Update recipient names
-                result_df.loc[mask_parentheses, recipient_col] = result_df.loc[mask_parentheses, 'temp_recipient'].str.strip()
-                
-                pattern_fixes['recipient_parentheses'] = mask_parentheses.sum()
-                logger.info(f"Fixed {mask_parentheses.sum():,} recipient names with parentheses pattern")
+                # Store both parts temporarily
+                result_df.loc[mask_parentheses, 'text_before_paren'] = extracted[0].str.strip()
+                result_df.loc[mask_parentheses, 'text_inside_paren'] = extracted[1].str.strip()
+            
+            # Check for name indicators (comma) and organization indicators
+            has_comma_before = result_df.loc[mask_parentheses, 'text_before_paren'].str.contains(',', regex=False)
+            has_comma_inside = result_df.loc[mask_parentheses, 'text_inside_paren'].str.contains(',', regex=False)
+            
+            # Keywords that suggest an institution (lowercase for case-insensitive matching)
+            org_keywords = ['university', 'université', 'univ', 'college', 'collège', 'institute', 
+                    'institut', 'school', 'école', 'center', 'centre', 'hospital', 'hôpital']
+            
+            # Check for org keywords
+            has_org_kw_before = result_df.loc[mask_parentheses, 'text_before_paren'].str.lower().apply(
+                lambda x: any(kw in x.lower() for kw in org_keywords))
+            has_org_kw_inside = result_df.loc[mask_parentheses, 'text_inside_paren'].str.lower().apply(
+                lambda x: any(kw in x.lower() for kw in org_keywords))
+            
+            # Determine which part is name and which is org
+            
+            # Case 1: Clear indicators in both parts - one has comma (name), other has org keywords
+            name_in_before_mask = has_comma_before & has_org_kw_inside & ~has_comma_inside
+            name_in_inside_mask = has_comma_inside & has_org_kw_before & ~has_comma_before
+            
+            # Case 2: Only one part has comma - assume it's a name
+            name_likely_before_mask = has_comma_before & ~has_comma_inside & ~name_in_inside_mask & ~name_in_before_mask
+            name_likely_inside_mask = has_comma_inside & ~has_comma_before & ~name_in_inside_mask & ~name_in_before_mask
+            
+            # Case 3: Only one part has org keywords - assume it's an organization
+            org_likely_before_mask = has_org_kw_before & ~has_org_kw_inside & ~name_in_inside_mask & ~name_in_before_mask & ~name_likely_before_mask & ~name_likely_inside_mask
+            org_likely_inside_mask = has_org_kw_inside & ~has_org_kw_before & ~name_in_inside_mask & ~name_in_before_mask & ~name_likely_before_mask & ~name_likely_inside_mask
+            
+            # Default case: Just use before as name and inside as org (original behavior)
+            default_mask = ~(name_in_before_mask | name_in_inside_mask | name_likely_before_mask | 
+                    name_likely_inside_mask | org_likely_before_mask | org_likely_inside_mask)
+            
+            # Apply the appropriate assignment based on determined cases
+            
+            # Case 1 & 2: Name is in the before part, org is inside
+            recipient_is_before_mask = name_in_before_mask | name_likely_before_mask | org_likely_inside_mask | default_mask
+            if recipient_is_before_mask.any():
+                result_df.loc[mask_parentheses & recipient_is_before_mask, 'temp_recipient'] = result_df.loc[mask_parentheses & recipient_is_before_mask, 'text_before_paren']
+                result_df.loc[mask_parentheses & recipient_is_before_mask, 'temp_org'] = result_df.loc[mask_parentheses & recipient_is_before_mask, 'text_inside_paren']
+            
+            # Case 1 & 2 inverted: Name is inside, org is before
+            recipient_is_inside_mask = name_in_inside_mask | name_likely_inside_mask | org_likely_before_mask
+            if recipient_is_inside_mask.any():
+                result_df.loc[mask_parentheses & recipient_is_inside_mask, 'temp_recipient'] = result_df.loc[mask_parentheses & recipient_is_inside_mask, 'text_inside_paren']
+                result_df.loc[mask_parentheses & recipient_is_inside_mask, 'temp_org'] = result_df.loc[mask_parentheses & recipient_is_inside_mask, 'text_before_paren']
+            
+            # Only update research org if it's missing
+            update_mask = mask_parentheses & result_df[research_org_col].isna()
+            if update_mask.any():
+                result_df.loc[update_mask, research_org_col] = result_df.loc[update_mask, 'temp_org']
+            
+            # Update recipient names
+            result_df.loc[mask_parentheses, recipient_col] = result_df.loc[mask_parentheses, 'temp_recipient']
+            
+            # Drop temporary columns
+            result_df = result_df.drop(['text_before_paren', 'text_inside_paren'], axis=1)
+            
+            pattern_fixes['recipient_parentheses'] = mask_parentheses.sum()
+            logger.info(f"Fixed {mask_parentheses.sum():,} recipient names with parentheses pattern")
         
         # STEP 3: Clean recipient names and research org names with pattern "text | text" - extract English version
         contains_pipe_pattern = r'^.*?\s*\|\s*.*?$'
@@ -710,13 +762,13 @@ class ProcessingPipeline:
                 pattern_fixes['research_org_pipe'] = mask_org_pipe.sum()
                 logger.info(f"Fixed {mask_org_pipe.sum():,} research organization names with pipe pattern")
         
-        # Fix city names with pipe pattern - extract English part
+        # Fix city names with pipe pattern - extract French part
         if city_col in result_df.columns:
             mask_city_pipe = result_df[city_col].str.contains(contains_pipe_pattern, regex=True, na=False)
             
             if mask_city_pipe.any():
-                # Extract the English part (before pipe)
-                result_df.loc[mask_city_pipe, city_col] = result_df.loc[mask_city_pipe, city_col].str.extract(extract_pipe_pattern)[0].str.strip()
+                # Extract the French part (after pipe)
+                result_df.loc[mask_city_pipe, city_col] = result_df.loc[mask_city_pipe, city_col].str.extract(extract_pipe_pattern)[1].str.strip()
                 
                 pattern_fixes['city_pipe'] = mask_city_pipe.sum()
                 logger.info(f"Fixed {mask_city_pipe.sum():,} city names with pipe pattern")
@@ -747,7 +799,7 @@ class ProcessingPipeline:
                 pattern_fixes['research_org_slash'] = mask_org_slash.sum()
                 logger.info(f"Fixed {mask_org_slash.sum():,} research organization names with slash pattern")
         
-        # STEP 5: NEW - Clean research org names with pattern "text - text" - extract English version
+        # STEP 5: Clean research org names with pattern "text - text" - extract English version
         contains_dash_pattern = r'^.*?\s*-\s*.*?$'
         extract_dash_pattern = r'^(.*?)\s*-\s*(.*?)$'
         
@@ -844,9 +896,6 @@ class ProcessingPipeline:
                     name: self._is_likely_institution(name) for name in unique_recipients
                 }
                 
-                # Apply the mapping to create a Series indicating which recipient names are institutions
-                is_institution_series = result_df.loc[mask, recipient_col].map(is_institution_map)
-                
                 # Refine the mask to include only rows where the recipient name is an institution
                 mask = mask & result_df[recipient_col].map(
                     lambda x: is_institution_map.get(x, False) if pd.notna(x) else False
@@ -858,13 +907,19 @@ class ProcessingPipeline:
                     
                     # Count fixed entries
                     fixed_count = mask.sum()
-                    missing_after = result_df[research_org_col].isna().sum()
                     
                     # Record the fix
                     self.quality_report.record_fix("missing_values_filled", research_org_col, fixed_count)
                     
                     logger.info(f"Fixed {fixed_count:,} missing research organization names")
-        
+
+        # STEP 10: Clean up research organization names if they start with 'The' case-insensitively
+        if research_org_col in result_df.columns:
+            # Remove 'The' from the start of research organization names
+            pattern_fixes['unneeded_the'] = result_df[research_org_col].str.match(r'^The\s+', case=False, na=False).sum()
+            result_df[research_org_col] = result_df[research_org_col].str.replace(r'^The\s+', '', case=False, regex=True)
+            logger.info(f"Removed 'The' from {pattern_fixes['unneeded_the']:,} research organization names")
+            
         # Record pattern fixes in quality report
         for fix_type, count in pattern_fixes.items():
             if count > 0:
@@ -1056,13 +1111,18 @@ class ProcessingPipeline:
             
             # Process each unique identifier group
             for unique_id, group in df.groupby('_unique_id'):
-                # Get the row with the highest amendment number
-                max_amendment_idx = group['amendment_number'].idxmax()
-                latest_amendment = group.loc[max_amendment_idx].copy()
+                # Sort by amendment number in descending order
+                sorted_group = group.sort_values('amendment_number', ascending=False)
                 
-                # Create the amendment history
+                # Get the row with the highest amendment number (first row after sorting)
+                latest_amendment = sorted_group.iloc[0].copy()
+                
+                # Create the amendment history only with PREVIOUS amendments
+                # (excluding the latest one which is already part of the main record)
                 amendments = []
-                for _, row in group.sort_values('amendment_number').iterrows():
+                
+                # Skip the first row (latest amendment) and process the rest
+                for _, row in sorted_group.iloc[1:].iterrows():
                     amendment = {}
                     for col in history_columns:
                         if col in row and pd.notna(row[col]):
@@ -1070,7 +1130,10 @@ class ProcessingPipeline:
                     amendments.append(amendment)
                 
                 # Add the amendment history to the latest amendment record
-                latest_amendment['amendments_history'] = json.dumps(amendments)
+                if amendments:  # Only add if there are previous amendments
+                    latest_amendment['amendments_history'] = json.dumps(amendments)
+                else:
+                    latest_amendment['amendments_history'] = None
                 
                 # Remove the temporary _unique_id column from the record
                 if '_unique_id' in latest_amendment:
@@ -1105,12 +1168,9 @@ class ProcessingPipeline:
             return result_df
             
         except Exception as e:
-            logger.error(f"Error in process_amendments: {str(e)}")
-            logger.error(f"Error details: {type(e).__name__}, {e.args}")
-            import traceback
-            logger.error(traceback.format_exc())
-            # Return original DataFrame on error
-            return df
+            logger.error(f"Error processing amendments: {str(e)}")
+            logger.exception("Amendment processing failed with exception")
+            return df  # Return original dataframe if processing fails
         
 class DataPreprocessor:
     """

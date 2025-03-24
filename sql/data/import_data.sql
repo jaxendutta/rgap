@@ -2,7 +2,7 @@
 -- Purpose: Transform data from temp_grants table into normalized schema
 -- Heavily optimized for MySQL 8.0.41 and large datasets
 
--- Even more aggressive performance settings
+-- Performance settings
 SET SESSION sql_mode = '';
 SET SESSION unique_checks = 0;
 SET SESSION foreign_key_checks = 0;
@@ -64,8 +64,7 @@ SELECT DISTINCT
     federal_riding_number
 FROM temp_grants
 WHERE research_organization_name IS NOT NULL 
-AND research_organization_name != ''
-LIMIT 1000000; -- Safety limit
+AND research_organization_name != '';
 
 -- Insert from memory table in a single operation
 INSERT IGNORE INTO Institute (name, country, province, city, postal_code, riding_name_en, riding_number)
@@ -111,9 +110,7 @@ JOIN institute_lookup i ON tg.research_organization_name = i.name
 WHERE tg.recipient_legal_name IS NOT NULL 
   AND tg.recipient_legal_name != ''
   AND tg.research_organization_name IS NOT NULL
-  AND tg.research_organization_name != ''
-GROUP BY tg.recipient_legal_name, i.institute_id
-LIMIT 1000000; -- Safety limit
+  AND tg.research_organization_name != '';
 
 -- Faster insert without unnecessary checks
 INSERT IGNORE INTO Recipient (legal_name, institute_id, type)
@@ -137,72 +134,91 @@ FROM Recipient r;
 SELECT 'Recipients inserted: ', ROW_COUNT() AS 'Rows inserted';
 
 -- ========================================================================
--- STEP 5: Insert Grants - Batch processing for speed
+-- STEP 5: Insert Grants - Using the existing amendments_history JSON
 -- ========================================================================
--- Pre-process grants in batches
-DROP TEMPORARY TABLE IF EXISTS grants_to_insert;
-CREATE TEMPORARY TABLE grants_to_insert (
-    ref_number VARCHAR(50),
-    latest_amendment_number INT UNSIGNED,
-    amendment_date DATE,
-    agreement_number VARCHAR(50),
-    agreement_value DECIMAL(15,2),
-    foreign_currency_type VARCHAR(3),
-    foreign_currency_value DECIMAL(15,2),
-    agreement_start_date DATE,
-    agreement_end_date DATE,
-    agreement_title_en TEXT,
-    description_en TEXT,
-    expected_results_en TEXT,
-    org VARCHAR(5),
-    recipient_id INT UNSIGNED,
-    prog_id INT UNSIGNED,
-    amendments_history JSON,
-    KEY (recipient_id),
-    KEY (prog_id)
-) ENGINE=InnoDB; -- Use InnoDB for this one as it might be large
 
--- Simplified data conversion with fewer joins
-INSERT INTO grants_to_insert
-SELECT 
-    tg.ref_number,
-    NULLIF(CAST(NULLIF(tg.latest_amendment_number, '') AS UNSIGNED), 0),
-    STR_TO_DATE(NULLIF(tg.amendment_date, ''), '%Y-%m-%d'),
-    tg.agreement_number,
-    CAST(NULLIF(REPLACE(REPLACE(tg.agreement_value, ',', ''), '$', ''), '') AS DECIMAL(15,2)),
-    tg.foreign_currency_type,
-    CAST(NULLIF(REPLACE(REPLACE(tg.foreign_currency_value, ',', ''), '$', ''), '') AS DECIMAL(15,2)),
-    STR_TO_DATE(NULLIF(tg.agreement_start_date, ''), '%Y-%m-%d'),
-    STR_TO_DATE(NULLIF(tg.agreement_end_date, ''), '%Y-%m-%d'),
-    tg.agreement_title_en,
-    tg.description_en,
-    tg.expected_results_en,
-    tg.org,
-    r.recipient_id,
-    p.prog_id,
-    NULL -- Skip JSON processing for now
-FROM temp_grants tg
-LEFT JOIN institute_lookup i ON tg.research_organization_name = i.name
-LEFT JOIN recipient_lookup r ON tg.recipient_legal_name = r.legal_name AND i.institute_id = r.institute_id
-LEFT JOIN Program p ON tg.prog_name_en = p.name_en
-WHERE tg.ref_number IS NOT NULL
-LIMIT 1000000; -- Safety limit to prevent runaway processes
-
--- Final insert in batches
+-- Insert directly into ResearchGrant preserving the original amendments_history
 INSERT INTO ResearchGrant (
     ref_number, latest_amendment_number, amendment_date, agreement_number,
     agreement_value, foreign_currency_type, foreign_currency_value,
     agreement_start_date, agreement_end_date, agreement_title_en,
-    description_en, expected_results_en, org, recipient_id, prog_id
+    description_en, expected_results_en, additional_information_en, 
+    org, recipient_id, prog_id, amendments_history
 )
 SELECT 
-    ref_number, latest_amendment_number, amendment_date, agreement_number,
-    agreement_value, foreign_currency_type, foreign_currency_value,
-    agreement_start_date, agreement_end_date, agreement_title_en,
-    description_en, expected_results_en, org, recipient_id, prog_id
-FROM grants_to_insert;
+    tg.ref_number,
+    CASE 
+        WHEN tg.latest_amendment_number = '' THEN NULL
+        ELSE CAST(tg.latest_amendment_number AS SIGNED)
+    END,
+    CASE 
+        WHEN tg.amendment_date = '' THEN NULL
+        ELSE STR_TO_DATE(tg.amendment_date, '%Y-%m-%d')
+    END,
+    tg.agreement_number,
+    CASE 
+        WHEN tg.agreement_value = '' THEN NULL
+        ELSE CAST(REPLACE(REPLACE(tg.agreement_value, ',', ''), '$', '') AS DECIMAL(15,2))
+    END,
+    tg.foreign_currency_type,
+    CASE 
+        WHEN tg.foreign_currency_value = '' THEN NULL
+        ELSE CAST(REPLACE(REPLACE(tg.foreign_currency_value, ',', ''), '$', '') AS DECIMAL(15,2))
+    END,
+    CASE 
+        WHEN tg.agreement_start_date = '' THEN NULL
+        ELSE STR_TO_DATE(tg.agreement_start_date, '%Y-%m-%d')
+    END,
+    CASE 
+        WHEN tg.agreement_end_date = '' THEN NULL
+        ELSE STR_TO_DATE(tg.agreement_end_date, '%Y-%m-%d')
+    END,
+    tg.agreement_title_en,
+    tg.description_en,
+    tg.expected_results_en,
+    tg.additional_information_en,
+    tg.org,
+    r.recipient_id,
+    p.prog_id,
+    -- Handle the amendments_history JSON
+    CASE 
+        -- If amendments_history already exists as JSON, use it
+        WHEN tg.amendments_history IS NOT NULL 
+            AND tg.amendments_history != ''
+            AND tg.amendments_history != 'NULL'
+            AND LEFT(tg.amendments_history, 1) = '['
+        THEN 
+            -- Try to validate it as JSON before using
+            CASE 
+                WHEN JSON_VALID(tg.amendments_history) THEN tg.amendments_history
+                ELSE NULL
+            END
+        -- Otherwise, create a basic amendment entry if we at least have start date
+        WHEN tg.agreement_start_date IS NOT NULL AND tg.agreement_start_date != ''
+        THEN 
+            JSON_ARRAY(
+                JSON_OBJECT(
+                    'amendment_number', IFNULL(tg.latest_amendment_number, '0'),
+                    'amendment_date', IFNULL(tg.amendment_date, tg.agreement_start_date),
+                    'agreement_value', CAST(REPLACE(REPLACE(IFNULL(tg.agreement_value, '0'), ',', ''), '$', '') AS DECIMAL(15,2)),
+                    'agreement_start_date', tg.agreement_start_date,
+                    'agreement_end_date', IFNULL(tg.agreement_end_date, tg.agreement_start_date)
+                )
+            )
+        ELSE NULL
+    END
+FROM temp_grants tg
+LEFT JOIN institute_lookup i ON tg.research_organization_name = i.name
+  AND (tg.recipient_country = i.country OR (tg.recipient_country IS NULL AND i.country IS NULL))
+  AND (tg.recipient_province = i.province OR (tg.recipient_province IS NULL AND i.province IS NULL))
+LEFT JOIN recipient_lookup r ON tg.recipient_legal_name = r.legal_name AND i.institute_id = r.institute_id
+LEFT JOIN Program p ON tg.prog_name_en = p.name_en
+WHERE tg.ref_number IS NOT NULL AND tg.id IS NOT NULL
+  AND r.recipient_id IS NOT NULL -- Add this to ensure we only insert grants with a valid recipient
+GROUP BY tg.id;  -- Use the unique ID column to avoid incorrect deduplication
 
-
+-- Print out success message
+SELECT 'Grants inserted: ', ROW_COUNT() AS 'Rows inserted';
 
 -- ========================================================================
 -- STEP 6: Clean up all temporary tables
@@ -211,7 +227,6 @@ DROP TEMPORARY TABLE IF EXISTS distinct_institutes;
 DROP TEMPORARY TABLE IF EXISTS institute_lookup;
 DROP TEMPORARY TABLE IF EXISTS temp_recipients;
 DROP TEMPORARY TABLE IF EXISTS recipient_lookup;
-DROP TEMPORARY TABLE IF EXISTS grants_to_insert;
 
 -- Restore normal MySQL settings
 SET SESSION unique_checks = 1;

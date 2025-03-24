@@ -45,6 +45,7 @@ CREATE TABLE temp_grants (
     description_en TEXT,
     naics_identifier VARCHAR(10),
     expected_results_en TEXT,
+    additional_information_en TEXT,
     org VARCHAR(5),
     org_title VARCHAR(100),
     year VARCHAR(4),

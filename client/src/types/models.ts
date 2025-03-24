@@ -3,7 +3,7 @@ import { GrantSearchParams } from "./search";
 
 // Amendment type for grant amendments
 export interface GrantAmendment {
-    amendment_number: string;
+    amendment_number: number;
     amendment_date: string;
     agreement_value: number;
     agreement_start_date: string;
@@ -53,7 +53,7 @@ export interface Institute {
 export interface Grant {
     grant_id: number;
     ref_number: string;
-    latest_amendment_number?: string;
+    latest_amendment_number: number;
     amendment_date?: string;
     agreement_number?: string;
     agreement_value: number;
@@ -64,6 +64,7 @@ export interface Grant {
     agreement_title_en: string;
     description_en?: string;
     expected_results_en?: string;
+    additional_information_en?: string;
 
     // Recipient information
     recipient_id: number;

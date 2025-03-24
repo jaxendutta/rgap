@@ -151,7 +151,7 @@ setup_node() {
 
             if [ "$current_version" != "$latest_version" ]; then
                 print_status "Upgrading nvm $current_version -> $latest_version"
-                curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/$latest_version/install.sh" | bash
+                curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v$latest_version/install.sh" | bash
             else
                 print_success "nvm is up to date ($current_version)"
             fi
@@ -184,7 +184,7 @@ setup_node() {
             nvm use --lts
             nvm alias default "lts/*"
         else
-            print_success "Node.js is up to date (v$current_version)"
+            print_success "Node.js is up to date ($current_version)"
         fi
     else
         print_status "Installing Node.js LTS..."

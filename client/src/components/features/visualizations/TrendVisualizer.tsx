@@ -1,7 +1,7 @@
 // src/components/features/visualizations/TrendVisualizer.tsx
 import React, { useState, useMemo } from "react";
 import { LineChart, BarChart, BarChart2, DollarSign, Hash } from "lucide-react";
-import { Grant } from "@/types/models";
+import { Grant, GrantAmendment } from "@/types/models";
 import { Card } from "@/components/common/ui/Card";
 import { Dropdown } from "@/components/common/ui/Dropdown";
 import DataChart from "./DataChart";
@@ -23,14 +23,6 @@ export type GroupingDimension =
     | "amendment";
 
 export type ViewContext = "search" | "recipient" | "institute" | "custom";
-
-export interface GrantAmendment {
-    amendment_number: string;
-    amendment_date: string;
-    agreement_value: number;
-    agreement_start_date: string;
-    agreement_end_date: string;
-}
 
 interface AdvancedVisualizationProps {
     // The grants data to visualize
@@ -87,7 +79,7 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
     title,
 }) => {
     // If amendmentsHistory is provided, we're visualizing a single grant's amendments
-    const isAmendmentView = !!amendmentsHistory && amendmentsHistory.length > 1;
+    const isAmendmentView = !!amendmentsHistory && amendmentsHistory.length > 0;
 
     // Add "amendment" to available groupings if we have amendment history
     const effectiveAvailableGroupings = useMemo(() => {
@@ -115,7 +107,8 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
     const [metricType, setMetricType] = useState<MetricType>(initialMetricType);
     const [groupingDimension, setGroupingDimension] =
         useState<GroupingDimension>(
-            initialGrouping || effectiveAvailableGroupings[0] as GroupingDimension
+            initialGrouping ||
+                (effectiveAvailableGroupings[0] as GroupingDimension)
         );
 
     // Generate display options for the dropdown
@@ -149,10 +142,54 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
 
         // Create chronological order for the chart (oldest to newest)
         const chronologicalAmendments = [...amendmentsHistory].sort((a, b) => {
-            const numA = parseInt(a.amendment_number);
-            const numB = parseInt(b.amendment_number);
-            return numA - numB;
+            return a.amendment_number - b.amendment_number;
         });
+
+        // Check if we need to add the current grant's data as an amendment
+        if (grants && grants.length > 0) {
+            const currentGrant = grants[0];
+
+            // Get the current amendment number from the grant
+            const currentAmendmentNumber =
+                currentGrant.latest_amendment_number || 0;
+
+            // Check if this amendment number already exists in the chronologicalAmendments
+            const currentAmendmentExists = chronologicalAmendments.some(
+                (a) => a.amendment_number === currentAmendmentNumber
+            );
+
+            // Only add if it doesn't exist already
+            if (!currentAmendmentExists && currentGrant.agreement_value) {
+                // Create an amendment object from the current grant data
+                const currentAmendment = {
+                    amendment_number: currentAmendmentNumber,
+                    amendment_date:
+                        currentGrant.amendment_date ||
+                        currentGrant.agreement_start_date,
+                    agreement_value: currentGrant.agreement_value,
+                    agreement_start_date: currentGrant.agreement_start_date,
+                    agreement_end_date: currentGrant.agreement_end_date,
+                };
+
+                // Insert it in the correct position based on amendment number
+                let inserted = false;
+                for (let i = 0; i < chronologicalAmendments.length; i++) {
+                    if (
+                        currentAmendmentNumber <
+                        chronologicalAmendments[i].amendment_number
+                    ) {
+                        chronologicalAmendments.splice(i, 0, currentAmendment);
+                        inserted = true;
+                        break;
+                    }
+                }
+
+                // If not inserted (higher than all existing amendments), append it
+                if (!inserted) {
+                    chronologicalAmendments.push(currentAmendment);
+                }
+            }
+        }
 
         // For line chart format, use a single "Funding" category
         if (chartType === "line") {
@@ -169,7 +206,7 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
 
                 // Create label - "Original" for amendment 0, otherwise "Amendment X"
                 const versionLabel =
-                    amendment.amendment_number === "0"
+                    amendment.amendment_number === 0
                         ? "Original"
                         : `Amendment ${amendment.amendment_number}`;
 
@@ -184,6 +221,11 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                         100;
                 }
 
+                // Determine initial and final amendments
+                const isInitialAmendment = index === 0;
+                const isFinalAmendment =
+                    index === chronologicalAmendments.length - 1;
+
                 return {
                     year: formattedDate, // Use year for the x-axis key
                     Funding: amendment.agreement_value, // Use a single 'Funding' category for line chart
@@ -192,6 +234,8 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                     percentChange: percentChange, // Store the percent change
                     displayDate: formattedDate, // For tooltip
                     amendmentNumber: amendment.amendment_number, // For coloring
+                    isFinal: isFinalAmendment, // Flag for showing green color on final amendment
+                    isInitial: isInitialAmendment, // Flag for initial amendment
                 };
             });
         }
@@ -208,11 +252,15 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                     .toString()
                     .padStart(2, "0")}`;
 
-                // Create label - "Original" for amendment 0, otherwise "Amendment X"
-                const versionLabel =
-                    amendment.amendment_number === "0"
-                        ? "Original"
-                        : `Amendment ${amendment.amendment_number}`;
+                // Create label - if amendment 0 is missing, mark the first one as "Initial Amendment"
+                const isInitialAmendment = index === 0;
+                const isOriginalAgreement = amendment.amendment_number === 0;
+
+                const versionLabel = isOriginalAgreement
+                    ? "Original"
+                    : isInitialAmendment && !isOriginalAgreement
+                    ? "Initial Amendment"
+                    : `Amendment ${amendment.amendment_number}`;
 
                 // Calculate percentage change from previous version
                 let percentChange = 0;
@@ -225,6 +273,10 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                         100;
                 }
 
+                // Determine if this is the final amendment
+                const isFinalAmendment =
+                    index === chronologicalAmendments.length - 1;
+
                 return {
                     year: formattedDate, // Use year for the x-axis key
                     [versionLabel]: amendment.agreement_value, // Use version label as the category
@@ -233,10 +285,12 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                     percentChange: percentChange, // Store the percent change
                     displayDate: formattedDate, // For tooltip
                     amendmentNumber: amendment.amendment_number, // For coloring
+                    isFinal: isFinalAmendment, // Flag for showing green color on final amendment
+                    isInitial: isInitialAmendment, // Flag for initial amendment
                 };
             });
         }
-    }, [amendmentsHistory, isAmendmentView, chartType]);
+    }, [amendmentsHistory, isAmendmentView, chartType, grants]);
 
     // Prepare data for visualization based on the selected options
     const chartData = useMemo(() => {
@@ -260,6 +314,8 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                             key !== "displayDate" &&
                             key !== "value" &&
                             key !== "amendmentNumber" &&
+                            key !== "isInitial" &&
+                            key !== "isFinal" &&
                             key !== "Funding" // Exclude the Funding key we added for line charts
                     );
                     return versionKey || "";
@@ -548,34 +604,43 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
             {chartData.categories.length > 0 && (
                 <div className="flex flex-wrap justify-center mt-4 gap-3">
                     {isAmendmentView
-                        ? Object.entries(AMENDMENT_COLORS).map(([key, color], index) => (
-                            <div className="flex items-center text-xs" key={index}>
-                                <span
-                                    className="w-3 h-3 rounded-full mr-1.5"
-                                    style={{
-                                        backgroundColor: color,
-                                    }}
-                                />
-                                <span className="text-gray-600">{key}</span>
-                            </div>
-                        ))
+                        ? Object.entries(AMENDMENT_COLORS).map(
+                              ([key, color], index) => (
+                                  <div
+                                      className="flex items-center text-xs"
+                                      key={index}
+                                  >
+                                      <span
+                                          className="w-3 h-3 rounded-full mr-1.5"
+                                          style={{
+                                              backgroundColor: color,
+                                          }}
+                                      />
+                                      <span className="text-gray-600">
+                                          {key}
+                                      </span>
+                                  </div>
+                              )
+                          )
                         : chartData.categories.map((category, index) => (
-                            <div
-                                key={category}
-                                className="flex items-center text-xs"
-                            >
-                                <span
-                                    className="w-3 h-3 rounded-full mr-1.5"
-                                    style={{
-                                        backgroundColor: getCategoryColor(
-                                            category,
-                                            index
-                                        ),
-                                    }}
-                                />
-                                <span className="text-gray-600">{category}</span>
-                            </div>
-                        ))}
+                              <div
+                                  key={category}
+                                  className="flex items-center text-xs"
+                              >
+                                  <span
+                                      className="w-3 h-3 rounded-full mr-1.5"
+                                      style={{
+                                          backgroundColor: getCategoryColor(
+                                              category,
+                                              index
+                                          ),
+                                      }}
+                                  />
+                                  <span className="text-gray-600">
+                                      {category}
+                                  </span>
+                              </div>
+                          ))}
                 </div>
             )}
         </Card>

@@ -365,7 +365,7 @@ IGNORE 1 ROWS
     naics_identifier,
     expected_results_en,
     @dummy_expected_results_fr,
-    @dummy_additional_information_en,
+    additional_information_en,
     @dummy_additional_information_fr,
     org,
     org_title,
@@ -386,7 +386,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 EOF
 
 # Enhanced progress indication for data loading
-phases=4
+phases=3
 current_phase=1
 print_status "Data Import Process ($phases phases):"
 print_status "Phase $current_phase/$phases: Loading CSV data into temporary table..."
@@ -430,8 +430,7 @@ print_success "CSV data loaded successfully!"
 # Transforming data
 # Phase 2: Transforming funding agencies, institutes, programs, and recipients
 current_phase=$((current_phase + 1))
-print_status "Transforming temporary data into normalized schema..."
-print_status "Phase $current_phase/$phases: Transforming funding agencies, institutes, programs, and recipients..."
+print_status "Phase $current_phase/$phases: Transforming temporary data into normalized schema..."
 print_status "This may take a while for large datasets. Please be patient."
 
 # Start spinner for transformation phase
@@ -440,28 +439,6 @@ SPIN_PID=$!
 
 # Perform the data transformation
 mysql --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap <"${SQL_ROOT}/data/import_data.sql" 2>>"$LOG_FILE"
-
-# Kill spinner
-kill $SPIN_PID 2>/dev/null
-wait $SPIN_PID 2>/dev/null
-printf "\r%s                                      \r" "$(tput sgr0)"
-
-if [ $? -ne 0 ]; then
-    print_error "Failed to transform data. Check $LOG_FILE for details."
-    exit 1
-fi
-
-# Phase 3: Transforming grants
-current_phase=$((current_phase + 1))
-print_status "Phase $current_phase/$phases: Transforming grants..."
-print_status "This may take a while for large datasets. Please be patient."
-
-# Start spinner for transformation phase
-spin &
-SPIN_PID=$!
-
-# Perform the data transformation
-mysql --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap <"${SQL_ROOT}/data/import_grants.sql" 2>>"$LOG_FILE"
 
 # Kill spinner
 kill $SPIN_PID 2>/dev/null
