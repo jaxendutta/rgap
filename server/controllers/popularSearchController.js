@@ -2,7 +2,7 @@
 import { pool } from "../config/db.js";
 
 /**
- * Handler for fetching top 5 popular search terms by type and date range.
+ * Handler for fetching the top 5 popular search terms of a specific type within a date range.
  * 
  * Expects:
  * - Path param: search_term_type (0 = grant, 1 = recipient, 2 = institution)
@@ -11,9 +11,19 @@ import { pool } from "../config/db.js";
  *      "date_start": "YYYY-MM-DD",
  *      "date_end": "YYYY-MM-DD"
  *    }
- *
- * Calls MySQL stored procedure `sp_get_popular_search` to return top search terms.
+ * 
+ * Calls the MySQL stored procedure `sp_get_popular_search(date_start, date_end, search_term_type)`
+ * to retrieve the top 5 most frequent terms for the specified category and time period.
+ * 
+ * Returns:
+ * - An array of up to 5 objects, each with the following fields:
+ *    {
+ *      search_term: string,   // The search keyword entered by users
+ *      frequency: number      // Number of times this term was searched
+ *    }
+ * - Results are ordered by frequency in descending order.
  */
+
 export const getPopularSearchTerms = async (req, res) => {
     try {
         const { search_term_type } = req.params;
