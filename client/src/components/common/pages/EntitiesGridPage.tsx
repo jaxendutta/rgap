@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
-import EntityCard, { EntityType } from "@/components/common/ui/EntityCard";
+import EntityCard, { Entity } from "@/components/common/ui/EntityCard";
 import PageContainer from "@/components/common/layout/PageContainer";
 import PageHeader from "@/components/common/layout/PageHeader";
 import { SearchField } from "@/components/common/ui/SearchField";
@@ -22,7 +22,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
 
 interface EntitiesGridPageProps {
-    entityType: EntityType;
+    entityType: Entity;
     title: string;
     subtitle?: string;
     useInfiniteEntities: any; // The infinite query hook

@@ -121,13 +121,17 @@ innodb_thread_concurrency = 4
 
 # Performance Settings
 key_buffer_size = 256M
+bulk_insert_buffer_size = 256M
 max_allowed_packet = 64M
 table_open_cache = 2000
-sort_buffer_size = 4M
+sort_buffer_size = 64M
+join_buffer_size = 4M
 read_buffer_size = 2M
 read_rnd_buffer_size = 2M
 thread_cache_size = 8
 max_connections = 151
+tmp_table_size = 1G
+max_heap_table_size = 1G
 
 # Enable local infile loading
 local_infile = 1

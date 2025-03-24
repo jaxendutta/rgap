@@ -65,8 +65,8 @@ export const GrantCard = ({
         grant.foreign_currency_value > 0;
 
     // Format amendment number for display (safely)
-    const amendmentNumber = grant.amendment_number
-        ? Number(grant.amendment_number) || 0
+    const amendmentNumber = grant.latest_amendment_number
+        ? Number(grant.latest_amendment_number) || 0
         : 0;
 
     // Check if this grant has amendments
@@ -305,8 +305,8 @@ export const GrantCard = ({
                             <History className="h-3 w-3 mr-1" />
                             {typeof amendmentNumber === "number" &&
                             amendmentNumber > 0
-                                ? `Latest Amendment: ${amendmentNumber}`
-                                : "Original"}
+                                ? `Amendment ${amendmentNumber} `
+                                : `Original `}
                             • {sortedAmendments.length} versions
                         </button>
 

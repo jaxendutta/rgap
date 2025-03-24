@@ -1,7 +1,7 @@
 // src/components/common/ui/EntityHeader.tsx
 import React from "react";
 import { LucideIcon, BookmarkPlus, BookmarkCheck } from "lucide-react";
-import { Button } from "./Button";
+import { Button } from "../ui/Button";
 import { cn } from "@/utils/cn";
 
 export interface MetadataItem {

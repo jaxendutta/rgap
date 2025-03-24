@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
 import { BookmarkType } from "@/types/bookmark";
-import createAPI from '@/utils/api';
+import createAPI from "@/utils/api";
 import { formatSentenceCase } from "@/utils/format";
 
 const API = createAPI(15000); // Increase timeout to 15 seconds
@@ -58,26 +58,22 @@ export function useAllBookmarks(
                     return [];
                 }
 
-                const response = await API.get(
+                const response = await API.get<any[]>(
                     `/save/${bookmarkType}/id/${user_id}`
                 );
-                
-                // Correctly extract IDs with proper type handling
-                const idsArray = response.data.map((entry: any) => {
-                    // For TypeScript safety, we need to use any type here
-                    if (bookmarkType === "recipient" && 'recipient_id' in entry) {
-                        return entry.recipient_id as number;
-                    } else if (bookmarkType === "grant" && 'grant_id' in entry) {
-                        return entry.grant_id as number;
-                    } else if (bookmarkType === "institute" && 'institute_id' in entry) {
-                        return entry.institute_id as number;
-                    } else {
-                        // Fallback to getting the first value
-                        return Object.values(entry)[0] as number;
-                    }
-                });
-                
-                console.log(`Extracted ${bookmarkType} IDs:`, idsArray);
+
+                // For grants, we now get ref_number instead of ref_number
+                if (bookmarkType === "grant") {
+                    const idsArray = response.data.map(
+                        (entry) => entry.ref_number
+                    );
+                    return idsArray;
+                }
+
+                // For recipients and institutes, we still get the respective IDs
+                const idsArray = response.data.map(
+                    (entry) => Object.values(entry)[0] as number
+                );
                 return idsArray;
             } catch (error) {
                 console.error(
@@ -97,7 +93,7 @@ export function useAllBookmarks(
 
 interface ToggleBookmarkVariables {
     user_id: number;
-    entity_id: number;
+    entity_id: number | string; // Can be either grant ref_number (string) or ID (number)
     isBookmarked: boolean;
 }
 
@@ -109,7 +105,7 @@ export function useToggleBookmark(bookmarkType: BookmarkType) {
         void,
         Error,
         ToggleBookmarkVariables,
-        { prevBookmarks: number[]; queryKey: (string | number)[] }
+        { prevBookmarks: (number | string)[]; queryKey: (string | number)[] }
     >({
         mutationFn: async ({ user_id, entity_id, isBookmarked }) => {
             // Special handling for search bookmarks
@@ -141,13 +137,15 @@ export function useToggleBookmark(bookmarkType: BookmarkType) {
             await queryClient.cancelQueries({ queryKey });
 
             const prevBookmarks =
-                queryClient.getQueryData<number[]>(queryKey) || [];
+                queryClient.getQueryData<(number | string)[]>(queryKey) || [];
 
             // Optimistically update UI
-            queryClient.setQueryData<number[]>(queryKey, (prev = []) =>
-                isBookmarked
-                    ? prev.filter((id) => id !== entity_id)
-                    : [...prev, entity_id]
+            queryClient.setQueryData<(number | string)[]>(
+                queryKey,
+                (prev = []) =>
+                    isBookmarked
+                        ? prev.filter((id) => id !== entity_id)
+                        : [...prev, entity_id]
             );
 
             return { prevBookmarks, queryKey };
@@ -168,7 +166,9 @@ export function useToggleBookmark(bookmarkType: BookmarkType) {
         onSuccess: (_, { isBookmarked }) => {
             showNotification(
                 isBookmarked
-                    ? `${formatSentenceCase(bookmarkType)} removed from bookmarks!`
+                    ? `${formatSentenceCase(
+                          bookmarkType
+                      )} removed from bookmarks!`
                     : `${formatSentenceCase(bookmarkType)} bookmarked!`,
                 "success"
             );

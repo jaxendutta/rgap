@@ -17,6 +17,7 @@ import { Card } from "@/components/common/ui/Card";
 import Tag, { TagGroup } from "@/components/common/ui/Tag";
 import { cn } from "@/utils/cn";
 import { Recipient } from "@/types/models";
+import { EntityType } from "@/constants/data";
 
 export interface RecipientCardProps {
     recipient: Recipient;
@@ -33,12 +34,6 @@ export const RecipientCard: React.FC<RecipientCardProps> = ({
 }) => {
     const total_funding = recipient.total_funding || 0;
     const grant_count = recipient.grant_count || 0;
-
-    // Format recipient type for display
-    const formattedType = recipient.recipient_type
-        ? recipient.recipient_type.charAt(0).toUpperCase() +
-          recipient.recipient_type.slice(1)
-        : recipient.type || "Organization";
 
     // Generate location string
     const location = [recipient.city, recipient.province, recipient.country]
@@ -103,9 +98,9 @@ export const RecipientCard: React.FC<RecipientCardProps> = ({
                             </Tag>
                         )}
 
-                        {formattedType && (
+                        {recipient.type && (
                             <Tag size="sm" variant="primary" icon={Users}>
-                                {formattedType}
+                                {EntityType[recipient.type as keyof typeof EntityType]}
                             </Tag>
                         )}
                     </TagGroup>

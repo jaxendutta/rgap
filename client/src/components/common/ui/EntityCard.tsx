@@ -23,12 +23,13 @@ import { Institute, Recipient } from "@/types/models";
 import { cn } from "@/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
+import { EntityType } from "@/constants/data";
 
-export type EntityType = "institute" | "recipient";
+export type Entity = "institute" | "recipient";
 
 interface EntityCardProps {
     entity: Institute | Recipient;
-    entityType: EntityType;
+    entityType: Entity;
     grantsCount?: number;
     totalFunding?: number;
     latestGrantDate?: string;
@@ -73,10 +74,8 @@ const EntityCard = ({
         ? (entity as Institute).name
         : (entity as Recipient).legal_name;
     const type = isInstitute()
-        ? entity.type || "Academic Institution"
-        : (entity as Recipient).recipient_type ||
-          (entity as Recipient).type ||
-          "Organization";
+        ? "Academic Institution"
+        : EntityType[(entity as Recipient).type as keyof typeof EntityType];
 
     // For recipients, get their institute info
     const institute =

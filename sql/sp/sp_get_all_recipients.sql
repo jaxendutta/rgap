@@ -19,7 +19,6 @@ BEGIN
         r.recipient_id,
         r.legal_name,
         r.type,
-        r.recipient_type,
         r.institute_id,
         i.name AS research_organization_name,
         i.city,

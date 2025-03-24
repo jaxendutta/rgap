@@ -31,7 +31,7 @@ export const searchGrants = async (req, res) => {
             userId = null, // Get userID from request if provided
         } = req.body;
 
-        console.log("Received request:", {
+        console.log("Received search request:", {
             userId, // Log the user ID for tracking (or null)
             searchTerms,
             filters,
@@ -102,7 +102,7 @@ export const searchGrants = async (req, res) => {
         ];
 
         // Log the query parameters for debugging
-        console.log("Query parameters:", queryParams);
+        console.log("Search query parameters:", queryParams);
 
         // Call the stored procedure with the correct parameter order
         const [results] = await pool.query(
@@ -116,20 +116,42 @@ export const searchGrants = async (req, res) => {
         // The second result set contains the actual data
         const grantsData = results[1] || [];
 
+        console.log(
+            `Search found ${totalCount} total grants, returning ${grantsData.length} for this page`
+        );
+
         // Process the results to convert amendment_history from JSON string to actual array
-        const processedResults = grantsData.map((row) => ({
-            ...row,
-            agreement_value: parseFloat(row.latest_value) || 0,
-            amendment_number: row.latest_amendment_number,
-            amendment_date: row.latest_amendment_date,
-            amendments_history:
-                typeof row.amendments_history === "string"
-                    ? JSON.parse(row.amendments_history)
-                    : row.amendments_history || [],
-        }));
+        const processedResults = grantsData.map((row) => {
+            // Create a clean copy of the row
+            const processed = { ...row };
+
+            // Ensure numeric values
+            processed.agreement_value =
+                parseFloat(processed.agreement_value) || 0;
+
+            // Handle amendment data
+            processed.amendment_number = processed.latest_amendment_number;
+            processed.amendment_date = processed.amendment_start_date;
+
+            // Handle JSON fields
+            if (typeof processed.amendments_history === "string") {
+                try {
+                    processed.amendments_history = JSON.parse(
+                        processed.amendments_history
+                    );
+                } catch (e) {
+                    processed.amendments_history = [];
+                    console.warn("Failed to parse amendments_history JSON:", e);
+                }
+            } else if (!processed.amendments_history) {
+                processed.amendments_history = [];
+            }
+
+            return processed;
+        });
 
         console.log(
-            `Query returned ${
+            `Search query returned ${
                 processedResults.length
             } grants (page ${page} of ${Math.ceil(totalCount / pageSize)})`
         );
@@ -180,10 +202,7 @@ export const searchGrants = async (req, res) => {
         // Return a more user-friendly error message
         res.status(500).json({
             error: "An error occurred while searching. Please try again.",
-            details:
-                process.env.NODE_ENV === "development"
-                    ? error.message
-                    : undefined,
+            details: error.message,
             query: req.body,
         });
     }

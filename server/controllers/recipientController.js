@@ -195,13 +195,12 @@ export const searchRecipients = async (req, res) => {
                 r.recipient_id,
                 r.legal_name,
                 r.type,
-                r.recipient_type,
                 r.institute_id,
                 i.name AS research_organization_name,
                 i.city,
                 i.province,
                 i.country,
-                COUNT(DISTINCT rg.grant_id) AS grant_count,
+                COUNT(DISTINCT rg.ref_number) AS grant_count,
                 COALESCE(SUM(rg.agreement_value), 0) AS total_funding,
                 MAX(rg.agreement_start_date) AS latest_grant_date
             FROM 

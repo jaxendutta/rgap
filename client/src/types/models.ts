@@ -8,6 +8,7 @@ export interface GrantAmendment {
     agreement_value: number;
     agreement_start_date: string;
     agreement_end_date: string;
+    additional_information_en?: string;
 }
 
 // Recipient
@@ -16,9 +17,7 @@ export interface Recipient {
     legal_name: string;
     institute_id: number;
     research_organization_name?: string;
-    institute_type?: string;
     type?: string;
-    recipient_type?: string;
     city?: string;
     province?: string;
     country?: string;
@@ -35,7 +34,6 @@ export interface Recipient {
 export interface Institute {
     institute_id: number;
     name: string;
-    type?: string;
     city?: string;
     province?: string;
     country?: string;
@@ -53,9 +51,9 @@ export interface Institute {
 
 // Grant
 export interface Grant {
-    grant_id?: number;
+    grant_id: number;
     ref_number: string;
-    amendment_number?: string;
+    latest_amendment_number?: string;
     amendment_date?: string;
     agreement_number?: string;
     agreement_value: number;
