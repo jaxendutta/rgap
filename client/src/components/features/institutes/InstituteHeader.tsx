@@ -8,7 +8,7 @@ import {
 import EntityHeader, {
     MetadataItem,
     ActionButton,
-} from "@/components/common/ui/EntityHeader";
+} from "@/components/common/layout/EntityHeader";
 
 interface InstituteHeaderProps {
     institute: any;

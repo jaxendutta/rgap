@@ -35,8 +35,7 @@ BEGIN
     LEFT JOIN 
         ResearchGrant rg ON r.recipient_id = rg.recipient_id
     WHERE 
-        i.name LIKE CONCAT('%', p_term, '%') 
-        OR i.type LIKE CONCAT('%', p_term, '%')
+        i.name LIKE CONCAT('%', p_term, '%')
         OR i.city LIKE CONCAT('%', p_term, '%')
         OR i.province LIKE CONCAT('%', p_term, '%')
         OR i.country LIKE CONCAT('%', p_term, '%')

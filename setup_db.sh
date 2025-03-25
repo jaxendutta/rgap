@@ -155,6 +155,7 @@ print_status "Loading data preparation scripts..."
 {
     # Run data preparation SQL
     mysql --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap <"${SQL_ROOT}/data/prepare_import.sql" 2>>"$LOG_FILE"
+    print_success "Data preparation scripts loaded successfully!"
 } || {
     print_error "Failed to prepare data tables"
     exit 1
@@ -240,7 +241,7 @@ if [ -z "$SAMPLE_DATA_7Z" ]; then
             print_error "No fallback sample dataset found either. Please ensure data files exist."
             exit 1
         else
-            print_status "Using sample dataset: $(basename "$SAMPLE_DATA_7Z")"
+            print_success "Using sample dataset: $(basename "$SAMPLE_DATA_7Z")"
             DATA_DESC="sample"
         fi
     else
@@ -248,7 +249,7 @@ if [ -z "$SAMPLE_DATA_7Z" ]; then
         exit 1
     fi
 else
-    print_status "Using ${DATA_DESC} dataset: $(basename "$SAMPLE_DATA_7Z")"
+    print_success "Using ${DATA_DESC} dataset: $(basename "$SAMPLE_DATA_7Z")"
 fi
 
 # Create temporary directory for extraction
@@ -314,9 +315,12 @@ SET SESSION character_set_results = utf8mb4;
 SET SESSION collation_connection = utf8mb4_unicode_ci;
 SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- Set a more permissive SQL mode
+SET SESSION sql_mode = '';
+
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Using column mapping to skip French fields and agreement_type
+-- Load the data directly into each column
 LOAD DATA LOCAL INFILE '${SAMPLE_DATA}'
 INTO TABLE temp_grants
 CHARACTER SET utf8mb4
@@ -326,11 +330,11 @@ ESCAPED BY '\\\\'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
 (
-    _id,
+    id,
     ref_number,
-    amendment_number,
+    latest_amendment_number,
     amendment_date,
-    @dummy_agreement_type,       -- Skip agreement_type
+    @dummy_agreement_type,
     recipient_type,
     recipient_business_number,
     recipient_legal_name,
@@ -341,14 +345,14 @@ IGNORE 1 ROWS
     recipient_city,
     recipient_postal_code,
     federal_riding_name_en,
-    @dummy_riding_name_fr,       -- Skip federal_riding_name_fr
+    @dummy_riding_name_fr,
     federal_riding_number,
     prog_name_en,
-    @dummy_prog_name_fr,         -- Skip prog_name_fr
+    @dummy_prog_name_fr,
     prog_purpose_en,
-    @dummy_prog_purpose_fr,      -- Skip prog_purpose_fr
+    @dummy_prog_purpose_fr,
     agreement_title_en,
-    @dummy_agreement_title_fr,   -- Skip agreement_title_fr
+    @dummy_agreement_title_fr,
     agreement_number,
     agreement_value,
     foreign_currency_type,
@@ -357,23 +361,35 @@ IGNORE 1 ROWS
     agreement_end_date,
     coverage,
     description_en,
-    @dummy_description_fr,       -- Skip description_fr
+    @dummy_description_fr,
     naics_identifier,
     expected_results_en,
-    @dummy_expected_results_fr,  -- Skip expected_results_fr
+    @dummy_expected_results_fr,
     additional_information_en,
-    @dummy_additional_information_fr,  -- Skip additional_information_fr
+    @dummy_additional_information_fr,
     org,
-    owner_org_title,
-    year
+    org_title,
+    year,
+    amendments_history
 );
+
+-- Now clean up the text data
+UPDATE temp_grants SET amendments_history = NULL WHERE amendments_history = '';
+UPDATE temp_grants SET amendments_history = REPLACE(amendments_history, '""', '"') WHERE amendments_history IS NOT NULL;
+
+-- Set invalid JSON to NULL instead of replacing with placeholder (faster)
+UPDATE temp_grants 
+SET amendments_history = NULL
+WHERE amendments_history IS NOT NULL AND NOT JSON_VALID(amendments_history);
 
 SET FOREIGN_KEY_CHECKS = 1;
 EOF
 
 # Enhanced progress indication for data loading
-print_status "Data Import Process (3 phases)"
-print_status "Phase 1/3: Loading CSV data into temporary table..."
+phases=3
+current_phase=1
+print_status "Data Import Process ($phases phases):"
+print_status "Phase $current_phase/$phases: Loading CSV data into temporary table..."
 
 # Start a spinner animation for the loading phase
 spin() {
@@ -411,8 +427,10 @@ wait $SPIN_PID 2>/dev/null
 printf "\r%s                                      \r" "$(tput sgr0)"
 print_success "CSV data loaded successfully!"
 
-# Phase 2: Transforming data
-print_status "Phase 2/3: Transforming temporary data into normalized schema..."
+# Transforming data
+# Phase 2: Transforming funding agencies, institutes, programs, and recipients
+current_phase=$((current_phase + 1))
+print_status "Phase $current_phase/$phases: Transforming temporary data into normalized schema..."
 print_status "This may take a while for large datasets. Please be patient."
 
 # Start spinner for transformation phase
@@ -433,7 +451,8 @@ if [ $? -ne 0 ]; then
 fi
 
 print_success "Data transformation complete!"
-print_status "Phase 3/3: Creating database indexes and finalizing..."
+current_phase=$((current_phase + 1))
+print_status "Phase $current_phase/$phases: Creating database indexes and finalizing..."
 
 # Run any final optimization or cleanup SQL here
 mysql --socket="${USER_MYSQL_DIR}/run/mysql.sock" -u rgap_user -p12345 rgap -e "ANALYZE TABLE ResearchGrant, Recipient, Institute, Program, Organization;" >>"$LOG_FILE" 2>&1
@@ -473,18 +492,19 @@ UNION ALL
 SELECT 
     LEFT(legal_name, 30),
     LEFT(i.name, 35),
-    recipient_type
+    type
 FROM Recipient r 
 LEFT JOIN Institute i ON r.institute_id = i.institute_id
 LIMIT 3;
 
 -- Sample Grants
-SELECT '\nReference', 'Value', 'Start Date'
+SELECT '\nReference', 'Latest Amendment', 'Value', 'Start Date'
 UNION ALL
-SELECT '---------------', '---------------', '---------------'
+SELECT '---------------', '---------------', '---------------', '---------------'
 UNION ALL
 SELECT 
     ref_number,
+    latest_amendment_number,
     CONCAT('$', FORMAT(agreement_value, 2)),
     DATE_FORMAT(agreement_start_date, '%Y-%m-%d')
 FROM ResearchGrant 

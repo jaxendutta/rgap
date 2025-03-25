@@ -109,24 +109,22 @@ export const DataChart: React.FC<DataChartProps> = ({
                                         isAmendmentView
                                             ? // For amendment view, customize each dot based on version
                                               ({ cx, cy, payload }) => {
-                                                  // Determine color based on amendment number
+                                                  // Determine color based on amendment number, isInitial flag, and isFinal flag
                                                   let color =
                                                       AMENDMENT_COLORS.Original;
 
                                                   if (
                                                       payload?.amendmentNumber ===
-                                                      "0"
+                                                      0
                                                   ) {
                                                       color =
                                                           AMENDMENT_COLORS.Original;
+                                                  } else if (payload?.isFinal) {
+                                                      color =
+                                                          AMENDMENT_COLORS.Final;
                                                   } else {
-                                                      // If it's the last dot, use green, otherwise amber
-                                                      const isLast =
-                                                          +payload?.amendmentNumber ===
-                                                          data.length - 1;
-                                                      color = isLast
-                                                          ? AMENDMENT_COLORS.Final
-                                                          : AMENDMENT_COLORS.Amendment;
+                                                      color =
+                                                          AMENDMENT_COLORS.Amendment;
                                                   }
 
                                                   return (
@@ -227,22 +225,17 @@ export const DataChart: React.FC<DataChartProps> = ({
 
                                                 // Original is blue, amendments are amber, current is green
                                                 if (
-                                                    category.includes(
-                                                        "Original"
-                                                    )
+                                                    data[i]?.amendmentNumber ===
+                                                    0
                                                 ) {
                                                     color =
                                                         AMENDMENT_COLORS.Original;
-                                                } else if (
-                                                    category.includes(
-                                                        "Amendment"
-                                                    )
-                                                ) {
-                                                    const isLatestAmendment =
-                                                        i === data.length - 1;
-                                                    color = isLatestAmendment
-                                                        ? AMENDMENT_COLORS.Final
-                                                        : AMENDMENT_COLORS.Amendment;
+                                                } else if (data[i]?.isFinal) {
+                                                    color =
+                                                        AMENDMENT_COLORS.Final;
+                                                } else {
+                                                    color =
+                                                        AMENDMENT_COLORS.Amendment;
                                                 }
 
                                                 return (

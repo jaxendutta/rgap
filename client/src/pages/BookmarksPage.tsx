@@ -160,7 +160,7 @@ export const BookmarksPage = () => {
                         current.filter((item) => {
                             if (
                                 activeTabType === "grant" &&
-                                "grant_id" in item
+                                "ref_number" in item
                             ) {
                                 return item.grant_id !== id;
                             } else if (
@@ -352,10 +352,10 @@ export const BookmarksPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {bookmarkedItems.map((item) => {
                     // Render different entity cards based on the active tab
-                    if (activeTabType === "grant" && "grant_id" in item) {
+                    if (activeTabType === "grant" && "ref_number" in item) {
                         return (
                             <GrantCard
-                                key={item.grant_id}
+                                key={item.ref_number}
                                 grant={item as Grant}
                                 isBookmarked={true}
                                 onBookmark={() =>

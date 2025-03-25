@@ -17,11 +17,11 @@ DEALLOCATE PREPARE stmt;
 
 /* Create temporary table for data import with minimal indexes */
 CREATE TABLE temp_grants (
-    _id VARCHAR(50),
-    ref_number VARCHAR(20),
-    amendment_number VARCHAR(10),
+    id VARCHAR(50) NOT NULL,  -- Make the ID field NOT NULL, this is crucial
+    ref_number VARCHAR(50),
+    latest_amendment_number INT,
     amendment_date VARCHAR(50),
-    recipient_type VARCHAR(50),
+    recipient_type VARCHAR(1),
     recipient_business_number VARCHAR(50),
     recipient_legal_name VARCHAR(255),
     recipient_operating_name VARCHAR(255),
@@ -47,8 +47,11 @@ CREATE TABLE temp_grants (
     expected_results_en TEXT,
     additional_information_en TEXT,
     org VARCHAR(5),
-    owner_org_title VARCHAR(100),
+    org_title VARCHAR(100),
     year VARCHAR(4),
-    INDEX idx_ref (ref_number),
-    INDEX idx_org_name (research_organization_name(50))
+    amendments_history TEXT,
+    INDEX idx_id (id),              -- Add a primary index on id for performance
+    INDEX idx_ref (ref_number),     -- Keep the ref_number index
+    INDEX idx_recipient (recipient_legal_name),      -- Add index for join performance
+    INDEX idx_institution (research_organization_name) -- Add index for join performance
 );

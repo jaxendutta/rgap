@@ -43,8 +43,7 @@ BEGIN
         province TEXT,
         country TEXT,
         org VARCHAR(20),
-        owner_org VARCHAR(20),
-        owner_org_title TEXT,
+        org_title TEXT,
         prog_id VARCHAR(50),
         name_en TEXT,
         amendments_history JSON);

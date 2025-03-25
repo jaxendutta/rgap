@@ -141,11 +141,6 @@ const GrantsList: React.FC<GrantsListProps> = ({
                     );
             }
 
-            // Ensure program information is correctly formatted
-            if (processedGrant.prog_title_en) {
-                processedGrant.program_name = processedGrant.prog_title_en;
-            }
-
             // Ensure numeric values are valid numbers
             processedGrant.agreement_value =
                 Number(processedGrant.agreement_value) || 0;
@@ -221,16 +216,16 @@ const GrantsList: React.FC<GrantsListProps> = ({
         <GrantCard
             grant={grant}
             isBookmarked={
-                grant.grant_id ? bookmarkedIds.includes(grant.grant_id) : false
+                grant.ref_number ? bookmarkedIds.includes(grant.ref_number) : false
             }
-            onBookmark={() => grant.grant_id && toggleBookmark(grant.grant_id)}
+            onBookmark={() => grant.ref_number && toggleBookmark(grant.ref_number)}
         />
     );
 
     // Key extractor for grants - ensure unique keys by combining multiple identifiers
     const keyExtractor = (grant: Grant, index: number) =>
-        `grant-${grant.grant_id || ""}-${grant.ref_number || ""}-${
-            grant.amendment_number || "0"
+        `grant-${grant.ref_number || ""}-${grant.ref_number || ""}-${
+            grant.latest_amendment_number || "0"
         }-idx${index}`;
 
     // Visualization component - pass all available grant data, not just the visible ones

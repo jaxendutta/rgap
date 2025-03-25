@@ -4,10 +4,11 @@ USE rgap;
 -- BookmarkedGrants
 CREATE TABLE BookmarkedGrants (
     user_id INT UNSIGNED NOT NULL,
-    ref_number VARCHAR(50) NOT NULL,
+    grant_id INT UNSIGNED NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id, ref_number),
-    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
+    PRIMARY KEY (user_id, grant_id),
+    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (grant_id) REFERENCES ResearchGrant(grant_id) ON DELETE CASCADE
 );
 
 -- BookmarkedRecipients
