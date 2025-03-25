@@ -187,24 +187,8 @@ SELECT
             AND tg.amendments_history != ''
             AND tg.amendments_history != 'NULL'
             AND LEFT(tg.amendments_history, 1) = '['
-        THEN 
-            -- Try to validate it as JSON before using
-            CASE 
-                WHEN JSON_VALID(tg.amendments_history) THEN tg.amendments_history
-                ELSE NULL
-            END
-        -- Otherwise, create a basic amendment entry if we at least have start date
-        WHEN tg.agreement_start_date IS NOT NULL AND tg.agreement_start_date != ''
-        THEN 
-            JSON_ARRAY(
-                JSON_OBJECT(
-                    'amendment_number', IFNULL(tg.latest_amendment_number, '0'),
-                    'amendment_date', IFNULL(tg.amendment_date, tg.agreement_start_date),
-                    'agreement_value', CAST(REPLACE(REPLACE(IFNULL(tg.agreement_value, '0'), ',', ''), '$', '') AS DECIMAL(15,2)),
-                    'agreement_start_date', tg.agreement_start_date,
-                    'agreement_end_date', IFNULL(tg.agreement_end_date, tg.agreement_start_date)
-                )
-            )
+            AND JSON_VALID(tg.amendments_history)
+        THEN tg.amendments_history
         ELSE NULL
     END
 FROM temp_grants tg
