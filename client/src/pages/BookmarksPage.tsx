@@ -1,5 +1,5 @@
 // src/pages/BookmarksPage.tsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
     BookMarked,
     University,
@@ -15,7 +15,11 @@ import PageContainer from "@/components/common/layout/PageContainer";
 import PageHeader from "@/components/common/layout/PageHeader";
 import { Button } from "@/components/common/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAllBookmarks, useToggleBookmark } from "@/hooks/api/useBookmarks";
+import {
+    useAllBookmarks,
+    useToggleBookmark,
+    useBookmarkedEntities,
+} from "@/hooks/api/useBookmarks";
 import EntityCard from "@/components/common/ui/EntityCard";
 import { GrantCard } from "@/components/features/grants/GrantCard";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
@@ -26,8 +30,6 @@ import ErrorState from "@/components/common/ui/ErrorState";
 import { BookmarkType } from "@/types/bookmark";
 import { cn } from "@/utils/cn";
 import { Grant, Institute, Recipient, SearchHistory } from "@/types/models";
-import { useInstitutesByIds } from "@/hooks/api/useInstitutes";
-import { useRecipientsByIds } from "@/hooks/api/useRecipients";
 
 // Define the tab structure with correct bookmark types
 const tabs = [
@@ -50,11 +52,6 @@ export const BookmarksPage = () => {
     const { user } = useAuth();
     const { showNotification } = useNotification();
     const [activeTab, setActiveTab] = useState("Grants");
-    const [bookmarkedItems, setBookmarkedItems] = useState<
-        (Grant | Institute | Recipient | SearchHistory)[]
-    >([]);
-    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
-    const [detailsError, setDetailsError] = useState<string | null>(null);
 
     // Get the active tab type for the bookmark API
     const activeTabType =
@@ -69,77 +66,20 @@ export const BookmarksPage = () => {
         refetch: refetchBookmarks,
     } = useAllBookmarks(activeTabType, user?.user_id);
 
-    // Use specific hooks for each entity type
-    const bookmarkedGrants: Grant[] = [];
-
-    const { data: institutesByIds, isLoading: isLoadingInstitutesByIds } =
-        useInstitutesByIds(activeTabType === "institute" ? bookmarkedIds : []);
-
-    const { data: recipientsByIds = [], isLoading: isLoadingRecipientsByIds } =
-        useRecipientsByIds(activeTabType === "recipient" ? bookmarkedIds : []);
-
-    const searchHistoryItems: SearchHistory[] = [];
+    // Use the hook to get full bookmarked entities with details
+    const {
+        data: bookmarkedItems = [],
+        isLoading: isLoadingEntities,
+        isError: isEntitiesError,
+        error: entitiesError,
+    } = useBookmarkedEntities(activeTabType, user?.user_id);
 
     // Set up toggle bookmark mutation
     const toggleBookmarkMutation = useToggleBookmark(activeTabType);
 
-    // Process bookmarked items based on the active tab and filter from loaded data
-    useEffect(() => {
-        if (isLoadingBookmarks || bookmarkedIds.length === 0) {
-            setBookmarkedItems([]);
-            return;
-        }
-
-        setIsLoadingDetails(true);
-        setDetailsError(null);
-
-        try {
-            // Process items based on the tab type
-            switch (activeTabType) {
-                case "grant":
-                    // For grants, use placeholders or fetch from API
-                    setBookmarkedItems(bookmarkedGrants);
-                    break;
-
-                case "recipient":
-                    // Use the data from our recipientsByIds hook
-                    setBookmarkedItems(
-                        Array.isArray(recipientsByIds) ? recipientsByIds : []
-                    );
-                    break;
-
-                case "institute":
-                    // Use the data from our institutesByIds hook
-                    setBookmarkedItems(
-                        Array.isArray(institutesByIds) ? institutesByIds : []
-                    );
-                    break;
-
-                case "search":
-                    setBookmarkedItems(searchHistoryItems);
-                    break;
-            }
-        } catch (error) {
-            console.error("Error processing bookmarked items:", error);
-            setDetailsError(
-                error instanceof Error
-                    ? error.message
-                    : "Failed to load bookmark details"
-            );
-        } finally {
-            setIsLoadingDetails(false);
-        }
-    }, [
-        bookmarkedIds,
-        activeTabType,
-        institutesByIds,
-        recipientsByIds,
-        isLoadingBookmarks,
-    ]);
-
-    // Handle toggling a bookmark
-    const handleToggleBookmark = (id: number) => {
-        if (!user?.user_id) {
+    // Handle bookmarks
+    const toggleBookmark = (id: number | string) => {
+        if (!user || !user.user_id) {
             showNotification(
                 "You must be logged in to manage bookmarks",
                 "error"
@@ -147,40 +87,33 @@ export const BookmarksPage = () => {
             return;
         }
 
+        const isBookmarked = true; // Since we're on the bookmarks page, we're removing bookmarks
+
+        // Trigger the mutation
         toggleBookmarkMutation.mutate(
             {
                 user_id: user.user_id,
                 entity_id: id,
-                isBookmarked: true, // Since we're on the bookmarks page, we're removing bookmarks
+                isBookmarked,
             },
             {
                 onSuccess: () => {
-                    // Remove the item from the local state immediately for better UX
-                    setBookmarkedItems((current) =>
-                        current.filter((item) => {
-                            if (
-                                activeTabType === "grant" &&
-                                "ref_number" in item
-                            ) {
-                                return item.grant_id !== id;
-                            } else if (
-                                activeTabType === "institute" &&
-                                "institute_id" in item
-                            ) {
-                                return item.institute_id !== id;
-                            } else if (
-                                activeTabType === "recipient" &&
-                                "recipient_id" in item
-                            ) {
-                                return item.recipient_id !== id;
-                            }
-                            return true;
-                        })
-                    );
+                    // Refresh bookmark data after toggle
+                    refetchBookmarks();
                 },
             }
         );
     };
+
+    // Handle search rerun
+    const handleRerunSearch = (searchParams: any) => {
+        navigate("/search", { state: { searchParams } });
+    };
+
+    // Check for loading or error states
+    const isLoading = isLoadingBookmarks || isLoadingEntities;
+    const isError = isBookmarksError || isEntitiesError;
+    const errorMessage = bookmarksError || entitiesError;
 
     // If user is not logged in, show sign-in prompt
     if (!user) {
@@ -202,7 +135,7 @@ export const BookmarksPage = () => {
                     </p>
                     <Button
                         variant="primary"
-                        icon={LogIn}
+                        leftIcon={LogIn}
                         onClick={() => navigate("/auth")}
                     >
                         Sign In
@@ -215,12 +148,7 @@ export const BookmarksPage = () => {
     // Render bookmarked entities based on the active tab
     const renderBookmarkedItems = () => {
         // Show appropriate loading state
-        if (
-            isLoadingBookmarks ||
-            (activeTabType === "institute" && isLoadingInstitutesByIds) ||
-            (activeTabType === "recipient" && isLoadingRecipientsByIds) ||
-            isLoadingDetails
-        ) {
+        if (isLoading) {
             return (
                 <LoadingState
                     title={`Loading your bookmarked ${activeTab.toLowerCase()}...`}
@@ -231,27 +159,15 @@ export const BookmarksPage = () => {
             );
         }
 
-        if (isBookmarksError) {
+        if (isError) {
             return (
                 <ErrorState
                     title="Error Loading Bookmarks"
                     message={
-                        bookmarksError instanceof Error
-                            ? bookmarksError.message
+                        errorMessage instanceof Error
+                            ? errorMessage.message
                             : "Failed to load your bookmarks."
                     }
-                    onRetry={() => refetchBookmarks()}
-                    size="md"
-                    icon={XCircle}
-                />
-            );
-        }
-
-        if (detailsError) {
-            return (
-                <ErrorState
-                    title="Error Loading Details"
-                    message={detailsError}
                     onRetry={() => refetchBookmarks()}
                     size="md"
                     icon={XCircle}
@@ -304,7 +220,7 @@ export const BookmarksPage = () => {
                     </p>
                     <Button
                         variant="primary"
-                        icon={RefreshCw}
+                        leftIcon={RefreshCw}
                         onClick={() => refetchBookmarks()}
                     >
                         Try Again
@@ -317,32 +233,14 @@ export const BookmarksPage = () => {
         if (activeTabType === "search") {
             return (
                 <div className="space-y-4">
-                    {bookmarkedItems.map((item) => {
-                        if ("id" in item && "search_params" in item) {
-                            return (
-                                <SearchHistoryCard
-                                    key={item.history_id}
-                                    search={item as SearchHistory}
-                                    onRerun={(params) =>
-                                        navigate("/search", {
-                                            state: { searchParams: params },
-                                        })
-                                    }
-                                    onDelete={(historyId) =>
-                                        setBookmarkedItems((current) =>
-                                            current.filter(
-                                                (item) =>
-                                                    (item as SearchHistory)
-                                                        .history_id !==
-                                                    historyId
-                                            )
-                                        )
-                                    }
-                                />
-                            );
-                        }
-                        return null;
-                    })}
+                    {bookmarkedItems.map((item: any) => (
+                        <SearchHistoryCard
+                            key={item.history_id}
+                            search={item as SearchHistory}
+                            onRerun={handleRerunSearch}
+                            onDelete={(historyId) => toggleBookmark(historyId)}
+                        />
+                    ))}
                 </div>
             );
         }
@@ -350,23 +248,22 @@ export const BookmarksPage = () => {
         // Render the grid of bookmarked items for other tab types
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {bookmarkedItems.map((item) => {
+                {bookmarkedItems.map((item: any) => {
                     // Render different entity cards based on the active tab
-                    if (activeTabType === "grant" && "ref_number" in item) {
+                    if (activeTabType === "grant") {
                         return (
                             <GrantCard
-                                key={item.ref_number}
+                                key={item.grant_id || item.ref_number}
                                 grant={item as Grant}
                                 isBookmarked={true}
                                 onBookmark={() =>
-                                    handleToggleBookmark(item.grant_id || 0)
+                                    toggleBookmark(
+                                        item.grant_id || item.ref_number
+                                    )
                                 }
                             />
                         );
-                    } else if (
-                        activeTabType === "institute" &&
-                        "institute_id" in item
-                    ) {
+                    } else if (activeTabType === "institute") {
                         return (
                             <EntityCard
                                 key={item.institute_id}
@@ -374,14 +271,11 @@ export const BookmarksPage = () => {
                                 entityType="institute"
                                 isBookmarked={true}
                                 onBookmark={() =>
-                                    handleToggleBookmark(item.institute_id || 0)
+                                    toggleBookmark(item.institute_id)
                                 }
                             />
                         );
-                    } else if (
-                        activeTabType === "recipient" &&
-                        "recipient_id" in item
-                    ) {
+                    } else if (activeTabType === "recipient") {
                         return (
                             <EntityCard
                                 key={item.recipient_id}
@@ -389,7 +283,7 @@ export const BookmarksPage = () => {
                                 entityType="recipient"
                                 isBookmarked={true}
                                 onBookmark={() =>
-                                    handleToggleBookmark(item.recipient_id || 0)
+                                    toggleBookmark(item.recipient_id)
                                 }
                             />
                         );

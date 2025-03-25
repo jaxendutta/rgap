@@ -76,6 +76,8 @@ const RecipientHeader = ({
             actions={actions}
             isBookmarked={isBookmarked}
             onToggleBookmark={toggleBookmark}
+            entityType="recipient"
+            entityId={recipient.recipient_id}
         />
     );
 };

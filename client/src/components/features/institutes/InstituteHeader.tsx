@@ -64,6 +64,8 @@ const InstituteHeader = ({
             actions={actions}
             isBookmarked={isBookmarked}
             onToggleBookmark={toggleBookmark}
+            entityType="institute"
+            entityId={institute.institute_id}
         />
     );
 };

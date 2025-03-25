@@ -54,12 +54,12 @@ const InstituteStats = ({
         {
             icon: GraduationCap,
             label: "Recipients",
-            value: uniqueRecipientCount,
+            value: uniqueRecipientCount.toLocaleString(),
         },
         {
             icon: BookMarked,
             label: "Total Grants",
-            value: uniqueGrantCount,
+            value: uniqueGrantCount.toLocaleString(),
         },
         {
             icon: DollarSign,

@@ -25,7 +25,6 @@ interface InstituteDetailsResponse {
         recipients: Array<{
             recipient_id: number;
             legal_name: string;
-            type: string;
             grant_count: number;
             total_funding: number;
         }>;

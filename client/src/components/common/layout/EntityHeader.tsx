@@ -1,8 +1,9 @@
-// src/components/common/ui/EntityHeader.tsx
-import React from "react";
-import { LucideIcon, BookmarkPlus, BookmarkCheck } from "lucide-react";
-import { Button } from "../ui/Button";
-import { cn } from "@/utils/cn";
+// src/components/common/layout/EntityHeader.tsx
+import { LucideIcon, BookMarked } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/common/ui/Button";
+import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
+import { BookmarkType } from "@/types/bookmark";
 
 export interface MetadataItem {
     icon: LucideIcon;
@@ -12,142 +13,114 @@ export interface MetadataItem {
 
 export interface ActionButton {
     icon: LucideIcon;
-    label?: string;
+    label: string;
     onClick: () => void;
-    active?: boolean;
     variant?: "primary" | "secondary" | "outline";
 }
 
 interface EntityHeaderProps {
     title: string;
     subtitle?: string;
-    icon?: LucideIcon;
-    metadata?: MetadataItem[];
+    icon: LucideIcon;
+    metadata: MetadataItem[];
     actions?: ActionButton[];
-    isBookmarked?: boolean;
-    onToggleBookmark?: () => void;
-    className?: string;
+    isBookmarked: boolean;
+    onToggleBookmark: () => void;
+    entityType?: BookmarkType;
+    entityId?: number;
 }
 
 const EntityHeader: React.FC<EntityHeaderProps> = ({
     title,
     subtitle,
-    icon: IconComponent,
-    metadata = [],
+    icon: Icon,
+    metadata,
     actions = [],
     isBookmarked,
     onToggleBookmark,
-    className,
+    entityType,
+    entityId,
 }) => {
-    // Process bookmark if provided
-    const allActions = [...actions];
-    if (typeof isBookmarked !== "undefined" && onToggleBookmark) {
-        allActions.push({
-            icon: isBookmarked ? BookmarkCheck : BookmarkPlus,
-            onClick: onToggleBookmark,
-            active: isBookmarked,
-        });
-    }
-
     return (
-        <div
-            className={cn(
-                "p-4 lg:p-6 pb-4 border-b border-gray-100",
-                className
-            )}
-        >
-            <div className="flex flex-row justify-between">
-                <div className="space-y-2 w-full">
-                    <div className="flex flex-col lg:flex-row items-start gap-3">
-                        <div className="flex flex-row items-start justify-between w-full lg:w-auto">
-                            {IconComponent && (
-                                <IconComponent className="h-6 w-6 text-blue-600 mt-1 shrink-0" />
-                            )}
-                            <div className="lg:hidden flex items-start gap-1">
-                                {/* Mobile actions */}
-                                {allActions.map((action, index) => (
-                                    <Button
-                                        key={index}
-                                        onClick={action.onClick}
-                                        variant={action.variant || "secondary"}
-                                        className={cn(
-                                            "p-1 transition-colors hover:bg-gray-50",
-                                            action.active
-                                                ? "text-blue-600 hover:text-blue-700"
-                                                : "text-gray-400 hover:text-gray-600"
-                                        )}
-                                        aria-label={action.label || "Action"}
-                                    >
-                                        {React.createElement(action.icon, {
-                                            className: "h-6 w-6",
-                                        })}
-                                    </Button>
-                                ))}
-                            </div>
-                        </div>
+        <div className="p-4 lg:p-6">
+            <div className="flex flex-col-reverse lg:flex-row lg:justify-between lg:items-start gap-4">
+                {/* Left side: Entity Info */}
+                <div className="flex-1 flex flex-col gap-3">
+                    {/* Entity Title */}
+                    <div className="flex items-start gap-2">
+                        <Icon className="h-7 w-7 text-blue-600 mt-1 flex-shrink-0" />
                         <div>
-                            <h1 className="text-xl lg:text-2xl font-bold text-gray-900">
+                            <h1 className="text-2xl font-bold text-gray-900">
                                 {title}
                             </h1>
                             {subtitle && (
-                                <p className="text-gray-600">{subtitle}</p>
+                                <p className="text-gray-500 mt-1">{subtitle}</p>
                             )}
-                            <div className="flex flex-wrap items-center text-gray-600 mt-1 gap-x-4 gap-y-1">
-                                {metadata.map((item, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center gap-1.5"
-                                    >
-                                        {item.href ? (
-                                            <a
-                                                href={item.href}
-                                                className="flex items-center gap-1.5 hover:text-blue-600 transition-colors"
-                                            >
-                                                {React.createElement(
-                                                    item.icon,
-                                                    {
-                                                        className:
-                                                            "h-4 w-4 flex-shrink-0",
-                                                    }
-                                                )}
-                                                <span>{item.text}</span>
-                                            </a>
-                                        ) : (
-                                            <>
-                                                {React.createElement(
-                                                    item.icon,
-                                                    {
-                                                        className:
-                                                            "h-4 w-4 flex-shrink-0",
-                                                    }
-                                                )}
-                                                <span>{item.text}</span>
-                                            </>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
                         </div>
                     </div>
+
+                    {/* Metadata */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 mt-1">
+                        {metadata.map((item, index) => (
+                            <div
+                                key={index}
+                                className="flex items-center text-gray-600"
+                            >
+                                <item.icon className="h-4 w-4 mr-2" />
+                                {item.href ? (
+                                    <Link
+                                        to={item.href}
+                                        className="hover:text-blue-600 transition-colors"
+                                    >
+                                        {item.text}
+                                    </Link>
+                                ) : (
+                                    <span>{item.text}</span>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                <div className="hidden lg:flex flex-row items-start gap-3 mt-4 lg:mt-0">
-                    {/* Desktop actions */}
-                    {allActions.map((action, index) => (
+
+                {/* Right side: Actions */}
+                <div className="flex flex-wrap gap-2 self-end lg:self-start">
+                    {/* Replace direct bookmark button with BookmarkButton component */}
+                    {entityType && entityId && (
+                        <BookmarkButton
+                            entityId={entityId}
+                            entityType={entityType}
+                            isBookmarked={isBookmarked}
+                            variant="button"
+                            size="md"
+                            onBookmarkChange={onToggleBookmark}
+                        />
+                    )}
+
+                    {/* If entityType/entityId are not provided, use the original toggle method */}
+                    {(!entityType || !entityId) && (
+                        <Button
+                            variant="outline"
+                            leftIcon={isBookmarked ? BookMarked : BookMarked}
+                            onClick={onToggleBookmark}
+                            className={
+                                isBookmarked
+                                    ? "text-blue-600 border-blue-300 bg-blue-50"
+                                    : ""
+                            }
+                        >
+                            {isBookmarked ? "Bookmarked" : "Bookmark"}
+                        </Button>
+                    )}
+
+                    {/* Other action buttons */}
+                    {actions.map((action, index) => (
                         <Button
                             key={index}
+                            variant={action.variant || "outline"}
+                            leftIcon={action.icon}
                             onClick={action.onClick}
-                            variant={action.variant || "secondary"}
-                            className={cn(
-                                "p-1 transition-colors hover:bg-gray-50",
-                                action.active
-                                    ? "text-blue-600 hover:text-blue-700"
-                                    : "text-gray-400 hover:text-gray-600"
-                            )}
-                            aria-label={action.label || "Action"}
                         >
-                            {React.createElement(action.icon, {
-                                className: "h-6 w-6",
-                            })}
+                            {action.label}
                         </Button>
                     ))}
                 </div>

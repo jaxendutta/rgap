@@ -1,8 +1,6 @@
 // src/components/common/ui/EntityCard.tsx
 import { Link, useNavigate } from "react-router-dom";
 import {
-    BookmarkPlus,
-    BookmarkCheck,
     MapPin,
     University,
     Users,
@@ -21,9 +19,8 @@ import { Button } from "@/components/common/ui/Button";
 import Tag, { TagGroup } from "@/components/common/ui/Tag";
 import { Institute, Recipient } from "@/types/models";
 import { cn } from "@/utils/cn";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNotification } from "@/components/features/notifications/NotificationProvider";
 import { EntityType } from "@/constants/data";
+import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
 
 export type Entity = "institute" | "recipient";
 
@@ -58,8 +55,6 @@ const EntityCard = ({
     className,
 }: EntityCardProps) => {
     const navigate = useNavigate();
-    const { user } = useAuth();
-    const { showNotification } = useNotification();
 
     // Type guards to distinguish between institute and recipient
     const isInstitute = (): boolean => {
@@ -105,21 +100,6 @@ const EntityCard = ({
         : null;
     const latestDate = latestGrantDate ?? entity.latest_grant_date;
 
-    // Handle login check for bookmarking
-    const handleBookmarkClick = () => {
-        if (!user || !user.user_id) {
-            showNotification(
-                "You must be logged in to bookmark items",
-                "error"
-            );
-            return;
-        }
-
-        if (onBookmark) {
-            onBookmark();
-        }
-    };
-
     // Handle error state
     if (isError) {
         return (
@@ -129,7 +109,7 @@ const EntityCard = ({
                     <div className="flex space-x-2">
                         <Button
                             variant="outline"
-                            icon={ChevronLeft}
+                            leftIcon={ChevronLeft}
                             onClick={() =>
                                 navigate(
                                     `/${
@@ -246,26 +226,15 @@ const EntityCard = ({
                     </span>
                 </Link>
 
-                {onBookmark && (
-                    <button
-                        onClick={handleBookmarkClick}
-                        className={cn(
-                            "p-1 rounded-full transition-colors hover:bg-gray-50 flex-shrink-0",
-                            isBookmarked
-                                ? "text-blue-600 hover:text-blue-700"
-                                : "text-gray-400 hover:text-gray-600"
-                        )}
-                        aria-label={
-                            isBookmarked ? "Remove bookmark" : "Add bookmark"
-                        }
-                    >
-                        {isBookmarked ? (
-                            <BookmarkCheck className="h-5 w-5" />
-                        ) : (
-                            <BookmarkPlus className="h-5 w-5" />
-                        )}
-                    </button>
-                )}
+                {/* Use BookmarkButton instead of manual bookmark button */}
+                <BookmarkButton
+                    entityId={id}
+                    entityType={entityType}
+                    isBookmarked={isBookmarked}
+                    size="md"
+                    variant="icon"
+                    onBookmarkChange={onBookmark}
+                />
             </div>
 
             {/* Metadata Tags - Keep them single line with overflow handling */}

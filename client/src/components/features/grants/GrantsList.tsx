@@ -55,7 +55,7 @@ const GrantsList: React.FC<GrantsListProps> = ({
     initialSortConfig = { field: "date", direction: "desc" },
     emptyMessage = "No grants found.",
     contextData = {},
-    showVisualization = true,
+    showVisualization = false,
     visualizationInitiallyVisible = false,
     viewContext = "search",
     doNotShowVisualizationToggle = false,
@@ -183,9 +183,7 @@ const GrantsList: React.FC<GrantsListProps> = ({
     const user_id = user?.user_id;
     const bookmarkType = "grant";
 
-    const {
-        data: bookmarkedIds = [],
-    } = useAllBookmarks(bookmarkType, user_id);
+    const { data: bookmarkedIds = [] } = useAllBookmarks(bookmarkType, user_id);
     const toggleBookmarkMutation = useToggleBookmark(bookmarkType);
 
     // Use notification to show bookmark status
@@ -216,9 +214,9 @@ const GrantsList: React.FC<GrantsListProps> = ({
         <GrantCard
             grant={grant}
             isBookmarked={
-                grant.ref_number ? bookmarkedIds.includes(grant.ref_number) : false
+                grant.grant_id ? bookmarkedIds.includes(grant.grant_id) : false
             }
-            onBookmark={() => grant.ref_number && toggleBookmark(grant.ref_number)}
+            onBookmark={() => grant.grant_id && toggleBookmark(grant.grant_id)}
         />
     );
 

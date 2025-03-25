@@ -163,7 +163,7 @@ function EntityList<T>({
                         <Button
                             variant="secondary"
                             size="sm"
-                            icon={visualizationToggle.isVisible ? X : LineChart}
+                            leftIcon={visualizationToggle.isVisible ? X : LineChart}
                             onClick={visualizationToggle.toggle}
                             disabled={items.length === 0}
                             className="lg:space-x-2"
@@ -214,7 +214,7 @@ function EntityList<T>({
                     ) : hasNextPage ? (
                         <Button
                             variant="outline"
-                            icon={MoreHorizontal}
+                            leftIcon={MoreHorizontal}
                             onClick={() => infiniteQuery.fetchNextPage()}
                         >
                             Load More

@@ -226,9 +226,9 @@ print_status "Setting up database..."
 if [ "$INTERACTIVE" = true ]; then
     echo
     echo "Database setup options:"
-    echo "1) Use sample data (35K+ records, faster setup)"
+    echo "1) Use sample data (40K records, faster setup)"
     echo "2) Use filtered dataset (subset with specific criteria)"
-    echo "3) Use full dataset (231K+ records, comprehensive but slower)"
+    echo "3) Use full dataset (175K+ records, comprehensive but slower)"
     echo
     read -p "Choose an option [1/2/3] (default: 1): " data_choice
 

@@ -7,7 +7,7 @@ import authRoutes from "./routes/authRoutes.js";
 import searchRoutes from "./routes/searchRoutes.js";
 import recipientRoutes from "./routes/recipientRoutes.js";
 import instituteRoutes from "./routes/instituteRoutes.js";
-import saveRoutes from "./routes/saveRoutes.js";
+import bookmarkRoutes from "./routes/bookmarkRoutes.js";
 import searchHistoryRoutes from "./routes/searchHistoryRoutes.js";
 
 const app = express();
@@ -54,7 +54,7 @@ app.use("/auth", authRoutes);
 app.use("/search", searchRoutes);
 app.use("/recipients", recipientRoutes);
 app.use("/institutes", instituteRoutes);
-app.use("/save", saveRoutes);
+app.use("/bookmark", bookmarkRoutes);
 app.use("/search-history", searchHistoryRoutes);
 
 // Error handling middleware

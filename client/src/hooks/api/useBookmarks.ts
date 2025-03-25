@@ -5,178 +5,174 @@ import { BookmarkType } from "@/types/bookmark";
 import createAPI from "@/utils/api";
 import { formatSentenceCase } from "@/utils/format";
 
-const API = createAPI(15000); // Increase timeout to 15 seconds
-
-// Configure retry logic for specific error codes
-API.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        // If we get a 409 Conflict from the server (temporary table issue)
-        if (error.response?.status === 409 && error.response?.data?.retryable) {
-            console.log(
-                "Received retryable error, attempting to retry the request..."
-            );
-
-            // Wait a short delay before retrying
-            await new Promise((resolve) => setTimeout(resolve, 500));
-
-            // Retry the request
-            return API(error.config);
-        }
-
-        // For all other errors, just reject the promise
-        return Promise.reject(error);
-    }
-);
+const API = createAPI();
 
 export const bookmarkKeys = {
     all: ["bookmarks"] as const,
     type: (bookmarkType: BookmarkType) =>
         [...bookmarkKeys.all, bookmarkType] as const,
+    user: (userId: number | null | undefined) =>
+        [...bookmarkKeys.all, userId] as const,
+    userType: (bookmarkType: BookmarkType, userId: number | null | undefined) =>
+        [...bookmarkKeys.type(bookmarkType), userId] as const,
 };
 
+/**
+ * Hook to fetch all bookmarked IDs for a given entity type and user
+ */
 export function useAllBookmarks(
     bookmarkType: BookmarkType,
-    user_id: number | undefined | null
+    userId: number | null | undefined
 ) {
     return useQuery({
-        queryKey: [...bookmarkKeys.type(bookmarkType), user_id],
+        queryKey: bookmarkKeys.userType(bookmarkType, userId),
         queryFn: async () => {
             // Skip the API call if user_id is not present
-            if (!user_id) {
+            if (!userId) {
                 return [];
             }
 
             try {
-                // Special handling for search bookmarks since there's no endpoint yet
-                if (bookmarkType === "search") {
-                    // Return empty array for now or mock data if needed
-                    // In a production app, you would implement the server endpoint
-                    console.log(
-                        "Search bookmarks functionality not implemented on server yet"
-                    );
-                    return [];
-                }
-
-                const response = await API.get<any[]>(
-                    `/save/${bookmarkType}/id/${user_id}`
+                const response = await API.get(
+                    `/bookmark/${bookmarkType}/ids/${userId}`
                 );
-
-                // For grants, we now get ref_number instead of ref_number
-                if (bookmarkType === "grant") {
-                    const idsArray = response.data.map(
-                        (entry) => entry.ref_number
-                    );
-                    return idsArray;
-                }
-
-                // For recipients and institutes, we still get the respective IDs
-                const idsArray = response.data.map(
-                    (entry) => Object.values(entry)[0] as number
-                );
-                return idsArray;
+                return response.data;
             } catch (error) {
                 console.error(
                     `Error fetching ${bookmarkType} bookmarks:`,
                     error
                 );
-                // Return empty array on error instead of throwing
                 return [];
             }
         },
-        enabled: !!user_id, // Only run query if user_id exists
-        staleTime: 5 * 60 * 1000,
-        gcTime: 10 * 60 * 1000,
-        retry: 1, // Only retry once
+        enabled: !!userId, // Only run query if userId exists
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 10 * 60 * 1000, // 10 minutes
+    });
+}
+
+/**
+ * Hook to fetch all bookmarked entities with their details
+ */
+export function useBookmarkedEntities(
+    bookmarkType: BookmarkType,
+    userId: number | null | undefined
+) {
+    return useQuery({
+        queryKey: [...bookmarkKeys.userType(bookmarkType, userId), "details"],
+        queryFn: async () => {
+            // Skip the API call if user_id is not present
+            if (!userId) {
+                return [];
+            }
+
+            try {
+                const response = await API.get(
+                    `/bookmark/${bookmarkType}/${userId}`
+                );
+                return response.data;
+            } catch (error) {
+                console.error(
+                    `Error fetching ${bookmarkType} bookmarks:`,
+                    error
+                );
+                return [];
+            }
+        },
+        enabled: !!userId, // Only run query if userId exists
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 10 * 60 * 1000, // 10 minutes
     });
 }
 
 interface ToggleBookmarkVariables {
     user_id: number;
-    entity_id: number | string; // Can be either grant ref_number (string) or ID (number)
+    entity_id: number | string;
     isBookmarked: boolean;
 }
 
+/**
+ * Hook to toggle bookmark status (add or remove)
+ */
 export function useToggleBookmark(bookmarkType: BookmarkType) {
     const queryClient = useQueryClient();
     const { showNotification } = useNotification();
 
-    return useMutation<
-        void,
-        Error,
-        ToggleBookmarkVariables,
-        { prevBookmarks: (number | string)[]; queryKey: (string | number)[] }
-    >({
-        mutationFn: async ({ user_id, entity_id, isBookmarked }) => {
-            // Special handling for search bookmarks
-            if (bookmarkType === "search") {
-                // This is a placeholder since the search bookmark API is not implemented yet
-                console.log(
-                    `Would ${
-                        isBookmarked ? "remove" : "add"
-                    } search bookmark ${entity_id}`
-                );
-                // In a real app, we would implement the API call
-                return;
-            }
-
+    return useMutation({
+        mutationFn: async ({
+            user_id,
+            entity_id,
+            isBookmarked,
+        }: ToggleBookmarkVariables) => {
             if (isBookmarked) {
                 // Remove bookmark
-                await API.delete(`/save/${bookmarkType}/${entity_id}`, {
+                await API.delete(`/bookmark/${bookmarkType}/${entity_id}`, {
                     data: { user_id },
                 });
             } else {
                 // Add bookmark
-                await API.post(`/save/${bookmarkType}/${entity_id}`, {
+                await API.post(`/bookmark/${bookmarkType}/${entity_id}`, {
                     user_id,
                 });
             }
         },
         onMutate: async ({ user_id, entity_id, isBookmarked }) => {
-            const queryKey = [...bookmarkKeys.type(bookmarkType), user_id];
-            await queryClient.cancelQueries({ queryKey });
+            // Cancel any outgoing refetches
+            await queryClient.cancelQueries({
+                queryKey: bookmarkKeys.userType(bookmarkType, user_id),
+            });
 
-            const prevBookmarks =
-                queryClient.getQueryData<(number | string)[]>(queryKey) || [];
+            // Snapshot the previous value
+            const previousIds =
+                queryClient.getQueryData<any[]>(
+                    bookmarkKeys.userType(bookmarkType, user_id)
+                ) || [];
 
-            // Optimistically update UI
-            queryClient.setQueryData<(number | string)[]>(
-                queryKey,
-                (prev = []) =>
-                    isBookmarked
-                        ? prev.filter((id) => id !== entity_id)
-                        : [...prev, entity_id]
+            // Optimistically update to the new value
+            queryClient.setQueryData(
+                bookmarkKeys.userType(bookmarkType, user_id),
+                (old: any[] = []) => {
+                    if (isBookmarked) {
+                        return old.filter((id) => id !== entity_id);
+                    } else {
+                        return [...old, entity_id];
+                    }
+                }
             );
 
-            return { prevBookmarks, queryKey };
+            // Return a context object with the previous value
+            return { previousIds };
         },
-        onError: (_, __, context) => {
-            if (context && context.prevBookmarks) {
-                // Revert to previous state on error
+        onError: (err, variables, context) => {
+            if (context) {
+                // Reset to the previous value on error
                 queryClient.setQueryData(
-                    context.queryKey,
-                    context.prevBookmarks
-                );
-                showNotification(
-                    "Failed to update bookmark. Please try again.",
-                    "error"
+                    bookmarkKeys.userType(bookmarkType, variables.user_id),
+                    context.previousIds
                 );
             }
+            showNotification(
+                `Failed to ${
+                    variables.isBookmarked ? "remove" : "add"
+                } bookmark: ${err}. Please try again.`,
+                "error"
+            );
         },
         onSuccess: (_, { isBookmarked }) => {
+            // Show success notification
             showNotification(
                 isBookmarked
                     ? `${formatSentenceCase(
                           bookmarkType
-                      )} removed from bookmarks!`
-                    : `${formatSentenceCase(bookmarkType)} bookmarked!`,
+                      )} removed from bookmarks`
+                    : `${formatSentenceCase(bookmarkType)} added to bookmarks`,
                 "success"
             );
         },
         onSettled: (_, __, { user_id }) => {
-            // Always invalidate the query to ensure data is fresh
+            // Invalidate the relevant queries
             queryClient.invalidateQueries({
-                queryKey: [...bookmarkKeys.type(bookmarkType), user_id],
+                queryKey: bookmarkKeys.userType(bookmarkType, user_id),
             });
         },
     });

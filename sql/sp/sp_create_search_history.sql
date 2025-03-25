@@ -25,7 +25,7 @@ BEGIN
             search_filters,
             search_time,
             result_count,
-            saved
+            bookmarked
         )
         VALUES (
             p_user_id,

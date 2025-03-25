@@ -10,6 +10,6 @@ CREATE TABLE SearchHistory (
    search_filters JSON,
    search_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
    result_count INT,
-   saved BOOLEAN NOT NULL,
+   bookmarked BOOLEAN NOT NULL,
    FOREIGN KEY (user_id) REFERENCES User(user_id)
 );

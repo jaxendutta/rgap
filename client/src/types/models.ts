@@ -96,4 +96,5 @@ export interface SearchHistory {
     search_time: Date;
     search_params: GrantSearchParams;
     result_count: number;
+    bookmarked: boolean;
 }

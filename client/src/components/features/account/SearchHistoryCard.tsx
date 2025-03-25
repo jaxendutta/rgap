@@ -15,6 +15,7 @@ import { FILTER_LIMITS } from "@/constants/filters";
 import Tag, { TagGroup } from "@/components/common/ui/Tag";
 import { SearchHistory } from "@/types/models";
 import { GrantSearchParams } from "@/types/search";
+import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
 
 interface SearchHistoryCardProps {
     search: SearchHistory;
@@ -211,18 +212,30 @@ export const SearchHistoryCard = ({
 
                     {/* Actions row */}
                     <div className="flex gap-2 items-center justify-end">
+                        {/* Bookmark Button */}
+                        <BookmarkButton
+                            entityId={search.history_id}
+                            entityType="search"
+                            isBookmarked={search.bookmarked}
+                            size="sm"
+                            variant="icon"
+                        />
+
+                        {/* Run Search Button */}
                         <Button
                             variant="secondary"
                             size="sm"
-                            icon={Search}
+                            leftIcon={Search}
                             onClick={() => onRerun(searchParams)}
                         >
                             <span className="hidden md:inline">Run Search</span>
                         </Button>
+
+                        {/* Delete Button */}
                         <Button
                             variant="outline"
                             size="sm"
-                            icon={Trash2}
+                            leftIcon={Trash2}
                             onClick={() => onDelete(search.history_id)}
                             className="text-red-600 hover:bg-red-50"
                         >

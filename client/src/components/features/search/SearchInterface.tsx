@@ -285,7 +285,7 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                 <Button
                     className="w-full lg:w-auto border-dashed border-amber-400 text-amber-700 hover:bg-amber-100 hover:border-solid transition-all duration-200"
                     variant="outline"
-                    icon={SearchIcon}
+                    leftIcon={SearchIcon}
                     onClick={performSearch}
                     size="sm"
                 >
@@ -322,7 +322,7 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                                     ? "primary"
                                     : "secondary"
                             }
-                            icon={Sparkles}
+                            leftIcon={Sparkles}
                             onClick={() => togglePanel("popular")}
                             className={cn(
                                 activePanelType === "popular"
@@ -345,7 +345,7 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                                 ? "primary"
                                 : "secondary"
                         }
-                        icon={SlidersHorizontal}
+                        leftIcon={SlidersHorizontal}
                         onClick={() => togglePanel("filters")}
                         className={cn(
                             activePanelType === "filters"
@@ -362,7 +362,9 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                     {onBookmark && (
                         <Button
                             variant="secondary"
-                            icon={isBookmarked ? BookmarkCheck : BookmarkPlus}
+                            leftIcon={
+                                isBookmarked ? BookmarkCheck : BookmarkPlus
+                            }
                             onClick={onBookmark}
                             className={cn(
                                 isBookmarked
@@ -376,7 +378,7 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                     <Button
                         id="search-button"
                         variant="primary"
-                        icon={SearchIcon}
+                        leftIcon={SearchIcon}
                         onClick={performSearch}
                         className="bg-gray-900 hover:bg-gray-800"
                     >

@@ -76,7 +76,7 @@ const InstituteProfilePage = () => {
         },
         {
             id: "analytics",
-            label: "Detailed Analytics",
+            label: "Analytics",
             icon: PieChart,
         },
     ];
@@ -137,7 +137,7 @@ const InstituteProfilePage = () => {
                         }}
                         emptyMessage="This institute has no associated grants in our database."
                         showVisualization={true}
-                        visualizationInitiallyVisible={true}
+                        visualizationInitiallyVisible={false}
                         viewContext="institute"
                     />
                 );
@@ -172,9 +172,10 @@ const InstituteProfilePage = () => {
                                             );
 
                                         const percentage =
-                                            institute.total_funding > 0
+                                            (institute.total_funding ?? 0) > 0
                                                 ? (agencyTotal /
-                                                      institute.total_funding) *
+                                                      (institute.total_funding ??
+                                                          1)) *
                                                   100
                                                 : 0;
 
@@ -267,7 +268,8 @@ const InstituteProfilePage = () => {
 
                                                 const percentOfTotal =
                                                     (top3Funding /
-                                                        institute.total_funding) *
+                                                        (institute.total_funding ??
+                                                            1)) *
                                                     100;
                                                 return `${percentOfTotal.toFixed(
                                                     1
@@ -305,7 +307,7 @@ const InstituteProfilePage = () => {
                                                     }
                                                 );
 
-                                                return `${activeCount} / ${institute.recipients.length}`;
+                                                return `${activeCount.toLocaleString()} / ${institute.recipients.length.toLocaleString()}`;
                                             })(),
                                         },
                                     ],
@@ -364,17 +366,15 @@ const InstituteProfilePage = () => {
                                         {
                                             label: "Grants per Recipient",
                                             value:
-                                                institute.total_grants &&
-                                                institute.total_recipients
+                                                institute.grant_count &&
+                                                institute.recipients &&
+                                                institute.recipients.length > 0
                                                     ? (
-                                                          institute.total_grants /
-                                                          institute.total_recipients
+                                                          institute.grant_count /
+                                                          institute.recipients
+                                                              .length
                                                       ).toFixed(1)
                                                     : "N/A",
-                                        },
-                                        {
-                                            label: "Success Rate",
-                                            value: "N/A", // Would need additional data to calculate
                                         },
                                     ],
                                 },
