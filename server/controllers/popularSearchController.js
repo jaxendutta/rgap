@@ -22,6 +22,14 @@ import { pool } from "../config/db.js";
  *      frequency: number      // Number of times this term was searched
  *    }
  * - Results are ordered by frequency in descending order.
+ * 
+ * Example:
+ *   GET http://localhost:4000/popular-search/0
+ *   Body:
+ *   {
+ *     "date_start": "2024-01-01",
+ *     "date_end": "2024-12-31"
+ *   }
  */
 
 export const getPopularSearchTerms = async (req, res) => {
