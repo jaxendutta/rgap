@@ -207,3 +207,19 @@ export const searchGrants = async (req, res) => {
         });
     }
 };
+
+export const getPopularSearches = async (req, res) => {
+    /*
+    try {
+        // Use the stored procedure for popular searches
+        const [results] = await pool.query("CALL sp_get_popular_searches()");
+
+        const popularSearches = results[0].map((row) => row.search_term);
+
+        res.json(popularSearches);
+    } catch (error) {
+        console.error("Error fetching popular searches:", error);
+        res.status(500).json({ error: error.message });
+    }
+    */
+}
