@@ -1,10 +1,11 @@
 // src/components/features/institutes/InstituteHeader.tsx
-import { University, MapPin, CircleArrowOutUpRight } from "lucide-react";
+import { University, CircleArrowOutUpRight } from "lucide-react";
 import EntityHeader, {
     MetadataItem,
     ActionButton,
 } from "@/components/common/layout/EntityHeader";
 import { Institute } from "@/types/models";
+import { formatCommaSeparated } from "@/utils/format";
 
 const InstituteHeader = (institute: Institute) => {
     // Create a Google search URL for the institute
@@ -14,15 +15,6 @@ const InstituteHeader = (institute: Institute) => {
 
     // Prepare metadata for the EntityHeader
     const metadata: MetadataItem[] = [];
-
-    if (institute.city || institute.province || institute.country) {
-        metadata.push({
-            icon: MapPin,
-            text: `${institute.city ? `${institute.city}, ` : ""}${
-                institute.province || ""
-            }${institute.country ? `, ${institute.country}` : ""}`,
-        });
-    }
 
     // Prepare actions for the EntityHeader
     const actions: ActionButton[] = [
@@ -43,6 +35,11 @@ const InstituteHeader = (institute: Institute) => {
             actions={actions}
             entityType="institute"
             entityId={institute.institute_id}
+            location={formatCommaSeparated(
+                [institute.city, institute.province, institute.country].filter(
+                    Boolean
+                ) as string[]
+            )}
         />
     );
 };

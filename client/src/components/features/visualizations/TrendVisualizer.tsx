@@ -1,10 +1,10 @@
 // src/components/features/visualizations/TrendVisualizer.tsx
 import React, { useState, useMemo } from "react";
-import { LineChart, BarChart, BarChart2, DollarSign, Hash } from "lucide-react";
+import { DollarSign, Hash, ChartColumnStacked, ChartColumn, ChartSpline } from "lucide-react";
 import { Grant, GrantAmendment } from "@/types/models";
 import { Card } from "@/components/common/ui/Card";
 import { Dropdown } from "@/components/common/ui/Dropdown";
-import DataChart from "./DataChart";
+import DataChart from "@/components/features/visualizations/DataChart";
 import { cn } from "@/utils/cn";
 import { AMENDMENT_COLORS, getCategoryColor } from "@/utils/chartColors";
 import { prepareGrantsForVisualization } from "@/utils/chartDataTransforms";
@@ -474,11 +474,7 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
     // Special title for amendment view
     const effectiveTitle = isAmendmentView
         ? "Grant Amendment History"
-        : `${chartTitle}${
-              groupingDisplayOptions.find(
-                  (opt) => opt.value === groupingDimension
-              )?.label || ""
-          }`;
+        : chartTitle;
 
     return (
         <Card className={cn("p-6", className)}>
@@ -546,7 +542,7 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                                 "rounded-l-md"
                             )}
                         >
-                            <LineChart className="h-3.5 w-3.5" />
+                            <ChartSpline className="h-3.5 w-3.5" />
                             <span className="hidden md:inline">Line</span>
                         </button>
                         <button
@@ -558,7 +554,7 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                                     : "bg-white text-gray-500 hover:bg-gray-50 border-gray-200"
                             )}
                         >
-                            <BarChart className="h-3.5 w-3.5" />
+                            <ChartColumnStacked className="h-3.5 w-3.5" />
                             <span className="hidden md:inline">Stacked</span>
                         </button>
                         <button
@@ -571,7 +567,7 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                                 "rounded-r-md"
                             )}
                         >
-                            <BarChart2 className="h-3.5 w-3.5" />
+                            <ChartColumn className="h-3.5 w-3.5" />
                             <span className="hidden md:inline">Grouped</span>
                         </button>
                     </div>

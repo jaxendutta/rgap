@@ -1,12 +1,11 @@
 // src/components/features/recipients/RecipientsList.tsx
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
-import { DollarSign, BookMarked, Users, GraduationCap } from "lucide-react";
-import { formatCurrency } from "@/utils/format";
-import { Card } from "@/components/common/ui/Card";
+import { DollarSign, Users } from "lucide-react";
 import { useInfiniteInstituteRecipients } from "@/hooks/api/useInstitutes";
 import EntityList, { SortConfig } from "@/components/common/ui/EntityList";
 import { TrendVisualizer } from "@/components/features/visualizations/TrendVisualizer";
+import RecipientCard from "./RecipientCard";
+import { Recipient } from "@/types/models";
 
 interface RecipientsListProps {
     instituteId: string | number;
@@ -63,7 +62,7 @@ export const RecipientsList = ({
 
         // Extract and transform data for visualization
         // Group recipients by various attributes
-        const recipientData = recipients.map(recipient => ({
+        const recipientData = recipients.map((recipient) => ({
             ...recipient,
             // Ensure we have proper data types
             grant_count: Number(recipient.grant_count) || 0,
@@ -72,40 +71,26 @@ export const RecipientsList = ({
             recipient_id: recipient.recipient_id,
             legal_name: recipient.legal_name,
             // Add dummy agreement dates for visualization purposes
-            agreement_start_date: recipient.latest_grant_date || new Date().toISOString(),
+            agreement_start_date:
+                recipient.latest_grant_date || new Date().toISOString(),
             agreement_value: recipient.total_funding,
-            org: "Institute Recipient" // This could be replaced with actual org if available
+            org: "Institute Recipient", // This could be replaced with actual org if available
         }));
 
         return recipientData;
     }, [recipients]);
 
-    // Render recipient card
-    const renderRecipientItem = (recipient: any) => (
-        <Card className="p-4 hover:border-gray-300 transition-all">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
-                <div className="space-y-1">
-                    <Link
-                        to={`/recipients/${recipient.recipient_id}`}
-                        className="text-lg font-medium hover:text-blue-600 transition-colors flex items-center"
-                    >
-                        <GraduationCap className="h-4 w-4 mr-1.5 flex-shrink-0" />
-                        {recipient.legal_name}
-                    </Link>
-                    <div className="text-sm text-gray-500 flex items-center">
-                        <BookMarked className="h-4 w-4 mr-1.5 flex-shrink-0" />
-                        {recipient.grant_count} grants
-                    </div>
-                </div>
-                <div className="text-right">
-                    <div className="font-medium text-lg flex items-center justify-end">
-                        <DollarSign className="h-4 w-4 mr-1 flex-shrink-0" />
-                        {formatCurrency(recipient.total_funding)}
-                    </div>
-                </div>
-            </div>
-        </Card>
-    );
+    // Render recipient using the RecipientCard component
+    const renderRecipientItem = (recipient: Recipient) => {
+        // Log the recipient object to debug
+        console.log("Rendering recipient:", recipient);
+        return (
+            <RecipientCard
+                recipient={recipient}
+                className="hover:border-gray-300 transition-all"
+            />
+        );
+    };
 
     // Key extractor
     const keyExtractor = (recipient: any) =>
@@ -114,7 +99,7 @@ export const RecipientsList = ({
     // Visualization component
     const visualization = useMemo(() => {
         if (!showVisualization || transformedData.length === 0) return null;
-        
+
         return (
             <TrendVisualizer
                 grants={transformedData}
@@ -146,7 +131,10 @@ export const RecipientsList = ({
                 showVisualization
                     ? {
                           isVisible: isVisualizationVisible,
-                          toggle: () => setIsVisualizationVisible(!isVisualizationVisible),
+                          toggle: () =>
+                              setIsVisualizationVisible(
+                                  !isVisualizationVisible
+                              ),
                           showToggleButton: true,
                       }
                     : undefined
@@ -154,3 +142,5 @@ export const RecipientsList = ({
         />
     );
 };
+
+export default RecipientsList;

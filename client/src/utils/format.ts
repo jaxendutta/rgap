@@ -65,3 +65,7 @@ export const formatSentenceCase = (value: string): string => {
         )
         .join(" ");
 };
+
+export const formatCommaSeparated = (values: (string | null | undefined)[]): string => {
+    return values.filter(Boolean).join(", ");
+}

@@ -1,9 +1,12 @@
-// src/components/common/layout/EntityHeader.tsx
-import { LucideIcon } from "lucide-react";
+import { useState } from "react";
+import { LucideIcon, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/common/ui/Button";
 import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
 import { BookmarkType } from "@/types/bookmark";
+import { cn } from "@/utils/cn";
+import LocationMap from "@/components/common/ui/LocationMap";
+import { formatCommaSeparated } from "@/utils/format";
 
 // Define types for metadata and action items
 export interface MetadataItem {
@@ -27,6 +30,7 @@ interface EntityHeaderProps {
     actions?: ActionButton[];
     entityType?: BookmarkType;
     entityId?: number;
+    location?: string;
 }
 
 const EntityHeader: React.FC<EntityHeaderProps> = ({
@@ -37,17 +41,22 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
     actions = [],
     entityType,
     entityId,
+    location,
 }) => {
+    const [showMap, setShowMap] = useState(false);
+
+    // Check if we have a location string to display a map
+    const hasLocationData = !!location && location.trim() !== "";
+
     return (
-        <div className="p-4 md:p-6">
-            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
-                {/* Left side: Entity Info */}
-                <div className="flex-1 flex flex-col gap-3">
-                    {/* Entity Title */}
-                    <div className="flex items-start gap-2">
-                        <Icon className="h-7 w-7 text-blue-600 mt-1 flex-shrink-0" />
+        <div className="px-4 py-6 lg:px-6 lg:py-8 border-b border-gray-200">
+            <div className="flex-1 flex flex-col gap-1.5">
+                {/* Entity Title */}
+                <div className="flex items-start justify-between flex-wrap gap-4">
+                    <div className="flex items-start gap-3">
+                        <Icon className="h-5 w-5 lg:h-6 lg:w-6 text-blue-600 mt-1 flex-shrink-0" />
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">
+                            <h1 className="text-xl lg:text-2xl font-semibold text-gray-900">
                                 {title}
                             </h1>
                             {subtitle && (
@@ -55,54 +64,92 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                             )}
                         </div>
                     </div>
-
-                    {/* Metadata */}
-                    <div className="flex gap-x-6 gap-y-2">
-                        {metadata.map((item, index) => (
-                            <div
-                                key={index}
-                                className="flex items-center text-gray-600"
+                    <div className="flex flex-wrap gap-2 self-end lg:self-start">
+                        {/* Map toggle button - only show if we have location data */}
+                        {hasLocationData && (
+                            <Button
+                                variant="outline"
+                                leftIcon={MapPin}
+                                rightIcon={showMap ? ChevronUp : ChevronDown}
+                                size="sm"
+                                onClick={() => setShowMap(!showMap)}
+                                className="text-blue-600 border-blue-200 hover:bg-blue-50"
                             >
-                                <item.icon className="h-4 w-4 mr-2" />
-                                {item.href ? (
-                                    <Link
-                                        to={item.href}
-                                        className="hover:text-blue-600 transition-colors"
-                                    >
-                                        {item.text}
-                                    </Link>
-                                ) : (
-                                    <span>{item.text}</span>
+                                {formatCommaSeparated(
+                                    [location].filter(Boolean) as string[]
                                 )}
-                            </div>
+                            </Button>
+                        )}
+
+                        {/* Other action buttons */}
+                        {actions.map((action, index) => (
+                            <Button
+                                key={index}
+                                variant={action.variant || "outline"}
+                                leftIcon={action.icon}
+                                size="sm"
+                                onClick={action.onClick}
+                            >
+                                {<span className="hidden lg:inline">${action.label}</span>}
+                            </Button>
                         ))}
+
+                        {/* Add BookmarkButton if entityType and entityId are provided */}
+                        {entityType && entityId && (
+                            <BookmarkButton
+                                entityId={entityId}
+                                entityType={entityType}
+                                size="sm"
+                            />
+                        )}
                     </div>
                 </div>
 
-                {/* Right side: Actions */}
-                <div className="flex flex-wrap gap-2 self-end lg:self-start">
-                    {/* Add BookmarkButton if entityType and entityId are provided */}
-                    {entityType && entityId && (
-                        <BookmarkButton
-                            entityId={entityId}
-                            entityType={entityType}
-                            variant="button"
-                            size="md"
-                        />
-                    )}
-
-                    {/* Other action buttons */}
-                    {actions.map((action, index) => (
-                        <Button
+                {/* Metadata */}
+                {metadata.length > 0 && <div className="flex flex-wrap gap-3 mt-2">
+                    {metadata.map((item, index) => (
+                        <div
                             key={index}
-                            variant={action.variant || "outline"}
-                            leftIcon={action.icon}
-                            onClick={action.onClick}
+                            className="flex items-start text-gray-600"
                         >
-                            {action.label}
-                        </Button>
+                            {item.href ? (
+                                <Link
+                                    to={item.href}
+                                    className="flex items-start hover:text-blue-600 transition-colors"
+                                >
+                                    <item.icon className="h-4 w-4 mr-1.5 mt-0.5 flex-shrink-0" />
+                                    <span>{item.text}</span>
+                                </Link>
+                            ) : (
+                                <div className="flex items-start">
+                                    <item.icon className="h-4 w-4 mr-1.5 mt-0.5 flex-shrink-0" />
+                                    <span>{item.text}</span>
+                                </div>
+                            )}
+                        </div>
                     ))}
-                </div>
+                </div>}
+
+                {/* Map section - collapsible */}
+                {hasLocationData && (
+                    <div
+                        className={cn(
+                            "overflow-hidden transition-all duration-300 ease-in-out",
+                            showMap
+                                ? "max-h-96 opacity-100 mt-4"
+                                : "max-h-0 opacity-0"
+                        )}
+                    >
+                        <div className="border rounded-lg overflow-hidden bg-gray-50">
+                            <div className="p-4">
+                                <LocationMap
+                                    locationString={title + ", " + location}
+                                    height={300}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

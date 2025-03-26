@@ -36,6 +36,9 @@ export const responsive = {
   gridOnMobile: 'grid sm:hidden',
   gridOnTablet: 'hidden sm:grid md:hidden',
   gridOnDesktop: 'hidden lg:grid',
+
+  // Padding variants
+  padding: 'p-4 md:p-6 lg:p-6',
 };
 
 /**

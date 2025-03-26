@@ -62,11 +62,6 @@ export const SearchPage = () => {
         // Implement the actual bookmark functionality here
     };
 
-    const handleBookmarkGrant = (grantId: string) => {
-        console.log("Bookmarking grant:", grantId);
-        // Implement grant bookmarking here
-    };
-
     return (
         <PageContainer>
             {/* Header */}
@@ -106,7 +101,6 @@ export const SearchPage = () => {
                     infiniteQuery={infiniteQueryResult}
                     title="Grants"
                     initialSortConfig={sortConfig}
-                    onBookmark={handleBookmarkGrant}
                     emptyMessage={
                         isInitialState
                             ? "Enter search terms above to begin exploring grants."

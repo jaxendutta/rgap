@@ -38,13 +38,11 @@ import { TrendVisualizer } from "../visualizations/TrendVisualizer";
 interface GrantCardProps {
     grant: Grant;
     isBookmarked?: boolean;
-    onBookmark?: () => void;
 }
 
 export const GrantCard = ({
     grant,
-    isBookmarked,
-    onBookmark,
+    isBookmarked
 }: GrantCardProps) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [activeTab, setActiveTab] = useState<
@@ -199,8 +197,7 @@ export const GrantCard = ({
                                     entityType="grant"
                                     isBookmarked={isBookmarked}
                                     size="md"
-                                    variant="icon"
-                                    onBookmarkChange={onBookmark}
+                                    iconOnly={true}
                                 />
                             </div>
                         </div>

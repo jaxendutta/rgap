@@ -12,6 +12,7 @@ import {
     Landmark,
     Calendar,
     CircleDollarSign,
+    HandCoins,
 } from "lucide-react";
 import { formatCurrency } from "@/utils/format";
 import { Card } from "@/components/common/ui/Card";
@@ -33,7 +34,6 @@ interface EntityCardProps {
     firstGrantDate?: string;
     recipientsCount?: number;
     isBookmarked?: boolean;
-    onBookmark?: () => void;
     isError?: boolean;
     errorMessage?: string;
     onRetry?: () => void;
@@ -48,7 +48,6 @@ const EntityCard = ({
     latestGrantDate,
     recipientsCount,
     isBookmarked = false,
-    onBookmark,
     isError = false,
     errorMessage = "Unable to load data",
     onRetry,
@@ -70,7 +69,9 @@ const EntityCard = ({
         : (entity as Recipient).legal_name;
     const type = isInstitute()
         ? "Academic Institution"
-        : RecipientType[(entity as Recipient).type as keyof typeof RecipientType];
+        : RecipientType[
+              (entity as Recipient).type as keyof typeof RecipientType
+          ];
 
     // For recipients, get their institute info
     const institute =
@@ -196,7 +197,7 @@ const EntityCard = ({
               {
                   label: "Total Funding",
                   value: funding ? formatCurrency(funding) : "N/A",
-                  icon: CircleDollarSign,
+                  icon: HandCoins,
               },
           ];
 
@@ -226,14 +227,11 @@ const EntityCard = ({
                     </span>
                 </Link>
 
-                {/* Use BookmarkButton instead of manual bookmark button */}
                 <BookmarkButton
                     entityId={id}
                     entityType={entityType}
                     isBookmarked={isBookmarked}
-                    size="md"
-                    variant="icon"
-                    onBookmarkChange={onBookmark}
+                    iconOnly={true}
                 />
             </div>
 
@@ -265,21 +263,23 @@ const EntityCard = ({
 
             {/* Stats Section - Adaptive grid layout */}
             <div className="pt-3 border-t">
-                <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-wrap gap-2">
                     {statItems.map((stat, index) => (
                         <div
                             key={index}
-                            className="bg-white border border-gray-100 rounded-lg p-2"
+                            className="bg-white border border-gray-100 rounded-lg p-2 flex-1"
                         >
                             <div className="flex items-center text-xs text-blue-700 mb-1">
                                 {stat.icon && (
                                     <stat.icon
-                                        className={cn("h-3 w-3 mr-1.5")}
+                                        className={cn(
+                                            "h-3 w-3 mr-1.5 flex-shrink-0"
+                                        )}
                                     />
                                 )}
-                                {stat.label}
+                                <span className="truncate">{stat.label}</span>
                             </div>
-                            <div className="flex items-center font-medium whitespace-nowrap">
+                            <div className="flex items-center font-medium">
                                 <span className="truncate">{stat.value}</span>
                             </div>
                         </div>

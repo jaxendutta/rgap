@@ -109,7 +109,7 @@ export const RecipientProfilePage = () => {
                         }}
                         emptyMessage="This recipient has no associated grants in our database."
                         showVisualization={true}
-                        visualizationInitiallyVisible={true}
+                        visualizationInitiallyVisible={false}
                         viewContext="recipient"
                     />
                 );

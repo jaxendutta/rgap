@@ -7,7 +7,7 @@ import { useInfiniteInstituteGrants } from "@/hooks/api/useInstitutes";
 import EntityProfilePage from "@/components/common/pages/EntityProfilePage";
 import InstituteHeader from "@/components/features/institutes/InstituteHeader";
 import InstituteStats from "@/components/features/institutes/InstituteStats";
-import { RecipientsList } from "@/components/features/recipients/RecipientsList";
+import RecipientsList from "@/components/features/recipients/RecipientsList";
 import GrantsList from "@/components/features/grants/GrantsList";
 import { SortConfig } from "@/components/common/ui/EntityList";
 import { AnalyticsCards } from "@/components/common/ui/AnalyticsCards";
@@ -128,7 +128,7 @@ const InstituteProfilePage = () => {
                         }}
                         emptyMessage="This institute has no associated grants in our database."
                         showVisualization={true}
-                        visualizationInitiallyVisible={true}
+                        visualizationInitiallyVisible={false}
                         viewContext="institute"
                     />
                 );

@@ -6,17 +6,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
 import { useAllBookmarks, useToggleBookmark } from "@/hooks/api/useBookmarks";
 import { BookmarkType } from "@/types/bookmark";
+import { Button } from "@/components/common/ui/Button";
 
 interface BookmarkButtonProps {
     entityId: number | string;
     entityType: BookmarkType;
     isBookmarked?: boolean; // Optional override if you already know the state
     size?: "sm" | "md" | "lg";
-    variant?: "icon" | "button" | "text";
-    label?: string;
-    className?: string;
+    variant?: "primary" | "secondary" | "outline";
     iconOnly?: boolean;
-    onBookmarkChange?: (isBookmarked: boolean) => void;
+    className?: string;
 }
 
 export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
@@ -24,11 +23,9 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
     entityType,
     isBookmarked: externalIsBookmarked,
     size = "md",
-    variant = "icon",
-    label = "",
-    className,
+    variant = "secondary",
     iconOnly = false,
-    onBookmarkChange,
+    className,
 }) => {
     const { user } = useAuth();
     const { showNotification } = useNotification();
@@ -64,100 +61,60 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
             },
             {
                 onSuccess: () => {
-                    // Call the callback if provided
-                    if (onBookmarkChange) {
-                        onBookmarkChange(!isBookmarked);
-                    }
+                    showNotification(
+                        isBookmarked
+                            ? "Bookmark removed successfully"
+                            : "Bookmark added successfully",
+                        "success"
+                    );
                 },
             }
         );
     };
 
-    // Define size-specific classes
-    const sizeClasses = {
-        sm: "h-4 w-4",
-        md: "h-5 w-5",
-        lg: "h-6 w-6",
-    };
-
-    // Render based on variant
-    switch (variant) {
-        case "button":
-            return (
-                <button
-                    onClick={handleToggleBookmark}
-                    className={cn(
-                        "flex items-center gap-2 rounded-md px-3 py-1.5 transition-colors",
-                        isBookmarked
-                            ? "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                            : "bg-gray-50 text-gray-600 hover:bg-gray-100",
-                        className
-                    )}
-                >
-                    {isBookmarked ? (
-                        <BookmarkCheck className={sizeClasses[size]} />
-                    ) : (
-                        <BookmarkPlus className={sizeClasses[size]} />
-                    )}
-                    {!iconOnly && (
-                        <span className="text-sm font-medium">
-                            {label ||
-                                (isBookmarked ? "Bookmarked" : "Bookmark")}
-                        </span>
-                    )}
-                </button>
-            );
-
-        case "text":
-            return (
-                <button
-                    onClick={handleToggleBookmark}
-                    className={cn(
-                        "flex items-center gap-2 text-sm font-medium transition-colors",
-                        isBookmarked
-                            ? "text-blue-600"
-                            : "text-gray-600 hover:text-gray-800",
-                        className
-                    )}
-                >
-                    {isBookmarked ? (
-                        <BookmarkCheck className={sizeClasses[size]} />
-                    ) : (
-                        <BookmarkPlus className={sizeClasses[size]} />
-                    )}
-                    {!iconOnly && (
-                        <span>
-                            {label ||
-                                (isBookmarked ? "Bookmarked" : "Bookmark")}
-                        </span>
-                    )}
-                </button>
-            );
-
-        case "icon":
-        default:
-            return (
-                <button
-                    onClick={handleToggleBookmark}
-                    className={cn(
-                        "p-1 rounded-full transition-colors focus:outline-none",
-                        isBookmarked
-                            ? "text-blue-600 hover:text-blue-700"
-                            : "text-gray-400 hover:text-gray-600",
-                        className
-                    )}
-                    aria-label={
-                        isBookmarked ? "Remove bookmark" : "Add bookmark"
-                    }
-                >
-                    {isBookmarked ? (
-                        <BookmarkCheck className={sizeClasses[size]} />
-                    ) : (
-                        <BookmarkPlus className={sizeClasses[size]} />
-                    )}
-                </button>
-            );
+    // For icon-only mode, use a simpler button
+    if (iconOnly) {
+        return (
+            <button
+                onClick={handleToggleBookmark}
+                className={cn(
+                    "p-1 rounded-full transition-colors focus:outline-none",
+                    isBookmarked
+                        ? "text-blue-600 hover:text-blue-700"
+                        : "text-gray-400 hover:text-gray-600",
+                    className
+                )}
+                aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+            >
+                {isBookmarked ? (
+                    <BookmarkCheck className="h-5 w-5" />
+                ) : (
+                    <BookmarkPlus className="h-5 w-5" />
+                )}
+            </button>
+        );
     }
+
+    // Customize button appearance based on bookmark state
+    const buttonVariant = isBookmarked ? "secondary" : variant;
+    const customClassName = isBookmarked
+        ? cn(
+              "bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200",
+              className
+          )
+        : className;
+
+    return (
+        <Button
+            size={size}
+            variant={buttonVariant}
+            leftIcon={isBookmarked ? BookmarkCheck : BookmarkPlus}
+            onClick={handleToggleBookmark}
+            className={customClassName}
+        >
+            <span className="hidden lg:inline">{isBookmarked ? "Bookmarked" : "Bookmark"}</span>
+        </Button>
+    );
 };
 
 export default BookmarkButton;
