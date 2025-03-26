@@ -104,6 +104,11 @@ export function useToggleBookmark(bookmarkType: BookmarkType) {
             entity_id,
             isBookmarked,
         }: ToggleBookmarkVariables) => {
+            // Ensure entity_id is not undefined
+            if (!entity_id) {
+                throw new Error("Entity ID is required for bookmarking!");
+            }
+
             if (isBookmarked) {
                 // Remove bookmark
                 await API.delete(`/bookmark/${bookmarkType}/${entity_id}`, {
@@ -165,7 +170,7 @@ export function useToggleBookmark(bookmarkType: BookmarkType) {
                     ? `${formatSentenceCase(
                           bookmarkType
                       )} removed from bookmarks`
-                    : `${formatSentenceCase(bookmarkType)} added to bookmarks`,
+                    : `${formatSentenceCase(bookmarkType)} added to bookmarks!`,
                 "success"
             );
         },

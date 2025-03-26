@@ -75,6 +75,11 @@ const handleBookmark = async (entityType, entityId, userId, isRemoving) => {
             throw new Error(`Unknown entity type: ${entityType}`);
     }
 
+    // Check if entityId is valid
+    if (!entityId || entityId === "undefined") {
+        throw new Error(`Invalid ${entityLabel} ID: ${entityId}`);
+    }
+
     // Call the appropriate stored procedure
     const [results] = await pool.query(`CALL ${procedure}(?, ?)`, [
         userId,
@@ -160,10 +165,10 @@ export const toggleBookmark = async (req, res) => {
             return res.status(400).json({ message: "User ID is required" });
         }
 
-        if (!entityType || !entityId) {
+        if (!entityType || !entityId || entityId === "undefined") {
             return res
                 .status(400)
-                .json({ message: "Entity type and ID are required" });
+                .json({ message: "Entity type and valid ID are required" });
         }
 
         // Validate that the entity type is supported

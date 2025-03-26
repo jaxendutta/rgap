@@ -40,10 +40,7 @@ interface GrantCardProps {
     isBookmarked?: boolean;
 }
 
-export const GrantCard = ({
-    grant,
-    isBookmarked
-}: GrantCardProps) => {
+export const GrantCard = ({ grant, isBookmarked }: GrantCardProps) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [activeTab, setActiveTab] = useState<
         "details" | "versions" | "funding"
@@ -61,19 +58,43 @@ export const GrantCard = ({
 
     // Format amendment number for display (safely)
     const amendmentNumber = grant.latest_amendment_number
-        ? Number(grant.latest_amendment_number) || 0
+        ? grant.latest_amendment_number
         : 0;
 
     // Check if this grant has amendments
     const hasAmendments =
         grant.amendments_history && grant.amendments_history.length > 0;
 
-    // Sort amendments by number (descending - most recent first)
-    const sortedAmendments = hasAmendments
-        ? [...(grant.amendments_history || [])].sort((a, b) => {
-              return b.amendment_number - a.amendment_number;
-          })
+    // Initialize sorted amendments array
+    const amendments = hasAmendments
+        ? [...(grant.amendments_history || [])]
         : [];
+
+    // Add current grant data as an amendment if it's not already in the history
+    if (hasAmendments && grant.latest_amendment_number) {
+        const currentAmendmentNumber = Number(grant.latest_amendment_number);
+
+        // Check if this amendment number already exists in the amendments
+        const currentAmendmentExists = amendments.some(
+            (a) => a.amendment_number === currentAmendmentNumber
+        );
+
+        // Add current grant as amendment if not already present
+        if (!currentAmendmentExists) {
+            amendments.push({
+                amendment_number: currentAmendmentNumber,
+                amendment_date:
+                    grant.amendment_date || grant.agreement_start_date,
+                agreement_value: grant.agreement_value,
+                agreement_start_date: grant.agreement_start_date,
+                agreement_end_date: grant.agreement_end_date,
+                additional_information_en: grant.additional_information_en,
+            });
+        }
+    }
+
+    // Sort amendments by number (descending - most recent first)
+    amendments.sort((a, b) => b.amendment_number - a.amendment_number);
 
     // Function to render funding change indicator
     const renderChangeIndicator = (current: number, previous: number) => {
@@ -267,32 +288,31 @@ export const GrantCard = ({
                         >
                             <History className="h-3 w-3 mr-1" />
                             {typeof amendmentNumber === "number" &&
-                            amendmentNumber > 0
-                                ? `Amendment ${amendmentNumber} `
-                                : `Original `}
-                            • Versions available: {sortedAmendments.length + 1}
+                                (amendmentNumber > 0
+                                    ? `Amendment ${amendmentNumber} `
+                                    : `Original `) +
+                                    `• Versions available: ${amendments.length}`}
                         </button>
 
                         {/* Show funding change if available */}
-                        {sortedAmendments.length > 0 && amendmentNumber > 0 && (
+                        {amendments.length > 0 && amendmentNumber > 0 && (
                             <div className="inline-flex items-center text-xs font-medium rounded-full px-2.5 py-1">
                                 {(() => {
                                     // Find the previous amendment
-                                    const currentAmendment =
-                                        sortedAmendments.find(
-                                            (a) =>
-                                                a.amendment_number ===
-                                                amendmentNumber
-                                        );
+                                    const currentAmendment = amendments.find(
+                                        (a) =>
+                                            a.amendment_number ===
+                                            amendmentNumber
+                                    );
                                     const previousIndex =
-                                        sortedAmendments.findIndex(
+                                        amendments.findIndex(
                                             (a) =>
                                                 a.amendment_number ===
                                                 amendmentNumber
                                         ) + 1;
                                     const previousAmendment =
-                                        previousIndex < sortedAmendments.length
-                                            ? sortedAmendments[previousIndex]
+                                        previousIndex < amendments.length
+                                            ? amendments[previousIndex]
                                             : null;
 
                                     if (currentAmendment && previousAmendment) {
@@ -503,12 +523,11 @@ export const GrantCard = ({
                                                         )}
                                                     </span>
                                                     {hasAmendments &&
-                                                        sortedAmendments.length >
-                                                            1 &&
+                                                        amendments.length > 1 &&
                                                         renderChangeIndicator(
                                                             grant.agreement_value,
-                                                            sortedAmendments[
-                                                                sortedAmendments.length -
+                                                            amendments[
+                                                                amendments.length -
                                                                     1
                                                             ].agreement_value
                                                         )}
@@ -562,15 +581,15 @@ export const GrantCard = ({
                                             )}
 
                                             {hasAmendments &&
-                                                sortedAmendments.length > 0 && (
+                                                amendments.length > 0 && (
                                                     <div className="grid grid-cols-12 gap-2">
                                                         <span className="col-span-5 text-gray-500 self-start">
                                                             Original Value
                                                         </span>
                                                         <span className="col-span-7 text-gray-800">
                                                             {formatCurrency(
-                                                                sortedAmendments[
-                                                                    sortedAmendments.length -
+                                                                amendments[
+                                                                    amendments.length -
                                                                         1
                                                                 ]
                                                                     .agreement_value
@@ -846,10 +865,10 @@ export const GrantCard = ({
                                                 Total Versions
                                             </h4>
                                             <p className="text-sm lg:text-md font-semibold text-gray-900">
-                                                {sortedAmendments.length + 1}
+                                                {amendments.length}
                                             </p>
                                         </div>
-                                        {sortedAmendments.length > 0 && (
+                                        {amendments.length > 0 && (
                                             <>
                                                 <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
                                                     <h4 className="text-xs lg:text-sm font-medium text-gray-500 mb-1">
@@ -857,8 +876,8 @@ export const GrantCard = ({
                                                     </h4>
                                                     <p className="text-sm lg:text-md font-semibold text-gray-900">
                                                         {formatDate(
-                                                            sortedAmendments[
-                                                                sortedAmendments.length -
+                                                            amendments[
+                                                                amendments.length -
                                                                     1
                                                             ]
                                                                 .agreement_start_date
@@ -871,9 +890,9 @@ export const GrantCard = ({
                                                     </h4>
                                                     <p className="text-sm lg:text-md font-semibold text-gray-900">
                                                         {formatDate(
-                                                            sortedAmendments[0]
+                                                            amendments[0]
                                                                 .amendment_date ||
-                                                                sortedAmendments[0]
+                                                                amendments[0]
                                                                     .agreement_start_date
                                                         )}
                                                     </p>
@@ -890,203 +909,195 @@ export const GrantCard = ({
 
                                     {/* Amendment entries */}
                                     <div className="space-y-6 lg:space-y-8">
-                                        {sortedAmendments.map(
-                                            (amendment, index) => (
-                                                <div
-                                                    key={
-                                                        amendment.amendment_number
-                                                    }
-                                                    className="relative pl-12 lg:pl-16"
-                                                >
-                                                    {/* Timeline dot */}
+                                        {/* First ensure we have the current grant as the newest amendment */}
+                                        {(() => {
+                                            // Render the amendments in newest-to-oldest order
+                                            return amendments.map((amendment, index) => {
+                                                // Get the next (older) amendment for comparison if it exists
+                                                const prevAmendment = amendments[index + 1];
+                                                
+                                                // Check if there are any changes to display
+                                                const hasValueChange = prevAmendment && 
+                                                    amendment.agreement_value !== prevAmendment.agreement_value;
+                                                    
+                                                const hasEndDateChange = prevAmendment && 
+                                                    amendment.agreement_end_date !== prevAmendment.agreement_end_date;
+                                                    
+                                                const hasChanges = hasValueChange || hasEndDateChange;
+                                                
+                                                // Check if this is the current version
+                                                const isCurrentVersion = amendment.amendment_number === grant.latest_amendment_number;
+
+                                                return (
                                                     <div
-                                                        className={cn(
-                                                            "absolute left-2 w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                                                            amendment.amendment_number ===
-                                                                0
-                                                                ? "border-blue-500 bg-white"
-                                                                : "border-amber-500 bg-white"
-                                                        )}
+                                                        key={index}
+                                                        className="relative pl-12 lg:pl-16"
                                                     >
+                                                        {/* Timeline dot */}
                                                         <div
                                                             className={cn(
-                                                                "w-2 h-2 rounded-full",
-                                                                amendment.amendment_number ===
-                                                                    0
-                                                                    ? "bg-blue-500"
-                                                                    : "bg-amber-500"
+                                                                "absolute left-2 w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                                                                amendment.amendment_number === 0
+                                                                    ? "border-blue-500 bg-white"
+                                                                    : isCurrentVersion
+                                                                    ? "border-green-500 bg-white"
+                                                                    : "border-amber-500 bg-white"
                                                             )}
-                                                        ></div>
-                                                    </div>
-
-                                                    {/* Amendment card */}
-                                                    <div className="bg-white border rounded-lg shadow-sm">
-                                                        <div className="p-3 lg:p-4">
-                                                            <div className="flex justify-between items-start">
-                                                                <div>
-                                                                    <h4
-                                                                        className={cn(
-                                                                            "text-sm font-medium",
-                                                                            amendment.amendment_number ===
-                                                                                0
-                                                                                ? "text-blue-600"
-                                                                                : "text-amber-600"
-                                                                        )}
-                                                                    >
-                                                                        {amendment.amendment_number ===
-                                                                        0
-                                                                            ? "Original Agreement"
-                                                                            : `Amendment ${amendment.amendment_number}`}
-                                                                    </h4>
-                                                                    <p className="text-xs text-gray-500 mt-1">
-                                                                        {amendment.amendment_date
-                                                                            ? formatDate(
-                                                                                  amendment.amendment_date
-                                                                              )
-                                                                            : formatDate(
-                                                                                  amendment.agreement_start_date
-                                                                              )}
-                                                                    </p>
-                                                                </div>
-                                                                <div className="text-right">
-                                                                    <p className="text-sm font-medium">
-                                                                        {formatCurrency(
-                                                                            amendment.agreement_value
-                                                                        )}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
+                                                        >
+                                                            <div
+                                                                className={cn(
+                                                                    "w-2 h-2 rounded-full",
+                                                                    amendment.amendment_number === 0
+                                                                        ? "bg-blue-500"
+                                                                        : isCurrentVersion
+                                                                        ? "bg-green-500"
+                                                                        : "bg-amber-500"
+                                                                )}
+                                                            ></div>
                                                         </div>
 
-                                                        {/* Changes from previous version */}
-                                                        {index <
-                                                            sortedAmendments.length -
-                                                                1 && (
-                                                            <div className="border-t px-4 py-3 bg-gray-50 rounded-b-lg">
-                                                                <p className="text-xs font-medium text-gray-600 mb-2">
-                                                                    Registered
-                                                                    changes from
-                                                                    previous
-                                                                    version:
-                                                                </p>
-                                                                <div className="space-y-2 text-sm">
-                                                                    {/* Amount change */}
-                                                                    {amendment.agreement_value !==
-                                                                        sortedAmendments[
-                                                                            index +
-                                                                                1
-                                                                        ]
-                                                                            .agreement_value && (
-                                                                        <div className="flex items-start">
-                                                                            <CornerDownRight className="h-3 w-3 mr-2 mt-1 shrink-0 text-gray-400" />
-                                                                            <span className="text-gray-600">
-                                                                                Funding
-                                                                                changed
-                                                                                from
-                                                                                <span className="font-medium mx-1">
-                                                                                    {formatCurrency(
-                                                                                        sortedAmendments[
-                                                                                            index +
-                                                                                                1
-                                                                                        ]
-                                                                                            .agreement_value
-                                                                                    )}
-                                                                                </span>
-                                                                                to
-                                                                                <span
-                                                                                    className={cn(
-                                                                                        "font-medium mx-1",
-                                                                                        amendment.agreement_value >
-                                                                                            sortedAmendments[
-                                                                                                index +
-                                                                                                    1
-                                                                                            ]
-                                                                                                .agreement_value
-                                                                                            ? "text-green-600"
-                                                                                            : "text-amber-600"
-                                                                                    )}
-                                                                                >
-                                                                                    {formatCurrency(
-                                                                                        amendment.agreement_value
-                                                                                    )}
-                                                                                    {amendment.agreement_value >
-                                                                                    sortedAmendments[
-                                                                                        index +
-                                                                                            1
-                                                                                    ]
-                                                                                        .agreement_value
-                                                                                        ? ` (+${formatCurrency(
-                                                                                              amendment.agreement_value -
-                                                                                                  sortedAmendments[
-                                                                                                      index +
-                                                                                                          1
-                                                                                                  ]
-                                                                                                      .agreement_value
-                                                                                          )})`
-                                                                                        : ` (-${formatCurrency(
-                                                                                              sortedAmendments[
-                                                                                                  index +
-                                                                                                      1
-                                                                                              ]
-                                                                                                  .agreement_value -
-                                                                                                  amendment.agreement_value
-                                                                                          )})`}
-                                                                                </span>
-                                                                            </span>
-                                                                        </div>
-                                                                    )}
+                                                        {/* Amendment card */}
+                                                        <div className="bg-white border rounded-lg shadow-sm">
+                                                            <div className="p-3 lg:p-4">
+                                                                <div className="flex justify-between items-start">
+                                                                    <div>
+                                                                        <h4
+                                                                            className={cn(
+                                                                                "text-sm font-medium",
+                                                                                amendment.amendment_number === 0
+                                                                                    ? "text-blue-600"
+                                                                                    : isCurrentVersion
+                                                                                    ? "text-green-600"
+                                                                                    : "text-amber-600"
+                                                                            )}
+                                                                        >
+                                                                            {amendment.amendment_number === 0
+                                                                                ? "Original Agreement"
+                                                                                : `Amendment ${amendment.amendment_number}`}
+                                                                            {isCurrentVersion && " • Current"}
+                                                                        </h4>
+                                                                        <p className="text-xs text-gray-500 mt-1">
+                                                                            {amendment.amendment_date
+                                                                                ? formatDate(
+                                                                                    amendment.amendment_date
+                                                                                )
+                                                                                : formatDate(
+                                                                                    amendment.agreement_start_date
+                                                                                )}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="text-right">
+                                                                        <p className="text-sm font-medium">
+                                                                            {formatCurrency(
+                                                                                amendment.agreement_value
+                                                                            )}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
 
-                                                                    {/* End date change */}
-                                                                    {amendment.agreement_end_date !==
-                                                                        sortedAmendments[
-                                                                            index +
-                                                                                1
-                                                                        ]
-                                                                            .agreement_end_date && (
-                                                                        <div className="flex items-start">
-                                                                            <CornerDownRight className="h-3 w-3 mr-2 mt-1 shrink-0  text-gray-400" />
-                                                                            <span className="text-gray-600">
-                                                                                End
-                                                                                date
-                                                                                extended
-                                                                                from
-                                                                                <span className="font-medium mx-1">
-                                                                                    {formatDate(
-                                                                                        sortedAmendments[
-                                                                                            index +
-                                                                                                1
-                                                                                        ]
-                                                                                            .agreement_end_date
-                                                                                    )}
-                                                                                </span>
-                                                                                to
-                                                                                <span className="font-medium mx-1">
-                                                                                    {formatDate(
-                                                                                        amendment.agreement_end_date
-                                                                                    )}
-                                                                                </span>
-
-                                                                                (
-                                                                                {formatDateDiff(
-                                                                                    sortedAmendments[
-                                                                                        index +
-                                                                                            1
-                                                                                    ]
-                                                                                        .agreement_end_date,
-                                                                                    amendment.agreement_end_date
+                                                            {/* Changes section - only show if there are actual changes */}
+                                                            {(hasChanges || amendment.additional_information_en) && prevAmendment && (
+                                                                <div className="border-t px-4 py-3 bg-gray-50 rounded-b-lg">
+                                                                    {hasChanges && (
+                                                                        <>
+                                                                            <p className="text-xs font-medium text-gray-600 mb-2">
+                                                                                Registered changes from previous version:
+                                                                            </p>
+                                                                            <div className="space-y-2 text-sm">
+                                                                                {/* Amount change */}
+                                                                                {hasValueChange && (
+                                                                                    <div className="flex items-start">
+                                                                                        <CornerDownRight className="h-3 w-3 mr-2 mt-1 shrink-0 text-gray-400" />
+                                                                                        <span className="text-gray-600">
+                                                                                            Funding changed from
+                                                                                            <span className="font-medium mx-1">
+                                                                                                {formatCurrency(
+                                                                                                    prevAmendment.agreement_value
+                                                                                                )}
+                                                                                            </span>
+                                                                                            to
+                                                                                            <span
+                                                                                                className={cn(
+                                                                                                    "font-medium mx-1",
+                                                                                                    amendment.agreement_value >
+                                                                                                        prevAmendment.agreement_value
+                                                                                                        ? "text-green-600"
+                                                                                                        : "text-amber-600"
+                                                                                                )}
+                                                                                            >
+                                                                                                {formatCurrency(
+                                                                                                    amendment.agreement_value
+                                                                                                )}
+                                                                                                {amendment.agreement_value >
+                                                                                                prevAmendment.agreement_value
+                                                                                                    ? ` (+${formatCurrency(
+                                                                                                        amendment.agreement_value -
+                                                                                                            prevAmendment.agreement_value
+                                                                                                    )})`
+                                                                                                    : ` (-${formatCurrency(
+                                                                                                        prevAmendment.agreement_value -
+                                                                                                            amendment.agreement_value
+                                                                                                    )})`}
+                                                                                            </span>
+                                                                                        </span>
+                                                                                    </div>
                                                                                 )}
 
-                                                                                )
-                                                                            </span>
+                                                                                {/* End date change */}
+                                                                                {hasEndDateChange && (
+                                                                                    <div className="flex items-start">
+                                                                                        <CornerDownRight className="h-3 w-3 mr-2 mt-1 shrink-0 text-gray-400" />
+                                                                                        <span className="text-gray-600">
+                                                                                            End date 
+                                                                                            {new Date(amendment.agreement_end_date) > new Date(prevAmendment.agreement_end_date)
+                                                                                                ? " extended from"
+                                                                                                : " changed from"
+                                                                                            }
+                                                                                            <span className="font-medium mx-1">
+                                                                                                {formatDate(
+                                                                                                    prevAmendment.agreement_end_date
+                                                                                                )}
+                                                                                            </span>
+                                                                                            to
+                                                                                            <span className="font-medium mx-1">
+                                                                                                {formatDate(
+                                                                                                    amendment.agreement_end_date
+                                                                                                )}
+                                                                                            </span>
+                                                                                            {new Date(amendment.agreement_end_date) !== new Date(prevAmendment.agreement_end_date) && (
+                                                                                                <>
+                                                                                                    {" "}({formatDateDiff(
+                                                                                                        prevAmendment.agreement_end_date,
+                                                                                                        amendment.agreement_end_date
+                                                                                                    )})
+                                                                                                </>
+                                                                                            )}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </>
+                                                                    )}
+
+                                                                    {/* Additional information section */}
+                                                                    {amendment.additional_information_en && (
+                                                                        <div className={cn(hasChanges && "mt-3 pt-3 border-t border-gray-200")}>
+                                                                            <p className="text-xs font-medium text-gray-600 mb-2">
+                                                                                Additional Information:
+                                                                            </p>
+                                                                            <div className="text-sm text-gray-600">
+                                                                                {amendment.additional_information_en}
+                                                                            </div>
                                                                         </div>
                                                                     )}
                                                                 </div>
-                                                            </div>
-                                                        )}
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            )
-                                        )}
+                                                );
+                                            });
+                                        })()}
                                     </div>
                                 </div>
                             </div>
@@ -1102,8 +1113,7 @@ export const GrantCard = ({
                                         Funding Overview
                                     </h3>
 
-                                    {hasAmendments &&
-                                    sortedAmendments.length > 0 ? (
+                                    {hasAmendments && amendments.length > 0 ? (
                                         <div className="grid grid-cols-3 gap-2 lg:gap-4 lg:text-sm text-center">
                                             <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
                                                 <p className="text-gray-500 text-xs">
@@ -1111,8 +1121,8 @@ export const GrantCard = ({
                                                 </p>
                                                 <p className="text-gray-900 font-medium text-md lg:text-lg">
                                                     {formatCurrency(
-                                                        sortedAmendments[
-                                                            sortedAmendments.length -
+                                                        amendments[
+                                                            amendments.length -
                                                                 1
                                                         ].agreement_value
                                                     )}
@@ -1136,14 +1146,14 @@ export const GrantCard = ({
                                                     className={cn(
                                                         "font-medium text-md lg:text-lg",
                                                         grant.agreement_value >
-                                                            sortedAmendments[
-                                                                sortedAmendments.length -
+                                                            amendments[
+                                                                amendments.length -
                                                                     1
                                                             ].agreement_value
                                                             ? "text-green-600"
                                                             : grant.agreement_value <
-                                                              sortedAmendments[
-                                                                  sortedAmendments.length -
+                                                              amendments[
+                                                                  amendments.length -
                                                                       1
                                                               ].agreement_value
                                                             ? "text-amber-600"
@@ -1151,21 +1161,20 @@ export const GrantCard = ({
                                                     )}
                                                 >
                                                     {grant.agreement_value !==
-                                                    sortedAmendments[
-                                                        sortedAmendments.length -
-                                                            1
+                                                    amendments[
+                                                        amendments.length - 1
                                                     ].agreement_value ? (
                                                         grant.agreement_value >
-                                                        sortedAmendments[
-                                                            sortedAmendments.length -
+                                                        amendments[
+                                                            amendments.length -
                                                                 1
                                                         ].agreement_value ? (
                                                             <>
                                                                 +
                                                                 {formatCurrency(
                                                                     grant.agreement_value -
-                                                                        sortedAmendments[
-                                                                            sortedAmendments.length -
+                                                                        amendments[
+                                                                            amendments.length -
                                                                                 1
                                                                         ]
                                                                             .agreement_value
@@ -1175,8 +1184,8 @@ export const GrantCard = ({
                                                             <>
                                                                 -
                                                                 {formatCurrency(
-                                                                    sortedAmendments[
-                                                                        sortedAmendments.length -
+                                                                    amendments[
+                                                                        amendments.length -
                                                                             1
                                                                     ]
                                                                         .agreement_value -
@@ -1207,19 +1216,18 @@ export const GrantCard = ({
                                 </div>
 
                                 {/* TrendVisualizer for Funding History */}
-                                {hasAmendments &&
-                                    sortedAmendments.length > 1 && (
-                                        <TrendVisualizer
-                                            grants={[grant]}
-                                            amendmentsHistory={sortedAmendments}
-                                            viewContext="custom"
-                                            height={250}
-                                            initialChartType={"line"}
-                                            initialMetricType="funding"
-                                            availableGroupings={["amendment"]}
-                                            className="mt-4"
-                                        />
-                                    )}
+                                {hasAmendments && amendments.length > 0 && (
+                                    <TrendVisualizer
+                                        grants={[grant]}
+                                        amendmentsHistory={amendments}
+                                        viewContext="custom"
+                                        height={250}
+                                        initialChartType={"line"}
+                                        initialMetricType="funding"
+                                        availableGroupings={["amendment"]}
+                                        className="mt-4"
+                                    />
+                                )}
                             </div>
                         )}
                     </div>

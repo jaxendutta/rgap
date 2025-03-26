@@ -256,11 +256,6 @@ export const BookmarksPage = () => {
                                 key={item.grant_id || item.ref_number}
                                 grant={item as Grant}
                                 isBookmarked={true}
-                                onBookmark={() =>
-                                    toggleBookmark(
-                                        item.grant_id || item.ref_number
-                                    )
-                                }
                             />
                         );
                     } else if (activeTabType === "institute") {
@@ -270,9 +265,6 @@ export const BookmarksPage = () => {
                                 entity={item as Institute}
                                 entityType="institute"
                                 isBookmarked={true}
-                                onBookmark={() =>
-                                    toggleBookmark(item.institute_id)
-                                }
                             />
                         );
                     } else if (activeTabType === "recipient") {
@@ -282,9 +274,6 @@ export const BookmarksPage = () => {
                                 entity={item as Recipient}
                                 entityType="recipient"
                                 isBookmarked={true}
-                                onBookmark={() =>
-                                    toggleBookmark(item.recipient_id)
-                                }
                             />
                         );
                     }

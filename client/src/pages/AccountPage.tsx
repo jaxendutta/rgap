@@ -576,7 +576,7 @@ export default function AccountPage() {
                                         <Button
                                             variant="primary"
                                             onClick={() => navigate("/search")}
-                                            icon={Search}
+                                            leftIcon={Search}
                                         >
                                             Start exploring
                                         </Button>
@@ -603,7 +603,7 @@ export default function AccountPage() {
                                             variant="primary"
                                             onClick={handleLogout}
                                             className="bg-red-600 hover:bg-red-700"
-                                            icon={LogOut}
+                                            leftIcon={LogOut}
                                         >
                                             Sign Out
                                         </Button>
@@ -650,7 +650,7 @@ export default function AccountPage() {
                                             variant="outline"
                                             onClick={openDeleteModal}
                                             className="border-red-300 text-red-600 hover:bg-red-50"
-                                            icon={Trash2}
+                                            leftIcon={Trash2}
                                         >
                                             Delete Account
                                         </Button>
@@ -737,7 +737,7 @@ export default function AccountPage() {
                                             variant="primary"
                                             onClick={handleDeleteAccount}
                                             className="bg-red-600 hover:bg-red-700 text-white"
-                                            icon={Trash2}
+                                            leftIcon={Trash2}
                                             isLoading={isDeleting}
                                             disabled={
                                                 confirmEmail !== user?.email

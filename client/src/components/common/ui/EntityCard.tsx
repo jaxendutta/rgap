@@ -14,7 +14,7 @@ import {
     CircleDollarSign,
     HandCoins,
 } from "lucide-react";
-import { formatCurrency } from "@/utils/format";
+import { formatCommaSeparated, formatCurrency } from "@/utils/format";
 import { Card } from "@/components/common/ui/Card";
 import { Button } from "@/components/common/ui/Button";
 import Tag, { TagGroup } from "@/components/common/ui/Tag";
@@ -62,7 +62,7 @@ const EntityCard = ({
 
     // Get entity-specific properties
     const id = isInstitute()
-        ? entity.institute_id
+        ? (entity as Institute).institute_id
         : (entity as Recipient).recipient_id;
     const name = isInstitute()
         ? (entity as Institute).name
@@ -86,7 +86,7 @@ const EntityCard = ({
     const city = entity.city;
     const province = entity.province;
     const country = entity.country;
-    const location = [city, province, country].filter(Boolean).join(", ");
+    const location = formatCommaSeparated([city, province, country]);
 
     // Get counts with fallbacks from props
     const grants =

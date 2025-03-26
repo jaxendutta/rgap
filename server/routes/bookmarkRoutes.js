@@ -8,10 +8,10 @@ import {
     getBookmarks,
 } from "../controllers/bookmarkController.js";
 
-// New unified routes
-router.post("/bookmark/:entityType/:entityId", toggleBookmark);
-router.delete("/bookmark/:entityType/:entityId", toggleBookmark);
-router.get("/bookmark/:entityType/ids/:user_id", getBookmarkIds);
-router.get("/bookmark/:entityType/:user_id", getBookmarks);
+// Fixed routes removing the duplicate "bookmark" prefix
+router.post("/:entityType/:entityId", toggleBookmark);
+router.delete("/:entityType/:entityId", toggleBookmark);
+router.get("/:entityType/ids/:user_id", getBookmarkIds);
+router.get("/:entityType/:user_id", getBookmarks);
 
 export default router;

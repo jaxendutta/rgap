@@ -1,4 +1,5 @@
--- Create a replacement sp_grant_search with better performance
+-- File: sql/sp/sp_grant_search.sql
+-- Purpose: Stored procedure for searching research grants with advanced filters
 DELIMITER $
 DROP PROCEDURE IF EXISTS sp_grant_search$
 CREATE PROCEDURE sp_grant_search(
@@ -120,7 +121,7 @@ BEGIN
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
     
-    -- Apply additional filters from JSON arrays using join
+    -- Apply agency filter
     IF EXISTS (SELECT 1 FROM search_filters WHERE filter_type = 'org') THEN
         DELETE fg 
         FROM filtered_grants fg
@@ -129,20 +130,37 @@ BEGIN
         WHERE sf.filter_value IS NULL;
     END IF;
     
-    -- Apply location filters
-    IF EXISTS (SELECT 1 FROM search_filters WHERE filter_type IN ('country', 'province', 'city')) THEN
+    -- Apply country filter
+    IF EXISTS (SELECT 1 FROM search_filters WHERE filter_type = 'country') THEN
         DELETE fg 
         FROM filtered_grants fg
         JOIN ResearchGrant rg ON fg.grant_id = rg.grant_id
         JOIN Recipient r ON rg.recipient_id = r.recipient_id
         JOIN Institute i ON r.institute_id = i.institute_id
-        LEFT JOIN search_filters sf_country ON sf_country.filter_type = 'country' AND i.country = sf_country.filter_value
-        LEFT JOIN search_filters sf_province ON sf_province.filter_type = 'province' AND i.province = sf_province.filter_value
-        LEFT JOIN search_filters sf_city ON sf_city.filter_type = 'city' AND i.city = sf_city.filter_value
-        WHERE 
-            (EXISTS (SELECT 1 FROM search_filters WHERE filter_type = 'country') AND sf_country.filter_value IS NULL)
-            OR (EXISTS (SELECT 1 FROM search_filters WHERE filter_type = 'province') AND sf_province.filter_value IS NULL)
-            OR (EXISTS (SELECT 1 FROM search_filters WHERE filter_type = 'city') AND sf_city.filter_value IS NULL);
+        LEFT JOIN search_filters sf ON sf.filter_type = 'country' AND i.country = sf.filter_value
+        WHERE sf.filter_value IS NULL;
+    END IF;
+
+    -- Apply province filter
+    IF EXISTS (SELECT 1 FROM search_filters WHERE filter_type = 'province') THEN
+        DELETE fg 
+        FROM filtered_grants fg
+        JOIN ResearchGrant rg ON fg.grant_id = rg.grant_id
+        JOIN Recipient r ON rg.recipient_id = r.recipient_id
+        JOIN Institute i ON r.institute_id = i.institute_id
+        LEFT JOIN search_filters sf ON sf.filter_type = 'province' AND i.province = sf.filter_value
+        WHERE sf.filter_value IS NULL;
+    END IF;
+
+    -- Apply city filter
+    IF EXISTS (SELECT 1 FROM search_filters WHERE filter_type = 'city') THEN
+        DELETE fg 
+        FROM filtered_grants fg
+        JOIN ResearchGrant rg ON fg.grant_id = rg.grant_id
+        JOIN Recipient r ON rg.recipient_id = r.recipient_id
+        JOIN Institute i ON r.institute_id = i.institute_id
+        LEFT JOIN search_filters sf ON sf.filter_type = 'city' AND i.city = sf.filter_value
+        WHERE sf.filter_value IS NULL;
     END IF;
     
     -- Get the total count of filtered grants
@@ -160,7 +178,8 @@ BEGIN
     
     -- Prepare and execute the main query using filtered IDs
     SET @main_query = CONCAT("
-        SELECT 
+        SELECT
+            rg.grant_id,
             rg.ref_number,
             rg.latest_amendment_number,
             rg.amendment_date,

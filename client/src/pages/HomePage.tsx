@@ -49,7 +49,7 @@ export default function HomePage() {
                                 <Button
                                     variant="primary"
                                     size="lg"
-                                    icon={Search}
+                                    leftIcon={Search}
                                     className="pl-6 pr-8 md:text-lg"
                                     onClick={() => {}} // Using button with Link component
                                 >
@@ -61,7 +61,7 @@ export default function HomePage() {
                                 <Button
                                     variant="outline"
                                     size="lg"
-                                    icon={LogIn}
+                                    leftIcon={LogIn}
                                     className="pl-6 pr-8 md:text-lg"
                                     onClick={() => {}} // Using button with Link component
                                 >

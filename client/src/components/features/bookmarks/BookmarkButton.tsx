@@ -9,7 +9,7 @@ import { BookmarkType } from "@/types/bookmark";
 import { Button } from "@/components/common/ui/Button";
 
 interface BookmarkButtonProps {
-    entityId: number | string;
+    entityId: number;
     entityType: BookmarkType;
     isBookmarked?: boolean; // Optional override if you already know the state
     size?: "sm" | "md" | "lg";
@@ -52,6 +52,15 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
             );
             return;
         }
+        
+        // Ensure entityId is defined
+        if (!entityId) {
+            showNotification(
+                "Cannot bookmark this item - missing ID",
+                "error"
+            );
+            return;
+        }
 
         toggleBookmarkMutation.mutate(
             {
@@ -60,14 +69,10 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
                 isBookmarked,
             },
             {
+                // Don't show notification here as the mutation already handles it
                 onSuccess: () => {
-                    showNotification(
-                        isBookmarked
-                            ? "Bookmark removed successfully"
-                            : "Bookmark added successfully",
-                        "success"
-                    );
-                },
+                    // Success is already handled in the mutation
+                }
             }
         );
     };

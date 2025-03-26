@@ -145,52 +145,6 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
             return a.amendment_number - b.amendment_number;
         });
 
-        // Check if we need to add the current grant's data as an amendment
-        if (grants && grants.length > 0) {
-            const currentGrant = grants[0];
-
-            // Get the current amendment number from the grant
-            const currentAmendmentNumber =
-                currentGrant.latest_amendment_number || 0;
-
-            // Check if this amendment number already exists in the chronologicalAmendments
-            const currentAmendmentExists = chronologicalAmendments.some(
-                (a) => a.amendment_number === currentAmendmentNumber
-            );
-
-            // Only add if it doesn't exist already
-            if (!currentAmendmentExists && currentGrant.agreement_value) {
-                // Create an amendment object from the current grant data
-                const currentAmendment = {
-                    amendment_number: currentAmendmentNumber,
-                    amendment_date:
-                        currentGrant.amendment_date ||
-                        currentGrant.agreement_start_date,
-                    agreement_value: currentGrant.agreement_value,
-                    agreement_start_date: currentGrant.agreement_start_date,
-                    agreement_end_date: currentGrant.agreement_end_date,
-                };
-
-                // Insert it in the correct position based on amendment number
-                let inserted = false;
-                for (let i = 0; i < chronologicalAmendments.length; i++) {
-                    if (
-                        currentAmendmentNumber <
-                        chronologicalAmendments[i].amendment_number
-                    ) {
-                        chronologicalAmendments.splice(i, 0, currentAmendment);
-                        inserted = true;
-                        break;
-                    }
-                }
-
-                // If not inserted (higher than all existing amendments), append it
-                if (!inserted) {
-                    chronologicalAmendments.push(currentAmendment);
-                }
-            }
-        }
-
         // For line chart format, use a single "Funding" category
         if (chartType === "line") {
             return chronologicalAmendments.map((amendment, index) => {
