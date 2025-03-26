@@ -18,12 +18,10 @@ import { formatCommaSeparated, formatCurrency } from "@/utils/format";
 import { Card } from "@/components/common/ui/Card";
 import { Button } from "@/components/common/ui/Button";
 import Tag, { TagGroup } from "@/components/common/ui/Tag";
-import { Institute, Recipient } from "@/types/models";
+import { Institute, Recipient, Entity } from "@/types/models";
 import { cn } from "@/utils/cn";
 import { RecipientType } from "@/constants/data";
 import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
-
-export type Entity = "institute" | "recipient";
 
 interface EntityCardProps {
     entity: Institute | Recipient;

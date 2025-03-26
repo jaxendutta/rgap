@@ -116,7 +116,7 @@ export const RecipientsList = ({
     return (
         <EntityList
             title="Recipients"
-            items={recipients}
+            entities={recipients}
             renderItem={renderRecipientItem}
             keyExtractor={keyExtractor}
             emptyMessage="This institute has no associated recipients in our database."

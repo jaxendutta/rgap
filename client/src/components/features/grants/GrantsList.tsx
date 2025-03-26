@@ -222,7 +222,7 @@ const GrantsList: React.FC<GrantsListProps> = ({
     return (
         <EntityList
             title={title}
-            items={sortedGrantsToDisplay}
+            entities={sortedGrantsToDisplay}
             renderItem={renderGrantItem}
             keyExtractor={keyExtractor}
             emptyMessage={emptyMessage}

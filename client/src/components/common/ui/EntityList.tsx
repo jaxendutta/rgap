@@ -9,8 +9,11 @@ import EmptyState from "./EmptyState";
 import ErrorState from "./ErrorState";
 import { UseInfiniteQueryResult } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
+import { cn } from "@/utils/cn";
+import { Entity } from "@/types/models";
 
 export type SortDirection = "asc" | "desc";
+export type variant = "list" | "grid";
 
 export interface SortConfig {
     field: string;
@@ -20,9 +23,11 @@ export interface SortConfig {
 interface EntityListProps<T> {
     // Content props
     title: string;
-    items: T[];
+    entities: T[];
+    entityType: Entity;
     renderItem: (item: T, index: number) => React.ReactNode;
     keyExtractor: (item: T, index: number) => string;
+    variant?: variant;
     emptyMessage?: string;
 
     // Sorting props
@@ -55,9 +60,10 @@ interface EntityListProps<T> {
 
 function EntityList<T>({
     title,
-    items,
+    entities: items,
     renderItem,
     keyExtractor,
+    variant = "list",
     emptyMessage = "No items found.",
     sortOptions,
     sortConfig,
@@ -194,7 +200,11 @@ function EntityList<T>({
             )}
 
             {/* Items list */}
-            <div className="space-y-4 mt-4">
+            <div className={cn(
+                variant === "grid" 
+                    ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                    : "space-y-4"
+            )}>
                 {items.map((item, index) => (
                     <React.Fragment key={keyExtractor(item, index)}>
                         {renderItem(item, index)}

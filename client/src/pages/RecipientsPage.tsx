@@ -1,5 +1,5 @@
 // src/pages/RecipientsPage.tsx
-import EntitiesGridPage from "@/components/common/pages/EntitiesGridPage";
+import EntitiesPage from "@/components/common/pages/EntitiesPage";
 import {
     useInfiniteRecipients,
     useSearchRecipients,
@@ -7,7 +7,7 @@ import {
 
 const RecipientsPage = () => {
     return (
-        <EntitiesGridPage
+        <EntitiesPage
             entityType="recipient"
             title="Grant Recipients"
             subtitle="Explore organizations and individuals who have received research grants."

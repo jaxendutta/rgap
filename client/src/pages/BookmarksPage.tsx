@@ -9,6 +9,7 @@ import {
     LogIn,
     RefreshCw,
     XCircle,
+    LucideIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageContainer from "@/components/common/layout/PageContainer";
@@ -27,24 +28,34 @@ import { SearchHistoryCard } from "@/components/features/account/SearchHistoryCa
 import LoadingState from "@/components/common/ui/LoadingState";
 import EmptyState from "@/components/common/ui/EmptyState";
 import ErrorState from "@/components/common/ui/ErrorState";
-import { BookmarkType } from "@/types/bookmark";
 import { cn } from "@/utils/cn";
-import { Grant, Institute, Recipient, SearchHistory } from "@/types/models";
+import {
+    Grant,
+    Institute,
+    Recipient,
+    SearchHistory,
+    Entity,
+} from "@/types/models";
 
 // Define the tab structure with correct bookmark types
-const tabs = [
-    { name: "Grants", icon: BookMarked, type: "grant" as BookmarkType },
-    { name: "Institutes", icon: University, type: "institute" as BookmarkType },
-    {
-        name: "Recipients",
-        icon: GraduationCap,
-        type: "recipient" as BookmarkType,
-    },
-    {
-        name: "Searches",
-        icon: Search,
-        type: "search" as BookmarkType,
-    },
+interface TabDefinition {
+    name: string;
+    icon: LucideIcon,
+    type: Entity;
+}
+
+// Define the tab structure with correct bookmark types
+interface TabDefinition {
+    name: string;
+    icon: LucideIcon;
+    type: Entity;
+}
+
+const tabs: TabDefinition[] = [
+    { name: "Grants", icon: BookMarked, type: "grant" },
+    { name: "Institutes", icon: University, type: "institute" },
+    { name: "Recipients", icon: GraduationCap, type: "recipient" },
+    { name: "Searches", icon: Search, type: "search" }
 ];
 
 export const BookmarksPage = () => {

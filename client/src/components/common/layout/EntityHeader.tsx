@@ -3,10 +3,10 @@ import { LucideIcon, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/common/ui/Button";
 import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
-import { BookmarkType } from "@/types/bookmark";
 import { cn } from "@/utils/cn";
 import LocationMap from "@/components/common/ui/LocationMap";
 import { formatCommaSeparated } from "@/utils/format";
+import { Entity } from "@/types/models";
 
 // Define types for metadata and action items
 export interface MetadataItem {
@@ -28,7 +28,7 @@ interface EntityHeaderProps {
     icon: LucideIcon;
     metadata: MetadataItem[];
     actions?: ActionButton[];
-    entityType?: BookmarkType;
+    entityType?: Entity;
     entityId?: number;
     location?: string;
 }

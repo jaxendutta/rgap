@@ -1,9 +1,9 @@
-// src/components/common/pages/EntitiesGridPage.tsx
+// src/components/common/pages/EntitiesPage.tsx
 import { useState, useMemo } from "react";
 import { Search, X, AlertTriangle } from "lucide-react";
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
-import EntityCard, { Entity } from "@/components/common/ui/EntityCard";
+import EntityCard from "@/components/common/ui/EntityCard";
 import PageContainer from "@/components/common/layout/PageContainer";
 import PageHeader from "@/components/common/layout/PageHeader";
 import { SearchField } from "@/components/common/ui/SearchField";
@@ -11,10 +11,10 @@ import { Button } from "@/components/common/ui/Button";
 import LoadingState from "@/components/common/ui/LoadingState";
 import EmptyState from "@/components/common/ui/EmptyState";
 import ErrorState from "@/components/common/ui/ErrorState";
-import { Institute, Recipient } from "@/types/models";
+import { Institute, Recipient, Entity } from "@/types/models";
 import { cn } from "@/utils/cn";
 
-interface EntitiesGridPageProps {
+interface EntitiesPageProps {
     entityType: Entity;
     title: string;
     subtitle?: string;
@@ -26,7 +26,7 @@ interface EntitiesGridPageProps {
     initialFilters?: Record<string, any>;
 }
 
-const EntitiesGridPage = ({
+const EntitiesPage = ({
     entityType,
     title,
     subtitle,
@@ -35,7 +35,7 @@ const EntitiesGridPage = ({
     searchPlaceholder = "Search by name...",
     emptyMessage = "No entities found.",
     searchEmptyMessage = "No entities match your search.",
-}: EntitiesGridPageProps) => {
+}: EntitiesPageProps) => {
     // State for search query
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearching, setIsSearching] = useState(false);
@@ -166,15 +166,15 @@ const EntitiesGridPage = ({
             {!isLoading && !isError && entities.length > 0 && (
                 <div className="mb-4 text-sm flex justify-between items-center text-gray-600 border-b pb-2">
                     <div>
-                        Showing{" "}
+                        {`Showing `}
                         <span className="font-medium">
                             {entities.length.toLocaleString()}
-                        </span>{" "}
-                        of{" "}
+                        </span>
+                        {` of `}
                         <span className="font-medium">
                             {metadata.totalCount.toLocaleString()}
-                        </span>{" "}
-                        {title.toLowerCase()}
+                        </span>
+                        {` ${title.toLowerCase()}`}
                     </div>
                     {isSearching && (
                         <div className="flex items-center bg-blue-50 text-blue-800 rounded-full px-3 py-1 text-xs">
@@ -285,4 +285,4 @@ const EntitiesGridPage = ({
     );
 };
 
-export default EntitiesGridPage;
+export default EntitiesPage;

@@ -1,5 +1,5 @@
 // src/pages/InstitutesPage.tsx
-import EntitiesGridPage from "@/components/common/pages/EntitiesGridPage";
+import EntitiesPage from "@/components/common/pages/EntitiesPage";
 import {
     useInfiniteInstitutes,
     useSearchInstitutes,
@@ -7,7 +7,7 @@ import {
 
 const InstitutesPage = () => {
     return (
-        <EntitiesGridPage
+        <EntitiesPage
             entityType="institute"
             title="Research Institutes"
             subtitle="Explore and discover research institutes across various regions and types."

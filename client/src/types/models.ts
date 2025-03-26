@@ -98,3 +98,6 @@ export interface SearchHistory {
     result_count: number;
     bookmarked: boolean;
 }
+
+// Entity types
+export type Entity = "recipient" | "institute" | "grant" | "search";

@@ -5,12 +5,12 @@ import { cn } from "@/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
 import { useAllBookmarks, useToggleBookmark } from "@/hooks/api/useBookmarks";
-import { BookmarkType } from "@/types/bookmark";
 import { Button } from "@/components/common/ui/Button";
+import { Entity } from "@/types/models";
 
 interface BookmarkButtonProps {
     entityId: number;
-    entityType: BookmarkType;
+    entityType: Entity;
     isBookmarked?: boolean; // Optional override if you already know the state
     size?: "sm" | "md" | "lg";
     variant?: "primary" | "secondary" | "outline";

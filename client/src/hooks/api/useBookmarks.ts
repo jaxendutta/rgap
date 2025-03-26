@@ -1,7 +1,7 @@
 // src/hooks/api/useBookmarks.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
-import { BookmarkType } from "@/types/bookmark";
+import { Entity } from "@/types/models";
 import createAPI from "@/utils/api";
 import { formatSentenceCase } from "@/utils/format";
 
@@ -9,11 +9,11 @@ const API = createAPI();
 
 export const bookmarkKeys = {
     all: ["bookmarks"] as const,
-    type: (bookmarkType: BookmarkType) =>
+    type: (bookmarkType: Entity) =>
         [...bookmarkKeys.all, bookmarkType] as const,
     user: (userId: number | null | undefined) =>
         [...bookmarkKeys.all, userId] as const,
-    userType: (bookmarkType: BookmarkType, userId: number | null | undefined) =>
+    userType: (bookmarkType: Entity, userId: number | null | undefined) =>
         [...bookmarkKeys.type(bookmarkType), userId] as const,
 };
 
@@ -21,7 +21,7 @@ export const bookmarkKeys = {
  * Hook to fetch all bookmarked IDs for a given entity type and user
  */
 export function useAllBookmarks(
-    bookmarkType: BookmarkType,
+    bookmarkType: Entity,
     userId: number | null | undefined
 ) {
     return useQuery({
@@ -55,7 +55,7 @@ export function useAllBookmarks(
  * Hook to fetch all bookmarked entities with their details
  */
 export function useBookmarkedEntities(
-    bookmarkType: BookmarkType,
+    bookmarkType: Entity,
     userId: number | null | undefined
 ) {
     return useQuery({
@@ -94,7 +94,7 @@ interface ToggleBookmarkVariables {
 /**
  * Hook to toggle bookmark status (add or remove)
  */
-export function useToggleBookmark(bookmarkType: BookmarkType) {
+export function useToggleBookmark(bookmarkType: Entity) {
     const queryClient = useQueryClient();
     const { showNotification } = useNotification();
 
