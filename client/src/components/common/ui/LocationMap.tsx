@@ -6,6 +6,7 @@ import {
     Marker,
     ZoomableGroup,
 } from "react-simple-maps";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 // More detailed world map
 const geoUrl = "https://unpkg.com/world-atlas@2.0.2/countries-50m.json";
@@ -14,7 +15,8 @@ const geoUrl = "https://unpkg.com/world-atlas@2.0.2/countries-50m.json";
 const GEOCODING_API = "https://nominatim.openstreetmap.org/search";
 
 interface LocationMapProps {
-    locationString?: string;
+    title: string;
+    location?: string;
     height?: number;
     width?: string;
 }
@@ -27,13 +29,12 @@ interface GeocodingResult {
 }
 
 const LocationMap: React.FC<LocationMapProps> = ({
-    locationString,
+    title,
+    location,
     height = 300,
     width = "100%",
 }) => {
-    const [coordinates, setCoordinates] = useState<[number, number] | null>(
-        null
-    );
+    const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
     const [zoom, setZoom] = useState(4);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -41,24 +42,16 @@ const LocationMap: React.FC<LocationMapProps> = ({
 
     // Geocode location
     useEffect(() => {
-        const geocodeLocation = async () => {
-            setIsLoading(true);
-            setError(null);
-
+        const geocodeQuery = async (query: string) => {
             try {
-                // Check if we have a location string to geocode
-                if (!locationString || locationString.trim() === "") {
-                    throw new Error("No location provided");
+                if (!query || query.trim() === "") {
+                    return null;
                 }
 
-                // Make request to Nominatim API
                 const response = await fetch(
-                    `${GEOCODING_API}?q=${encodeURIComponent(
-                        locationString
-                    )}&format=json&limit=1`,
+                    `${GEOCODING_API}?q=${encodeURIComponent(query)}&format=json&limit=1`,
                     {
                         headers: {
-                            // Add a referrer policy and user agent as per Nominatim usage policy
                             "Referrer-Policy": "no-referrer",
                             "User-Agent": "RGAP-Research-App",
                         },
@@ -66,21 +59,52 @@ const LocationMap: React.FC<LocationMapProps> = ({
                 );
 
                 if (!response.ok) {
-                    throw new Error("Geocoding service unavailable");
+                    return null;
                 }
 
                 const data = (await response.json()) as GeocodingResult[];
+                return data && data.length > 0 ? data[0] : null;
+            } catch (err) {
+                console.error("Geocoding error for query:", query, err);
+                return null;
+            }
+        };
 
-                if (data && data.length > 0) {
-                    const lat = parseFloat(data[0].lat);
-                    const lon = parseFloat(data[0].lon);
+        const geocodeLocation = async () => {
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                // Check if we have location data to geocode
+                if (!location && !title) {
+                    throw new Error("No location information provided");
+                }
+
+                // First attempt: Try with title and location combined
+                let result = null;
+                if (title && location) {
+                    result = await geocodeQuery(`${title}, ${location}`);
+                }
+
+                // Second attempt: Try with just location
+                if (!result && location) {
+                    result = await geocodeQuery(location);
+                }
+
+                // Third attempt: Try with just title as fallback
+                if (!result && title) {
+                    result = await geocodeQuery(title);
+                }
+
+                if (result) {
+                    const lat = parseFloat(result.lat);
+                    const lon = parseFloat(result.lon);
 
                     setCoordinates([lon, lat]);
-                    setLocationDisplay(data[0].display_name);
+                    setLocationDisplay(result.display_name);
 
                     // Set appropriate zoom level based on importance
-                    // Nominatim provides an importance score for each result
-                    const importance = data[0].importance || 0.5;
+                    const importance = result.importance || 0.5;
                     if (importance > 0.7) {
                         setZoom(3); // Country level
                     } else if (importance > 0.5) {
@@ -105,10 +129,10 @@ const LocationMap: React.FC<LocationMapProps> = ({
         };
 
         geocodeLocation();
-    }, [locationString]);
+    }, [title, location]);
 
     // If we have no location data at all or geocoding failed
-    if (!locationString || error) {
+    if ((!location && !title) || error) {
         return (
             <div
                 style={{ width, height }}
@@ -127,7 +151,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
                 className="flex items-center justify-center bg-gray-100 text-gray-500 text-sm"
             >
                 <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-500 mr-3"></div>
+                    <LoadingSpinner size="sm" className="mr-3" />
                     <span>Locating...</span>
                 </div>
             </div>
@@ -164,10 +188,8 @@ const LocationMap: React.FC<LocationMapProps> = ({
                             }
                         </Geographies>
 
-                        {/* Enhanced marker with labels */}
                         <Marker coordinates={coordinates}>
                             <g>
-                                {/* Animated pulse effect */}
                                 <circle
                                     r="10"
                                     className="fill-blue-500 opacity-20 animate-pulse"

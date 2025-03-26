@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Grant } from "@/types/models";
 import { Card } from "@/components/common/ui/Card";
-import { formatCurrency, formatDate, formatDateDiff } from "@/utils/format";
+import { formatCommaSeparated, formatCurrency, formatDate, formatDateDiff } from "@/utils/format";
 import { Link } from "react-router-dom";
 import {
     University,
@@ -126,16 +126,7 @@ export const GrantCard = ({ grant, isBookmarked }: GrantCardProps) => {
         { icon: Database, text: grant.ref_number },
         {
             icon: MapPin,
-            text:
-                (grant.city && grant.city.toUpperCase() !== "N/A"
-                    ? `${grant.city}, `
-                    : "") +
-                (grant.province && grant.province.toUpperCase() !== "N/A"
-                    ? `${grant.province}, `
-                    : "") +
-                (grant.country && grant.country.toUpperCase() !== "N/A"
-                    ? grant.country
-                    : ""),
+            text: formatCommaSeparated([grant.city, grant.province, grant.country]),
             hide: !(
                 (grant.city && grant.city.toUpperCase() !== "N/A") ||
                 (grant.province && grant.province.toUpperCase() !== "N/A") ||

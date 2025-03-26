@@ -90,7 +90,7 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                                 size="sm"
                                 onClick={action.onClick}
                             >
-                                {<span className="hidden lg:inline">${action.label}</span>}
+                                {<span className="hidden lg:inline">{action.label}</span>}
                             </Button>
                         ))}
 
@@ -143,7 +143,8 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                         <div className="border rounded-lg overflow-hidden bg-gray-50">
                             <div className="p-4">
                                 <LocationMap
-                                    locationString={title + ", " + location}
+                                    title={title}
+                                    location={location}
                                     height={300}
                                 />
                             </div>
