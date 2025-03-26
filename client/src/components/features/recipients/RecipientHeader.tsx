@@ -11,20 +11,9 @@ import EntityHeader, {
     ActionButton,
 } from "@/components/common/layout/EntityHeader";
 import { Recipient } from "@/types/models";
-import { EntityType } from "@/constants/data";
+import { RecipientType } from "@/constants/data";
 
-// Recipient Header Component
-interface RecipientHeaderProps {
-    recipient: Recipient;
-    isBookmarked: boolean;
-    toggleBookmark: () => void;
-}
-
-const RecipientHeader = ({
-    recipient,
-    isBookmarked,
-    toggleBookmark,
-}: RecipientHeaderProps) => {
+const RecipientHeader = (recipient : Recipient) => {
     // Create a Google search URL for the recipient
     const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(
         `${recipient.legal_name} ${recipient.research_organization_name || ""}`
@@ -44,7 +33,7 @@ const RecipientHeader = ({
     metadata.push({
         icon: FileUser,
         text: recipient.type
-            ? EntityType[recipient.type as keyof typeof EntityType]
+            ? RecipientType[recipient.type as keyof typeof RecipientType]
             : "Unspecified",
     });
 
@@ -74,8 +63,6 @@ const RecipientHeader = ({
             icon={GraduationCap}
             metadata={metadata}
             actions={actions}
-            isBookmarked={isBookmarked}
-            onToggleBookmark={toggleBookmark}
             entityType="recipient"
             entityId={recipient.recipient_id}
         />

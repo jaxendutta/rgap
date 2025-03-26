@@ -172,7 +172,7 @@ export const GrantCard = ({
                                 aria-label={`View profile for recipient ${grant.legal_name}`}
                             >
                                 <span className="inline-flex">
-                                    <GraduationCap className="h-5 w-5 mt-1 mr-1.5" />
+                                    <GraduationCap className="h-5 w-5 mt-1 mr-1.5 flex-shrink-0" />
                                     {grant.legal_name}
                                     <ArrowUpRight className="inline-block h-4 w-4 ml-1 mt-2.5 lg:mt-1.5 lg:opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all" />
                                 </span>
@@ -227,7 +227,7 @@ export const GrantCard = ({
                                 icon={BookMarked}
                                 size="md"
                                 pill={true}
-                                variant="default"
+                                variant="outline"
                                 className={cn(
                                     !hasValue("agreement_title_en") &&
                                         "text-gray-400 italic",
@@ -248,7 +248,7 @@ export const GrantCard = ({
                                         icon={tag.icon}
                                         size="sm"
                                         pill={true}
-                                        variant="outline"
+                                        variant="default"
                                     >
                                         {tag.text}
                                     </Tag>

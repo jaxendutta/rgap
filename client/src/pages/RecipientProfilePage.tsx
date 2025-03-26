@@ -69,18 +69,9 @@ export const RecipientProfilePage = () => {
     ];
 
     // Render functions for EntityProfilePage
-    const renderHeader = (
-        isBookmarked: boolean,
-        toggleBookmark: () => void
-    ) => {
+    const renderHeader = () => {
         if (!recipient) return null;
-        return (
-            <RecipientHeader
-                recipient={recipient}
-                isBookmarked={isBookmarked}
-                toggleBookmark={toggleBookmark}
-            />
-        );
+        return <RecipientHeader {...recipient} />;
     };
 
     const renderStats = () => {

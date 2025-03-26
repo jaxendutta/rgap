@@ -1,10 +1,6 @@
 // src/components/common/pages/EntitiesGridPage.tsx
 import { useState, useMemo } from "react";
-import {
-    Search,
-    X,
-    AlertTriangle,
-} from "lucide-react";
+import { Search, X, AlertTriangle } from "lucide-react";
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
 import EntityCard, { Entity } from "@/components/common/ui/EntityCard";
@@ -17,9 +13,6 @@ import EmptyState from "@/components/common/ui/EmptyState";
 import ErrorState from "@/components/common/ui/ErrorState";
 import { Institute, Recipient } from "@/types/models";
 import { cn } from "@/utils/cn";
-import { useAllBookmarks, useToggleBookmark } from "@/hooks/api/useBookmarks";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNotification } from "@/components/features/notifications/NotificationProvider";
 
 interface EntitiesGridPageProps {
     entityType: Entity;
@@ -27,7 +20,6 @@ interface EntitiesGridPageProps {
     subtitle?: string;
     useInfiniteEntities: any; // The infinite query hook
     useSearchEntities?: any; // The search query hook
-    onBookmark?: (id: number) => void;
     searchPlaceholder?: string;
     emptyMessage?: string;
     searchEmptyMessage?: string;
@@ -47,15 +39,6 @@ const EntitiesGridPage = ({
     // State for search query
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearching, setIsSearching] = useState(false);
-    //const [bookmarkedIds, setBookmarkedIds] = useState<number[]>([]);
-
-    const { user } = useAuth();
-    const user_id = user?.user_id;
-
-    const { data: bookmarkedIds = [], isLoading: isLoadingBookmarks, isError: isGetBookmarksError, } = useAllBookmarks(entityType, user_id,);
-    const toggleBookmarkMutation = useToggleBookmark(entityType);
-
-    const { showNotification } = useNotification();
 
     // Setup intersection observer for infinite loading
     const { ref, inView } = useInView({
@@ -100,14 +83,12 @@ const EntitiesGridPage = ({
     // Check if we're in a loading state
     const isLoading =
         (infiniteQuery.isLoading && !infiniteQuery.data) ||
-        (isSearching && searchQuery$.isLoading) ||
-        (isLoadingBookmarks);
+        (isSearching && searchQuery$.isLoading);
 
     // Check for errors
     const isError =
         (infiniteQuery.isError && !isSearching) ||
-        (isSearching && searchQuery$.isError) ||
-        (isGetBookmarksError);
+        (isSearching && searchQuery$.isError);
 
     const error = isSearching ? searchQuery$.error : infiniteQuery.error;
 
@@ -138,23 +119,6 @@ const EntitiesGridPage = ({
         setIsSearching(false);
     };
 
-    // Handle bookmarks
-    const toggleBookmark = (id: number) => {
-        if (!user_id) {
-            showNotification(
-                "You must be logged in to bookmark.",
-                "error",
-            );
-            return;
-        }
-        const isBookmarked = bookmarkedIds.includes(id);
-        //console.log(`toggleBookmark: isBookmarked:${isBookmarked}`);
-        //console.log(bookmarkedIds)
-        
-        // Trigger the mutation
-        toggleBookmarkMutation.mutate({ user_id: user_id, entity_id: id, isBookmarked });
-    };
-
     return (
         <PageContainer>
             {/* Header */}
@@ -179,7 +143,7 @@ const EntitiesGridPage = ({
                 <div className="flex gap-2">
                     <Button
                         variant="primary"
-                        icon={Search}
+                        leftIcon={Search}
                         onClick={handleSearch}
                         className="bg-gray-900 hover:bg-gray-800 flex-1 lg:flex-auto rounded-full"
                     >
@@ -188,7 +152,7 @@ const EntitiesGridPage = ({
                     {isSearching && (
                         <Button
                             variant="outline"
-                            icon={X}
+                            leftIcon={X}
                             onClick={clearSearch}
                             className="flex-1 lg:flex-auto rounded-full"
                         >
@@ -203,7 +167,9 @@ const EntitiesGridPage = ({
                 <div className="mb-4 text-sm flex justify-between items-center text-gray-600 border-b pb-2">
                     <div>
                         Showing{" "}
-                        <span className="font-medium">{entities.length.toLocaleString()}</span>{" "}
+                        <span className="font-medium">
+                            {entities.length.toLocaleString()}
+                        </span>{" "}
                         of{" "}
                         <span className="font-medium">
                             {metadata.totalCount.toLocaleString()}
@@ -258,10 +224,10 @@ const EntitiesGridPage = ({
                     primaryAction={
                         isSearching
                             ? {
-                                label: "Clear Search",
-                                onClick: clearSearch,
-                                icon: X,
-                            }
+                                  label: "Clear Search",
+                                  onClick: clearSearch,
+                                  icon: X,
+                              }
                             : undefined
                     }
                 />
@@ -281,8 +247,6 @@ const EntitiesGridPage = ({
                                 key={`${entityType}-${id}`}
                                 entity={entity}
                                 entityType={entityType}
-                                isBookmarked={bookmarkedIds.includes(id)}
-                                onBookmark={() => toggleBookmark(id)}
                             />
                         );
                     })}

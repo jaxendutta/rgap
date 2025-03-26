@@ -19,7 +19,7 @@ import { Button } from "@/components/common/ui/Button";
 import Tag, { TagGroup } from "@/components/common/ui/Tag";
 import { Institute, Recipient } from "@/types/models";
 import { cn } from "@/utils/cn";
-import { EntityType } from "@/constants/data";
+import { RecipientType } from "@/constants/data";
 import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
 
 export type Entity = "institute" | "recipient";
@@ -70,7 +70,7 @@ const EntityCard = ({
         : (entity as Recipient).legal_name;
     const type = isInstitute()
         ? "Academic Institution"
-        : EntityType[(entity as Recipient).type as keyof typeof EntityType];
+        : RecipientType[(entity as Recipient).type as keyof typeof RecipientType];
 
     // For recipients, get their institute info
     const institute =

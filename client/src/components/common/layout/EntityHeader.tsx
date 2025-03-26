@@ -1,10 +1,11 @@
 // src/components/common/layout/EntityHeader.tsx
-import { LucideIcon, BookMarked } from "lucide-react";
+import { LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/common/ui/Button";
 import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
 import { BookmarkType } from "@/types/bookmark";
 
+// Define types for metadata and action items
 export interface MetadataItem {
     icon: LucideIcon;
     text: string;
@@ -24,8 +25,6 @@ interface EntityHeaderProps {
     icon: LucideIcon;
     metadata: MetadataItem[];
     actions?: ActionButton[];
-    isBookmarked: boolean;
-    onToggleBookmark: () => void;
     entityType?: BookmarkType;
     entityId?: number;
 }
@@ -36,14 +35,12 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
     icon: Icon,
     metadata,
     actions = [],
-    isBookmarked,
-    onToggleBookmark,
     entityType,
     entityId,
 }) => {
     return (
-        <div className="p-4 lg:p-6">
-            <div className="flex flex-col-reverse lg:flex-row lg:justify-between lg:items-start gap-4">
+        <div className="p-4 md:p-6">
+            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
                 {/* Left side: Entity Info */}
                 <div className="flex-1 flex flex-col gap-3">
                     {/* Entity Title */}
@@ -60,7 +57,7 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                     </div>
 
                     {/* Metadata */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 mt-1">
+                    <div className="flex gap-x-6 gap-y-2">
                         {metadata.map((item, index) => (
                             <div
                                 key={index}
@@ -84,32 +81,14 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
 
                 {/* Right side: Actions */}
                 <div className="flex flex-wrap gap-2 self-end lg:self-start">
-                    {/* Replace direct bookmark button with BookmarkButton component */}
+                    {/* Add BookmarkButton if entityType and entityId are provided */}
                     {entityType && entityId && (
                         <BookmarkButton
                             entityId={entityId}
                             entityType={entityType}
-                            isBookmarked={isBookmarked}
                             variant="button"
                             size="md"
-                            onBookmarkChange={onToggleBookmark}
                         />
-                    )}
-
-                    {/* If entityType/entityId are not provided, use the original toggle method */}
-                    {(!entityType || !entityId) && (
-                        <Button
-                            variant="outline"
-                            leftIcon={isBookmarked ? BookMarked : BookMarked}
-                            onClick={onToggleBookmark}
-                            className={
-                                isBookmarked
-                                    ? "text-blue-600 border-blue-300 bg-blue-50"
-                                    : ""
-                            }
-                        >
-                            {isBookmarked ? "Bookmarked" : "Bookmark"}
-                        </Button>
                     )}
 
                     {/* Other action buttons */}

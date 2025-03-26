@@ -1,4 +1,4 @@
-export enum EntityType {
+export enum RecipientType {
     A = "Indigenous recipients",
     F = "For-profit organizations",
     G = "Government",

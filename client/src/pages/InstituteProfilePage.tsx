@@ -82,18 +82,9 @@ const InstituteProfilePage = () => {
     ];
 
     // Render functions for EntityProfilePage
-    const renderHeader = (
-        isBookmarked: boolean,
-        toggleBookmark: () => void
-    ) => {
+    const renderHeader = () => {
         if (!institute) return null;
-        return (
-            <InstituteHeader
-                institute={institute}
-                isBookmarked={isBookmarked}
-                toggleBookmark={toggleBookmark}
-            />
-        );
+        return <InstituteHeader {...institute} />;
     };
 
     const renderStats = () => {
@@ -137,7 +128,7 @@ const InstituteProfilePage = () => {
                         }}
                         emptyMessage="This institute has no associated grants in our database."
                         showVisualization={true}
-                        visualizationInitiallyVisible={false}
+                        visualizationInitiallyVisible={true}
                         viewContext="institute"
                     />
                 );
@@ -307,7 +298,7 @@ const InstituteProfilePage = () => {
                                                     }
                                                 );
 
-                                                return `${activeCount.toLocaleString()} / ${institute.recipients.length.toLocaleString()}`;
+                                                return `${activeCount} / ${institute.recipients.length}`;
                                             })(),
                                         },
                                     ],

@@ -10,9 +10,6 @@ import {
     ViewContext,
 } from "@/components/features/visualizations/TrendVisualizer";
 import { prepareGrantsForVisualization } from "@/utils/chartDataTransforms";
-import { useAllBookmarks, useToggleBookmark } from "@/hooks/api/useBookmarks";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNotification } from "../notifications/NotificationProvider";
 
 export type GrantSortField = "date" | "value";
 export type SortDirection = "asc" | "desc";
@@ -38,7 +35,6 @@ interface GrantsListProps {
         province?: string;
         country?: string;
     };
-    onBookmark?: (grantId: string) => void;
 
     // Visualization props
     showVisualization?: boolean;
@@ -55,7 +51,7 @@ const GrantsList: React.FC<GrantsListProps> = ({
     initialSortConfig = { field: "date", direction: "desc" },
     emptyMessage = "No grants found.",
     contextData = {},
-    showVisualization = false,
+    showVisualization = true,
     visualizationInitiallyVisible = false,
     viewContext = "search",
     doNotShowVisualizationToggle = false,
@@ -178,47 +174,8 @@ const GrantsList: React.FC<GrantsListProps> = ({
         infiniteQuery?.data?.pages[0]?.metadata?.totalCount ||
         sortedGrantsToDisplay.length;
 
-    // Get total bookmarks
-    const { user } = useAuth();
-    const user_id = user?.user_id;
-    const bookmarkType = "grant";
-
-    const { data: bookmarkedIds = [] } = useAllBookmarks(bookmarkType, user_id);
-    const toggleBookmarkMutation = useToggleBookmark(bookmarkType);
-
-    // Use notification to show bookmark status
-    const { showNotification } = useNotification();
-
-    // Handle bookmarks
-    const toggleBookmark = (id: number) => {
-        if (!user || !user.user_id) {
-            showNotification(
-                "You must be logged in to bookmark grants",
-                "error"
-            );
-            return;
-        }
-
-        const isBookmarked = bookmarkedIds.includes(id);
-
-        // Trigger the mutation
-        toggleBookmarkMutation.mutate({
-            user_id: user.user_id,
-            entity_id: id,
-            isBookmarked,
-        });
-    };
-
     // Render grant item
-    const renderGrantItem = (grant: Grant) => (
-        <GrantCard
-            grant={grant}
-            isBookmarked={
-                grant.grant_id ? bookmarkedIds.includes(grant.grant_id) : false
-            }
-            onBookmark={() => grant.grant_id && toggleBookmark(grant.grant_id)}
-        />
-    );
+    const renderGrantItem = (grant: Grant) => <GrantCard grant={grant} />;
 
     // Key extractor for grants - ensure unique keys by combining multiple identifiers
     const keyExtractor = (grant: Grant, index: number) =>

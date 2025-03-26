@@ -3,10 +3,6 @@ import Tabs, { TabItem } from "@/components/common/ui/Tabs";
 import LoadingState from "@/components/common/ui/LoadingState";
 import ErrorState from "@/components/common/ui/ErrorState";
 import PageContainer from "../layout/PageContainer";
-import { useAllBookmarks, useToggleBookmark } from "@/hooks/api/useBookmarks";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNotification } from "@/components/features/notifications/NotificationProvider";
-import { BookmarkType } from "@/types/bookmark";
 
 export interface EntityProfilePageProps {
     // Core data and state
@@ -18,10 +14,7 @@ export interface EntityProfilePageProps {
     error?: Error | unknown;
 
     // Header and stats content
-    renderHeader: (
-        isBookmarked: boolean,
-        toggleBookmark: () => void
-    ) => React.ReactNode;
+    renderHeader: () => React.ReactNode;
     renderStats: () => React.ReactNode;
 
     // Tabs and content
@@ -47,50 +40,6 @@ const EntityProfilePage = ({
     onTabChange,
     renderTabContent,
 }: EntityProfilePageProps) => {
-    // Use bookmark hooks
-    const bookmarkType = entityType as BookmarkType;
-    const { user } = useAuth();
-    const { showNotification } = useNotification();
-
-    // Get entity ID based on entity type
-    const entityId = entity
-        ? entityType === "institute"
-            ? entity.institute_id
-            : entity.recipient_id
-        : null;
-
-    // Get bookmarked IDs for this entity type
-    const { data: bookmarkedIds = [] } = useAllBookmarks(
-        bookmarkType,
-        user?.user_id
-    );
-    const toggleBookmarkMutation = useToggleBookmark(bookmarkType);
-
-    // Check if current entity is bookmarked
-    const isBookmarked = entityId ? bookmarkedIds.includes(entityId) : false;
-
-    // Toggle bookmark handler
-    const handleToggleBookmark = () => {
-        if (!user?.user_id) {
-            showNotification(
-                "You must be logged in to bookmark items",
-                "error"
-            );
-            return;
-        }
-
-        if (!entityId) {
-            showNotification("Cannot bookmark this item", "error");
-            return;
-        }
-
-        toggleBookmarkMutation.mutate({
-            user_id: user.user_id,
-            entity_id: entityId,
-            isBookmarked: isBookmarked,
-        });
-    };
-
     // Handle the error state
     if (isError) {
         return (
@@ -128,7 +77,7 @@ const EntityProfilePage = ({
             {/* Header with profile and quick stats */}
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
                 {/* Top section with entity details */}
-                {renderHeader(isBookmarked, handleToggleBookmark)}
+                {renderHeader()}
 
                 {/* Stats section */}
                 {renderStats()}

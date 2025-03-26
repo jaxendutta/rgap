@@ -1,26 +1,12 @@
 // src/components/features/institutes/InstituteHeader.tsx
-import {
-    University,
-    FileUser,
-    MapPin,
-    CircleArrowOutUpRight,
-} from "lucide-react";
+import { University, MapPin, CircleArrowOutUpRight } from "lucide-react";
 import EntityHeader, {
     MetadataItem,
     ActionButton,
 } from "@/components/common/layout/EntityHeader";
+import { Institute } from "@/types/models";
 
-interface InstituteHeaderProps {
-    institute: any;
-    isBookmarked: boolean;
-    toggleBookmark: () => void;
-}
-
-const InstituteHeader = ({
-    institute,
-    isBookmarked,
-    toggleBookmark,
-}: InstituteHeaderProps) => {
+const InstituteHeader = (institute: Institute) => {
     // Create a Google search URL for the institute
     const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(
         institute.name
@@ -28,13 +14,6 @@ const InstituteHeader = ({
 
     // Prepare metadata for the EntityHeader
     const metadata: MetadataItem[] = [];
-
-    if (institute.type) {
-        metadata.push({
-            icon: FileUser,
-            text: institute.type,
-        });
-    }
 
     if (institute.city || institute.province || institute.country) {
         metadata.push({
@@ -62,8 +41,6 @@ const InstituteHeader = ({
             icon={University}
             metadata={metadata}
             actions={actions}
-            isBookmarked={isBookmarked}
-            onToggleBookmark={toggleBookmark}
             entityType="institute"
             entityId={institute.institute_id}
         />

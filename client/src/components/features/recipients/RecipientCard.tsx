@@ -17,7 +17,7 @@ import { Card } from "@/components/common/ui/Card";
 import Tag, { TagGroup } from "@/components/common/ui/Tag";
 import { cn } from "@/utils/cn";
 import { Recipient } from "@/types/models";
-import { EntityType } from "@/constants/data";
+import { RecipientType } from "@/constants/data";
 
 export interface RecipientCardProps {
     recipient: Recipient;
@@ -100,7 +100,7 @@ export const RecipientCard: React.FC<RecipientCardProps> = ({
 
                         {recipient.type && (
                             <Tag size="sm" variant="primary" icon={Users}>
-                                {EntityType[recipient.type as keyof typeof EntityType]}
+                                {RecipientType[recipient.type as keyof typeof RecipientType]}
                             </Tag>
                         )}
                     </TagGroup>
