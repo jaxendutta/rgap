@@ -9,7 +9,7 @@ import axios from "axios";
 import { Grant } from "@/types/models";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import { GrantSearchParams, SearchResponse } from "@/types/search";
-import createAPI from '@/utils/api';
+import createAPI from "@/utils/api";
 
 const API = createAPI(15000); // Use 15000ms timeout
 
@@ -44,15 +44,23 @@ export const grantKeys = {
 };
 
 // Helper to create a clean copy of filters
-const cleanFilters = (filters: typeof DEFAULT_FILTER_STATE) => {
+const cleanFilters = (
+    filters: typeof DEFAULT_FILTER_STATE = DEFAULT_FILTER_STATE
+) => {
+    // Ensure we have a filters object
+    if (!filters) {
+        return DEFAULT_FILTER_STATE;
+    }
+
     // Handle array filters by ensuring they are arrays and contain only strings
-    const cleanArrayFilter = (arr: any[]): string[] => {
+    const cleanArrayFilter = (arr: any[] = []): string[] => {
         if (!Array.isArray(arr)) return [];
         return arr
             .filter((item) => item !== null && item !== undefined)
             .map((item) => String(item));
     };
 
+    // Ensure the structure has all required properties with sensible defaults
     return {
         dateRange: {
             from:
@@ -63,10 +71,10 @@ const cleanFilters = (filters: typeof DEFAULT_FILTER_STATE) => {
             min: filters.valueRange?.min ?? DEFAULT_FILTER_STATE.valueRange.min,
             max: filters.valueRange?.max ?? DEFAULT_FILTER_STATE.valueRange.max,
         },
-        agencies: cleanArrayFilter(filters.agencies),
-        countries: cleanArrayFilter(filters.countries),
-        provinces: cleanArrayFilter(filters.provinces),
-        cities: cleanArrayFilter(filters.cities),
+        agencies: cleanArrayFilter(filters.agencies || []),
+        countries: cleanArrayFilter(filters.countries || []),
+        provinces: cleanArrayFilter(filters.provinces || []),
+        cities: cleanArrayFilter(filters.cities || []),
     };
 };
 
@@ -114,19 +122,64 @@ export function useGrantSearch(params: GrantSearchParams) {
 }
 
 export function useInfiniteGrantSearch(
-    params: Omit<GrantSearchParams, "pagination">
+    params: Omit<GrantSearchParams, "pagination"> | any = {},
+    enabled: boolean = true
 ) {
     // Get the user context
     const { user } = useAuth();
-    
-    return useInfiniteQuery<SearchResponse, Error, InfiniteData<SearchResponse>>({
-        queryKey: grantKeys.infiniteSearch(params),
+
+    // Ensure params has the expected shape
+    const ensureValidParams = (
+        params: any
+    ): Omit<GrantSearchParams, "pagination"> => {
+        // If params is empty or not properly structured, create a default structure
+        if (!params || typeof params !== "object") {
+            return {
+                searchTerms: { recipient: "", institute: "", grant: "" },
+                filters: DEFAULT_FILTER_STATE,
+                sortConfig: { field: "date", direction: "desc" },
+            };
+        }
+
+        // Make sure searchTerms exists and has the right structure
+        const searchTerms = params.searchTerms || {};
+        const validSearchTerms = {
+            recipient: searchTerms.recipient || "",
+            institute: searchTerms.institute || "",
+            grant: searchTerms.grant || "",
+        };
+
+        // Make sure filters exist
+        const filters = params.filters || DEFAULT_FILTER_STATE;
+
+        // Make sure sortConfig exists
+        const sortConfig = params.sortConfig || {
+            field: "date",
+            direction: "desc",
+        };
+
+        return {
+            searchTerms: validSearchTerms,
+            filters,
+            sortConfig,
+        };
+    };
+
+    // Ensure we have valid params before proceeding
+    const validParams = ensureValidParams(params);
+
+    return useInfiniteQuery<
+        SearchResponse,
+        Error,
+        InfiniteData<SearchResponse>
+    >({
+        queryKey: grantKeys.infiniteSearch(validParams),
         queryFn: async ({ pageParam }) => {
             try {
                 // Create a clean copy of the params
                 const cleanParams = {
-                    ...params,
-                    filters: cleanFilters(params.filters),
+                    ...validParams,
+                    filters: cleanFilters(validParams.filters),
                     pagination: {
                         page: pageParam as number,
                         pageSize: 10, // Load 10 items per page
@@ -159,7 +212,9 @@ export function useInfiniteGrantSearch(
         getNextPageParam: (lastPage: SearchResponse) => {
             // If we've reached the last page, return undefined to signal that there are no more pages
             if (
+                !lastPage.metadata ||
                 lastPage.metadata.page >= lastPage.metadata.totalPages ||
+                !lastPage.data ||
                 lastPage.data.length === 0
             ) {
                 return undefined;
@@ -172,6 +227,7 @@ export function useInfiniteGrantSearch(
         staleTime: 30000,
         gcTime: 5 * 60 * 1000,
         refetchOnWindowFocus: false,
+        enabled: enabled,
     });
 }
 

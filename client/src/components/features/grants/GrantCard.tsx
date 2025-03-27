@@ -31,7 +31,7 @@ import {
     BookOpen,
 } from "lucide-react";
 import { cn } from "@/utils/cn";
-import Tag, { TagGroup } from "@/components/common/ui/Tag";
+import Tag, { Tags } from "@/components/common/ui/Tag";
 import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
 import { TrendVisualizer } from "../visualizations/TrendVisualizer";
 
@@ -214,7 +214,7 @@ export const GrantCard = ({ grant, isBookmarked }: GrantCardProps) => {
                             </div>
                         </div>
 
-                        <TagGroup spacing="normal">
+                        <Tags spacing="normal">
                             {/* Institution */}
                             <Tag
                                 icon={University}
@@ -246,11 +246,11 @@ export const GrantCard = ({ grant, isBookmarked }: GrantCardProps) => {
                                 {grant.agreement_title_en ||
                                     "No Agreement Title Record Found"}
                             </Tag>
-                        </TagGroup>
+                        </Tags>
 
                         {/* Tags */}
                         <div className="mt-1.5">
-                            <TagGroup spacing="tight">
+                            <Tags spacing="tight">
                                 {metadataTags.map((tag, index) => (
                                     <Tag
                                         key={index}
@@ -262,7 +262,7 @@ export const GrantCard = ({ grant, isBookmarked }: GrantCardProps) => {
                                         {tag.text}
                                     </Tag>
                                 ))}
-                            </TagGroup>
+                            </Tags>
                         </div>
                     </div>
                 </div>

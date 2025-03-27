@@ -9,6 +9,16 @@ export interface BaseSortConfig {
     direction: SortDirection;
 }
 
+// Recipient-specific sort config
+export interface RecipientSortConfig extends BaseSortConfig {
+    field: "grant_count" | "total_funding" | "avg_funding";
+}
+
+// Institute-specific sort config
+export interface InstituteSortConfig extends BaseSortConfig {
+    field: "grant_count" | "total_funding" | "avg_funding" | "recipient_count";
+}
+
 // Grant-specific sort config
 export interface GrantSortConfig extends BaseSortConfig {
     field: "date" | "value";
@@ -20,8 +30,9 @@ export interface HistorySortConfig extends BaseSortConfig {
 }
 
 // Generic sort config for broader use
-export interface SortConfig extends BaseSortConfig {
-    field: "date" | "value" | "results";
+export interface SortConfig {
+    field: "date" | "value" | "results" | "grant_count" | "total_funding" | "avg_funding" | "recipient_count";
+    direction: "asc" | "desc";
 }
 
 // Grant-specific search params

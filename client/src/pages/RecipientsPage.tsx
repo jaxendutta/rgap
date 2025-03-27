@@ -13,9 +13,7 @@ const RecipientsPage = () => {
             subtitle="Explore organizations and individuals who have received research grants."
             useInfiniteEntities={useInfiniteRecipients}
             useSearchEntities={useSearchRecipients}
-            searchPlaceholder="Search by recipient name, institution, or location..."
-            emptyMessage="No grant recipients found. Try adjusting your filters or check back later."
-            searchEmptyMessage="No recipients match your search criteria. Try different keywords."
+            variant="grid"
         />
     );
 };

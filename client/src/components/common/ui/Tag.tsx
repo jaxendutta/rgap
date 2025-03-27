@@ -157,13 +157,13 @@ export const Tag: React.FC<TagProps> = ({
 };
 
 // TagGroup component for grouping tags
-export interface TagGroupProps {
+export interface TagsProps {
     children: React.ReactNode;
     className?: string;
     spacing?: "tight" | "normal" | "loose";
 }
 
-export const TagGroup: React.FC<TagGroupProps> = ({
+export const Tags: React.FC<TagsProps> = ({
     children,
     className,
     spacing = "normal",

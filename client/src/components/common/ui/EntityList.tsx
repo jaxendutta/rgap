@@ -1,7 +1,7 @@
 // src/components/common/ui/EntityList.tsx
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
-import { MoreHorizontal, LucideIcon, X, LineChart } from "lucide-react";
+import { MoreHorizontal, LucideIcon, X, LineChart, Grid, List } from "lucide-react";
 import { SortButton } from "./SortButton";
 import { Button } from "./Button";
 import LoadingState from "./LoadingState";
@@ -10,24 +10,17 @@ import ErrorState from "./ErrorState";
 import { UseInfiniteQueryResult } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/utils/cn";
-import { Entity } from "@/types/models";
+import { SortConfig } from "@/types/search";
 
-export type SortDirection = "asc" | "desc";
-export type variant = "list" | "grid";
-
-export interface SortConfig {
-    field: string;
-    direction: SortDirection;
-}
+export type LayoutVariant = "list" | "grid";
 
 interface EntityListProps<T> {
     // Content props
-    title: string;
+    entityType: string;
     entities: T[];
-    entityType: Entity;
     renderItem: (item: T, index: number) => React.ReactNode;
     keyExtractor: (item: T, index: number) => string;
-    variant?: variant;
+    variant?: LayoutVariant;
     emptyMessage?: string;
 
     // Sorting props
@@ -41,6 +34,11 @@ interface EntityListProps<T> {
 
     // Optional infinite query props
     infiniteQuery?: UseInfiniteQueryResult<any, Error>;
+
+    // Optional loading/error state props (for manually managing these states)
+    isLoading?: boolean;
+    isError?: boolean;
+    error?: Error | unknown;
 
     // Optional metadata counts
     totalCount?: number;
@@ -56,34 +54,43 @@ interface EntityListProps<T> {
 
     // Optional additional class
     className?: string;
+    
+    // Layout toggle
+    allowLayoutToggle?: boolean;
 }
 
-function EntityList<T>({
-    title,
-    entities: items,
-    renderItem,
-    keyExtractor,
-    variant = "list",
-    emptyMessage = "No items found.",
-    sortOptions,
-    sortConfig,
-    onSortChange,
-    infiniteQuery,
-    totalCount,
-    totalItems,
-    visualization,
-    visualizationToggle,
-    className,
-}: EntityListProps<T>) {
+function EntityList<T>(props: EntityListProps<T>) {
+    const {
+        entityType,
+        entities: items,
+        renderItem,
+        keyExtractor,
+        variant = "list",
+        emptyMessage = "No items found.",
+        sortOptions,
+        sortConfig,
+        onSortChange,
+        infiniteQuery,
+        totalCount,
+        totalItems,
+        visualization,
+        visualizationToggle,
+        className,
+        allowLayoutToggle = false,
+    } = props;
+
     const { ref, inView } = useInView({
         threshold: 0.1,
         rootMargin: "0px 0px 500px 0px", // Trigger 500px before reaching the end
     });
 
-    // Handle infinite query loading
-    const isLoading = infiniteQuery?.isLoading;
-    const isError = infiniteQuery?.isError;
-    const error = infiniteQuery?.error;
+    // State for layout variant (if toggle is allowed)
+    const [layoutVariant, setLayoutVariant] = useState<LayoutVariant>(variant);
+
+    // Handle loading and error states - either from props or from infiniteQuery
+    const isLoading = props.isLoading !== undefined ? props.isLoading : infiniteQuery?.isLoading;
+    const isError = props.isError !== undefined ? props.isError : infiniteQuery?.isError;
+    const error = props.error !== undefined ? props.error : infiniteQuery?.error;
     const isFetchingNextPage = infiniteQuery?.isFetchingNextPage;
     const hasNextPage = infiniteQuery?.hasNextPage;
 
@@ -107,6 +114,11 @@ function EntityList<T>({
         onSortChange(newSortConfig);
     };
 
+    // Toggle layout variant
+    const toggleLayoutVariant = () => {
+        setLayoutVariant(prev => prev === "list" ? "grid" : "list");
+    };
+
     // Handle error state
     if (isError && error) {
         return (
@@ -125,14 +137,14 @@ function EntityList<T>({
 
     // Handle initial loading state
     if (isLoading && items.length === 0) {
-        return <LoadingState title={`Loading ${title}...`} size="md" />;
+        return <LoadingState title={`Loading ${entityType}...`} size="md" />;
     }
 
     // Handle empty state
     if (!isLoading && items.length === 0) {
         return (
             <EmptyState
-                title={`No ${title} Found`}
+                title={`No ${entityType} Found`}
                 message={emptyMessage}
                 size="md"
             />
@@ -142,13 +154,19 @@ function EntityList<T>({
     return (
         <div className={className}>
             {/* Header with sort controls and visualization toggle */}
-            <div className="flex justify-between items-center border-b pb-2">
+            <div className="flex justify-between items-end border-b pb-2">
                 <div className="flex flex-col lg:flex-row lg:items-center">
-                    <div className="text-lg font-medium">{title}</div>
                     {totalCount !== undefined && totalItems !== undefined && (
-                        <span className="text-sm text-gray-500 lg:ml-2">
-                            ({totalItems.toLocaleString()} out of{" "}
-                            {totalCount.toLocaleString()} results)
+                        <span className="text-xs lg:text-sm text-gray-500 lg:ml-2">
+                            {`Showing `}
+                            <span className="font-semibold">
+                                {totalItems.toLocaleString()}
+                            </span>
+                            {` out of `}
+                            <span className="font-semibold">
+                                {totalCount.toLocaleString()}
+                            </span>
+                            {` ${entityType.toLowerCase()}`}
                         </span>
                     )}
                 </div>
@@ -181,6 +199,21 @@ function EntityList<T>({
                             </span>
                         </Button>
                     )}
+                    
+                    {/* Layout Toggle Button */}
+                    {allowLayoutToggle && (
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            leftIcon={layoutVariant === "grid" ? List : Grid}
+                            onClick={toggleLayoutVariant}
+                            className="lg:space-x-2 hidden lg:inline-flex"
+                        >
+                            <span className="hidden lg:inline">
+                                {layoutVariant === "grid" ? "List View" : "Grid View"}
+                            </span>
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -199,11 +232,11 @@ function EntityList<T>({
                 </AnimatePresence>
             )}
 
-            {/* Items list */}
+            {/* Items list or grid */}
             <div className={cn(
-                variant === "grid" 
-                    ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
-                    : "space-y-4"
+                layoutVariant === "grid" 
+                    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"
+                    : "space-y-4 mt-4"
             )}>
                 {items.map((item, index) => (
                     <React.Fragment key={keyExtractor(item, index)}>
@@ -218,7 +251,7 @@ function EntityList<T>({
                     {isFetchingNextPage ? (
                         <LoadingState
                             title=""
-                            message={`Loading more ${title.toLowerCase()}...`}
+                            message={`Loading more ${entityType.toLowerCase()}...`}
                             size="sm"
                         />
                     ) : hasNextPage ? (
@@ -231,7 +264,7 @@ function EntityList<T>({
                         </Button>
                     ) : items.length > 0 ? (
                         <p className="text-sm text-gray-500">
-                            All {title.toLowerCase()} loaded
+                            All {entityType.toLowerCase()} loaded
                         </p>
                     ) : null}
                 </div>

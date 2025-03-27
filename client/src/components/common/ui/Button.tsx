@@ -8,8 +8,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     size?: "sm" | "md" | "lg";
     leftIcon?: LucideIcon;
     rightIcon?: LucideIcon;
-    iconPosition?: "left" | "right";
     isLoading?: boolean;
+    pill?: boolean;
     responsiveText?: boolean; // New prop to enable responsive text
     responsiveIcon?: "hideOnMobile" | "hideOnDesktop" | "always"; // Control icon visibility
 }
@@ -22,6 +22,7 @@ export const Button = ({
     leftIcon: LeftIcon,
     rightIcon: RightIcon,
     isLoading,
+    pill=false,
     disabled,
     responsiveText = false, // Default is false to maintain backward compatibility
     responsiveIcon = "always", // Default always shows icon
@@ -52,8 +53,9 @@ export const Button = ({
     return (
         <button
             className={cn(
-                "flex items-center justify-center font-medium rounded-md gap-2",
+                "flex items-center justify-center font-medium gap-2",
                 "transition-colors transition-all duration-800 ease-in-out",
+                pill ? "rounded-full" : "rounded-md",
                 variants[variant],
                 sizes[size],
                 (disabled || isLoading) && "opacity-50 cursor-not-allowed",

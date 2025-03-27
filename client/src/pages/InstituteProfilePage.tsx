@@ -9,7 +9,7 @@ import InstituteHeader from "@/components/features/institutes/InstituteHeader";
 import InstituteStats from "@/components/features/institutes/InstituteStats";
 import RecipientsList from "@/components/features/recipients/RecipientsList";
 import GrantsList from "@/components/features/grants/GrantsList";
-import { SortConfig } from "@/components/common/ui/EntityList";
+import { SortConfig } from "@/types/search";
 import { AnalyticsCards } from "@/components/common/ui/AnalyticsCards";
 import { formatCurrency } from "@/utils/format";
 import { getCategoryColor } from "@/utils/chartColors";
@@ -110,6 +110,8 @@ const InstituteProfilePage = () => {
                     <RecipientsList
                         instituteId={id || ""}
                         initialPageSize={15}
+                        showVisualization={true}
+                        visualizationInitiallyVisible={false}
                     />
                 );
 
@@ -117,7 +119,6 @@ const InstituteProfilePage = () => {
                 return (
                     <GrantsList
                         infiniteQuery={infiniteGrantsQuery}
-                        title="Grants"
                         initialSortConfig={grantsSortConfig}
                         contextData={{
                             instituteName: institute.name,
@@ -138,7 +139,7 @@ const InstituteProfilePage = () => {
                 return (
                     <div className="space-y-6">
                         <h2 className="text-xl font-semibold">
-                            Detailed Analytics
+                            Analytics
                         </h2>
 
                         {/* Analytics cards for detailed metrics */}

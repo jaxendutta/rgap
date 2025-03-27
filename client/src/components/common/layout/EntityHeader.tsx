@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { LucideIcon, MapPin, ChevronDown, ChevronUp } from "lucide-react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/common/ui/Button";
 import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
 import { cn } from "@/utils/cn";
 import LocationMap from "@/components/common/ui/LocationMap";
 import { formatCommaSeparated } from "@/utils/format";
 import { Entity } from "@/types/models";
+import { Tag, Tags } from "../ui/Tag";
 
 // Define types for metadata and action items
 export interface MetadataItem {
@@ -72,6 +72,7 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                                 leftIcon={MapPin}
                                 rightIcon={showMap ? ChevronUp : ChevronDown}
                                 size="sm"
+                                pill={true}
                                 onClick={() => setShowMap(!showMap)}
                                 className="text-blue-600 border-blue-200 hover:bg-blue-50"
                             >
@@ -90,7 +91,11 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                                 size="sm"
                                 onClick={action.onClick}
                             >
-                                {<span className="hidden lg:inline">{action.label}</span>}
+                                {
+                                    <span className="hidden lg:inline">
+                                        {action.label}
+                                    </span>
+                                }
                             </Button>
                         ))}
 
@@ -106,29 +111,31 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                 </div>
 
                 {/* Metadata */}
-                {metadata.length > 0 && <div className="flex flex-wrap gap-3 mt-2">
-                    {metadata.map((item, index) => (
-                        <div
-                            key={index}
-                            className="flex items-start text-gray-600"
-                        >
-                            {item.href ? (
-                                <Link
-                                    to={item.href}
-                                    className="flex items-start hover:text-blue-600 transition-colors"
-                                >
-                                    <item.icon className="h-4 w-4 mr-1.5 mt-0.5 flex-shrink-0" />
-                                    <span>{item.text}</span>
-                                </Link>
-                            ) : (
-                                <div className="flex items-start">
-                                    <item.icon className="h-4 w-4 mr-1.5 mt-0.5 flex-shrink-0" />
-                                    <span>{item.text}</span>
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>}
+                {metadata.length > 0 && (
+                    <Tags>
+                        {metadata.map((item, index) => (
+                            <Tag
+                                key={index}
+                                icon={item.icon}
+                                onClick={
+                                    item.href && item.href.trim() !== ""
+                                        ? () =>
+                                              (window.location.href =
+                                                  item.href || "")
+                                        : undefined
+                                }
+                                variant={
+                                    item.href && item.href.trim() !== ""
+                                        ? "link"
+                                        : "outline"
+                                }
+                                pill={true}
+                            >
+                                {item.text}
+                            </Tag>
+                        ))}
+                    </Tags>
+                )}
 
                 {/* Map section - collapsible */}
                 {hasLocationData && (

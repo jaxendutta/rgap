@@ -7,9 +7,6 @@ import {
     Search,
     PackageOpen,
     LogIn,
-    RefreshCw,
-    XCircle,
-    LucideIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PageContainer from "@/components/common/layout/PageContainer";
@@ -21,61 +18,41 @@ import {
     useToggleBookmark,
     useBookmarkedEntities,
 } from "@/hooks/api/useBookmarks";
+import EntityList from "@/components/common/ui/EntityList";
 import EntityCard from "@/components/common/ui/EntityCard";
 import { GrantCard } from "@/components/features/grants/GrantCard";
-import { useNotification } from "@/components/features/notifications/NotificationProvider";
 import { SearchHistoryCard } from "@/components/features/account/SearchHistoryCard";
-import LoadingState from "@/components/common/ui/LoadingState";
-import EmptyState from "@/components/common/ui/EmptyState";
-import ErrorState from "@/components/common/ui/ErrorState";
+import { useNotification } from "@/components/features/notifications/NotificationProvider";
+import { Entity } from "@/types/models";
 import { cn } from "@/utils/cn";
-import {
-    Grant,
-    Institute,
-    Recipient,
-    SearchHistory,
-    Entity,
-} from "@/types/models";
 
 // Define the tab structure with correct bookmark types
 interface TabDefinition {
+    id: Entity;
     name: string;
-    icon: LucideIcon,
-    type: Entity;
-}
-
-// Define the tab structure with correct bookmark types
-interface TabDefinition {
-    name: string;
-    icon: LucideIcon;
-    type: Entity;
+    icon: React.ElementType;
 }
 
 const tabs: TabDefinition[] = [
-    { name: "Grants", icon: BookMarked, type: "grant" },
-    { name: "Institutes", icon: University, type: "institute" },
-    { name: "Recipients", icon: GraduationCap, type: "recipient" },
-    { name: "Searches", icon: Search, type: "search" }
+    { id: "grant", name: "Grants", icon: BookMarked },
+    { id: "institute", name: "Institutes", icon: University },
+    { id: "recipient", name: "Recipients", icon: GraduationCap },
+    { id: "search", name: "Searches", icon: Search },
 ];
 
 export const BookmarksPage = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const { showNotification } = useNotification();
-    const [activeTab, setActiveTab] = useState("Grants");
-
-    // Get the active tab type for the bookmark API
-    const activeTabType =
-        tabs.find((tab) => tab.name === activeTab)?.type || "grant";
+    const [activeTab, setActiveTab] = useState<Entity>("grant");
 
     // Use the hook to get bookmarked item IDs
     const {
-        data: bookmarkedIds = [],
         isLoading: isLoadingBookmarks,
         isError: isBookmarksError,
         error: bookmarksError,
         refetch: refetchBookmarks,
-    } = useAllBookmarks(activeTabType, user?.user_id);
+    } = useAllBookmarks(activeTab, user?.user_id);
 
     // Use the hook to get full bookmarked entities with details
     const {
@@ -83,10 +60,10 @@ export const BookmarksPage = () => {
         isLoading: isLoadingEntities,
         isError: isEntitiesError,
         error: entitiesError,
-    } = useBookmarkedEntities(activeTabType, user?.user_id);
+    } = useBookmarkedEntities(activeTab, user?.user_id);
 
     // Set up toggle bookmark mutation
-    const toggleBookmarkMutation = useToggleBookmark(activeTabType);
+    const toggleBookmarkMutation = useToggleBookmark(activeTab);
 
     // Handle bookmarks
     const toggleBookmark = (id: number | string) => {
@@ -119,6 +96,84 @@ export const BookmarksPage = () => {
     // Handle search rerun
     const handleRerunSearch = (searchParams: any) => {
         navigate("/search", { state: { searchParams } });
+    };
+
+    // Entity-specific render functions
+    const renderItem = (item: any) => {
+        switch (activeTab) {
+            case "grant":
+                return <GrantCard grant={item} isBookmarked={true} />;
+            case "recipient":
+                return (
+                    <EntityCard
+                        entity={item}
+                        entityType="recipient"
+                        isBookmarked={true}
+                    />
+                );
+            case "institute":
+                return (
+                    <EntityCard
+                        entity={item}
+                        entityType="institute"
+                        isBookmarked={true}
+                    />
+                );
+            case "search":
+                return (
+                    <SearchHistoryCard
+                        search={item}
+                        onRerun={handleRerunSearch}
+                        onDelete={(historyId) => toggleBookmark(historyId)}
+                    />
+                );
+            default:
+                return null;
+        }
+    };
+
+    // Entity-specific key extractors
+    const keyExtractor = (item: any) => {
+        switch (activeTab) {
+            case "grant":
+                return `bookmarked-grant-${item.grant_id || item.ref_number}`;
+            case "recipient":
+                return `bookmarked-recipient-${item.recipient_id}`;
+            case "institute":
+                return `bookmarked-institute-${item.institute_id}`;
+            case "search":
+                return `bookmarked-search-${item.history_id}`;
+            default:
+                return `bookmark-${Math.random()}`;
+        }
+    };
+
+    // Define sort options based on active tab
+    const getSortOptions = () => {
+        switch (activeTab) {
+            case "grant":
+                return [
+                    {
+                        field: "agreement_start_date",
+                        label: "Date",
+                        icon: Search,
+                    },
+                    { field: "agreement_value", label: "Value", icon: Search },
+                ];
+            case "recipient":
+            case "institute":
+                return [
+                    { field: "total_funding", label: "Funding", icon: Search },
+                    { field: "grant_count", label: "Grants", icon: Search },
+                ];
+            case "search":
+                return [
+                    { field: "search_time", label: "Date", icon: Search },
+                    { field: "result_count", label: "Results", icon: Search },
+                ];
+            default:
+                return [];
+        }
     };
 
     // Check for loading or error states
@@ -156,144 +211,6 @@ export const BookmarksPage = () => {
         );
     }
 
-    // Render bookmarked entities based on the active tab
-    const renderBookmarkedItems = () => {
-        // Show appropriate loading state
-        if (isLoading) {
-            return (
-                <LoadingState
-                    title={`Loading your bookmarked ${activeTab.toLowerCase()}...`}
-                    message="Please wait while we fetch your saved items."
-                    fullHeight
-                    size="md"
-                />
-            );
-        }
-
-        if (isError) {
-            return (
-                <ErrorState
-                    title="Error Loading Bookmarks"
-                    message={
-                        errorMessage instanceof Error
-                            ? errorMessage.message
-                            : "Failed to load your bookmarks."
-                    }
-                    onRetry={() => refetchBookmarks()}
-                    size="md"
-                    icon={XCircle}
-                />
-            );
-        }
-
-        if (bookmarkedIds.length === 0) {
-            return (
-                <EmptyState
-                    title={`No bookmarked ${activeTab.toLowerCase()}`}
-                    message={`You haven't saved any ${activeTab.toLowerCase()} yet. Browse and click the bookmark icon to save items for later.`}
-                    primaryAction={{
-                        label:
-                            activeTab === "Grants"
-                                ? "Browse Grants"
-                                : activeTab === "Institutes"
-                                ? "Browse Institutes"
-                                : activeTab === "Recipients"
-                                ? "Browse Recipients"
-                                : "Search",
-                        onClick: () =>
-                            navigate(
-                                activeTab === "Grants"
-                                    ? "/search"
-                                    : activeTab === "Institutes"
-                                    ? "/institutes"
-                                    : activeTab === "Recipients"
-                                    ? "/recipients"
-                                    : "/search"
-                            ),
-                        icon: Search,
-                    }}
-                    size="md"
-                />
-            );
-        }
-
-        if (bookmarkedItems.length === 0) {
-            // This should only happen if we have IDs but couldn't load the details
-            return (
-                <div className="flex flex-col items-center justify-center p-8 bg-white rounded-lg border shadow-sm">
-                    <RefreshCw className="h-12 w-12 text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        No details available
-                    </h3>
-                    <p className="text-gray-600 mb-6 max-w-md text-center">
-                        We found your bookmarks, but couldn't load the details.
-                        This might be a temporary issue.
-                    </p>
-                    <Button
-                        variant="primary"
-                        leftIcon={RefreshCw}
-                        onClick={() => refetchBookmarks()}
-                    >
-                        Try Again
-                    </Button>
-                </div>
-            );
-        }
-
-        // Render for searches tab
-        if (activeTabType === "search") {
-            return (
-                <div className="space-y-4">
-                    {bookmarkedItems.map((item: any) => (
-                        <SearchHistoryCard
-                            key={item.history_id}
-                            search={item as SearchHistory}
-                            onRerun={handleRerunSearch}
-                            onDelete={(historyId) => toggleBookmark(historyId)}
-                        />
-                    ))}
-                </div>
-            );
-        }
-
-        // Render the grid of bookmarked items for other tab types
-        return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {bookmarkedItems.map((item: any) => {
-                    // Render different entity cards based on the active tab
-                    if (activeTabType === "grant") {
-                        return (
-                            <GrantCard
-                                key={item.grant_id || item.ref_number}
-                                grant={item as Grant}
-                                isBookmarked={true}
-                            />
-                        );
-                    } else if (activeTabType === "institute") {
-                        return (
-                            <EntityCard
-                                key={item.institute_id}
-                                entity={item as Institute}
-                                entityType="institute"
-                                isBookmarked={true}
-                            />
-                        );
-                    } else if (activeTabType === "recipient") {
-                        return (
-                            <EntityCard
-                                key={item.recipient_id}
-                                entity={item as Recipient}
-                                entityType="recipient"
-                                isBookmarked={true}
-                            />
-                        );
-                    }
-                    return null;
-                })}
-            </div>
-        );
-    };
-
     return (
         <PageContainer>
             {/* Header */}
@@ -303,15 +220,15 @@ export const BookmarksPage = () => {
             />
 
             {/* Tabs */}
-            <div className="flex space-x-2 lg:space-x-4">
+            <div className="flex space-x-2 lg:space-x-4 mb-6">
                 {tabs.map((tab) => {
-                    const isActive = activeTab === tab.name;
+                    const isActive = activeTab === tab.id;
                     const Icon = tab.icon;
 
                     return (
                         <button
-                            key={tab.name}
-                            onClick={() => setActiveTab(tab.name)}
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
                             className={cn(
                                 "w-full flex items-center py-3 rounded-lg transition-all duration-200 gap-0.5 lg:gap-2",
                                 isActive
@@ -329,8 +246,27 @@ export const BookmarksPage = () => {
                 })}
             </div>
 
-            {/* Tab Content */}
-            <div className="mt-6">{renderBookmarkedItems()}</div>
+            {/* Entity List */}
+            <EntityList
+                entityType={activeTab}
+                entities={bookmarkedItems}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                variant={
+                    activeTab === "search" || activeTab === "grant"
+                        ? "list"
+                        : "grid"
+                }
+                sortOptions={getSortOptions()}
+                sortConfig={{ field: "date", direction: "desc" }}
+                onSortChange={() => {}} // Bookmarks don't need sorting for now
+                totalCount={bookmarkedItems.length}
+                totalItems={bookmarkedItems.length}
+                emptyMessage={`No bookmarked ${activeTab}s found.`}
+                isLoading={isLoading}
+                isError={isError}
+                error={errorMessage}
+            />
         </PageContainer>
     );
 };

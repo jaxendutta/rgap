@@ -17,7 +17,7 @@ import {
 import { formatCommaSeparated, formatCurrency } from "@/utils/format";
 import { Card } from "@/components/common/ui/Card";
 import { Button } from "@/components/common/ui/Button";
-import Tag, { TagGroup } from "@/components/common/ui/Tag";
+import Tag, { Tags } from "@/components/common/ui/Tag";
 import { Institute, Recipient, Entity } from "@/types/models";
 import { cn } from "@/utils/cn";
 import { RecipientType } from "@/constants/data";
@@ -236,7 +236,7 @@ const EntityCard = ({
             {/* Metadata Tags - Keep them single line with overflow handling */}
             {metadataItems.length > 0 && (
                 <div className="mb-4 overflow-hidden">
-                    <TagGroup>
+                    <Tags>
                         {metadataItems.map((item, index) => (
                             <Tag
                                 key={index}
@@ -255,7 +255,7 @@ const EntityCard = ({
                                 </span>
                             </Tag>
                         ))}
-                    </TagGroup>
+                    </Tags>
                 </div>
             )}
 

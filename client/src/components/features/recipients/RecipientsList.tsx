@@ -2,7 +2,8 @@
 import { useState, useMemo } from "react";
 import { DollarSign, Users } from "lucide-react";
 import { useInfiniteInstituteRecipients } from "@/hooks/api/useInstitutes";
-import EntityList, { SortConfig } from "@/components/common/ui/EntityList";
+import EntityList from "@/components/common/ui/EntityList";
+import { SortConfig } from "@/types/search";
 import { TrendVisualizer } from "@/components/features/visualizations/TrendVisualizer";
 import RecipientCard from "./RecipientCard";
 import { Recipient } from "@/types/models";
@@ -115,7 +116,7 @@ export const RecipientsList = ({
 
     return (
         <EntityList
-            title="Recipients"
+            entityType={"recipient"}
             entities={recipients}
             renderItem={renderRecipientItem}
             keyExtractor={keyExtractor}

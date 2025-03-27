@@ -4,7 +4,8 @@ import { Calendar, DollarSign } from "lucide-react";
 import { Grant } from "@/types/models";
 import { GrantCard } from "./GrantCard";
 import { UseInfiniteQueryResult } from "@tanstack/react-query";
-import EntityList, { SortConfig } from "@/components/common/ui/EntityList";
+import EntityList from "@/components/common/ui/EntityList";
+import { SortConfig } from "@/types/search";
 import {
     TrendVisualizer,
     ViewContext,
@@ -23,7 +24,6 @@ interface GrantsListProps {
     infiniteQuery?: UseInfiniteQueryResult<any, Error>;
 
     // Common props
-    title?: string;
     initialSortConfig?: SortConfig;
     emptyMessage?: string;
     contextData?: {
@@ -47,7 +47,6 @@ const GrantsList: React.FC<GrantsListProps> = ({
     grants,
     onSortChange,
     infiniteQuery,
-    title = "Grants",
     initialSortConfig = { field: "date", direction: "desc" },
     emptyMessage = "No grants found.",
     contextData = {},
@@ -221,7 +220,7 @@ const GrantsList: React.FC<GrantsListProps> = ({
 
     return (
         <EntityList
-            title={title}
+            entityType="grant"
             entities={sortedGrantsToDisplay}
             renderItem={renderGrantItem}
             keyExtractor={keyExtractor}

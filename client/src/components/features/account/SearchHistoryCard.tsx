@@ -12,7 +12,7 @@ import { Button } from "@/components/common/ui/Button";
 import { Card } from "@/components/common/ui/Card";
 import { formatCurrency } from "@/utils/format";
 import { FILTER_LIMITS } from "@/constants/filters";
-import Tag, { TagGroup } from "@/components/common/ui/Tag";
+import Tag, { Tags } from "@/components/common/ui/Tag";
 import { SearchHistory } from "@/types/models";
 import { GrantSearchParams } from "@/types/search";
 import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
@@ -145,7 +145,7 @@ export const SearchHistoryCard = ({
                     {/* Search terms */}
                     {hasSearchTerms && (
                         <div className="mb-2">
-                            <TagGroup>
+                            <Tags>
                                 {searchTerms.map(
                                     ({ key, value, icon: Icon }) => (
                                         <Tag
@@ -158,14 +158,14 @@ export const SearchHistoryCard = ({
                                         </Tag>
                                     )
                                 )}
-                            </TagGroup>
+                            </Tags>
                         </div>
                     )}
 
                     {/* Active filters */}
                     {hasFilters && (
                         <div>
-                            <TagGroup spacing="tight">
+                            <Tags spacing="tight">
                                 {activeFilters.map((filter, index) => (
                                     <Tag
                                         key={`filter-${index}`}
@@ -178,7 +178,7 @@ export const SearchHistoryCard = ({
                                         {filter.value}
                                     </Tag>
                                 ))}
-                            </TagGroup>
+                            </Tags>
                         </div>
                     )}
 

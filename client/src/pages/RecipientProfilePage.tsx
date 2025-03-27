@@ -7,7 +7,7 @@ import EntityProfilePage from "@/components/common/pages/EntityProfilePage";
 import RecipientHeader from "@/components/features/recipients/RecipientHeader";
 import RecipientStats from "@/components/features/recipients/RecipientStats";
 import GrantsList from "@/components/features/grants/GrantsList";
-import { SortConfig } from "@/components/common/ui/EntityList";
+import { SortConfig } from "@/types/search";
 import { AnalyticsCards } from "@/components/common/ui/AnalyticsCards";
 import { formatCurrency } from "@/utils/format";
 import { getCategoryColor } from "@/utils/chartColors";
@@ -63,7 +63,7 @@ export const RecipientProfilePage = () => {
         },
         {
             id: "analytics",
-            label: "Detailed Analytics",
+            label: "Analytics",
             icon: PieChart,
         },
     ];
@@ -97,7 +97,6 @@ export const RecipientProfilePage = () => {
                         grants={recipient.grants || []}
                         onSortChange={setSortConfig}
                         initialSortConfig={sortConfig}
-                        title="Grants"
                         contextData={{
                             recipientName: recipient.legal_name,
                             recipientId: recipient.recipient_id,
@@ -119,7 +118,7 @@ export const RecipientProfilePage = () => {
                 return (
                     <div className="space-y-6">
                         <h2 className="text-xl font-semibold">
-                            Detailed Analytics
+                            Analytics
                         </h2>
 
                         {/* Analytics cards for detailed metrics */}
