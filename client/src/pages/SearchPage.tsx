@@ -1,44 +1,115 @@
 // src/pages/SearchPage.tsx
-import EntitiesPage from "@/components/common/pages/EntitiesPage";
+import { useState } from "react";
+import { FileSearch2, University, UserSearch } from "lucide-react";
 import { useInfiniteGrantSearch } from "@/hooks/api/useGrants";
+import GrantsList from "@/components/features/grants/GrantsList";
+import type { GrantSortConfig as SortConfig } from "@/types/search";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
+import type { GrantSearchParams } from "@/types/search";
+import SearchInterface from "@/components/features/search/SearchInterface";
+import PageHeader from "@/components/common/layout/PageHeader";
+import PageContainer from "@/components/common/layout/PageContainer";
 
-// Create a wrapper for useInfiniteGrantSearch to ensure proper parameters
-const useInitialGrantSearch = (params: any) => {
-    // When used as useInfiniteEntities, ensure we have default filters
-    const searchParams = {
-        searchTerms: {
-            recipient: "",
-            institute: "",
-            grant: "",
-        },
-        filters: DEFAULT_FILTER_STATE,
-        sortConfig: params || { field: "date", direction: "desc" },
+export const SearchPage = () => {
+    // Current search terms (what's shown in the input fields)
+    const [searchTerms, setSearchTerms] = useState({
+        recipient: "",
+        institute: "",
+        grant: "",
+    });
+
+    // UI state controls
+    const [isBookmarked, setIsBookmarked] = useState(false);
+    const [sortConfig] = useState<SortConfig>({
+        field: "date",
+        direction: "desc",
+    });
+    const [filters, setFilters] = useState(DEFAULT_FILTER_STATE);
+    const [isInitialState, setIsInitialState] = useState(true);
+
+    // Create search params
+    const searchParams: Omit<GrantSearchParams, "pagination"> = {
+        searchTerms,
+        filters,
+        sortConfig,
     };
 
-    return useInfiniteGrantSearch(searchParams);
-};
+    // Initialize infinite query
+    const infiniteQueryResult = useInfiniteGrantSearch(searchParams);
 
-// Create a wrapper for search queries
-const useSearchGrantsWrapper = (params: any, enabled: boolean) => {
-    // Make sure the search parameters are properly structured
-    return useInfiniteGrantSearch(params, enabled);
-};
+    const handleSearch = (params: {
+        searchTerms: Record<string, string>;
+        filters: typeof DEFAULT_FILTER_STATE;
+    }) => {
+        setSearchTerms(
+            params.searchTerms as {
+                recipient: string;
+                institute: string;
+                grant: string;
+            }
+        );
+        setFilters(params.filters);
+        setIsInitialState(false);
 
-const SearchPage = () => {
+        // Refetch with updated parameters
+        setTimeout(() => {
+            infiniteQueryResult.refetch();
+        }, 0);
+    };
+
+    const handleBookmark = () => {
+        setIsBookmarked(!isBookmarked);
+        // Implement the actual bookmark functionality here
+    };
+
     return (
-        <EntitiesPage
-            entityType="grant"
-            title="Advanced Grant Search"
-            subtitle="Search for grants by recipient, institute, or grant details."
-            useInfiniteEntities={useInitialGrantSearch}
-            useSearchEntities={useSearchGrantsWrapper}
-            variant="list"
-            allowVisualization={true}
-            emptyMessage="Enter search terms above to begin exploring grants."
-            searchEmptyMessage="No grants match your search criteria."
-            initialSortConfig={{ field: "date", direction: "desc" }}
-        />
+        <PageContainer>
+            {/* Header */}
+            <PageHeader title="Advanced Grant Search" />
+
+            {/* Search Interface */}
+            <SearchInterface
+                fields={[
+                    {
+                        key: "recipient",
+                        icon: UserSearch,
+                        placeholder: "Search by recipient...",
+                    },
+                    {
+                        key: "institute",
+                        icon: University,
+                        placeholder: "Search by institute...",
+                    },
+                    {
+                        key: "grant",
+                        icon: FileSearch2,
+                        placeholder: "Search by grant...",
+                    },
+                ]}
+                initialValues={searchTerms}
+                filters={filters}
+                onSearch={handleSearch}
+                onBookmark={handleBookmark}
+                isBookmarked={isBookmarked}
+                isInitialState={isInitialState}
+                showPopularSearches={true}
+            />
+
+            {/* Search Results */}
+            <div className="mt-4">
+                <GrantsList
+                    infiniteQuery={infiniteQueryResult}
+                    initialSortConfig={sortConfig}
+                    emptyMessage={
+                        isInitialState
+                            ? "Enter search terms above to begin exploring grants."
+                            : "No grants match your search criteria."
+                    }
+                    showVisualization={true}
+                    visualizationInitiallyVisible={false}
+                />
+            </div>
+        </PageContainer>
     );
 };
 

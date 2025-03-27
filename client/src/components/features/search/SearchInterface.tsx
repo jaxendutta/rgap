@@ -92,6 +92,18 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
             setSearchTermsChanged(false);
             setFiltersChanged(false);
             setShowBanner(false);
+
+            // If this is initial state with values, let's set lastSearched values to match
+            // so we don't immediately show the "Search terms changed" banner
+            if (Object.values(searchTerms).some((val) => val)) {
+                setLastSearchedTerms(searchTerms);
+            }
+            if (
+                JSON.stringify(filters) !== JSON.stringify(DEFAULT_FILTER_STATE)
+            ) {
+                setLastSearchedFilters(filters);
+            }
+
             return;
         }
 
@@ -260,7 +272,7 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
         onSearch({
             searchTerms,
             filters,
-            userId: user?.user_id, // Include this
+            userId: user?.user_id, // Include user ID for search history
         });
     };
 

@@ -3,17 +3,19 @@ import { useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { BookMarked, GraduationCap, PieChart } from "lucide-react";
 import { useInstituteDetails } from "@/hooks/api/useInstitutes";
-import { useInfiniteInstituteGrants } from "@/hooks/api/useInstitutes";
+import { useInfiniteInstituteGrants, useInfiniteInstituteRecipients } from "@/hooks/api/useInstitutes";
 import EntityProfilePage from "@/components/common/pages/EntityProfilePage";
 import InstituteHeader from "@/components/features/institutes/InstituteHeader";
 import InstituteStats from "@/components/features/institutes/InstituteStats";
-import RecipientsList from "@/components/features/recipients/RecipientsList";
+import EntityList from "@/components/common/ui/EntityList";
 import GrantsList from "@/components/features/grants/GrantsList";
 import { SortConfig } from "@/types/search";
 import { AnalyticsCards } from "@/components/common/ui/AnalyticsCards";
 import { formatCurrency } from "@/utils/format";
 import { getCategoryColor } from "@/utils/chartColors";
 import { DollarSign } from "lucide-react";
+import EntityCard from "@/components/common/ui/EntityCard";
+import { TrendVisualizer } from "@/components/features/visualizations/TrendVisualizer";
 
 const InstituteProfilePage = () => {
     const { id } = useParams();
@@ -27,6 +29,11 @@ const InstituteProfilePage = () => {
         field: "date",
         direction: "desc",
     });
+    const [recipientsSortConfig, setRecipientsSortConfig] = useState<SortConfig>({
+        field: "total_funding",
+        direction: "desc",
+    });
+    const [isVisualizationVisible, setIsVisualizationVisible] = useState(false);
 
     // Use the API hook to fetch institute basic details
     const {
@@ -42,6 +49,14 @@ const InstituteProfilePage = () => {
         15, // pageSize
         grantsSortConfig.field as "date" | "value",
         grantsSortConfig.direction
+    );
+
+    // Set up infinite query for recipients with sorting
+    const infiniteRecipientsQuery = useInfiniteInstituteRecipients(
+        id || "",
+        15, // pageSize
+        recipientsSortConfig.field as "total_funding" | "grant_count",
+        recipientsSortConfig.direction
     );
 
     const institute = instituteData?.data;
@@ -101,17 +116,79 @@ const InstituteProfilePage = () => {
         );
     };
 
+    // Render functions for recipient items
+    const renderRecipientItem = (recipient: any) => {
+        return (
+            <EntityCard
+                entity={recipient}
+                entityType="recipient"
+                className="hover:border-gray-300 transition-all h-full"
+            />
+        );
+    };
+
+    // Key extractor for recipients
+    const keyExtractor = (recipient: any) => `recipient-${recipient.recipient_id}`;
+
     const renderTabContent = (activeTabId: string) => {
         if (!institute) return null;
 
         switch (activeTabId) {
             case "recipients":
+                // Get recipients data from the infinite query
+                const recipients = infiniteRecipientsQuery.data 
+                    ? infiniteRecipientsQuery.data.pages.flatMap(page => page.data)
+                    : [];
+                    
+                // Get total count from metadata
+                const totalCount = infiniteRecipientsQuery.data?.pages[0]?.metadata?.totalCount || recipients.length;
+                    
+                // Create visualization component for recipients
+                const recipientsVisualization = recipients.length > 0 ? (
+                    <TrendVisualizer
+                        grants={recipients.map(recipient => ({
+                            ...recipient,
+                            // Add required properties for the visualizer
+                            agreement_start_date: recipient.latest_grant_date || new Date().toISOString(),
+                            agreement_value: recipient.total_funding,
+                            org: "Institute Recipient",
+                        }))}
+                        viewContext="institute"
+                        height={350}
+                        initialGrouping="recipient"
+                        initialMetricType="funding"
+                        initialChartType="bar-stacked"
+                        availableGroupings={["recipient"]}
+                    />
+                ) : null;
+                    
+                // Define sort options for recipients
+                const sortOptions = [
+                    { field: "total_funding", label: "Funding", icon: DollarSign },
+                    { field: "grant_count", label: "Grants", icon: BookMarked },
+                ];
+                    
                 return (
-                    <RecipientsList
-                        instituteId={id || ""}
-                        initialPageSize={15}
-                        showVisualization={true}
-                        visualizationInitiallyVisible={false}
+                    <EntityList
+                        entityType="recipient"
+                        entities={recipients}
+                        renderItem={renderRecipientItem}
+                        keyExtractor={keyExtractor}
+                        variant="grid"
+                        sortOptions={sortOptions}
+                        sortConfig={recipientsSortConfig}
+                        onSortChange={setRecipientsSortConfig}
+                        infiniteQuery={infiniteRecipientsQuery}
+                        totalCount={totalCount}
+                        totalItems={recipients.length}
+                        emptyMessage="This institute has no associated recipients in our database."
+                        visualization={recipientsVisualization}
+                        visualizationToggle={{
+                            isVisible: isVisualizationVisible,
+                            toggle: () => setIsVisualizationVisible(!isVisualizationVisible),
+                            showToggleButton: true
+                        }}
+                        allowLayoutToggle={true}
                     />
                 );
 
@@ -120,13 +197,6 @@ const InstituteProfilePage = () => {
                     <GrantsList
                         infiniteQuery={infiniteGrantsQuery}
                         initialSortConfig={grantsSortConfig}
-                        contextData={{
-                            instituteName: institute.name,
-                            instituteId: id,
-                            city: institute.city,
-                            province: institute.province,
-                            country: institute.country,
-                        }}
                         emptyMessage="This institute has no associated grants in our database."
                         showVisualization={true}
                         visualizationInitiallyVisible={false}

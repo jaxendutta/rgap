@@ -294,14 +294,14 @@ BEGIN
     DECLARE v_current_state BOOLEAN;
     
     -- Get current bookmark state
-    SELECT saved INTO v_current_state
+    SELECT bookmarked INTO v_current_state
     FROM SearchHistory
     WHERE history_id = p_history_id
     LIMIT 1;
     
     -- Toggle the bookmark state
     UPDATE SearchHistory
-    SET saved = NOT IFNULL(v_current_state, FALSE)
+    SET bookmarked = NOT IFNULL(v_current_state, FALSE)
     WHERE history_id = p_history_id;
     
     -- Return the new state
@@ -318,7 +318,7 @@ CREATE PROCEDURE sp_get_bookmarked_search_ids(
 BEGIN
     SELECT history_id
     FROM SearchHistory
-    WHERE user_id = p_user_id AND saved = TRUE;
+    WHERE user_id = p_user_id AND bookmarked = TRUE;
 END$
 DELIMITER ;
 
@@ -331,7 +331,7 @@ CREATE PROCEDURE sp_get_bookmarked_searches(
 BEGIN
     SELECT *
     FROM SearchHistory
-    WHERE user_id = p_user_id AND saved = TRUE
+    WHERE user_id = p_user_id AND bookmarked = TRUE
     ORDER BY search_time DESC;
 END$
 DELIMITER ;

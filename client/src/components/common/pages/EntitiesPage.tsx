@@ -2,7 +2,6 @@
 import { useState, useMemo, useEffect } from "react";
 import {
     Search,
-    X,
     FileSearch2,
     UserSearch,
     University,
@@ -337,11 +336,11 @@ const EntitiesPage = ({
     // Determine which data to display
     const entities = useMemo(() => {
         if (isSearching && searchQuery.data) {
-            return searchQuery.data.data;
+            return searchQuery.data.data || [];
         }
 
         if (infiniteQuery.data) {
-            return infiniteQuery.data.pages.flatMap((page: any) => page.data);
+            return infiniteQuery.data.pages.flatMap((page: any) => page.data) || [];
         }
 
         return [];
@@ -350,11 +349,11 @@ const EntitiesPage = ({
     // Get metadata for displaying total counts
     const metadata = useMemo(() => {
         if (isSearching && searchQuery.data) {
-            return searchQuery.data.metadata;
+            return searchQuery.data.metadata || { totalCount: 0, count: 0 };
         }
 
         if (infiniteQuery.data?.pages[0]?.metadata) {
-            return infiniteQuery.data.pages[0].metadata;
+            return infiniteQuery.data.pages[0].metadata || { totalCount: 0, count: 0 };
         }
 
         return { totalCount: 0, count: 0 };
@@ -441,6 +440,7 @@ const EntitiesPage = ({
         if (
             !allowVisualization ||
             entityType !== "grant" ||
+            !entities ||
             entities.length === 0
         )
             return null;

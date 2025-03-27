@@ -10,8 +10,6 @@ import {
     TrendVisualizer,
     ViewContext,
 } from "@/components/features/visualizations/TrendVisualizer";
-import { prepareGrantsForVisualization } from "@/utils/chartDataTransforms";
-
 export type GrantSortField = "date" | "value";
 export type SortDirection = "asc" | "desc";
 
@@ -26,15 +24,6 @@ interface GrantsListProps {
     // Common props
     initialSortConfig?: SortConfig;
     emptyMessage?: string;
-    contextData?: {
-        recipientName?: string;
-        recipientId?: number | string;
-        instituteName?: string;
-        instituteId?: number | string;
-        city?: string;
-        province?: string;
-        country?: string;
-    };
 
     // Visualization props
     showVisualization?: boolean;
@@ -49,7 +38,6 @@ const GrantsList: React.FC<GrantsListProps> = ({
     infiniteQuery,
     initialSortConfig = { field: "date", direction: "desc" },
     emptyMessage = "No grants found.",
-    contextData = {},
     showVisualization = true,
     visualizationInitiallyVisible = false,
     viewContext = "search",
@@ -63,17 +51,8 @@ const GrantsList: React.FC<GrantsListProps> = ({
         visualizationInitiallyVisible
     );
 
-    // Define sort options
-    const sortOptions = [
-        { field: "date", label: "Date", icon: Calendar },
-        { field: "value", label: "Value", icon: DollarSign },
-    ];
-
-    // Handle local sorting for direct data mode
     const handleSortChange = (newSortConfig: SortConfig) => {
         setSortConfig(newSortConfig);
-
-        // If consumer provided an onSortChange callback, call it
         if (onSortChange) {
             onSortChange(newSortConfig);
         }
@@ -96,142 +75,38 @@ const GrantsList: React.FC<GrantsListProps> = ({
         return [];
     }, [infiniteQuery?.data, grants]);
 
-    // Process grants with context data
-    const getGrantsToDisplay = useMemo((): Grant[] => {
-        const allGrants = getAllGrants;
-
-        // Enrich grants with context data if needed
-        return allGrants.map((grant) => {
-            // Start with the grant as returned from the API
-            const processedGrant = { ...grant };
-
-            // Only fill in missing critical data as a fallback safety measure
-            if (!processedGrant.city && contextData.city)
-                processedGrant.city = contextData.city;
-
-            if (!processedGrant.province && contextData.province)
-                processedGrant.province = contextData.province;
-
-            if (!processedGrant.country && contextData.country)
-                processedGrant.country = contextData.country;
-
-            // These should be extremely rare cases
-            if (!processedGrant.legal_name && contextData.recipientName) {
-                processedGrant.legal_name = contextData.recipientName;
-                if (contextData.recipientId)
-                    processedGrant.recipient_id = Number(
-                        contextData.recipientId
-                    );
-            }
-
-            if (
-                !processedGrant.research_organization_name &&
-                contextData.instituteName
-            ) {
-                processedGrant.research_organization_name =
-                    contextData.instituteName;
-                if (contextData.instituteId)
-                    processedGrant.institute_id = Number(
-                        contextData.instituteId
-                    );
-            }
-
-            // Ensure numeric values are valid numbers
-            processedGrant.agreement_value =
-                Number(processedGrant.agreement_value) || 0;
-
-            return processedGrant;
-        });
-    }, [getAllGrants, contextData]);
-
-    // For direct data mode, sort the grants according to config
-    const sortedGrantsToDisplay = useMemo(() => {
-        if (infiniteQuery) {
-            // In infinite query mode, the API handles sorting
-            return getGrantsToDisplay;
-        }
-
-        // In direct data mode, we need to sort the grants
-        return [...getGrantsToDisplay].sort((a, b) => {
-            if (sortConfig.field === "value") {
-                return sortConfig.direction === "asc"
-                    ? a.agreement_value - b.agreement_value
-                    : b.agreement_value - a.agreement_value;
-            } else {
-                // Sort by date
-                const dateA = new Date(a.agreement_start_date).getTime();
-                const dateB = new Date(b.agreement_start_date).getTime();
-                return sortConfig.direction === "asc"
-                    ? dateA - dateB
-                    : dateB - dateA;
-            }
-        });
-    }, [getGrantsToDisplay, infiniteQuery, sortConfig]);
-
-    // Get total count for display
-    const totalCount =
-        infiniteQuery?.data?.pages[0]?.metadata?.totalCount ||
-        sortedGrantsToDisplay.length;
-
-    // Render grant item
-    const renderGrantItem = (grant: Grant) => <GrantCard grant={grant} />;
-
-    // Key extractor for grants - ensure unique keys by combining multiple identifiers
-    const keyExtractor = (grant: Grant, index: number) =>
-        `grant-${grant.ref_number || ""}-${grant.ref_number || ""}-${
-            grant.latest_amendment_number || "0"
-        }-idx${index}`;
-
-    // Visualization component - pass all available grant data, not just the visible ones
-    // Use the prepareGrantsForVisualization function to ensure data quality
-    const visualization = useMemo(() => {
-        if (!showVisualization || getAllGrants.length === 0) return null;
-
-        // Prepare and clean data for visualization
-        const preparedGrants = prepareGrantsForVisualization(getAllGrants);
-
-        // Determine appropriate available groupings based on context
-        let availableGroupings: any[] = [];
-
-        if (viewContext === "recipient") {
-            availableGroupings = ["org", "program", "year"];
-        } else if (viewContext === "institute") {
-            availableGroupings = ["recipient", "org", "program", "year"];
-        } else {
-            availableGroupings = [
-                "org",
-                "city",
-                "province",
-                "country",
-                "recipient",
-                "institute",
-            ];
-        }
-
-        return (
-            <TrendVisualizer
-                grants={preparedGrants}
-                viewContext={viewContext}
-                height={350}
-                availableGroupings={availableGroupings}
-            />
-        );
-    }, [showVisualization, getAllGrants, viewContext]);
-
     return (
         <EntityList
             entityType="grant"
-            entities={sortedGrantsToDisplay}
-            renderItem={renderGrantItem}
-            keyExtractor={keyExtractor}
+            entities={getAllGrants}
+            renderItem={(grant: Grant) => <GrantCard grant={grant} />}
+            keyExtractor={(grant: Grant, index: number) =>
+                grant.grant_id || `grant-${index}`
+            }
             emptyMessage={emptyMessage}
-            sortOptions={sortOptions}
+            sortOptions={[
+                {
+                    field: "agreement_start_date",
+                    label: "Date",
+                    icon: Calendar,
+                },
+                { field: "agreement_value", label: "Value", icon: DollarSign },
+            ]}
             sortConfig={sortConfig}
-            onSortChange={handleSortChange}
+            onSortChange={handleSortChange} // TODO: Implement sorting
             infiniteQuery={infiniteQuery}
-            totalCount={totalCount}
+            totalCount={
+                infiniteQuery?.data?.pages[0]?.metadata?.totalCount ||
+                getAllGrants.length
+            }
             totalItems={getAllGrants.length}
-            visualization={visualization}
+            visualization={
+                <TrendVisualizer
+                    grants={getAllGrants}
+                    viewContext={viewContext}
+                    height={350}
+                />
+            }
             visualizationToggle={
                 showVisualization
                     ? {

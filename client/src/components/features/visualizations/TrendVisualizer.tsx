@@ -7,7 +7,6 @@ import { Dropdown } from "@/components/common/ui/Dropdown";
 import DataChart from "@/components/features/visualizations/DataChart";
 import { cn } from "@/utils/cn";
 import { AMENDMENT_COLORS, getCategoryColor } from "@/utils/chartColors";
-import { prepareGrantsForVisualization } from "@/utils/chartDataTransforms";
 
 export type ChartType = "line" | "bar-stacked" | "bar-grouped";
 export type MetricType = "funding" | "count";
@@ -130,11 +129,6 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
             label: displayLabels[option as GroupingDimension],
         }));
     }, [effectiveAvailableGroupings]);
-
-    // Process grants to ensure all needed fields are properly formatted
-    const processedGrants = useMemo(() => {
-        return prepareGrantsForVisualization(grants);
-    }, [grants]);
 
     // Prepare data for amendment visualization if needed
     const amendmentChartData = useMemo(() => {
@@ -283,14 +277,14 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
         }
 
         // Otherwise process the regular grants data
-        if (!processedGrants || processedGrants.length === 0)
+        if (!grants || grants.length === 0)
             return { data: [], categories: [] };
 
         const yearMap = new Map();
         const uniqueCategories = new Set<string>();
 
         // Group data by year and the selected dimension
-        processedGrants.forEach((grant) => {
+        grants.forEach((grant) => {
             // Extract year from the grant
             const year = new Date(grant.agreement_start_date).getFullYear();
             const grantValue = grant.agreement_value;
@@ -409,7 +403,7 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
 
         return { data: result, categories: Array.from(uniqueCategories) };
     }, [
-        processedGrants,
+        grants,
         groupingDimension,
         metricType,
         isAmendmentView,

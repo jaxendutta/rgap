@@ -58,9 +58,7 @@ export function transformGrantsToYearlyData(
 
         // Handle special case for program names
         const processedCategory =
-            groupBy === "prog_id" && grant.program_name
-                ? grant.program_name
-                : groupBy === "prog_id" && grant.prog_title_en
+            groupBy === "prog_id" && grant.prog_title_en
                 ? grant.prog_title_en
                 : category;
 
@@ -130,60 +128,4 @@ export function formatChartValue(
     } else {
         return Math.round(value).toString();
     }
-}
-
-/**
- * Checks if grants data contains program information
- *
- * @param grants - Array of grants
- * @returns Boolean indicating if program information is available
- */
-export function hasProgramInfo(grants: Grant[]): boolean {
-    if (!grants || !Array.isArray(grants) || grants.length === 0) {
-        return false;
-    }
-
-    return grants.some(
-        (grant) => grant.prog_title_en || grant.program_name || grant.prog_id
-    );
-}
-
-/**
- * Processes grant data to ensure all fields needed for visualization are properly formatted
- *
- * @param grants - Array of grants to process
- * @returns Array of processed grants with validated fields
- */
-export function prepareGrantsForVisualization(grants: Grant[]): Grant[] {
-    if (!grants || !Array.isArray(grants)) {
-        return [];
-    }
-
-    return grants.map((grant) => {
-        const processed = { ...grant };
-
-        // Ensure agreement_value is a valid number
-        processed.agreement_value = Number(processed.agreement_value) || 0;
-
-        // Ensure program information is available
-        if (processed.prog_title_en) {
-            processed.program_name = processed.prog_title_en;
-        } else if (processed.prog_id && !processed.program_name) {
-            processed.program_name = `Program ${processed.prog_id}`;
-        }
-
-        // Make sure dates are valid
-        if (processed.agreement_start_date) {
-            try {
-                const date = new Date(processed.agreement_start_date);
-                if (isNaN(date.getTime())) {
-                    processed.agreement_start_date = new Date().toISOString();
-                }
-            } catch (e) {
-                processed.agreement_start_date = new Date().toISOString();
-            }
-        }
-
-        return processed;
-    });
 }

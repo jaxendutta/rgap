@@ -19,7 +19,7 @@ interface EntityListProps<T> {
     entityType: string;
     entities: T[];
     renderItem: (item: T, index: number) => React.ReactNode;
-    keyExtractor: (item: T, index: number) => string;
+    keyExtractor: (item: T, index: number) => string | number;
     variant?: LayoutVariant;
     emptyMessage?: string;
 
