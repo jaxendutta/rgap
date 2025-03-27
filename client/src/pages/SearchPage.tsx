@@ -2,13 +2,10 @@
 import { useState } from "react";
 import { FileSearch2, University, UserSearch } from "lucide-react";
 import { useInfiniteGrantSearch } from "@/hooks/api/useGrants";
-import GrantsList from "@/components/features/grants/GrantsList";
 import type { GrantSortConfig as SortConfig } from "@/types/search";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import type { GrantSearchParams } from "@/types/search";
-import SearchInterface from "@/components/features/search/SearchInterface";
-import PageHeader from "@/components/common/layout/PageHeader";
-import PageContainer from "@/components/common/layout/PageContainer";
+import EntitiesPage from "@/components/common/pages/EntitiesPage";
 
 export const SearchPage = () => {
     // Current search terms (what's shown in the input fields)
@@ -63,13 +60,15 @@ export const SearchPage = () => {
     };
 
     return (
-        <PageContainer>
-            {/* Header */}
-            <PageHeader title="Advanced Grant Search" />
-
-            {/* Search Interface */}
-            <SearchInterface
-                fields={[
+        <EntitiesPage
+            headerConfig={{
+                title: "Advanced Grant Search",
+                subtitle:
+                    "Search for grants across multiple funding agencies and recipients.",
+            }}
+            searchConfig={{
+                variant: "full", // Using the full-featured search interface
+                fields: [
                     {
                         key: "recipient",
                         icon: UserSearch,
@@ -85,31 +84,27 @@ export const SearchPage = () => {
                         icon: FileSearch2,
                         placeholder: "Search by grant...",
                     },
-                ]}
-                initialValues={searchTerms}
-                filters={filters}
-                onSearch={handleSearch}
-                onBookmark={handleBookmark}
-                isBookmarked={isBookmarked}
-                isInitialState={isInitialState}
-                showPopularSearches={true}
-            />
-
-            {/* Search Results */}
-            <div className="mt-4">
-                <GrantsList
-                    infiniteQuery={infiniteQueryResult}
-                    initialSortConfig={sortConfig}
-                    emptyMessage={
-                        isInitialState
-                            ? "Enter search terms above to begin exploring grants."
-                            : "No grants match your search criteria."
-                    }
-                    showVisualization={true}
-                    visualizationInitiallyVisible={false}
-                />
-            </div>
-        </PageContainer>
+                ],
+                initialValues: searchTerms,
+                filters: filters,
+                onSearch: handleSearch,
+                onBookmark: handleBookmark,
+                isBookmarked: isBookmarked,
+                isInitialState: isInitialState,
+                showPopularSearches: true,
+            }}
+            listConfig={{
+                type: "grants",
+                infiniteQuery: infiniteQueryResult,
+                sortConfig: sortConfig,
+                emptyMessage: isInitialState
+                    ? "Enter search terms above to begin exploring grants."
+                    : "No grants match your search criteria.",
+                showVisualization: true,
+                visualizationInitiallyVisible: false,
+                viewContext: "search",
+            }}
+        />
     );
 };
 

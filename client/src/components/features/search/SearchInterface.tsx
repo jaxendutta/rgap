@@ -410,10 +410,12 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                             transition={{ duration: 0.3 }}
                         >
                             <Card className="p-4 mb-4">
-                                <FilterPanel
-                                    filters={filters}
-                                    onChange={handleFilterChange}
-                                />
+                                {filters && (
+                                    <FilterPanel
+                                        filters={filters}
+                                        onChange={handleFilterChange}
+                                    />
+                                )}
                             </Card>
                         </motion.div>
                     )}
