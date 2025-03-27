@@ -1,15 +1,9 @@
 // src/hooks/api/useInstitutes.ts
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import axios from "axios";
-import portConfig from "../../../../config/ports.json";
-import { Grant } from "@/types/models";
+import { Grant, Institute } from "@/types/models";
+import createAPI from "@/utils/api";
 
-const API = axios.create({
-    baseURL:
-        process.env.VITE_API_URL ||
-        `http://localhost:${portConfig.defaults.server}`,
-    timeout: 10000,
-});
+const API = createAPI(); // Use default 10000ms timeout
 
 // Query key factory
 export const instituteKeys = {
@@ -24,42 +18,15 @@ export const instituteKeys = {
     search: (term: string) => [...instituteKeys.all, "search", term] as const,
 };
 
-// Institute interface
-export interface Institute {
-    institute_id: number;
-    name: string;
-    type: string;
-    city?: string;
-    province?: string;
-    country?: string;
-    recipient_count?: number;
-    grant_count?: number;
-    total_funding?: number;
-    latest_grant_date?: string;
-}
-
 // Institute details response interface
 interface InstituteDetailsResponse {
     message: string;
-    data: {
-        institute_id: number;
-        name: string;
-        type: string;
-        total_recipients: number;
-        total_grants: number;
-        total_funding: number;
-        avg_funding: number;
-        first_grant_date?: string;
-        latest_grant_date?: string;
-        funding_agencies_count?: number;
-        city?: string;
-        province?: string;
-        country?: string;
+    data: Institute & {
         recipients: Array<{
             recipient_id: number;
             legal_name: string;
             type: string;
-            grants_count: number;
+            grant_count: number;
             total_funding: number;
         }>;
         grants: Array<any>; // Using any here as grants have a complex structure
@@ -142,6 +109,38 @@ export function useInstituteDetails(id: number | string) {
             return response.data;
         },
         enabled: isValidId, // Only run query when we have a valid ID
+    });
+}
+
+/**
+ * Hook to fetch intitutes by their IDs
+ * @param ids Array of institute IDs
+ * @returns Query object
+ */
+export function useInstitutesByIds(ids: number[]) {
+    return useQuery({
+        queryKey: [...instituteKeys.all, "byIds", ids],
+        queryFn: async () => {
+            if (!ids || ids.length === 0) {
+                return { message: "No institute IDs provided", data: [] };
+            }
+
+            // Fetch each institute individually and combine results
+            const results = await Promise.all(
+                ids.map(async (id) => {
+                    try {
+                        const response = await API.get(`/institutes/${id}`);
+                        return response.data?.data || null;
+                    } catch (error) {
+                        console.error(`Error fetching institute ${id}:`, error);
+                        return null;
+                    }
+                })
+            );
+
+            return results.filter(Boolean); // Filter out any null results
+        },
+        enabled: ids.length > 0, // Only run when we have IDs
     });
 }
 
@@ -280,7 +279,7 @@ export function useInstituteRecipients(
 export function useInfiniteInstituteRecipients(
     instituteId: string | number,
     pageSize = 10,
-    sortField: "total_funding" | "grants_count" = "total_funding",
+    sortField: "total_funding" | "grant_count" = "total_funding",
     sortDirection: "asc" | "desc" = "desc"
 ) {
     return useInfiniteQuery({

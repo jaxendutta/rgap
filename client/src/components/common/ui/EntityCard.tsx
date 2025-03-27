@@ -23,12 +23,13 @@ import { Institute, Recipient } from "@/types/models";
 import { cn } from "@/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
+import { EntityType } from "@/constants/data";
 
-export type EntityType = "institute" | "recipient";
+export type Entity = "institute" | "recipient";
 
 interface EntityCardProps {
     entity: Institute | Recipient;
-    entityType: EntityType;
+    entityType: Entity;
     grantsCount?: number;
     totalFunding?: number;
     latestGrantDate?: string;
@@ -73,10 +74,8 @@ const EntityCard = ({
         ? (entity as Institute).name
         : (entity as Recipient).legal_name;
     const type = isInstitute()
-        ? entity.type || "Academic Institution"
-        : (entity as Recipient).recipient_type ||
-          (entity as Recipient).type ||
-          "Organization";
+        ? "Academic Institution"
+        : EntityType[(entity as Recipient).type as keyof typeof EntityType];
 
     // For recipients, get their institute info
     const institute =
@@ -97,12 +96,12 @@ const EntityCard = ({
     const grants =
         grantsCount ??
         (entityType === "recipient"
-            ? (entity as Recipient).grants_count
-            : (entity as Institute).total_grants) ??
+            ? (entity as Recipient).grant_count
+            : (entity as Institute).grant_count) ??
         0;
     const funding = totalFunding ?? entity.total_funding ?? 0;
     const recipients = isInstitute()
-        ? recipientsCount ?? (entity as Institute).total_recipients ?? 0
+        ? recipientsCount ?? (entity as Institute).recipient_count ?? 0
         : null;
     const latestDate = latestGrantDate ?? entity.latest_grant_date;
 

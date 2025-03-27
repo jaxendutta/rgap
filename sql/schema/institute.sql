@@ -5,7 +5,6 @@ DROP TABLE IF EXISTS Institute;
 CREATE TABLE Institute (
     institute_id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
-    type VARCHAR(50),
     country VARCHAR(50),
     province VARCHAR(50),
     city VARCHAR(100),

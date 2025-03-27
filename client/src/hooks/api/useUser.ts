@@ -1,14 +1,9 @@
 // src/hooks/api/useUser.ts
 import { useState } from "react";
 import axios from "axios";
-import portConfig from "../../../../config/ports.json";
+import createAPI from '@/utils/api';
 
-const API = axios.create({
-    baseURL:
-        process.env.VITE_API_URL ||
-        `http://localhost:${portConfig.defaults.server}`,
-    timeout: 10000,
-});
+const API = createAPI(); // Use default 10000ms timeout
 
 export function useUser() {
     const [isLoading, setIsLoading] = useState(false);

@@ -151,7 +151,7 @@ setup_node() {
 
             if [ "$current_version" != "$latest_version" ]; then
                 print_status "Upgrading nvm $current_version -> $latest_version"
-                curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/$latest_version/install.sh" | bash
+                curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/v$latest_version/install.sh" | bash
             else
                 print_success "nvm is up to date ($current_version)"
             fi
@@ -184,7 +184,7 @@ setup_node() {
             nvm use --lts
             nvm alias default "lts/*"
         else
-            print_success "Node.js is up to date (v$current_version)"
+            print_success "Node.js is up to date ($current_version)"
         fi
     else
         print_status "Installing Node.js LTS..."
@@ -284,7 +284,7 @@ print "  source $(basename "${BASH_SOURCE[0]}")\n"
 print "${GREEN}Environment setup complete!${NC}"
 print "${BLUE}You can now run:"
 print "  1.${NC} source setup_env.sh ${BLUE}(to activate the virtual environment on the terminal)"
-print "  2.${NC} ./setup_mysql.sh    ${BLUE}(to install and setup MySQL 8.0.36 for Linux -> first time only)"
+print "  2.${NC} ./setup_mysql.sh    ${BLUE}(to install and setup MySQL 8.0 for Linux -> first time only)"
 print "  3.${NC} ./setup_app.sh      ${BLUE}(to start the application)\n"
 
 # Calculate and display execution time

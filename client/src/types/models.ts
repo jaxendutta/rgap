@@ -3,11 +3,12 @@ import { GrantSearchParams } from "./search";
 
 // Amendment type for grant amendments
 export interface GrantAmendment {
-    amendment_number: string;
+    amendment_number: number;
     amendment_date: string;
     agreement_value: number;
     agreement_start_date: string;
     agreement_end_date: string;
+    additional_information_en?: string;
 }
 
 // Recipient
@@ -17,41 +18,42 @@ export interface Recipient {
     institute_id: number;
     research_organization_name?: string;
     type?: string;
-    recipient_type?: string;
     city?: string;
     province?: string;
     country?: string;
     postal_code?: string;
-    riding_name_en?: string;
-    riding_number?: string;
-    grants_count?: number;
+    grant_count?: number;
     total_funding?: number;
+    avg_funding?: number;
+    first_grant_date?: string;
     latest_grant_date?: string;
+    funding_agencies_count?: number;
 }
 
 // Institute
 export interface Institute {
     institute_id: number;
     name: string;
-    type?: string;
     city?: string;
     province?: string;
     country?: string;
     postal_code?: string;
     riding_name_en?: string;
     riding_number?: string;
-    total_recipients?: number;
-    total_grants?: number;
+    recipient_count?: number;
+    grant_count?: number;
     total_funding?: number;
+    avg_funding: number;
     first_grant_date?: string;
     latest_grant_date?: string;
+    funding_agencies_count?: number;
 }
 
 // Grant
 export interface Grant {
-    grant_id?: number;
+    grant_id: number;
     ref_number: string;
-    amendment_number?: string;
+    latest_amendment_number: number;
     amendment_date?: string;
     agreement_number?: string;
     agreement_value: number;
@@ -62,6 +64,7 @@ export interface Grant {
     agreement_title_en: string;
     description_en?: string;
     expected_results_en?: string;
+    additional_information_en?: string;
 
     // Recipient information
     recipient_id: number;
@@ -90,7 +93,7 @@ export interface Grant {
 // Search History
 export interface SearchHistory {
     history_id: number;
-    timestamp: Date;
+    search_time: Date;
     search_params: GrantSearchParams;
-    results: number;
+    result_count: number;
 }

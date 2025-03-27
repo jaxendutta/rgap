@@ -178,3 +178,12 @@ cleanup_file() {
     fi
 }
 export -f cleanup_file
+
+print_welcome() {
+    print "${GREEN}============================================${NC}"
+    print "${GREEN}      Welcome to the RGAP Setup Script!      ${NC}"
+    print "${GREEN}       $(date)${NC}"
+    print "${GREEN}============================================${NC}"
+    echo
+}
+export -f print_welcome

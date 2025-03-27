@@ -1,15 +1,9 @@
 // src/hooks/api/useRecipients.ts
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import axios from "axios";
-import portConfig from "../../../../config/ports.json";
 import { Recipient, Grant } from "@/types/models";
+import createAPI from "@/utils/api";
 
-const API = axios.create({
-    baseURL:
-        process.env.VITE_API_URL ||
-        `http://localhost:${portConfig.defaults.server}`,
-    timeout: 10000,
-});
+const API = createAPI(); // Use default 10000ms timeout
 
 // Query key factory
 export const recipientKeys = {
@@ -25,23 +19,7 @@ export const recipientKeys = {
 // Interface for recipient details response
 interface RecipientDetailsResponse {
     message: string;
-    data: {
-        recipient_id: number;
-        legal_name: string;
-        institute_id: number;
-        research_organization_name: string; // This contains the institute name
-        institute_type?: string;
-        type?: string;
-        recipient_type?: string;
-        total_grants: number;
-        total_funding: number;
-        avg_funding: number;
-        first_grant_date?: string;
-        latest_grant_date?: string;
-        funding_agencies_count?: number;
-        city?: string;
-        province?: string;
-        country?: string;
+    data: Recipient & {
         grants: Array<
             Grant & {
                 program_name?: string;
@@ -119,6 +97,38 @@ export function useRecipientDetails(id: number | string) {
             return response.data;
         },
         enabled: !!id,
+    });
+}
+
+/**
+ * Hook to fetch recipients by their IDs
+ * @param ids Array of recipient IDs
+ * @returns Query object
+ */
+export function useRecipientsByIds(ids: number[]) {
+    return useQuery({
+        queryKey: [...recipientKeys.all, "byIds", ids],
+        queryFn: async () => {
+            if (!ids || ids.length === 0) {
+                return { message: "No recipient IDs provided", data: [] };
+            }
+
+            // Fetch each recipient individually and combine results
+            const results = await Promise.all(
+                ids.map(async (id) => {
+                    try {
+                        const response = await API.get(`/recipients/${id}`);
+                        return response.data?.data || null;
+                    } catch (error) {
+                        console.error(`Error fetching recipient ${id}:`, error);
+                        return null;
+                    }
+                })
+            );
+
+            return results.filter(Boolean); // Filter out any null results
+        },
+        enabled: ids.length > 0, // Only run when we have IDs
     });
 }
 

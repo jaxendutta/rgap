@@ -25,7 +25,7 @@ BEGIN
     SELECT 
         i.*,
         COUNT(DISTINCT r.recipient_id) as recipients_count,
-        COUNT(DISTINCT rg.grant_id) as grants_count,
+        COUNT(DISTINCT rg.grant_id) as grant_count,
         COALESCE(SUM(rg.agreement_value), 0) as total_funding,
         MAX(rg.agreement_start_date) as latest_grant_date
     FROM 
@@ -35,8 +35,7 @@ BEGIN
     LEFT JOIN 
         ResearchGrant rg ON r.recipient_id = rg.recipient_id
     WHERE 
-        i.name LIKE CONCAT('%', p_term, '%') 
-        OR i.type LIKE CONCAT('%', p_term, '%')
+        i.name LIKE CONCAT('%', p_term, '%')
         OR i.city LIKE CONCAT('%', p_term, '%')
         OR i.province LIKE CONCAT('%', p_term, '%')
         OR i.country LIKE CONCAT('%', p_term, '%')

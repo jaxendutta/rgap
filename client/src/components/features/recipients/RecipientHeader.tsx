@@ -9,11 +9,13 @@ import {
 import EntityHeader, {
     MetadataItem,
     ActionButton,
-} from "@/components/common/ui/EntityHeader";
+} from "@/components/common/layout/EntityHeader";
+import { Recipient } from "@/types/models";
+import { EntityType } from "@/constants/data";
 
 // Recipient Header Component
 interface RecipientHeaderProps {
-    recipient: any;
+    recipient: Recipient;
     isBookmarked: boolean;
     toggleBookmark: () => void;
 }
@@ -39,19 +41,19 @@ const RecipientHeader = ({
         });
     }
 
-    if (recipient.recipient_type) {
-        metadata.push({
-            icon: FileUser,
-            text: recipient.recipient_type,
-        });
-    }
+    metadata.push({
+        icon: FileUser,
+        text: recipient.type
+            ? EntityType[recipient.type as keyof typeof EntityType]
+            : "Unspecified",
+    });
 
     if (recipient.city || recipient.province) {
         metadata.push({
             icon: MapPin,
-            text: `${recipient.city ? `${recipient.city}, ` : ""}${
-                recipient.province || ""
-            }${recipient.country ? `, ${recipient.country}` : ""}`,
+            text: [recipient.city, recipient.province, recipient.country]
+                .filter(Boolean)
+                .join(", "),
         });
     }
 

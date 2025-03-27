@@ -6,6 +6,9 @@ source "setup_utils.sh"
 # Start timing
 start_timer
 
+# Print welcome message
+print_welcome
+
 # Get script directory (project root)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -39,24 +42,6 @@ while [[ $# -gt 0 ]]; do
         else
             print_warning "--data option requires a value (full, filtered, or sample). Using 'sample'."
         fi
-        ;;
-    # For backwards compatibility
-    --full)
-        DATA_SIZE="full"
-        shift
-        ;;
-    --filtered)
-        DATA_SIZE="filtered"
-        shift
-        ;;
-    --non-interactive)
-        INTERACTIVE=false
-        shift
-        ;;
-    *)
-        # Unknown option
-        shift
-        ;;
     esac
 done
 

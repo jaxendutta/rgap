@@ -42,7 +42,7 @@ BEGIN
     EXECUTE stmt;
     DEALLOCATE PREPARE stmt;
     
-    -- Main query to get the grants with latest amendments and improved program information
+    -- Main query to get the grants
     SET @main_query = '
         SELECT 
             rg.*,
@@ -55,50 +55,14 @@ BEGIN
             o.org,
             o.org_title,
             p.name_en AS prog_title_en,
-            p.purpose_en AS prog_purpose_en,
-            (
-                SELECT JSON_ARRAYAGG(
-                    JSON_OBJECT(
-                        "amendment_number", a.amendment_number,
-                        "amendment_date", a.amendment_date,
-                        "agreement_value", a.agreement_value,
-                        "agreement_start_date", a.agreement_start_date,
-                        "agreement_end_date", a.agreement_end_date
-                    )
-                )
-                FROM ResearchGrant a
-                WHERE a.ref_number = rg.ref_number
-            ) AS amendments_history
+            p.purpose_en AS prog_purpose_en
         FROM ResearchGrant rg
         JOIN Recipient r ON rg.recipient_id = r.recipient_id
         JOIN Institute i ON r.institute_id = i.institute_id
         JOIN Organization o ON rg.org = o.org
         LEFT JOIN Program p ON rg.prog_id = p.prog_id
-        JOIN (
-            SELECT 
-                t.ref_number,
-                MAX(CAST(t.amendment_number AS UNSIGNED)) AS latest_amendment
-            FROM ResearchGrant t
-            JOIN Recipient tr ON t.recipient_id = tr.recipient_id
-            JOIN Organization o2 ON t.org = o2.org
-            WHERE 1=1
-    ';
-    
-    -- Add filters for the subquery
-    IF p_recipient_id IS NOT NULL THEN
-        SET @main_query = CONCAT(@main_query, ' AND t.recipient_id = ', p_recipient_id);
-    END IF;
-    
-    IF p_institute_id IS NOT NULL THEN
-        SET @main_query = CONCAT(@main_query, ' AND tr.institute_id = ', p_institute_id);
-    END IF;
-    
-    -- Complete the subquery and add join condition
-    SET @main_query = CONCAT(@main_query, '
-            GROUP BY t.ref_number
-        ) AS tla ON rg.ref_number = tla.ref_number AND rg.amendment_number = tla.latest_amendment
         WHERE 1=1
-    ');
+    ';
     
     -- Add filters for the main query
     IF p_recipient_id IS NOT NULL THEN

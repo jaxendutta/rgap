@@ -1,16 +1,11 @@
 // src/hooks/api/useBookmarks.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import portConfig from "../../../../config/ports.json";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
 import { BookmarkType } from "@/types/bookmark";
+import createAPI from "@/utils/api";
+import { formatSentenceCase } from "@/utils/format";
 
-const API = axios.create({
-    baseURL:
-        process.env.VITE_API_URL ||
-        `http://localhost:${portConfig.defaults.server}`,
-    timeout: 15000,
-});
+const API = createAPI(15000); // Increase timeout to 15 seconds
 
 // Configure retry logic for specific error codes
 API.interceptors.response.use(
@@ -63,10 +58,19 @@ export function useAllBookmarks(
                     return [];
                 }
 
-                const response = await API.get<number[]>(
+                const response = await API.get<any[]>(
                     `/save/${bookmarkType}/id/${user_id}`
                 );
-                // Convert object to array of numbers (entity IDs)
+
+                // For grants, we now get ref_number instead of ref_number
+                if (bookmarkType === "grant") {
+                    const idsArray = response.data.map(
+                        (entry) => entry.ref_number
+                    );
+                    return idsArray;
+                }
+
+                // For recipients and institutes, we still get the respective IDs
                 const idsArray = response.data.map(
                     (entry) => Object.values(entry)[0] as number
                 );
@@ -89,7 +93,7 @@ export function useAllBookmarks(
 
 interface ToggleBookmarkVariables {
     user_id: number;
-    entity_id: number;
+    entity_id: number | string; // Can be either grant ref_number (string) or ID (number)
     isBookmarked: boolean;
 }
 
@@ -101,7 +105,7 @@ export function useToggleBookmark(bookmarkType: BookmarkType) {
         void,
         Error,
         ToggleBookmarkVariables,
-        { prevBookmarks: number[]; queryKey: (string | number)[] }
+        { prevBookmarks: (number | string)[]; queryKey: (string | number)[] }
     >({
         mutationFn: async ({ user_id, entity_id, isBookmarked }) => {
             // Special handling for search bookmarks
@@ -133,13 +137,15 @@ export function useToggleBookmark(bookmarkType: BookmarkType) {
             await queryClient.cancelQueries({ queryKey });
 
             const prevBookmarks =
-                queryClient.getQueryData<number[]>(queryKey) || [];
+                queryClient.getQueryData<(number | string)[]>(queryKey) || [];
 
             // Optimistically update UI
-            queryClient.setQueryData<number[]>(queryKey, (prev = []) =>
-                isBookmarked
-                    ? prev.filter((id) => id !== entity_id)
-                    : [...prev, entity_id]
+            queryClient.setQueryData<(number | string)[]>(
+                queryKey,
+                (prev = []) =>
+                    isBookmarked
+                        ? prev.filter((id) => id !== entity_id)
+                        : [...prev, entity_id]
             );
 
             return { prevBookmarks, queryKey };
@@ -160,8 +166,10 @@ export function useToggleBookmark(bookmarkType: BookmarkType) {
         onSuccess: (_, { isBookmarked }) => {
             showNotification(
                 isBookmarked
-                    ? "Bookmark removed successfully!"
-                    : "Saved to bookmarks!",
+                    ? `${formatSentenceCase(
+                          bookmarkType
+                      )} removed from bookmarks!`
+                    : `${formatSentenceCase(bookmarkType)} bookmarked!`,
                 "success"
             );
         },

@@ -23,7 +23,7 @@ BEGIN
 
     
         CREATE TEMPORARY TABLE IF NOT EXISTS temp_grant_search_results (
-        ref_number VARCHAR(50),
+        ref_number VARCHAR(20),
         latest_amendment_number VARCHAR(10),
         latest_amendment_date DATE,
         agreement_number VARCHAR(50),
@@ -43,8 +43,7 @@ BEGIN
         province TEXT,
         country TEXT,
         org VARCHAR(20),
-        owner_org VARCHAR(20),
-        owner_org_title TEXT,
+        org_title TEXT,
         prog_id VARCHAR(50),
         name_en TEXT,
         amendments_history JSON);
