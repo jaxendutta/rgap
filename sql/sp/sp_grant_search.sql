@@ -177,7 +177,7 @@ BEGIN
     );
     
     -- Prepare and execute the main query using filtered IDs
-    SET @main_query = CONCAT("
+    SET @main_query = "
         SELECT
             rg.grant_id,
             rg.ref_number,
@@ -205,7 +205,19 @@ BEGIN
             rg.prog_id,
             p.name_en AS prog_title_en,
             p.purpose_en AS prog_purpose_en,
-            rg.amendments_history
+            rg.amendments_history,";
+    
+    -- Add bookmark status
+    IF p_user_id IS NOT NULL THEN
+        SET @main_query = CONCAT(@main_query, "
+            EXISTS(SELECT 1 FROM BookmarkedGrants bg WHERE bg.user_id = ", p_user_id, " AND bg.grant_id = rg.grant_id) AS is_bookmarked");
+    ELSE
+        SET @main_query = CONCAT(@main_query, "
+            FALSE AS is_bookmarked");
+    END IF;
+    
+    -- Complete the query
+    SET @main_query = CONCAT(@main_query, "
         FROM filtered_grants fg
         JOIN ResearchGrant rg ON fg.grant_id = rg.grant_id
         JOIN Recipient r ON rg.recipient_id = r.recipient_id

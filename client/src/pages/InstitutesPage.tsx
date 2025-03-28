@@ -1,10 +1,7 @@
 // src/pages/InstitutesPage.tsx
 import { useState } from "react";
 import { University, BookMarked, Users, DollarSign } from "lucide-react";
-import {
-    useInfiniteInstitutes,
-    useSearchInstitutes,
-} from "@/hooks/api/useInstitutes";
+import { useInstitutes, useSearchInstitutes } from "@/hooks/api/useData";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import { SortConfig } from "@/types/search";
 import EntitiesPage from "@/components/common/pages/EntitiesPage";
@@ -21,19 +18,22 @@ const InstitutesPage = () => {
     });
     const [filters, setFilters] = useState(DEFAULT_FILTER_STATE);
 
-    // Use infinite query for institutes - fixing parameter type
-    const infiniteQuery = useInfiniteInstitutes(20); // Using a default pageSize of 20
+    // Use our new unified data hooks with bookmarking support
+    const institutesQuery = useInstitutes({
+        queryType: "infinite",
+        sort: sortConfig,
+        enabled: !isSearching,
+    });
 
     // Search query for when search is active
-    const searchQuery = useSearchInstitutes(
-        searchTerms.name,
-        isSearching,
-        1, // Page number (default to 1)
-        20 // Page size (default to 20)
-    );
+    const searchQuery = useSearchInstitutes(searchTerms.name, {
+        queryType: "infinite",
+        sort: sortConfig,
+        enabled: isSearching,
+    });
 
     // Use search results or regular results based on search state
-    const effectiveQuery = isSearching ? searchQuery : infiniteQuery;
+    const effectiveQuery = isSearching ? searchQuery : institutesQuery;
 
     // Handle search
     const handleSearch = (params: {

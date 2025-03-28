@@ -1,10 +1,7 @@
 // src/pages/RecipientsPage.tsx
 import { useState } from "react";
 import { GraduationCap, BookMarked, Calendar, DollarSign } from "lucide-react";
-import {
-    useInfiniteRecipients,
-    useSearchRecipients,
-} from "@/hooks/api/useRecipients";
+import { useRecipients, useSearchRecipients } from "@/hooks/api/useData";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import { SortConfig } from "@/types/search";
 import EntitiesPage from "@/components/common/pages/EntitiesPage";
@@ -21,19 +18,22 @@ const RecipientsPage = () => {
     });
     const [filters, setFilters] = useState(DEFAULT_FILTER_STATE);
 
-    // Use infinite query for recipients
-    const infiniteQuery = useInfiniteRecipients(20); // Using a default pageSize of 20
+    // Use our new unified data hooks with bookmarking support
+    const recipientsQuery = useRecipients({
+        queryType: "infinite",
+        sort: sortConfig,
+        enabled: !isSearching,
+    });
 
     // Search query for when search is active
-    const searchQuery = useSearchRecipients(
-        searchTerms.name,
-        isSearching,
-        1, // Page number (default to 1)
-        20 // Page size (default to 20)
-    );
+    const searchQuery = useSearchRecipients(searchTerms.name, {
+        queryType: "infinite",
+        sort: sortConfig,
+        enabled: isSearching,
+    });
 
     // Use search results or regular results based on search state
-    const effectiveQuery = isSearching ? searchQuery : infiniteQuery;
+    const effectiveQuery = isSearching ? searchQuery : recipientsQuery;
 
     // Handle search
     const handleSearch = (params: {

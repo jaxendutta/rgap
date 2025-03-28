@@ -1,7 +1,7 @@
 // src/pages/SearchPage.tsx
 import { useState } from "react";
 import { FileSearch2, University, UserSearch } from "lucide-react";
-import { useInfiniteGrantSearch } from "@/hooks/api/useGrants";
+import { useGrantSearch } from "@/hooks/api/useData";
 import type { GrantSortConfig as SortConfig } from "@/types/search";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import type { GrantSearchParams } from "@/types/search";
@@ -31,8 +31,11 @@ export const SearchPage = () => {
         sortConfig,
     };
 
-    // Initialize infinite query
-    const infiniteQueryResult = useInfiniteGrantSearch(searchParams);
+    // Use our new unified hook for grant search
+    const searchQuery = useGrantSearch(searchParams, {
+        queryType: "infinite",
+        enabled: !isInitialState,
+    });
 
     const handleSearch = (params: {
         searchTerms: Record<string, string>;
@@ -47,11 +50,6 @@ export const SearchPage = () => {
         );
         setFilters(params.filters);
         setIsInitialState(false);
-
-        // Refetch with updated parameters
-        setTimeout(() => {
-            infiniteQueryResult.refetch();
-        }, 0);
     };
 
     const handleBookmark = () => {
@@ -95,7 +93,7 @@ export const SearchPage = () => {
             }}
             listConfig={{
                 type: "grants",
-                infiniteQuery: infiniteQueryResult,
+                infiniteQuery: searchQuery,
                 sortConfig: sortConfig,
                 emptyMessage: isInitialState
                     ? "Enter search terms above to begin exploring grants."

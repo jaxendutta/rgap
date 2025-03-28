@@ -28,7 +28,7 @@ export interface DataChartProps {
     showGrid?: boolean;
     title?: string;
     className?: string;
-    isAmendmentView?: boolean; // New prop for amendment visualizations
+    isAmendmentView?: boolean;
 }
 
 export const DataChart: React.FC<DataChartProps> = ({

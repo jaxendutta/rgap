@@ -152,11 +152,16 @@ const EntitiesPage: React.FC<EntitiesPageProps> = ({
                             value={
                                 searchConfig.initialValues[searchFieldKey] || ""
                             }
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                            onChange={(
+                                e: React.ChangeEvent<HTMLInputElement>
+                            ) => {
                                 // Create a synthetic event to simulate the SearchInterface onChange
-                                searchConfig.initialValues[searchFieldKey] = e.target.value;
+                                searchConfig.initialValues[searchFieldKey] =
+                                    e.target.value;
                             }}
-                            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                            onKeyDown={(
+                                e: React.KeyboardEvent<HTMLInputElement>
+                            ) => {
                                 if (e.key === "Enter") {
                                     searchConfig.onSearch({
                                         searchTerms: searchConfig.initialValues,

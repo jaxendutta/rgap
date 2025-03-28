@@ -39,8 +39,8 @@ export const Button = ({
 
     const sizes = {
         sm: "px-3 py-1.5 text-sm",
-        md: "px-4 py-1.5 text-md",
-        lg: "px-6 py-3 text-lg",
+        md: "px-4 py-1.5 text-sm",
+        lg: "px-6 py-3 text-md",
     };
 
     // Handle responsive icon visibility
@@ -70,7 +70,7 @@ export const Button = ({
                 <>
                     {LeftIcon && (
                         <span className={cn("", iconClasses[responsiveIcon])}>
-                            <LeftIcon className="w-4 h-4" />
+                            <LeftIcon className="w-4 h-4 flex-shrink-0" />
                         </span>
                     )}
 
@@ -92,7 +92,7 @@ export const Button = ({
 
                     {RightIcon && (
                         <span className={cn("", iconClasses[responsiveIcon])}>
-                            <RightIcon className="w-4 h-4" />
+                            <RightIcon className="w-4 h-4 flex-shrink-0" />
                         </span>
                     )}
                 </>

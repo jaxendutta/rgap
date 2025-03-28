@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { BookMarked, PieChart, DollarSign } from "lucide-react";
-import { useRecipientDetails } from "@/hooks/api/useRecipients";
+import { useEntityById, useEntityGrants } from "@/hooks/api/useData";
 import EntityProfilePage from "@/components/common/pages/EntityProfilePage";
 import RecipientHeader from "@/components/features/recipients/RecipientHeader";
 import RecipientStats from "@/components/features/recipients/RecipientStats";
@@ -11,19 +11,17 @@ import { SortConfig } from "@/types/search";
 import { AnalyticsCards } from "@/components/common/ui/AnalyticsCards";
 import { formatCurrency } from "@/utils/format";
 import { getCategoryColor } from "@/utils/chartColors";
+import { UseInfiniteQueryResult } from "@tanstack/react-query"; // Add this import
 
 export const RecipientProfilePage = () => {
     const { id } = useParams();
 
-    // Use the API hook to fetch recipient details
-    const {
-        data: recipientData,
-        isLoading,
-        isError,
-        error,
-    } = useRecipientDetails(id || "");
-
-    const recipient = recipientData?.data;
+    // Use the new useEntityById hook for recipient details
+    const recipientDetailsQuery = useEntityById("recipient", id);
+    const isLoading = recipientDetailsQuery.isLoading;
+    const isError = recipientDetailsQuery.isError;
+    const error = recipientDetailsQuery.error;
+    const recipient = (recipientDetailsQuery.data as { data: any })?.data;
 
     // Component state
     const [sortConfig, setSortConfig] = useState<SortConfig>({
@@ -35,13 +33,21 @@ export const RecipientProfilePage = () => {
     );
     const [expandedStats, setExpandedStats] = useState(false);
 
+    // Use the new useEntityGrants hook with infinite query
+    // Add explicit type annotation to fix TypeScript error
+    const recipientGrantsQuery: UseInfiniteQueryResult<any, Error> =
+        useEntityGrants("recipient", id, {
+            queryType: "infinite",
+            sort: sortConfig,
+        });
+
     // If recipient not found and not loading
     if (!isLoading && !recipient && !isError) {
         return <Navigate to="/pageNotFound" />;
     }
 
     // Get all agencies from funding history for legend
-    const agencies = recipient?.funding_history
+    const agencies: string[] = recipient?.funding_history
         ? Array.from(
               new Set(
                   recipient.funding_history.flatMap((entry: any) =>
@@ -94,18 +100,9 @@ export const RecipientProfilePage = () => {
             case "grants":
                 return (
                     <GrantsList
-                        grants={recipient.grants || []}
+                        infiniteQuery={recipientGrantsQuery}
                         onSortChange={setSortConfig}
                         initialSortConfig={sortConfig}
-                        contextData={{
-                            recipientName: recipient.legal_name,
-                            recipientId: recipient.recipient_id,
-                            instituteName: recipient.research_organization_name,
-                            instituteId: recipient.institute_id,
-                            city: recipient.city,
-                            province: recipient.province,
-                            country: recipient.country,
-                        }}
                         emptyMessage="This recipient has no associated grants in our database."
                         showVisualization={true}
                         visualizationInitiallyVisible={false}
@@ -117,9 +114,7 @@ export const RecipientProfilePage = () => {
                 // More detailed analytics that might still be useful
                 return (
                     <div className="space-y-6">
-                        <h2 className="text-xl font-semibold">
-                            Analytics
-                        </h2>
+                        <h2 className="text-xl font-semibold">Analytics</h2>
 
                         {/* Analytics cards for detailed metrics */}
                         <AnalyticsCards

@@ -24,7 +24,7 @@ import { RecipientType } from "@/constants/data";
 import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
 
 interface EntityCardProps {
-    entity: Institute | Recipient;
+    entity: Institute | (Recipient & { is_bookmarked?: boolean });
     entityType: Entity;
     grantsCount?: number;
     totalFunding?: number;
@@ -45,13 +45,20 @@ const EntityCard = ({
     totalFunding,
     latestGrantDate,
     recipientsCount,
-    isBookmarked = false,
+    isBookmarked: propIsBookmarked,
     isError = false,
     errorMessage = "Unable to load data",
     onRetry,
     className,
 }: EntityCardProps) => {
     const navigate = useNavigate();
+
+    // Get bookmark status from either the prop or the entity itself
+    // This allows us to use the bookmark status from API responses
+    const isBookmarked =
+        propIsBookmarked !== undefined
+            ? propIsBookmarked
+            : entity.is_bookmarked;
 
     // Type guards to distinguish between institute and recipient
     const isInstitute = (): boolean => {

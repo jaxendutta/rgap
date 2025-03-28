@@ -28,6 +28,7 @@ export interface Recipient {
     first_grant_date?: string;
     latest_grant_date?: string;
     funding_agencies_count?: number;
+    is_bookmarked: boolean;
 }
 
 // Institute
@@ -47,6 +48,7 @@ export interface Institute {
     first_grant_date?: string;
     latest_grant_date?: string;
     funding_agencies_count?: number;
+    is_bookmarked: boolean;
 }
 
 // Grant
@@ -65,6 +67,7 @@ export interface Grant {
     description_en?: string;
     expected_results_en?: string;
     additional_information_en?: string;
+    is_bookmarked: boolean;
 
     // Recipient information
     recipient_id: number;

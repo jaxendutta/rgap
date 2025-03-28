@@ -7,7 +7,8 @@ CREATE PROCEDURE sp_entity_grants(
     IN p_sort_field VARCHAR(20),
     IN p_sort_direction VARCHAR(4),
     IN p_page_size INT,
-    IN p_page INT
+    IN p_page INT,
+    IN p_user_id INT UNSIGNED
 )
 BEGIN
     DECLARE v_offset INT;
@@ -55,14 +56,36 @@ BEGIN
             o.org,
             o.org_title,
             p.name_en AS prog_title_en,
-            p.purpose_en AS prog_purpose_en
+            p.purpose_en AS prog_purpose_en,
+            -- Add bookmarked status
+            IF(';
+    
+    -- Add user_id check
+    IF p_user_id IS NOT NULL THEN
+        SET @main_query = CONCAT(@main_query, p_user_id, ' IS NOT NULL');
+    ELSE
+        SET @main_query = CONCAT(@main_query, 'FALSE');
+    END IF;
+    
+    SET @main_query = CONCAT(@main_query, ',
+            EXISTS(SELECT 1 FROM BookmarkedGrants bg WHERE bg.user_id = ');
+    
+    -- Add user_id parameter
+    IF p_user_id IS NOT NULL THEN
+        SET @main_query = CONCAT(@main_query, p_user_id);
+    ELSE
+        SET @main_query = CONCAT(@main_query, 'NULL');
+    END IF;
+    
+    SET @main_query = CONCAT(@main_query, ' AND bg.grant_id = rg.grant_id),
+            FALSE) AS is_bookmarked
         FROM ResearchGrant rg
         JOIN Recipient r ON rg.recipient_id = r.recipient_id
         JOIN Institute i ON r.institute_id = i.institute_id
         JOIN Organization o ON rg.org = o.org
         LEFT JOIN Program p ON rg.prog_id = p.prog_id
         WHERE 1=1
-    ';
+    ');
     
     -- Add filters for the main query
     IF p_recipient_id IS NOT NULL THEN

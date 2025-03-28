@@ -166,7 +166,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                             <span className="font-semibold">
                                 {totalCount.toLocaleString()}
                             </span>
-                            {` ${entityType.toLowerCase()}`}
+                            {` ${entityType.toLowerCase()}s`}
                         </span>
                     )}
                 </div>

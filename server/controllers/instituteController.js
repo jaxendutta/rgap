@@ -11,10 +11,11 @@ export const getAllInstitutes = async (req, res) => {
         const pageSize = parseInt(req.query.pageSize) || 20;
 
         // Use stored procedure for getting institutes with stats
-        const [results] = await pool.query("CALL sp_get_all_institutes(?, ?)", [
-            page,
-            pageSize,
-        ]);
+        const userId = req.query.user_id || null;
+        const [results] = await pool.query(
+            "CALL sp_get_all_institutes(?, ?, ?)",
+            [page, pageSize, userId]
+        );
 
         // First result set contains total count
         const totalCount = results[0][0].total_count;
@@ -48,6 +49,7 @@ export const getAllInstitutes = async (req, res) => {
 export const getInstituteById = async (req, res) => {
     try {
         const instituteId = req.params.id;
+        const userId = req.query.user_id || null;
 
         // Check if the instituteId is valid
         if (!instituteId || isNaN(parseInt(instituteId))) {
@@ -61,8 +63,9 @@ export const getInstituteById = async (req, res) => {
         const parsedId = parseInt(instituteId);
 
         // Use the stored procedure to get comprehensive institute details
-        const [results] = await pool.query("CALL sp_institute_details(?)", [
+        const [results] = await pool.query("CALL sp_institute_details(?, ?)", [
             parsedId,
+            userId,
         ]);
 
         // The stored procedure returns multiple result sets
@@ -129,10 +132,11 @@ export const getInstituteGrants = async (req, res) => {
         const pageSize = parseInt(req.query.pageSize) || 20;
         const sortField = req.query.sortField || "date";
         const sortDirection = req.query.sortDirection || "desc";
+        const userId = req.query.user_id || null;
 
         const [results] = await pool.query(
-            "CALL sp_entity_grants(NULL, ?, ?, ?, ?, ?)",
-            [instituteId, sortField, sortDirection, pageSize, page]
+            "CALL sp_entity_grants(NULL, ?, ?, ?, ?, ?, ?)",
+            [instituteId, sortField, sortDirection, pageSize, page, userId]
         );
 
         // First result set contains the total count
@@ -169,11 +173,12 @@ export const getInstituteRecipients = async (req, res) => {
         const instituteId = req.params.id;
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 20;
+        const userId = req.query.user_id || null; // Add user_id from query params
 
         // Use the stored procedure to get paginated recipients
         const [results] = await pool.query(
-            "CALL sp_institute_recipients(?, ?, ?)",
-            [instituteId, page, pageSize]
+            "CALL sp_institute_recipients(?, ?, ?, ?)",
+            [instituteId, page, pageSize, userId]
         );
 
         // First result set contains total count

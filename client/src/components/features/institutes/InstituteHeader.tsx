@@ -7,7 +7,9 @@ import EntityHeader, {
 import { Institute } from "@/types/models";
 import { formatCommaSeparated } from "@/utils/format";
 
-const InstituteHeader = (institute: Institute) => {
+const InstituteHeader = (
+    institute: Institute & { is_bookmarked?: boolean }
+) => {
     // Create a Google search URL for the institute
     const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(
         institute.name
@@ -35,11 +37,12 @@ const InstituteHeader = (institute: Institute) => {
             actions={actions}
             entityType="institute"
             entityId={institute.institute_id}
-            location={formatCommaSeparated(
-                [institute.city, institute.province, institute.country].filter(
-                    Boolean
-                ) as string[]
-            )}
+            isBookmarked={institute.is_bookmarked}
+            location={formatCommaSeparated([
+                institute.city,
+                institute.province,
+                institute.country,
+            ])}
         />
     );
 };

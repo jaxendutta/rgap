@@ -93,6 +93,7 @@ interface ToggleBookmarkVariables {
 
 /**
  * Hook to toggle bookmark status (add or remove)
+ * Improved version with direct visual feedback
  */
 export function useToggleBookmark(bookmarkType: Entity) {
     const queryClient = useQueryClient();
@@ -111,16 +112,26 @@ export function useToggleBookmark(bookmarkType: Entity) {
 
             if (isBookmarked) {
                 // Remove bookmark
-                await API.delete(`/bookmark/${bookmarkType}/${entity_id}`, {
-                    data: { user_id },
-                });
+                const response = await API.delete(
+                    `/bookmark/${bookmarkType}/${entity_id}`,
+                    {
+                        data: { user_id, isBookmarked },
+                    }
+                );
+                return { removed: true, data: response.data };
             } else {
                 // Add bookmark
-                await API.post(`/bookmark/${bookmarkType}/${entity_id}`, {
-                    user_id,
-                });
+                const response = await API.post(
+                    `/bookmark/${bookmarkType}/${entity_id}`,
+                    {
+                        user_id,
+                        isBookmarked,
+                    }
+                );
+                return { added: true, data: response.data };
             }
         },
+        // Use onMutate for optimistic updates
         onMutate: async ({ user_id, entity_id, isBookmarked }) => {
             // Cancel any outgoing refetches
             await queryClient.cancelQueries({
@@ -134,19 +145,26 @@ export function useToggleBookmark(bookmarkType: Entity) {
                 ) || [];
 
             // Optimistically update to the new value
+            // Important: the change here is that we want to immediately show the result AFTER the toggle
             queryClient.setQueryData(
                 bookmarkKeys.userType(bookmarkType, user_id),
                 (old: any[] = []) => {
+                    // If currently bookmarked (and we're removing)
                     if (isBookmarked) {
                         return old.filter((id) => id !== entity_id);
-                    } else {
-                        return [...old, entity_id];
+                    }
+                    // If not currently bookmarked (and we're adding)
+                    else {
+                        // Only add if it's not already there
+                        return old.includes(entity_id)
+                            ? old
+                            : [...old, entity_id];
                     }
                 }
             );
 
             // Return a context object with the previous value
-            return { previousIds };
+            return { previousIds, newBookmarkState: !isBookmarked };
         },
         onError: (err, variables, context) => {
             if (context) {
@@ -159,7 +177,7 @@ export function useToggleBookmark(bookmarkType: Entity) {
             showNotification(
                 `Failed to ${
                     variables.isBookmarked ? "remove" : "add"
-                } bookmark: ${err}. Please try again.`,
+                } bookmark. Please try again.\n\nError: ${err.message}`,
                 "error"
             );
         },

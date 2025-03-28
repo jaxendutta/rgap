@@ -93,7 +93,7 @@ const GrantsList: React.FC<GrantsListProps> = ({
                 { field: "agreement_value", label: "Value", icon: DollarSign },
             ]}
             sortConfig={sortConfig}
-            onSortChange={handleSortChange} // TODO: Implement sorting
+            onSortChange={handleSortChange}
             infiniteQuery={infiniteQuery}
             totalCount={
                 infiniteQuery?.data?.pages[0]?.metadata?.totalCount ||

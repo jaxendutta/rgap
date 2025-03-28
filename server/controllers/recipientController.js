@@ -9,12 +9,13 @@ export const getAllRecipients = async (req, res) => {
         // Apply pagination parameters if provided
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 20;
+        const userId = req.query.user_id || null;
 
-        // Use stored procedure for getting recipients with stats
-        const [results] = await pool.query("CALL sp_get_all_recipients(?, ?)", [
-            page,
-            pageSize,
-        ]);
+        // Use stored procedure for getting recipients with stats and bookmark status
+        const [results] = await pool.query(
+            "CALL sp_get_all_recipients(?, ?, ?)",
+            [page, pageSize, userId]
+        );
 
         // First result contains total count
         const totalCount = results[0][0].total_count;
@@ -48,10 +49,12 @@ export const getAllRecipients = async (req, res) => {
 export const getRecipientById = async (req, res) => {
     try {
         const recipientId = req.params.id;
+        const userId = req.query.user_id || null;
 
         // Use the stored procedure to get comprehensive recipient details
-        const [results] = await pool.query("CALL sp_recipient_details(?)", [
+        const [results] = await pool.query("CALL sp_recipient_details(?, ?)", [
             recipientId,
+            userId,
         ]);
 
         // The stored procedure returns multiple result sets
@@ -107,10 +110,11 @@ export const getRecipientGrants = async (req, res) => {
         const pageSize = parseInt(req.query.pageSize) || 20;
         const sortField = req.query.sortField || "date";
         const sortDirection = req.query.sortDirection || "desc";
+        const userId = req.query.user_id || null;
 
         const [results] = await pool.query(
-            "CALL sp_entity_grants(?, NULL, ?, ?, ?, ?)",
-            [recipientId, sortField, sortDirection, pageSize, page]
+            "CALL sp_entity_grants(?, NULL, ?, ?, ?, ?, ?)",
+            [recipientId, sortField, sortDirection, pageSize, page, userId]
         );
 
         // First result set contains the total count
@@ -171,7 +175,7 @@ export const searchRecipients = async (req, res) => {
         const { term } = req.query;
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 20;
-        const offset = (page - 1) * pageSize;
+        const userId = req.query.user_id || null;
 
         if (!term || term.trim() === "") {
             return res.status(400).json({
@@ -179,45 +183,17 @@ export const searchRecipients = async (req, res) => {
             });
         }
 
-        // Get total count for pagination metadata
-        const [countResult] = await pool.query(
-            `SELECT COUNT(*) as total 
-             FROM Recipient r
-             LEFT JOIN Institute i ON r.institute_id = i.institute_id
-             WHERE r.legal_name LIKE ? OR i.name LIKE ?`,
-            [`%${term}%`, `%${term}%`]
+        // Updated to include user_id parameter
+        const [results] = await pool.query(
+            "CALL sp_search_recipients(?, ?, ?, ?)",
+            [term, page, pageSize, userId]
         );
-        const totalCount = countResult[0].total;
 
-        // Search recipients with their organization info and grant counts
-        const [recipients] = await pool.query(
-            `SELECT 
-                r.recipient_id,
-                r.legal_name,
-                r.type,
-                r.institute_id,
-                i.name AS research_organization_name,
-                i.city,
-                i.province,
-                i.country,
-                COUNT(DISTINCT rg.ref_number) AS grant_count,
-                COALESCE(SUM(rg.agreement_value), 0) AS total_funding,
-                MAX(rg.agreement_start_date) AS latest_grant_date
-            FROM 
-                Recipient r
-            LEFT JOIN 
-                Institute i ON r.institute_id = i.institute_id
-            LEFT JOIN 
-                ResearchGrant rg ON r.recipient_id = rg.recipient_id
-            WHERE 
-                r.legal_name LIKE ? OR i.name LIKE ?
-            GROUP BY 
-                r.recipient_id
-            ORDER BY 
-                total_funding DESC
-            LIMIT ? OFFSET ?`,
-            [`%${term}%`, `%${term}%`, pageSize, offset]
-        );
+        // First result set contains total count
+        const totalCount = results[0][0].total_count;
+
+        // Second result set contains recipients data
+        const recipients = results[1] || [];
 
         res.json({
             message: "Recipients search completed",

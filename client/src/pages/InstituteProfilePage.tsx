@@ -1,9 +1,15 @@
 // src/pages/InstituteProfilePage.tsx
 import { useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
+import { UseInfiniteQueryResult } from "@tanstack/react-query";
 import { BookMarked, GraduationCap, PieChart } from "lucide-react";
-import { useInstituteDetails } from "@/hooks/api/useInstitutes";
-import { useInfiniteInstituteGrants, useInfiniteInstituteRecipients } from "@/hooks/api/useInstitutes";
+import {
+    useEntityById,
+    useEntityGrants,
+    getDataFromResult,
+    getTotalFromResult,
+    useInstituteRecipients,
+} from "@/hooks/api/useData";
 import EntityProfilePage from "@/components/common/pages/EntityProfilePage";
 import InstituteHeader from "@/components/features/institutes/InstituteHeader";
 import InstituteStats from "@/components/features/institutes/InstituteStats";
@@ -29,37 +35,33 @@ const InstituteProfilePage = () => {
         field: "date",
         direction: "desc",
     });
-    const [recipientsSortConfig, setRecipientsSortConfig] = useState<SortConfig>({
-        field: "total_funding",
-        direction: "desc",
-    });
+    const [recipientsSortConfig, setRecipientsSortConfig] =
+        useState<SortConfig>({
+            field: "total_funding",
+            direction: "desc",
+        });
     const [isVisualizationVisible, setIsVisualizationVisible] = useState(false);
 
-    // Use the API hook to fetch institute basic details
-    const {
-        data: instituteData,
-        isLoading,
-        isError,
-        error,
-    } = useInstituteDetails(id || "");
+    // Use the new useEntityById hook for institute details
+    const instituteDetailsQuery = useEntityById("institute", id);
+    const isLoading = instituteDetailsQuery.isLoading;
+    const isError = instituteDetailsQuery.isError;
+    const error = instituteDetailsQuery.error;
+    const institute = (instituteDetailsQuery.data as { data: any })?.data;
 
-    // Set up infinite query for grants with sorting
-    const infiniteGrantsQuery = useInfiniteInstituteGrants(
-        id || "",
-        15, // pageSize
-        grantsSortConfig.field as "date" | "value",
-        grantsSortConfig.direction
-    );
+    // Use new useEntityGrants hook for institute grants with infinite query
+    // Add explicit type annotation to fix TypeScript error
+    const instituteGrantsQuery: UseInfiniteQueryResult<any, Error> =
+        useEntityGrants("institute", id, {
+            queryType: "infinite",
+            sort: grantsSortConfig,
+        });
 
-    // Set up infinite query for recipients with sorting
-    const infiniteRecipientsQuery = useInfiniteInstituteRecipients(
-        id || "",
-        15, // pageSize
-        recipientsSortConfig.field as "total_funding" | "grant_count",
-        recipientsSortConfig.direction
-    );
-
-    const institute = instituteData?.data;
+    // Use new useData hook for institute recipients
+    const instituteRecipientsQuery = useInstituteRecipients(id, {
+        queryType: "infinite",
+        sort: recipientsSortConfig,
+    }) as UseInfiniteQueryResult<any, Error>;
 
     // If institute not found and not loading
     if (!isLoading && !institute && !isError) {
@@ -67,7 +69,7 @@ const InstituteProfilePage = () => {
     }
 
     // Get all agencies from funding history for legend and charts
-    const agencies = institute?.funding_history
+    const agencies: string[] = institute?.funding_history
         ? Array.from(
               new Set(
                   institute.funding_history.flatMap((entry: any) =>
@@ -116,6 +118,15 @@ const InstituteProfilePage = () => {
         );
     };
 
+    // Get recipients data from query results
+    // Add null checks to fix "property 'data' does not exist on type '{}'" error
+    const recipients = instituteRecipientsQuery.data
+        ? getDataFromResult(instituteRecipientsQuery)
+        : [];
+    const recipientsTotal = instituteRecipientsQuery.data
+        ? getTotalFromResult(instituteRecipientsQuery)
+        : 0;
+
     // Render functions for recipient items
     const renderRecipientItem = (recipient: any) => {
         return (
@@ -123,51 +134,52 @@ const InstituteProfilePage = () => {
                 entity={recipient}
                 entityType="recipient"
                 className="hover:border-gray-300 transition-all h-full"
+                // isBookmarked now comes from recipient.is_bookmarked via API
             />
         );
     };
 
     // Key extractor for recipients
-    const keyExtractor = (recipient: any) => `recipient-${recipient.recipient_id}`;
+    const keyExtractor = (recipient: any) =>
+        `recipient-${recipient.recipient_id}`;
 
     const renderTabContent = (activeTabId: string) => {
         if (!institute) return null;
 
         switch (activeTabId) {
             case "recipients":
-                // Get recipients data from the infinite query
-                const recipients = infiniteRecipientsQuery.data 
-                    ? infiniteRecipientsQuery.data.pages.flatMap(page => page.data)
-                    : [];
-                    
-                // Get total count from metadata
-                const totalCount = infiniteRecipientsQuery.data?.pages[0]?.metadata?.totalCount || recipients.length;
-                    
                 // Create visualization component for recipients
-                const recipientsVisualization = recipients.length > 0 ? (
-                    <TrendVisualizer
-                        grants={recipients.map(recipient => ({
-                            ...recipient,
-                            // Add required properties for the visualizer
-                            agreement_start_date: recipient.latest_grant_date || new Date().toISOString(),
-                            agreement_value: recipient.total_funding,
-                            org: "Institute Recipient",
-                        }))}
-                        viewContext="institute"
-                        height={350}
-                        initialGrouping="recipient"
-                        initialMetricType="funding"
-                        initialChartType="bar-stacked"
-                        availableGroupings={["recipient"]}
-                    />
-                ) : null;
-                    
+                const recipientsVisualization =
+                    recipients.length > 0 ? (
+                        <TrendVisualizer
+                            grants={recipients.map((recipient) => ({
+                                ...recipient,
+                                // Add required properties for the visualizer
+                                agreement_start_date:
+                                    recipient.latest_grant_date ||
+                                    new Date().toISOString(),
+                                agreement_value: recipient.total_funding,
+                                org: "Institute Recipient",
+                            }))}
+                            viewContext="institute"
+                            height={350}
+                            initialGrouping="recipient"
+                            initialMetricType="funding"
+                            initialChartType="bar-stacked"
+                            availableGroupings={["recipient"]}
+                        />
+                    ) : null;
+
                 // Define sort options for recipients
                 const sortOptions = [
-                    { field: "total_funding", label: "Funding", icon: DollarSign },
+                    {
+                        field: "total_funding",
+                        label: "Funding",
+                        icon: DollarSign,
+                    },
                     { field: "grant_count", label: "Grants", icon: BookMarked },
                 ];
-                    
+
                 return (
                     <EntityList
                         entityType="recipient"
@@ -178,15 +190,18 @@ const InstituteProfilePage = () => {
                         sortOptions={sortOptions}
                         sortConfig={recipientsSortConfig}
                         onSortChange={setRecipientsSortConfig}
-                        infiniteQuery={infiniteRecipientsQuery}
-                        totalCount={totalCount}
+                        infiniteQuery={instituteRecipientsQuery}
+                        totalCount={recipientsTotal}
                         totalItems={recipients.length}
                         emptyMessage="This institute has no associated recipients in our database."
                         visualization={recipientsVisualization}
                         visualizationToggle={{
                             isVisible: isVisualizationVisible,
-                            toggle: () => setIsVisualizationVisible(!isVisualizationVisible),
-                            showToggleButton: true
+                            toggle: () =>
+                                setIsVisualizationVisible(
+                                    !isVisualizationVisible
+                                ),
+                            showToggleButton: true,
                         }}
                         allowLayoutToggle={true}
                     />
@@ -195,7 +210,7 @@ const InstituteProfilePage = () => {
             case "grants":
                 return (
                     <GrantsList
-                        infiniteQuery={infiniteGrantsQuery}
+                        infiniteQuery={instituteGrantsQuery}
                         initialSortConfig={grantsSortConfig}
                         emptyMessage="This institute has no associated grants in our database."
                         showVisualization={true}
@@ -205,12 +220,9 @@ const InstituteProfilePage = () => {
                 );
 
             case "analytics":
-                // More detailed analytics that might still be useful
                 return (
                     <div className="space-y-6">
-                        <h2 className="text-xl font-semibold">
-                            Analytics
-                        </h2>
+                        <h2 className="text-xl font-semibold">Analytics</h2>
 
                         {/* Analytics cards for detailed metrics */}
                         <AnalyticsCards
@@ -353,10 +365,15 @@ const InstituteProfilePage = () => {
 
                                                 let activeCount = 0;
                                                 institute.recipients.forEach(
-                                                    (recipient) => {
+                                                    (recipient: {
+                                                        recipient_id: number;
+                                                    }) => {
                                                         const hasRecentGrant =
                                                             institute.grants.some(
-                                                                (grant) =>
+                                                                (grant: {
+                                                                    recipient_id: number;
+                                                                    agreement_start_date: string;
+                                                                }) =>
                                                                     grant.recipient_id ===
                                                                         recipient.recipient_id &&
                                                                     new Date(
@@ -393,7 +410,10 @@ const InstituteProfilePage = () => {
 
                                                 const durations =
                                                     institute.grants.map(
-                                                        (grant) => {
+                                                        (grant: {
+                                                            agreement_start_date: Date;
+                                                            agreement_end_date: Date;
+                                                        }) => {
                                                             const start =
                                                                 new Date(
                                                                     grant.agreement_start_date
@@ -415,9 +435,12 @@ const InstituteProfilePage = () => {
                                                         }
                                                     );
 
-                                                const avgDuration =
+                                                const avgDuration: number =
                                                     durations.reduce(
-                                                        (sum, d) => sum + d,
+                                                        (
+                                                            sum: number,
+                                                            d: number
+                                                        ) => sum + d,
                                                         0
                                                     ) / durations.length;
                                                 return `${Math.round(
@@ -428,15 +451,8 @@ const InstituteProfilePage = () => {
                                         {
                                             label: "Grants per Recipient",
                                             value:
-                                                institute.grant_count &&
-                                                institute.recipients &&
-                                                institute.recipients.length > 0
-                                                    ? (
-                                                          institute.grant_count /
-                                                          institute.recipients
-                                                              .length
-                                                      ).toFixed(1)
-                                                    : "N/A",
+                                                institute.grant_count /
+                                                institute.recipients.length,
                                         },
                                     ],
                                 },

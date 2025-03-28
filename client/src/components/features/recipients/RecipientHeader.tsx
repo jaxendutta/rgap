@@ -12,8 +12,11 @@ import EntityHeader, {
 } from "@/components/common/layout/EntityHeader";
 import { Recipient } from "@/types/models";
 import { RecipientType } from "@/constants/data";
+import { formatCommaSeparated } from "@/utils/format";
 
-const RecipientHeader = (recipient : Recipient) => {
+const RecipientHeader = (
+    recipient: Recipient & { is_bookmarked?: boolean }
+) => {
     // Create a Google search URL for the recipient
     const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(
         `${recipient.legal_name} ${recipient.research_organization_name || ""}`
@@ -65,6 +68,12 @@ const RecipientHeader = (recipient : Recipient) => {
             actions={actions}
             entityType="recipient"
             entityId={recipient.recipient_id}
+            isBookmarked={recipient.is_bookmarked}
+            location={formatCommaSeparated([
+                recipient.city,
+                recipient.province,
+                recipient.country,
+            ])}
         />
     );
 };

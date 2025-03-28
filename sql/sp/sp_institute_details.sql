@@ -1,8 +1,9 @@
--- File: sql/sp/sp_institute_details.sql
+-- Modified sp_institute_details to include bookmark status
 DELIMITER $$
 DROP PROCEDURE IF EXISTS sp_institute_details$$
 CREATE PROCEDURE sp_institute_details(
-    IN p_institute_id INT
+    IN p_institute_id INT,
+    IN p_user_id INT UNSIGNED
 )
 BEGIN
     -- Get institute basic info with aggregated stats
@@ -14,7 +15,11 @@ BEGIN
         COALESCE(AVG(rg.agreement_value), 0) as avg_funding,
         MIN(rg.agreement_start_date) as first_grant_date,
         MAX(rg.agreement_start_date) as latest_grant_date,
-        COUNT(DISTINCT o.org) as funding_agencies_count
+        COUNT(DISTINCT o.org) as funding_agencies_count,
+        -- Add bookmarked status
+        IF(p_user_id IS NOT NULL, 
+           EXISTS(SELECT 1 FROM BookmarkedInstitutes bi WHERE bi.user_id = p_user_id AND bi.institute_id = i.institute_id), 
+           FALSE) AS is_bookmarked
     FROM Institute i
     LEFT JOIN Recipient r ON i.institute_id = r.institute_id
     LEFT JOIN ResearchGrant rg ON r.recipient_id = rg.recipient_id
@@ -22,27 +27,35 @@ BEGIN
     WHERE i.institute_id = p_institute_id
     GROUP BY i.institute_id;
 
-    -- Get institute's recipients with funding info
+    -- Get institute's recipients with funding info and bookmark status
     SELECT
         r.*,
         COUNT(DISTINCT rg.grant_id) as grants_count,
         COALESCE(SUM(rg.agreement_value), 0) as total_funding,
         MIN(rg.agreement_start_date) as first_grant_date,
-        MAX(rg.agreement_start_date) as latest_grant_date
+        MAX(rg.agreement_start_date) as latest_grant_date,
+        -- Add bookmarked status
+        IF(p_user_id IS NOT NULL, 
+           EXISTS(SELECT 1 FROM BookmarkedRecipients br WHERE br.user_id = p_user_id AND br.recipient_id = r.recipient_id), 
+           FALSE) AS is_bookmarked
     FROM Recipient r
     LEFT JOIN ResearchGrant rg ON r.recipient_id = rg.recipient_id
     WHERE r.institute_id = p_institute_id
     GROUP BY r.recipient_id
     ORDER BY total_funding DESC;
 
-    -- Get institute's grants
+    -- Get institute's grants with bookmark status
     SELECT
         rg.*,
         r.legal_name as recipient_name,
         o.org as org,
         o.org_title,
         p.name_en as prog_title_en,
-        p.purpose_en as prog_purpose_en
+        p.purpose_en as prog_purpose_en,
+        -- Add bookmarked status
+        IF(p_user_id IS NOT NULL, 
+           EXISTS(SELECT 1 FROM BookmarkedGrants bg WHERE bg.user_id = p_user_id AND bg.grant_id = rg.grant_id), 
+           FALSE) AS is_bookmarked
     FROM ResearchGrant rg
     JOIN Recipient r ON rg.recipient_id = r.recipient_id
     JOIN Organization o ON rg.org = o.org

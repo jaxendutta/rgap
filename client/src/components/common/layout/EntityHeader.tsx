@@ -1,3 +1,4 @@
+// src/components/common/layout/EntityHeader.tsx
 import { useState } from "react";
 import { LucideIcon, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/common/ui/Button";
@@ -31,6 +32,7 @@ interface EntityHeaderProps {
     entityType?: Entity;
     entityId?: number;
     location?: string;
+    isBookmarked?: boolean;
 }
 
 const EntityHeader: React.FC<EntityHeaderProps> = ({
@@ -42,6 +44,7 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
     entityType,
     entityId,
     location,
+    isBookmarked,
 }) => {
     const [showMap, setShowMap] = useState(false);
 
@@ -89,6 +92,7 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                                 variant={action.variant || "outline"}
                                 leftIcon={action.icon}
                                 size="sm"
+                                pill={true}
                                 onClick={action.onClick}
                             >
                                 {
@@ -105,6 +109,7 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                                 entityId={entityId}
                                 entityType={entityType}
                                 size="sm"
+                                isBookmarked={isBookmarked}
                             />
                         )}
                     </div>

@@ -1,17 +1,17 @@
 // src/components/features/bookmarks/BookmarkButton.tsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BookmarkPlus, BookmarkCheck } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
-import { useAllBookmarks, useToggleBookmark } from "@/hooks/api/useBookmarks";
+import { useToggleBookmark } from "@/hooks/api/useBookmarks";
 import { Button } from "@/components/common/ui/Button";
 import { Entity } from "@/types/models";
 
 interface BookmarkButtonProps {
     entityId: number;
     entityType: Entity;
-    isBookmarked?: boolean; // Optional override if you already know the state
+    isBookmarked?: boolean;
     size?: "sm" | "md" | "lg";
     variant?: "primary" | "secondary" | "outline";
     iconOnly?: boolean;
@@ -21,7 +21,7 @@ interface BookmarkButtonProps {
 export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
     entityId,
     entityType,
-    isBookmarked: externalIsBookmarked,
+    isBookmarked: initialIsBookmarked,
     size = "md",
     variant = "secondary",
     iconOnly = false,
@@ -30,18 +30,19 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
     const { user } = useAuth();
     const { showNotification } = useNotification();
 
-    // If isBookmarked is not explicitly provided, look it up from our hook
-    const { data: bookmarkedIds = [] } = useAllBookmarks(
-        entityType,
-        user?.user_id
+    // Keep track of the visual/UI state of the bookmark button
+    const [visualBookmarkState, setVisualBookmarkState] = useState<boolean>(
+        initialIsBookmarked ?? false
     );
 
-    // Use the external isBookmarked if provided, otherwise check our bookmarkedIds
-    const isBookmarked =
-        externalIsBookmarked !== undefined
-            ? externalIsBookmarked
-            : bookmarkedIds.includes(entityId);
+    // Update the visual state when props change (e.g., due to new API data)
+    useEffect(() => {
+        if (initialIsBookmarked !== undefined) {
+            setVisualBookmarkState(initialIsBookmarked);
+        }
+    }, [initialIsBookmarked]);
 
+    // Get the mutation function from our hook
     const toggleBookmarkMutation = useToggleBookmark(entityType);
 
     const handleToggleBookmark = () => {
@@ -52,27 +53,34 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
             );
             return;
         }
-        
+
         // Ensure entityId is defined
         if (!entityId) {
-            showNotification(
-                "Cannot bookmark this item - missing ID",
-                "error"
-            );
+            showNotification("Cannot bookmark this item - missing ID", "error");
             return;
         }
 
+        // Update visual state immediately for better UX
+        setVisualBookmarkState(!visualBookmarkState);
+
+        // Call the mutation with the CURRENT state (before toggling)
         toggleBookmarkMutation.mutate(
             {
                 user_id: user.user_id,
                 entity_id: entityId,
-                isBookmarked,
+                isBookmarked: visualBookmarkState, // The current state before toggling
             },
             {
-                // Don't show notification here as the mutation already handles it
-                onSuccess: () => {
-                    // Success is already handled in the mutation
-                }
+                onError: () => {
+                    // Revert visual state on error
+                    setVisualBookmarkState(visualBookmarkState);
+                    showNotification(
+                        `Failed to ${
+                            visualBookmarkState ? "remove" : "add"
+                        } bookmark. Please try again.`,
+                        "error"
+                    );
+                },
             }
         );
     };
@@ -82,27 +90,41 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
         return (
             <button
                 onClick={handleToggleBookmark}
+                disabled={toggleBookmarkMutation.isPending}
                 className={cn(
                     "p-1 rounded-full transition-colors focus:outline-none",
-                    isBookmarked
+                    visualBookmarkState
                         ? "text-blue-600 hover:text-blue-700"
                         : "text-gray-400 hover:text-gray-600",
+                    toggleBookmarkMutation.isPending && "opacity-50",
                     className
                 )}
-                aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+                aria-label={
+                    visualBookmarkState ? "Remove bookmark" : "Add bookmark"
+                }
             >
-                {isBookmarked ? (
-                    <BookmarkCheck className="h-5 w-5" />
+                {visualBookmarkState ? (
+                    <BookmarkCheck
+                        className={cn(
+                            "h-5 w-5",
+                            toggleBookmarkMutation.isPending && "animate-pulse"
+                        )}
+                    />
                 ) : (
-                    <BookmarkPlus className="h-5 w-5" />
+                    <BookmarkPlus
+                        className={cn(
+                            "h-5 w-5",
+                            toggleBookmarkMutation.isPending && "animate-pulse"
+                        )}
+                    />
                 )}
             </button>
         );
     }
 
     // Customize button appearance based on bookmark state
-    const buttonVariant = isBookmarked ? "secondary" : variant;
-    const customClassName = isBookmarked
+    const buttonVariant = visualBookmarkState ? "secondary" : variant;
+    const customClassName = visualBookmarkState
         ? cn(
               "bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200",
               className
@@ -113,11 +135,16 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
         <Button
             size={size}
             variant={buttonVariant}
-            leftIcon={isBookmarked ? BookmarkCheck : BookmarkPlus}
+            pill={true}
+            leftIcon={visualBookmarkState ? BookmarkCheck : BookmarkPlus}
             onClick={handleToggleBookmark}
+            disabled={toggleBookmarkMutation.isPending}
+            isLoading={toggleBookmarkMutation.isPending}
             className={customClassName}
         >
-            <span className="hidden lg:inline">{isBookmarked ? "Bookmarked" : "Bookmark"}</span>
+            <span className="hidden lg:inline">
+                {visualBookmarkState ? "Bookmarked" : "Bookmark"}
+            </span>
         </Button>
     );
 };
