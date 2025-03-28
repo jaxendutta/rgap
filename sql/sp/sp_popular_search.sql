@@ -10,36 +10,36 @@ BEGIN
     IF p_type = 0 THEN
         -- Grant
         SELECT 
-            search_grant AS search_term,
-            COUNT(*) AS frequency
+            normalized_grant AS search_term,
+            COUNT(normalized_grant) AS frequency
         FROM SearchHistory
-        WHERE search_grant IS NOT NULL
+        WHERE normalized_grant IS NOT NULL
           AND search_time BETWEEN p_start AND p_end
-        GROUP BY search_grant
+        GROUP BY normalized_grant
         ORDER BY frequency DESC
         LIMIT 5;
 
     ELSEIF p_type = 1 THEN
         -- Recipient
         SELECT 
-            search_recipient AS search_term,
-            COUNT(*) AS frequency
+            normalized_recipient AS search_term,
+            COUNT(normalized_recipient) AS frequency
         FROM SearchHistory
-        WHERE search_recipient IS NOT NULL
+        WHERE normalized_recipient IS NOT NULL
           AND search_time BETWEEN p_start AND p_end
-        GROUP BY search_recipient
+        GROUP BY normalized_recipient
         ORDER BY frequency DESC
         LIMIT 5;
 
     ELSE
         -- Institute
         SELECT 
-            search_institution AS search_term,
-            COUNT(*) AS frequency
+            normalized_institution AS search_term,
+            COUNT(normalized_institution) AS frequency
         FROM SearchHistory
-        WHERE search_institution IS NOT NULL
+        WHERE normalized_institution IS NOT NULL
           AND search_time BETWEEN p_start AND p_end
-        GROUP BY search_institution
+        GROUP BY normalized_institution
         ORDER BY frequency DESC
         LIMIT 5;
     END IF;
