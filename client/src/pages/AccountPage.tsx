@@ -1,5 +1,6 @@
 // src/pages/AccountPage.tsx
 import { useState, useEffect } from "react";
+import { UseInfiniteQueryResult } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
     User,
@@ -18,7 +19,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/common/ui/Card";
 import { Button } from "@/components/common/ui/Button";
-import { SortButton } from "@/components/common/ui/SortButton";
 import { SearchHistoryCard } from "@/components/features/account/SearchHistoryCard";
 import { cn } from "@/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,9 +27,8 @@ import PageContainer from "@/components/common/layout/PageContainer";
 import PageHeader from "@/components/common/layout/PageHeader";
 import { useUser } from "@/hooks/api/useUser";
 import { useUserSearchHistory } from "@/hooks/api/useSearchHistory";
-
-type SortField = "date" | "results";
-type SortDirection = "asc" | "desc";
+import EntityList from "@/components/common/ui/EntityList";
+import { SearchHistory } from "@/types/models";
 
 const TABS = [
     { id: "profile", label: "Profile", icon: User },
@@ -44,13 +43,6 @@ export default function AccountPage() {
         useState<(typeof TABS)[number]["id"]>("profile");
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
-    const [sortConfig, setSortConfig] = useState<{
-        field: SortField;
-        direction: SortDirection;
-    }>({
-        field: "date",
-        direction: "desc",
-    });
 
     // local state for editable profile info and password fields
     const [editName, setEditName] = useState("");
@@ -64,9 +56,22 @@ export default function AccountPage() {
     const { user, logout, updateUser } = useAuth();
     const { showNotification } = useNotification();
 
+    // Don't call the search history hook here - EntityList will call it
+
+    const { deleteAccount } = useUser();
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [confirmEmail, setConfirmEmail] = useState("");
+    const [emailError, setEmailError] = useState("");
+
     // If no user is logged in, redirect to the login page
+    useEffect(() => {
+        if (!user) {
+            navigate("/auth");
+        }
+    }, [user, navigate]);
+
     if (!user) {
-        navigate("/auth");
         return null;
     }
 
@@ -75,36 +80,6 @@ export default function AccountPage() {
         setEditName(user.name);
         setEditEmail(user.email);
     }, [user]);
-
-    // Use our new search history hooks
-    const {
-        data: searchHistoryData,
-        isLoading: historyLoading,
-        isError: historyError,
-        error: historyErrorMessage,
-        refetch: refetchSearchHistory,
-    } = useUserSearchHistory(
-        user.user_id,
-        sortConfig.field === "date" ? "search_time" : "result_count",
-        sortConfig.direction
-    );
-
-    // Get search history from the hook data
-    const searchHistory = searchHistoryData?.searches || [];
-
-    const handleSortChange = async (
-        field: "search_time" | "result_count",
-        direction: "asc" | "desc"
-    ) => {
-        // Update local state for sort config
-        setSortConfig({
-            field: field === "search_time" ? "date" : "results",
-            direction,
-        });
-
-        // Refetch with new sort params - our hook will use these parameters
-        await refetchSearchHistory();
-    };
 
     // Profile update in Account Settings
     const handleProfileUpdate = async () => {
@@ -184,12 +159,6 @@ export default function AccountPage() {
         navigate("/");
     };
 
-    const { deleteAccount } = useUser();
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [confirmEmail, setConfirmEmail] = useState("");
-    const [emailError, setEmailError] = useState("");
-
     const handleDeleteAccount = async () => {
         if (!user) return;
 
@@ -239,6 +208,16 @@ export default function AccountPage() {
         setConfirmEmail("");
         setEmailError("");
     };
+
+    const renderSearchHistoryItem = (search: SearchHistory) => (
+        <SearchHistoryCard key={search.history_id} data={search} />
+    );
+
+    const searchHistoryQuery = useUserSearchHistory(
+        user.user_id,
+        "search_time",
+        "desc",
+    ) as UseInfiniteQueryResult<SearchHistory[], Error>;
 
     return (
         <PageContainer>
@@ -466,82 +445,34 @@ export default function AccountPage() {
                             </div>
                         </Card>
                     )}
+
                     {/* Search History */}
                     {activeTab === "history" && (
                         <Card className="p-4 lg:p-6">
-                            <div className="space-y-4">
-                                {/* Header */}
-                                <div className="flex justify-between gap-4">
-                                    <h2 className="text-2xl font-medium">
-                                        Recent Searches
-                                    </h2>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <SortButton
-                                                label="Date"
-                                                icon={Calendar}
-                                                field="date"
-                                                currentField={sortConfig.field}
-                                                direction={sortConfig.direction}
-                                                onClick={() =>
-                                                    handleSortChange(
-                                                        "search_time",
-                                                        sortConfig.direction ===
-                                                            "asc"
-                                                            ? "desc"
-                                                            : "asc"
-                                                    )
-                                                }
-                                            />
-                                            <SortButton
-                                                label="Results"
-                                                icon={History}
-                                                field="results"
-                                                currentField={sortConfig.field}
-                                                direction={sortConfig.direction}
-                                                onClick={() =>
-                                                    handleSortChange(
-                                                        "result_count",
-                                                        sortConfig.direction ===
-                                                            "asc"
-                                                            ? "desc"
-                                                            : "asc"
-                                                    )
-                                                }
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {historyLoading ? (
-                                    <p>Loading search history...</p>
-                                ) : historyError ? (
-                                    <p className="text-red-600">
-                                        {historyErrorMessage instanceof Error
-                                            ? historyErrorMessage.message
-                                            : "Failed to load search history"}
-                                    </p>
-                                ) : searchHistory.length > 0 ? (
-                                    <motion.div
-                                        layout
-                                        className="grid grid-cols-1 gap-4"
-                                    >
-                                        {searchHistory.map((search) => (
-                                            <motion.div
-                                                key={search.history_id}
-                                                layout
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: -20 }}
-                                                transition={{ duration: 0.2 }}
-                                            >
-                                                <SearchHistoryCard
-                                                    search={search}
-                                                />
-                                            </motion.div>
-                                        ))}
-                                    </motion.div>
-                                ) : (
+                            <EntityList
+                                entityType="search"
+                                query={searchHistoryQuery}
+                                keyExtractor={(search) =>
+                                    search.history_id.toString()
+                                }
+                                initialSortConfig={{
+                                    field: "search_time",
+                                    direction: "desc",
+                                }}
+                                renderItem={renderSearchHistoryItem}
+                                sortOptions={[
+                                    {
+                                        label: "Date",
+                                        icon: Calendar,
+                                        field: "search_time",
+                                    },
+                                    {
+                                        label: "Results",
+                                        icon: History,
+                                        field: "result_count",
+                                    },
+                                ]}
+                                emptyState={
                                     <div className="flex flex-col justify-center items-center space-y-4 h-64 bg-gray-100 p-8 rounded-lg text-center w-full">
                                         <PackageOpen className="h-16 w-16 text-gray-400" />
                                         <p className="text-gray-700 text-md">
@@ -555,8 +486,8 @@ export default function AccountPage() {
                                             Start exploring
                                         </Button>
                                     </div>
-                                )}
-                            </div>
+                                }
+                            />
                         </Card>
                     )}
 

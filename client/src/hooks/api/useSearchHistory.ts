@@ -1,5 +1,10 @@
-// Update to src/hooks/api/useSearchHistory.ts
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+// src/hooks/api/useSearchHistory.ts
+import {
+    useMutation,
+    useQueryClient,
+    useInfiniteQuery,
+    UseInfiniteQueryResult,
+} from "@tanstack/react-query";
 import { SearchHistory } from "@/types/models";
 import { GrantSearchParams } from "@/types/search";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
@@ -22,80 +27,26 @@ export const adaptSearchHistory = (rawHistory: any[]): SearchHistory[] => {
     }
 
     return rawHistory.map((item) => {
-        // Initialize with default values to ensure proper structure
-        let searchTerms = { recipient: "", institute: "", grant: "" };
-        let searchFilters = DEFAULT_FILTER_STATE;
-
-        // Process search terms
+        // Convert search filters from string to object if needed
+        let searchFilters = item.search_filters;
         try {
-            // If search terms were stored as strings in the DB
-            if (
-                item.search_recipient ||
-                item.search_grant ||
-                item.search_institution
-            ) {
-                searchTerms = {
-                    recipient: item.search_recipient || "",
-                    grant: item.search_grant || "",
-                    institute: item.search_institution || "",
-                };
-            }
-        } catch (e) {
-            console.error("Error parsing search terms:", e);
-        }
-
-        // Process search filters
-        try {
-            if (typeof item.search_filters === "string") {
-                searchFilters = JSON.parse(item.search_filters);
-            } else if (
-                item.search_filters &&
-                typeof item.search_filters === "object"
-            ) {
-                searchFilters = item.search_filters;
-            }
-
-            // Validate filter structure
-            if (!searchFilters.agencies) searchFilters.agencies = [];
-            if (!searchFilters.countries) searchFilters.countries = [];
-            if (!searchFilters.provinces) searchFilters.provinces = [];
-            if (!searchFilters.cities) searchFilters.cities = [];
-
-            if (!searchFilters.dateRange) {
-                searchFilters.dateRange = DEFAULT_FILTER_STATE.dateRange;
-            } else {
-                // Ensure dates are Date objects
-                if (
-                    searchFilters.dateRange.from &&
-                    typeof searchFilters.dateRange.from === "string"
-                ) {
-                    searchFilters.dateRange.from = new Date(
-                        searchFilters.dateRange.from
-                    );
-                }
-                if (
-                    searchFilters.dateRange.to &&
-                    typeof searchFilters.dateRange.to === "string"
-                ) {
-                    searchFilters.dateRange.to = new Date(
-                        searchFilters.dateRange.to
-                    );
-                }
-            }
-
-            if (!searchFilters.valueRange) {
-                searchFilters.valueRange = DEFAULT_FILTER_STATE.valueRange;
+            if (typeof searchFilters === "string") {
+                searchFilters = JSON.parse(searchFilters);
             }
         } catch (e) {
             console.error("Error parsing search filters:", e);
-            searchFilters = DEFAULT_FILTER_STATE;
+            searchFilters = {};
         }
 
         // Build structured search params
         const searchParams: GrantSearchParams = {
-            searchTerms: searchTerms,
-            filters: searchFilters,
-            sortConfig: { field: "date", direction: "desc" },
+            searchTerms: {
+                recipient: item.search_recipient || "",
+                grant: item.search_grant || "",
+                institute: item.search_institution || "",
+            },
+            filters: searchFilters || DEFAULT_FILTER_STATE,
+            sortConfig: { field: "agreement_start_date", direction: "desc" },
         };
 
         // Create structured SearchHistory object
@@ -104,7 +55,6 @@ export const adaptSearchHistory = (rawHistory: any[]): SearchHistory[] => {
             search_time: new Date(item.search_time),
             search_params: searchParams,
             result_count: item.result_count || 0,
-            bookmarked: !!item.bookmarked,
             ...item,
         };
     });
@@ -116,18 +66,24 @@ export const adaptSearchHistory = (rawHistory: any[]): SearchHistory[] => {
 export function useUserSearchHistory(
     userId?: number | null,
     sortField = "search_time",
-    sortDirection = "desc"
-) {
-    return useQuery({
+    sortDirection = "desc",
+    limit = 10
+): UseInfiniteQueryResult<SearchHistory[]> {
+    interface SearchHistoryPage {
+        searches: SearchHistory[];
+        nextPage: number | null;
+    }
+
+    return useInfiniteQuery<SearchHistoryPage, Error, SearchHistory[]>({
         queryKey: searchHistoryKeys.list({ userId, sortField, sortDirection }),
-        queryFn: async () => {
-            if (!userId) return { searches: [] };
+        queryFn: async ({ pageParam }) => {
+            if (!userId) return { searches: [], nextPage: null };
 
             const baseurl =
                 process.env.VITE_API_URL ||
                 `http://localhost:${portConfig.defaults.server}`;
             const response = await fetch(
-                `${baseurl}/search-history/${userId}?sortField=${sortField}&sortDirection=${sortDirection}`
+                `${baseurl}/search-history/${userId}?sortField=${sortField}&sortDirection=${sortDirection}&page=${pageParam}&limit=${limit}`
             );
 
             if (!response.ok) {
@@ -139,8 +95,11 @@ export function useUserSearchHistory(
             // Adapt raw search history to structured format
             return {
                 searches: adaptSearchHistory(data.searches || []),
+                nextPage: data.nextPage,
             };
         },
+        initialPageParam: 0,
+        getNextPageParam: (lastPage: SearchHistoryPage) => lastPage.nextPage,
         enabled: !!userId,
     });
 }

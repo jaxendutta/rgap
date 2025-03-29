@@ -2,36 +2,8 @@
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import { Grant } from "./models";
 
-export type SortDirection = "asc" | "desc";
-
-// Base sort configuration that includes all possible fields
-export interface BaseSortConfig {
-    direction: SortDirection;
-}
-
-// Recipient-specific sort config
-export interface RecipientSortConfig extends BaseSortConfig {
-    field: "grant_count" | "total_funding" | "avg_funding";
-}
-
-// Institute-specific sort config
-export interface InstituteSortConfig extends BaseSortConfig {
-    field: "grant_count" | "total_funding" | "avg_funding" | "recipient_count";
-}
-
-// Grant-specific sort config
-export interface GrantSortConfig extends BaseSortConfig {
-    field: "date" | "value";
-}
-
-// History-specific sort config
-export interface HistorySortConfig extends BaseSortConfig {
-    field: "date" | "results";
-}
-
-// Generic sort config for broader use
-export interface SortConfig {
-    field: "date" | "value" | "results" | "grant_count" | "total_funding" | "avg_funding" | "recipient_count";
+export interface SortConfig<T> {
+    field: keyof T;
     direction: "asc" | "desc";
 }
 
@@ -43,17 +15,11 @@ export interface GrantSearchParams {
         grant: string;
     };
     filters: typeof DEFAULT_FILTER_STATE;
-    sortConfig: GrantSortConfig;
+    sortConfig: SortConfig<Grant>;
     pagination?: {
         page: number;
         pageSize: number;
     };
-}
-
-// History search params
-export interface HistorySearchParams {
-    sortConfig: HistorySortConfig;
-    // other history-specific fields
 }
 
 export interface SearchResponseMetadata {

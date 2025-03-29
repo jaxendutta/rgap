@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import {
     useQuery,
+    useQueryClient,
     UseQueryResult,
     useInfiniteQuery,
     UseInfiniteQueryResult,
@@ -203,13 +204,13 @@ export function useData(
     params: Record<string, any> = {},
     options: DataFetchOptions = {}
 ) {
+    const queryClient = useQueryClient();
     const {
         queryType = "regular",
         pagination = { page: 1, pageSize: 20 },
         sort = { field: "date", direction: "desc" },
         userId: explicitUserId,
         enabled = true,
-        keepPreviousData = false,
         queryOptions = {},
     } = options;
 
@@ -235,18 +236,27 @@ export function useData(
 
     // For complete data fetch (all pages)
     if (queryType === "complete") {
-        return useCompleteData(endpoint, params, {
-            pagination,
-            sort,
-            userId: explicitUserId,
-            enabled,
-            queryOptions,
-        });
+        const completeQuery = useCompleteData(endpoint, params, options);
+
+        // Add updateSort function
+        const updateSort = (newSortConfig: SortParams) => {
+            // Refetch with new sort config
+            const newOptions = {
+                ...options,
+                sort: newSortConfig,
+            };
+            return useCompleteData(endpoint, params, newOptions);
+        };
+
+        return {
+            ...completeQuery,
+            updateSort,
+        };
     }
 
     // For infinite queries
     if (queryType === "infinite") {
-        return useInfiniteQuery({
+        const infiniteQuery = useInfiniteQuery({
             queryKey,
             queryFn: async ({ pageParam = 1 }) => {
                 const response = await API.get(endpoint, {
@@ -270,19 +280,30 @@ export function useData(
             enabled,
             ...queryOptions,
         });
-    }
 
-    // For regular queries
-    return useQuery({
-        queryKey,
-        queryFn: async () => {
-            const response = await API.get(endpoint, { params: queryParams });
-            return response.data;
-        },
-        enabled,
-        keepPreviousData,
-        ...queryOptions,
-    });
+        // Add updateSort function for infinite queries
+        const updateSort = (newSortConfig: SortParams) => {
+            // Create new query key with updated sort
+            const newParams = {
+                ...params,
+                sortField: newSortConfig.field,
+                sortDirection: newSortConfig.direction,
+            };
+
+            const newQueryKey = [endpoint, newParams, { type: queryType }];
+
+            // Reset the query cache to force a refetch with the new sort
+            queryClient.resetQueries({ queryKey: newQueryKey });
+
+            // Update the options for future queries
+            options.sort = newSortConfig;
+        };
+
+        return {
+            ...infiniteQuery,
+            updateSort,
+        };
+    }
 }
 
 /**

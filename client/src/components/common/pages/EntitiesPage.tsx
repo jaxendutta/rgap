@@ -10,6 +10,7 @@ import EntityList from "@/components/common/ui/EntityList";
 import GrantsList from "@/components/features/grants/GrantsList";
 import { UseInfiniteQueryResult, UseQueryResult } from "@tanstack/react-query";
 import { Button } from "@/components/common/ui/Button";
+import { Grant } from "@/types/models";
 
 interface HeaderConfig {
     title: string;
@@ -44,10 +45,10 @@ interface SimpleSearchConfig extends BaseSearchConfig {
 
 type SearchConfig = FullSearchConfig | SimpleSearchConfig;
 
-interface ListConfig {
+interface ListConfig<T> {
     type: "grants" | "entities";
     query: UseInfiniteQueryResult<any, Error> | UseQueryResult<any, Error>;
-    sortConfig: SortConfig;
+    sortConfig: SortConfig<T>;
     emptyMessage: string;
     showVisualization?: boolean;
     visualizationInitiallyVisible?: boolean;
@@ -61,20 +62,20 @@ interface ListConfig {
         label: string;
         icon: LucideIcon;
     }>;
-    onSortChange?: (config: SortConfig) => void;
+    onSortChange?: (config: SortConfig<T>) => void;
 }
 
-interface EntitiesPageProps {
+interface EntitiesPageProps<T> {
     headerConfig: HeaderConfig;
     searchConfig?: SearchConfig;
-    listConfig: ListConfig;
+    listConfig: ListConfig<T>;
 }
 
-const EntitiesPage: React.FC<EntitiesPageProps> = ({
+const EntitiesPage = <T,>({
     headerConfig,
     searchConfig,
     listConfig,
-}) => {
+}: EntitiesPageProps<T>) => {
     // Helper function to get entities from query result
     const getEntitiesFromQuery = (
         query: UseInfiniteQueryResult<any, Error> | UseQueryResult<any, Error>
@@ -195,18 +196,15 @@ const EntitiesPage: React.FC<EntitiesPageProps> = ({
                 <GrantsList
                     grants={getEntitiesFromQuery(listConfig.query)}
                     query={
-                        listConfig.query as UseInfiniteQueryResult<
-                            any,
-                            Error
-                        >
+                        listConfig.query as UseInfiniteQueryResult<any, Error>
                     }
-                    initialSortConfig={listConfig.sortConfig}
+                    initialSortConfig={listConfig.sortConfig as SortConfig<Grant>}
                     emptyMessage={listConfig.emptyMessage}
                     showVisualization={listConfig.showVisualization}
                     visualizationInitiallyVisible={
                         listConfig.visualizationInitiallyVisible
                     }
-                    viewContext={listConfig.viewContext as any}
+                    viewContext={listConfig.viewContext}
                 />
             );
         } else {
@@ -226,9 +224,13 @@ const EntitiesPage: React.FC<EntitiesPageProps> = ({
                         ((_, index) => `entity-${index}`)
                     }
                     variant={listConfig.variant || "list"}
-                    sortOptions={listConfig.sortOptions || []}
-                    sortConfig={listConfig.sortConfig}
-                    onSortChange={listConfig.onSortChange || (() => {})}
+                    sortOptions={
+                        listConfig.sortOptions?.map((option) => ({
+                            ...option,
+                            field: option.field as keyof T,
+                        })) || []
+                    }
+                    initialSortConfig={listConfig.sortConfig}
                     query={
                         isInfiniteQuery
                             ? (listConfig.query as UseInfiniteQueryResult<

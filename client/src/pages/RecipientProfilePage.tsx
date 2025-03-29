@@ -26,6 +26,7 @@ import EntityHeader, {
     MetadataItem,
 } from "@/components/common/layout/EntityHeader";
 import { RecipientType } from "@/constants/data";
+import { Grant } from "@/types/models";
 
 const RecipientProfilePage = () => {
     const { id } = useParams();
@@ -40,8 +41,8 @@ const RecipientProfilePage = () => {
         "grants"
     );
     const [expandedStats, setExpandedStats] = useState(false);
-    const [grantsSortConfig] = useState<SortConfig>({
-        field: "date",
+    const [grantsSortConfig] = useState<SortConfig<Grant>>({
+        field: "agreement_start_date",
         direction: "desc",
     });
 

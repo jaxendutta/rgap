@@ -78,7 +78,7 @@ export const BookmarksPage = () => {
                     />
                 );
             case "search":
-                return <SearchHistoryCard search={item} />;
+                return <SearchHistoryCard data={item} />;
             default:
                 return null;
         }
@@ -180,8 +180,7 @@ export const BookmarksPage = () => {
                         : "grid"
                 }
                 sortOptions={getSortOptions()}
-                sortConfig={{ field: "date", direction: "desc" }}
-                onSortChange={() => {}} // Bookmarks don't need sorting for now
+                initialSortConfig={{ field: "date", direction: "desc" }}
                 totalCount={bookmarkedItems.length}
                 totalItems={bookmarkedItems.length}
                 emptyMessage={`No bookmarked ${activeTab}s found.`}

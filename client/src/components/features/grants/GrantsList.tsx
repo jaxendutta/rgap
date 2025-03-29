@@ -12,11 +12,10 @@ export type GrantSortField = "date" | "value";
 export type SortDirection = "asc" | "desc";
 
 interface GrantsListProps {
-    // Direct data mode
+    // Complete data
     grants: Grant[];
-    onSortChange?: (sortConfig: SortConfig) => void;
 
-    // OR Infinite query mode
+    // Infinite query
     query?: UseInfiniteQueryResult<any, Error>;
 
     // Entity information for fetching all grants
@@ -24,7 +23,7 @@ interface GrantsListProps {
     entityType?: "recipient" | "institute";
 
     // Common props
-    initialSortConfig?: SortConfig;
+    initialSortConfig?: SortConfig<Grant>;
     emptyMessage?: string;
 
     // Visualization props
@@ -36,11 +35,10 @@ interface GrantsListProps {
 
 const GrantsList: React.FC<GrantsListProps> = ({
     grants,
-    onSortChange,
     query,
     entityId,
     entityType,
-    initialSortConfig = { field: "date", direction: "desc" },
+    initialSortConfig = { field: "agreement_start_date", direction: "desc" },
     emptyMessage = "No grants found.",
     showVisualization = true,
     visualizationInitiallyVisible = false,
@@ -48,19 +46,12 @@ const GrantsList: React.FC<GrantsListProps> = ({
     doNotShowVisualizationToggle = false,
 }) => {
     // Local sort state (used in direct data mode)
-    const [sortConfig, setSortConfig] = useState<SortConfig>(initialSortConfig);
+    const [sortConfig] = useState<SortConfig<Grant>>(initialSortConfig);
 
     // State for visualization
     const [isVisualizationVisible, setIsVisualizationVisible] = useState(
         visualizationInitiallyVisible
     );
-
-    const handleSortChange = (newSortConfig: SortConfig) => {
-        setSortConfig(newSortConfig);
-        if (onSortChange) {
-            onSortChange(newSortConfig);
-        }
-    };
 
     // Get grants for visualization from props or from the infinite query (all pages)
     const getVisibleGrants = useMemo((): Grant[] => {
@@ -96,8 +87,7 @@ const GrantsList: React.FC<GrantsListProps> = ({
                 },
                 { field: "agreement_value", label: "Value", icon: DollarSign },
             ]}
-            sortConfig={sortConfig}
-            onSortChange={handleSortChange}
+            initialSortConfig={sortConfig}
             query={query}
             totalCount={
                 query?.data?.pages[0]?.metadata?.totalCount ||

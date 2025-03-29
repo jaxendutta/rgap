@@ -1,4 +1,4 @@
-// src/components/common/ui/EntityList.tsx
+// src/pages/Re// src/components/common/ui/EntityList.tsx
 import React, { useState, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import {
@@ -30,7 +30,7 @@ function isInfiniteQuery(
 interface EntityListProps<T> {
     // Content props
     entityType: string;
-    entities: T[];
+    entities?: T[];
     renderItem: (item: T, index: number) => React.ReactNode;
     keyExtractor: (item: T, index: number) => string | number;
     variant?: LayoutVariant;
@@ -38,12 +38,11 @@ interface EntityListProps<T> {
 
     // Sorting props
     sortOptions: Array<{
-        field: string;
+        field: keyof T;
         label: string;
         icon: LucideIcon;
     }>;
-    sortConfig: SortConfig;
-    onSortChange: (config: SortConfig) => void;
+    initialSortConfig?: SortConfig<T>;
 
     // Optional infinite query props
     query?: UseInfiniteQueryResult<any, Error>;
@@ -52,6 +51,7 @@ interface EntityListProps<T> {
     isLoading?: boolean;
     isError?: boolean;
     error?: Error | unknown;
+    emptyState?: React.ReactNode;
 
     // Optional metadata counts
     totalCount?: number;
@@ -75,14 +75,14 @@ interface EntityListProps<T> {
 function EntityList<T>(props: EntityListProps<T>) {
     const {
         entityType,
-        entities: items,
+        entities = [],
         renderItem,
         keyExtractor,
         variant = "list",
+        emptyState,
         emptyMessage = "No items found.",
         sortOptions,
-        sortConfig,
-        onSortChange,
+        initialSortConfig,
         query,
         totalCount,
         totalItems,
@@ -99,6 +99,20 @@ function EntityList<T>(props: EntityListProps<T>) {
 
     // State for layout variant (if toggle is allowed)
     const [layoutVariant, setLayoutVariant] = useState<LayoutVariant>(variant);
+
+    // Internal sort state - initialized with initialSortConfig or the first option in sortOptions
+    const [sortConfig, setSortConfig] = useState<SortConfig<T>>(() => {
+        if (initialSortConfig) return initialSortConfig;
+        // If no initial config provided, use the first option as default with "desc" direction
+        if (sortOptions && sortOptions.length > 0) {
+            return {
+                field: sortOptions[0].field,
+                direction: "desc",
+            };
+        }
+        // Fallback
+        return { field: "id" as keyof T, direction: "desc" };
+    });
 
     // Handle loading and error states - either from props or from infiniteQuery
     const isLoading =
@@ -124,17 +138,42 @@ function EntityList<T>(props: EntityListProps<T>) {
         }
     }, [inView, query, hasNextPage, isFetchingNextPage]);
 
-    // Handle sort change
-    const handleSortChange = (field: string) => {
+    // Enhanced sort change handler that encapsulates all the sorting logic
+    const handleSortChange = (field: keyof T) => {
+        // Determine new sort direction
+        const newDirection =
+            field === sortConfig.field && sortConfig.direction === "desc"
+                ? "asc"
+                : "desc";
+
+        // Create new sort config
         const newSortConfig = {
             field,
-            direction:
-                sortConfig.field === field && sortConfig.direction === "desc"
-                    ? "asc"
-                    : "desc",
-        } as SortConfig;
+            direction: newDirection as "asc" | "desc",
+        };
 
-        onSortChange(newSortConfig);
+        // Update internal sort state
+        setSortConfig(newSortConfig);
+
+        // Handle the data refresh directly if we have a query with updateSort
+        if (query && "updateSort" in query) {
+            try {
+                (query as any).updateSort({
+                    field: String(field),
+                    direction: newDirection,
+                });
+            } catch (error) {
+                console.error("Error updating sort:", error);
+                // Fallback to manual refetch if updateSort fails
+                if (isInfiniteQuery(query)) {
+                    query.refetch();
+                }
+            }
+        }
+        // For queries without updateSort method, try to refetch if possible
+        else if (query && typeof query.refetch === "function") {
+            query.refetch();
+        }
     };
 
     // Toggle layout variant
@@ -159,18 +198,20 @@ function EntityList<T>(props: EntityListProps<T>) {
     }
 
     // Handle initial loading state
-    if (isLoading && items.length === 0) {
+    if (isLoading && entities?.length === 0) {
         return <LoadingState title={`Loading ${entityType}...`} size="md" />;
     }
 
     // Handle empty state
-    if (!isLoading && items.length === 0) {
+    if (!isLoading && entities?.length === 0) {
         return (
-            <EmptyState
-                title={`No ${entityType} Found`}
-                message={emptyMessage}
-                size="md"
-            />
+            emptyState || (
+                <EmptyState
+                    title={`No ${entityType} Found`}
+                    message={emptyMessage}
+                    size="md"
+                />
+            )
         );
     }
 
@@ -198,7 +239,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                 <div className="flex items-center space-x-2">
                     {sortOptions.map((option) => (
                         <SortButton
-                            key={option.field}
+                            key={String(option.field)}
                             label={option.label}
                             icon={option.icon}
                             field={option.field}
@@ -216,7 +257,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                                 visualizationToggle.isVisible ? X : LineChart
                             }
                             onClick={visualizationToggle.toggle}
-                            disabled={items.length === 0}
+                            disabled={entities?.length === 0}
                         >
                             <span className="hidden lg:inline">
                                 {visualizationToggle.isVisible
@@ -271,9 +312,9 @@ function EntityList<T>(props: EntityListProps<T>) {
                         : "space-y-4 mt-4"
                 )}
             >
-                {items.map((item, index) => (
-                    <React.Fragment key={keyExtractor(item, index)}>
-                        {renderItem(item, index)}
+                {entities?.map((entity, index) => (
+                    <React.Fragment key={keyExtractor(entity, index)}>
+                        {renderItem(entity, index)}
                     </React.Fragment>
                 ))}
             </div>
@@ -295,7 +336,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                         >
                             Load More
                         </Button>
-                    ) : items.length > 0 ? (
+                    ) : (entities?.length ?? 0) > 0 ? (
                         <p className="text-sm text-gray-500">
                             All {entityType.toLowerCase()} loaded
                         </p>

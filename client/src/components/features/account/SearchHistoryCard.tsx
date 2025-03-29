@@ -20,15 +20,15 @@ import { useDeleteSearchHistory } from "@/hooks/api/useSearchHistory";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
 
 interface SearchHistoryCardProps {
-    search: SearchHistory;
+    data: SearchHistory;
 }
 
-export const SearchHistoryCard = ({ search }: SearchHistoryCardProps) => {
+export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
     const { showNotification } = useNotification();
     const navigate = useNavigate();
 
     // Ensure searchParams is properly structured
-    const searchParams = search.search_params || {
+    const searchParams = data.search_params || {
         searchTerms: {},
         filters: DEFAULT_FILTER_STATE,
         sortConfig: { field: "date", direction: "desc" },
@@ -135,7 +135,7 @@ export const SearchHistoryCard = ({ search }: SearchHistoryCardProps) => {
     const activeFilters = getActiveFilters();
 
     // Format timestamp
-    const timestamp = new Date(search.search_time);
+    const timestamp = new Date(data.search_time);
     const formattedDate = timestamp.toLocaleDateString();
     const formattedTime = timestamp.toLocaleTimeString([], {
         hour: "2-digit",
@@ -196,7 +196,7 @@ export const SearchHistoryCard = ({ search }: SearchHistoryCardProps) => {
                         { Icon: Clock, text: formattedTime },
                         {
                             Icon: BookMarked,
-                            text: `${search.result_count.toLocaleString()} results`,
+                            text: `${data.result_count.toLocaleString()} results`,
                         },
                     ].map(({ Icon, text }, index) => (
                         <Tag
@@ -251,9 +251,9 @@ export const SearchHistoryCard = ({ search }: SearchHistoryCardProps) => {
             <div className="flex flex-col gap-2">
                 {/* Bookmark Button */}
                 <BookmarkButton
-                    entityId={search.history_id}
+                    entityId={data.history_id}
                     entityType="search"
-                    isBookmarked={search.bookmarked}
+                    isBookmarked={data.bookmarked}
                     size="sm"
                 />
 
@@ -274,7 +274,7 @@ export const SearchHistoryCard = ({ search }: SearchHistoryCardProps) => {
                     pill={true}
                     size="sm"
                     leftIcon={Trash2}
-                    onClick={() => handleDeleteHistory(search.history_id)}
+                    onClick={() => handleDeleteHistory(data.history_id)}
                     className="text-red-600 hover:bg-red-50"
                 >
                     <span className="hidden md:inline">Delete</span>

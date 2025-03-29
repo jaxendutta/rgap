@@ -5,17 +5,17 @@ import { cn } from "@/utils/cn";
 
 export type SortDirection = "asc" | "desc";
 
-interface SortButtonProps {
+interface SortButtonProps<T> {
     label: string;
     icon: LucideIcon;
-    field: string;
-    currentField: string;
+    field: keyof T;
+    currentField: keyof T;
     direction: SortDirection;
     onClick: () => void;
     className?: string;
 }
 
-export const SortButton = ({
+export const SortButton = <T,>({
     label,
     icon: Icon,
     field,
@@ -23,7 +23,7 @@ export const SortButton = ({
     direction,
     onClick,
     className,
-}: SortButtonProps) => {
+}: SortButtonProps<T>) => {
     const isActive = currentField === field;
 
     return (

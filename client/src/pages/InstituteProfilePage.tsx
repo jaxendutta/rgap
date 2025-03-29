@@ -32,6 +32,7 @@ import EntityHeader, {
     ActionButton,
 } from "@/components/common/layout/EntityHeader";
 import { formatCommaSeparated } from "@/utils/format";
+import { Grant, Recipient } from "@/types/models";
 
 const InstituteProfilePage = () => {
     const { id } = useParams();
@@ -46,15 +47,16 @@ const InstituteProfilePage = () => {
         "recipients" | "grants" | "analytics"
     >("recipients");
     const [expandedStats, setExpandedStats] = useState(false);
-    const [grantsSortConfig] = useState<SortConfig>({
-        field: "date",
+    const [grantsSortConfig] = useState<SortConfig<Grant>>({
+        field: "agreement_start_date",
         direction: "desc",
     });
-    const [recipientsSortConfig, setRecipientsSortConfig] =
-        useState<SortConfig>({
-            field: "total_funding",
-            direction: "desc",
-        });
+    const [recipientsSortConfig] = useState<
+        SortConfig<Recipient>
+    >({
+        field: "total_funding",
+        direction: "desc",
+    });
     const [showVisualization] = useState(true);
     const [isVisualizationVisible, setIsVisualizationVisible] = useState(true);
     const [doNotShowVisualizationToggle] = useState(false);
@@ -231,16 +233,6 @@ const InstituteProfilePage = () => {
 
         switch (activeTabId) {
             case "recipients":
-                // Define sort options for recipients
-                const sortOptions = [
-                    {
-                        field: "total_funding",
-                        label: "Funding",
-                        icon: DollarSign,
-                    },
-                    { field: "grant_count", label: "Grants", icon: BookMarked },
-                ];
-
                 return (
                     <EntityList
                         entityType="recipient"
@@ -248,9 +240,19 @@ const InstituteProfilePage = () => {
                         renderItem={renderRecipientItem}
                         keyExtractor={keyExtractor}
                         variant="grid"
-                        sortOptions={sortOptions}
-                        sortConfig={recipientsSortConfig}
-                        onSortChange={setRecipientsSortConfig}
+                        sortOptions={[
+                            {
+                                field: "total_funding",
+                                label: "Funding",
+                                icon: DollarSign,
+                            },
+                            {
+                                field: "grant_count",
+                                label: "Grants",
+                                icon: BookMarked,
+                            },
+                        ]}
+                        initialSortConfig={recipientsSortConfig}
                         query={instituteRecipientsQuery}
                         totalCount={getTotalFromResult(
                             instituteRecipientsQuery
