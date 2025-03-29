@@ -358,7 +358,7 @@ export const EntityAnalyticsSection = ({
     entityType: "institute" | "recipient";
     entity: Institute | Recipient;
     grants: Grant[];
-    recipients?: any[];
+    recipients?: Recipient[];
     agencies?: string[];
 }) => {
     // Initialize state for visualization settings
@@ -540,7 +540,7 @@ export const EntityAnalyticsSection = ({
                                 ? [
                                       [
                                           "Active Recipients",
-                                          activeRecipientsData?.text || "N/A",
+                                          activeRecipientsData?.text,
                                       ],
                                       [
                                           "Funding per Recipient",
@@ -588,24 +588,35 @@ export const EntityAnalyticsSection = ({
                                               : "N/A",
                                       ],
                                       [
-                                        "Most Active Year",
-                                        // calculate
-                                        // get the year with the most grants
-                                        (() => {
-                                            const yearCounts = grants.reduce((acc, grant) => {
-                                                const year = new Date(
-                                                    grant.agreement_start_date
-                                                ).getFullYear();
-                                                acc[year] = (acc[year] || 0) + 1;
-                                                return acc;
-                                            }, {} as Record<string, number>);
-                                            
-                                            if (Object.keys(yearCounts).length === 0) return "N/A";
-                                            
-                                            return Object.entries(yearCounts)
-                                                .sort((a, b) => b[1] - a[1])[0][0];
-                                        })(),
-                                      ]
+                                          "Most Active Year",
+                                          // calculate
+                                          // get the year with the most grants
+                                          (() => {
+                                              const yearCounts = grants.reduce(
+                                                  (acc, grant) => {
+                                                      const year = new Date(
+                                                          grant.agreement_start_date
+                                                      ).getFullYear();
+                                                      acc[year] =
+                                                          (acc[year] || 0) + 1;
+                                                      return acc;
+                                                  },
+                                                  {} as Record<string, number>
+                                              );
+
+                                              if (
+                                                  Object.keys(yearCounts)
+                                                      .length === 0
+                                              )
+                                                  return "N/A";
+
+                                              return Object.entries(
+                                                  yearCounts
+                                              ).sort(
+                                                  (a, b) => b[1] - a[1]
+                                              )[0][0];
+                                          })(),
+                                      ],
                                   ]
                             ).map(([label, value], index: number) => (
                                 <div

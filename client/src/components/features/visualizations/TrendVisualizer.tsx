@@ -1,5 +1,5 @@
 // src/components/features/visualizations/TrendVisualizer.tsx
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
     DollarSign,
     Hash,
@@ -12,15 +12,14 @@ import {
     Calendar,
     BookOpen,
 } from "lucide-react";
+import { cn } from "@/utils/cn";
 import { Grant, GrantAmendment } from "@/types/models";
 import { Card } from "@/components/common/ui/Card";
 import { Dropdown } from "@/components/common/ui/Dropdown";
 import DataChart from "@/components/features/visualizations/DataChart";
-import { cn } from "@/utils/cn";
 import { AMENDMENT_COLORS, getCategoryColor } from "@/utils/chartColors";
 import Button from "@/components/common/ui/Button";
 import ToggleButtons from "@/components/common/ui/ToggleButtons";
-import { useEntityGrants } from "@/hooks/api/useData";
 import LoadingState from "@/components/common/ui/LoadingState";
 import { formatSentenceCase } from "@/utils/format";
 
@@ -101,9 +100,7 @@ const getDefaultGroupings = (viewContext: ViewContext): GroupingDimension[] => {
 };
 
 export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
-    grants: propsGrants,
-    entityId,
-    entityType,
+    grants,
     amendmentsHistory,
     viewContext = "search",
     initialChartType = "line",
@@ -118,10 +115,6 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
 }) => {
     // Determine if we're visualizing a single grant's amendments
     const isAmendmentView = !!amendmentsHistory && amendmentsHistory.length > 0;
-
-    // State for loading when fetching from API
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
     // Get appropriate available groupings
     const effectiveAvailableGroupings = useMemo(() => {
@@ -139,49 +132,9 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
             initialGrouping ||
                 (effectiveAvailableGroupings[0] as GroupingDimension)
         );
-
-    // State for grants data
-    const [allGrants, setAllGrants] = useState<Grant[]>([]);
-
-    // Only fetch grants if we have an entityId and entityType but no grants provided
-    const shouldFetch = !!entityId && !!entityType && !propsGrants;
-
-    // Use regular (non-infinite) query to get ALL grants for visualization
-    const {
-        data: fetchedData,
-        isLoading: isFetching,
-        isError: isFetchError,
-    } = useEntityGrants(
-        entityType as "recipient" | "institute",
-        entityId || 0,
-        {
-            queryType: "regular", // Use regular query to get all data at once
-            enabled: shouldFetch,
-        }
-    ) as {
-        data?: { data: Grant[] };
-        isLoading: boolean;
-        isError: boolean;
-    };
-
-    // Update loading states based on fetch status
-    useEffect(() => {
-        setIsLoading(isFetching);
-        if (isFetchError) {
-            setError("Failed to load data for visualization");
-        } else {
-            setError(null);
-        }
-    }, [isFetching, isFetchError]);
-
-    // Update allGrants state when data is fetched or props change
-    useEffect(() => {
-        if (fetchedData?.data) {
-            setAllGrants(fetchedData.data);
-        } else if (propsGrants) {
-            setAllGrants(propsGrants);
-        }
-    }, [fetchedData, propsGrants]);
+    // Add loading and error states
+    const [isLoading] = useState(false);
+    const [error] = useState<string | null>(null);
 
     // Generate display options for the dropdown
     const groupingDisplayOptions = useMemo(() => {
@@ -351,14 +304,14 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
         }
 
         // Otherwise process the regular grants data
-        if (!allGrants || allGrants.length === 0)
+        if (!grants || grants.length === 0)
             return { data: [], categories: [] };
 
         const yearMap = new Map();
         const uniqueCategories = new Set<string>();
 
         // Group data by year and the selected dimension
-        allGrants.forEach((grant) => {
+        grants.forEach((grant) => {
             // Extract year from the grant
             const year = new Date(grant.agreement_start_date).getFullYear();
             const grantValue = grant.agreement_value;
@@ -479,7 +432,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
 
         return { data: result, categories: Array.from(uniqueCategories) };
     }, [
-        allGrants,
+        grants,
         groupingDimension,
         metricType,
         isAmendmentView,
@@ -498,7 +451,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
     }
 
     // If no data available, don't render anything
-    if ((!allGrants || allGrants.length === 0) && !isAmendmentView) {
+    if ((!grants || grants.length === 0) && !isAmendmentView) {
         return null;
     }
 

@@ -46,9 +46,7 @@ type SearchConfig = FullSearchConfig | SimpleSearchConfig;
 
 interface ListConfig {
     type: "grants" | "entities";
-    infiniteQuery:
-        | UseInfiniteQueryResult<any, Error>
-        | UseQueryResult<any, Error>;
+    query: UseInfiniteQueryResult<any, Error> | UseQueryResult<any, Error>;
     sortConfig: SortConfig;
     emptyMessage: string;
     showVisualization?: boolean;
@@ -96,27 +94,27 @@ const EntitiesPage: React.FC<EntitiesPageProps> = ({
     };
 
     // Determine if this is an infinite query
-    const isInfiniteQuery = "fetchNextPage" in listConfig.infiniteQuery;
+    const isInfiniteQuery = "fetchNextPage" in listConfig.query;
 
     // Get metadata safely
     const getMetadata = () => {
-        if (!listConfig.infiniteQuery.data) {
+        if (!listConfig.query.data) {
             return { totalCount: 0 };
         }
 
         if (
             isInfiniteQuery &&
-            "pages" in listConfig.infiniteQuery.data &&
-            listConfig.infiniteQuery.data.pages.length > 0
+            "pages" in listConfig.query.data &&
+            listConfig.query.data.pages.length > 0
         ) {
             return (
-                listConfig.infiniteQuery.data.pages[0].metadata || {
+                listConfig.query.data.pages[0].metadata || {
                     totalCount: 0,
                 }
             );
         }
 
-        return listConfig.infiniteQuery.data.metadata || { totalCount: 0 };
+        return listConfig.query.data.metadata || { totalCount: 0 };
     };
 
     // Render the appropriate search interface
@@ -195,8 +193,9 @@ const EntitiesPage: React.FC<EntitiesPageProps> = ({
         if (listConfig.type === "grants") {
             return (
                 <GrantsList
-                    infiniteQuery={
-                        listConfig.infiniteQuery as UseInfiniteQueryResult<
+                    grants={getEntitiesFromQuery(listConfig.query)}
+                    query={
+                        listConfig.query as UseInfiniteQueryResult<
                             any,
                             Error
                         >
@@ -211,7 +210,7 @@ const EntitiesPage: React.FC<EntitiesPageProps> = ({
                 />
             );
         } else {
-            const entities = getEntitiesFromQuery(listConfig.infiniteQuery);
+            const entities = getEntitiesFromQuery(listConfig.query);
             const metadata = getMetadata();
 
             return (
@@ -230,17 +229,17 @@ const EntitiesPage: React.FC<EntitiesPageProps> = ({
                     sortOptions={listConfig.sortOptions || []}
                     sortConfig={listConfig.sortConfig}
                     onSortChange={listConfig.onSortChange || (() => {})}
-                    infiniteQuery={
+                    query={
                         isInfiniteQuery
-                            ? (listConfig.infiniteQuery as UseInfiniteQueryResult<
+                            ? (listConfig.query as UseInfiniteQueryResult<
                                   any,
                                   Error
                               >)
                             : undefined
                     }
-                    isLoading={listConfig.infiniteQuery.isLoading}
-                    isError={listConfig.infiniteQuery.isError}
-                    error={listConfig.infiniteQuery.error}
+                    isLoading={listConfig.query.isLoading}
+                    isError={listConfig.query.isError}
+                    error={listConfig.query.error}
                     emptyMessage={listConfig.emptyMessage}
                     totalCount={metadata.totalCount || entities.length}
                     totalItems={entities.length}

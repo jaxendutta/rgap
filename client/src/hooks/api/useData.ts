@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import {
     useQuery,
+    UseQueryResult,
     useInfiniteQuery,
     UseInfiniteQueryResult,
 } from "@tanstack/react-query";
@@ -12,7 +13,7 @@ import { GrantSearchParams } from "@/types/search";
 const API = createAPI();
 
 // Type for configuring the query type
-export type QueryType = "regular" | "infinite" | "complete";
+export type QueryType = "infinite" | "complete";
 
 // Type for the pagination parameters
 export interface PaginationParams {
@@ -78,7 +79,7 @@ export function useCompleteData(
     endpoint: string,
     params: Record<string, any> = {},
     options: Omit<DataFetchOptions, "queryType"> = {}
-) {
+): UseQueryResult<any, Error> {
     const [completeData, setCompleteData] = useState<any[]>([]);
     const [isLoadingComplete, setIsLoadingComplete] = useState(true);
     const [totalCount, setTotalCount] = useState(0);
@@ -168,15 +169,29 @@ export function useCompleteData(
         infiniteQuery.isFetchingNextPage,
     ]);
 
+    // Return a UseQueryResult compatible object
     return {
-        data: completeData,
+        data: {
+            data: completeData,
+            metadata: { totalCount },
+        },
         isLoading: infiniteQuery.isLoading || isLoadingComplete,
         isError: infiniteQuery.isError,
         error: infiniteQuery.error,
-        totalCount,
-        // Make the result look like a UseQueryResult for compatibility
         refetch: infiniteQuery.refetch,
-    };
+        // Add required properties to be compatible with UseQueryResult
+        isSuccess: infiniteQuery.isSuccess && !isLoadingComplete,
+        isRefetching: infiniteQuery.isRefetching,
+        isPending: infiniteQuery.isPending,
+        isFetching: infiniteQuery.isFetching,
+        status:
+            infiniteQuery.isLoading || isLoadingComplete
+                ? "pending"
+                : infiniteQuery.isError
+                ? "error"
+                : "success",
+        fetchStatus: infiniteQuery.fetchStatus,
+    } as UseQueryResult<any, Error>;
 }
 
 /**
@@ -277,7 +292,7 @@ export function useSearchData(
     endpoint: string,
     searchParams: any,
     options: DataFetchOptions = {}
-) {
+): UseQueryResult<any, Error> | UseInfiniteQueryResult<any, Error> {
     const {
         queryType = "infinite",
         pagination = { page: 1, pageSize: 20 },
@@ -310,7 +325,7 @@ export function useSearchData(
                     ...searchParams,
                     pagination: {
                         page: pageParam,
-                        pageSize: 100, // Use larger page size for efficiency
+                        pageSize: 10000, // Use larger page size for efficiency
                     },
                     userId,
                 };
@@ -370,13 +385,26 @@ export function useSearchData(
         ]);
 
         return {
-            data: completeData,
+            data: {
+                data: completeData,
+                metadata: { totalCount },
+            },
             isLoading: infiniteQuery.isLoading || isLoadingComplete,
             isError: infiniteQuery.isError,
             error: infiniteQuery.error,
-            totalCount,
             refetch: infiniteQuery.refetch,
-        };
+            isSuccess: infiniteQuery.isSuccess && !isLoadingComplete,
+            isRefetching: infiniteQuery.isRefetching,
+            isPending: infiniteQuery.isPending,
+            isFetching: infiniteQuery.isFetching,
+            status:
+                infiniteQuery.isLoading || isLoadingComplete
+                    ? "pending"
+                    : infiniteQuery.isError
+                    ? "error"
+                    : "success",
+            fetchStatus: infiniteQuery.fetchStatus,
+        } as UseQueryResult<any, Error>;
     }
 
     // For infinite queries
@@ -408,7 +436,7 @@ export function useSearchData(
             },
             enabled,
             ...queryOptions,
-        });
+        }) as UseInfiniteQueryResult<any, Error>;
     }
 
     // For regular queries
@@ -429,7 +457,7 @@ export function useSearchData(
         },
         enabled,
         ...queryOptions,
-    });
+    }) as UseQueryResult<any, Error>;
 }
 
 /**
@@ -482,7 +510,7 @@ export function useEntityById(
  */
 export function useAllEntityGrants(
     entityType: "recipient" | "institute",
-    id: number | string | undefined,
+    id: number,
     options: Omit<DataFetchOptions, "queryType"> = {}
 ) {
     const {
@@ -494,16 +522,13 @@ export function useAllEntityGrants(
 
     // Only enable if we have a valid ID
     const enabled =
-        explicitEnabled !== false &&
-        id !== undefined &&
-        id !== null &&
-        id !== "";
+        explicitEnabled !== false && id !== undefined && id !== null;
 
     // Construct the endpoint
     const endpoint = `/${entityType}s/${id}/grants`;
 
     // Use the complete data hook to fetch all grants
-    return useCompleteData(
+    const result = useCompleteData(
         endpoint,
         {},
         {
@@ -513,6 +538,8 @@ export function useAllEntityGrants(
             queryOptions,
         }
     );
+
+    return result.data?.data;
 }
 
 /**
@@ -604,7 +631,7 @@ export function useEntityGrants(
  * This uses the "complete" query type to fetch all pages
  */
 export function useAllInstituteRecipients(
-    id: number | string | undefined,
+    id: number,
     options: Omit<DataFetchOptions, "queryType"> = {}
 ) {
     const {
@@ -616,16 +643,13 @@ export function useAllInstituteRecipients(
 
     // Only enable if we have a valid ID
     const enabled =
-        explicitEnabled !== false &&
-        id !== undefined &&
-        id !== null &&
-        id !== "";
+        explicitEnabled !== false && id !== undefined && id !== null;
 
     // Construct the endpoint
     const endpoint = `/institutes/${id}/recipients`;
 
     // Use the complete data hook to fetch all recipients
-    return useCompleteData(
+    const result = useCompleteData(
         endpoint,
         {},
         {
@@ -635,6 +659,8 @@ export function useAllInstituteRecipients(
             queryOptions,
         }
     );
+
+    return result.data?.data;
 }
 
 /**

@@ -5,6 +5,9 @@ import {
     University,
     GraduationCap,
     Search,
+    Calendar,
+    DollarSign,
+    Hash,
 } from "lucide-react";
 import PageContainer from "@/components/common/layout/PageContainer";
 import PageHeader from "@/components/common/layout/PageHeader";
@@ -105,20 +108,20 @@ export const BookmarksPage = () => {
                     {
                         field: "agreement_start_date",
                         label: "Date",
-                        icon: Search,
+                        icon: Calendar,
                     },
                     { field: "agreement_value", label: "Value", icon: Search },
                 ];
             case "recipient":
             case "institute":
                 return [
-                    { field: "total_funding", label: "Funding", icon: Search },
-                    { field: "grant_count", label: "Grants", icon: Search },
+                    { field: "total_funding", label: "Funding", icon: DollarSign },
+                    { field: "grant_count", label: "Grants", icon: BookMarked },
                 ];
             case "search":
                 return [
-                    { field: "search_time", label: "Date", icon: Search },
-                    { field: "result_count", label: "Results", icon: Search },
+                    { field: "search_time", label: "Date", icon: Calendar },
+                    { field: "result_count", label: "Results", icon: Hash },
                 ];
             default:
                 return [];

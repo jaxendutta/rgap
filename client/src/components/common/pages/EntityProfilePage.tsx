@@ -11,7 +11,6 @@ export interface EntityProfilePageProps {
     // Core data and state
     entity: any;
     entityType: "recipient" | "institute";
-    entityTypeLabel: string;
     isLoading: boolean;
     isError: boolean;
     error?: Error | unknown;
@@ -32,7 +31,6 @@ export interface EntityProfilePageProps {
 const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
     entity,
     entityType,
-    entityTypeLabel,
     isLoading,
     isError,
     error,
@@ -50,7 +48,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
         return (
             <PageContainer>
                 <ErrorState
-                    title={`Error Loading ${entityTypeLabel}`}
+                    title={`Error Loading ${entityType}`}
                     message={
                         error instanceof Error
                             ? error.message
@@ -70,7 +68,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
         return (
             <PageContainer>
                 <LoadingState
-                    title={`Loading ${entityTypeLabel} details...`}
+                    title={`Loading ${entityType} details...`}
                     message="Please wait while we fetch the data..."
                     fullHeight
                     size="lg"

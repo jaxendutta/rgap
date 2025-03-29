@@ -1,6 +1,7 @@
-// src/pages/SearchPage.tsx
-import { useState } from "react";
+// src/pages/SearchPage.tsx with proper type handling
+import { useState, useEffect } from "react";
 import { FileSearch2, University, UserSearch } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { useGrantSearch } from "@/hooks/api/useData";
 import type { GrantSortConfig as SortConfig } from "@/types/search";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
@@ -8,21 +9,43 @@ import type { GrantSearchParams } from "@/types/search";
 import EntitiesPage from "@/components/common/pages/EntitiesPage";
 
 export const SearchPage = () => {
+    const location = useLocation();
+
+    // Extract search params from location state if they exist
+    const stateSearchParams = location.state?.searchParams;
+
     // Current search terms (what's shown in the input fields)
     const [searchTerms, setSearchTerms] = useState({
-        recipient: "",
-        institute: "",
-        grant: "",
+        recipient: stateSearchParams?.searchTerms?.recipient || "",
+        institute: stateSearchParams?.searchTerms?.institute || "",
+        grant: stateSearchParams?.searchTerms?.grant || "",
     });
 
     // UI state controls
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [sortConfig] = useState<SortConfig>({
-        field: "date",
-        direction: "desc",
+        field: stateSearchParams?.sortConfig?.field || "date",
+        direction: stateSearchParams?.sortConfig?.direction || "desc",
     });
-    const [filters, setFilters] = useState(DEFAULT_FILTER_STATE);
-    const [isInitialState, setIsInitialState] = useState(true);
+
+    // Initialize filters from state if available, otherwise use defaults
+    const [filters, setFilters] = useState(
+        stateSearchParams?.filters || DEFAULT_FILTER_STATE
+    );
+
+    // If we came from a search history card, we want to immediately search
+    const [isInitialState, setIsInitialState] = useState(!stateSearchParams);
+
+    // Effect to run search if we have search params in location state
+    useEffect(() => {
+        if (stateSearchParams) {
+            // The search will be triggered because isInitialState is false
+            console.log(
+                "Running search from location state:",
+                stateSearchParams
+            );
+        }
+    }, [stateSearchParams]);
 
     // Create search params
     const searchParams: Omit<GrantSearchParams, "pagination"> = {
@@ -31,7 +54,7 @@ export const SearchPage = () => {
         sortConfig,
     };
 
-    // Use our new unified hook for grant search
+    // Use unified hook for grant search
     const searchQuery = useGrantSearch(searchParams, {
         queryType: "infinite",
         enabled: !isInitialState,
@@ -93,7 +116,7 @@ export const SearchPage = () => {
             }}
             listConfig={{
                 type: "grants",
-                infiniteQuery: searchQuery,
+                query: searchQuery,
                 sortConfig: sortConfig,
                 emptyMessage: isInitialState
                     ? "Enter search terms above to begin exploring grants."

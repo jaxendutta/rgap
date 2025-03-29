@@ -1,5 +1,5 @@
 // src/utils/analytics.ts
-import { Grant } from "@/types/models";
+import { Grant, Recipient } from "@/types/models";
 
 /**
  * Calculate funding growth trend between first and last year
@@ -165,90 +165,6 @@ export const extractAgenciesFromGrants = (grants: Grant[]): string[] => {
 };
 
 /**
- * Extract yearly funding data from grants for year-by-year analysis
- */
-export const extractYearlyFundingData = (grants: Grant[]) => {
-    if (!grants || grants.length === 0) {
-        return { byYear: {}, byYearAndAgency: {} };
-    }
-
-    const byYear: Record<number, number> = {};
-    const byYearAndAgency: Record<number, Record<string, number>> = {};
-
-    grants.forEach((grant) => {
-        if (!grant.agreement_start_date || !grant.agreement_value) return;
-
-        try {
-            const year = new Date(grant.agreement_start_date).getFullYear();
-            if (isNaN(year)) return;
-
-            const value = Number(grant.agreement_value);
-            if (isNaN(value)) return;
-
-            // Add to yearly total
-            byYear[year] = (byYear[year] || 0) + value;
-
-            // Add to agency breakdown for that year
-            if (!byYearAndAgency[year]) byYearAndAgency[year] = {};
-            byYearAndAgency[year][grant.org] =
-                (byYearAndAgency[year][grant.org] || 0) + value;
-        } catch (e) {
-            // Skip invalid dates/values
-            return;
-        }
-    });
-
-    return { byYear, byYearAndAgency };
-};
-
-/**
- * Calculate annual averages for an entity
- */
-export const calculateAnnualAverages = (grants: Grant[]) => {
-    if (!grants || grants.length === 0) {
-        return { annualFunding: 0, annualGrantCount: 0, yearsActive: 0 };
-    }
-
-    const { byYear } = extractYearlyFundingData(grants);
-    const years = Object.keys(byYear).map(Number);
-
-    if (years.length === 0) {
-        return { annualFunding: 0, annualGrantCount: 0, yearsActive: 0 };
-    }
-
-    // Calculate total funding and grants
-    const totalFunding = Object.values(byYear).reduce(
-        (sum, value) => sum + value,
-        0
-    );
-    const annualFunding = totalFunding / years.length;
-    const annualGrantCount = grants.length / years.length;
-
-    return {
-        annualFunding,
-        annualGrantCount,
-        yearsActive: years.length,
-    };
-};
-
-/**
- * Get top recipients by funding
- */
-export const getTopRecipientsByFunding = (recipients: any[], limit = 5) => {
-    if (!recipients || recipients.length === 0) return [];
-
-    return [...recipients]
-        .sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))
-        .slice(0, limit)
-        .map((recipient) => ({
-            id: recipient.recipient_id,
-            name: recipient.legal_name,
-            funding: recipient.total_funding || 0,
-            grantCount: recipient.grant_count || 0,
-        }));
-};
-
-/**
  * Calculate recipient concentration
  */
 export const calculateRecipientConcentration = (
@@ -379,41 +295,20 @@ export const calculateAvgGrantDuration = (grants: Grant[]) => {
 };
 
 /**
- * Get active period for an entity
- */
-export const getActivePeriod = (firstDate?: string, lastDate?: string) => {
-    if (!firstDate || !lastDate) {
-        return { text: "N/A", years: 0 };
-    }
-
-    try {
-        const firstYear = new Date(firstDate).getFullYear();
-        const lastYear = new Date(lastDate).getFullYear();
-
-        if (isNaN(firstYear) || isNaN(lastYear)) {
-            return { text: "N/A", years: 0 };
-        }
-
-        const years = lastYear - firstYear + 1;
-        return {
-            text: `${firstYear} - ${lastYear}`,
-            years: years,
-        };
-    } catch (e) {
-        return { text: "N/A", years: 0 };
-    }
-};
-
-/**
  * Calculate active recipients (with grants in the last X years)
  */
 export const calculateActiveRecipients = (
-    recipients: any[],
+    recipients: Recipient[],
     grants: Grant[],
     years = 2
 ) => {
     if (!recipients || recipients.length === 0) {
-        return { active: 0, total: 0, text: "N/A", percentage: 0 };
+        return {
+            active: 0,
+            total: 0,
+            text: "No recipient data",
+            percentage: 0,
+        };
     }
 
     // Calculate recipients with recent grants
@@ -441,32 +336,4 @@ export const calculateActiveRecipients = (
             1
         )}%)`,
     };
-};
-
-/**
- * Process funding history data for charts and tables
- */
-export const processFundingHistory = (fundingHistory: any[]): any[] => {
-    if (!fundingHistory || fundingHistory.length === 0) {
-        return [];
-    }
-
-    // Group by year
-    const yearMap = new Map();
-
-    fundingHistory.forEach((entry) => {
-        const year = entry.year;
-        const agency = entry.agency;
-        const value = parseFloat(entry.total_value) || 0;
-
-        if (!yearMap.has(year)) {
-            yearMap.set(year, { year });
-        }
-
-        const yearData = yearMap.get(year);
-        yearData[agency] = value;
-    });
-
-    // Convert to array and sort by year
-    return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
 };

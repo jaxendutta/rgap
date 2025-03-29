@@ -89,7 +89,7 @@ const RecipientsPage = () => {
             }}
             listConfig={{
                 type: "entities",
-                infiniteQuery: effectiveQuery,
+                query: effectiveQuery,
                 sortConfig: sortConfig,
                 emptyMessage: isSearching
                     ? "No recipients match your search criteria."

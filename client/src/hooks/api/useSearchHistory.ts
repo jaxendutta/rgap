@@ -1,4 +1,4 @@
-// src/hooks/api/useSearchHistory.ts
+// Update to src/hooks/api/useSearchHistory.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SearchHistory } from "@/types/models";
 import { GrantSearchParams } from "@/types/search";
@@ -22,8 +22,29 @@ export const adaptSearchHistory = (rawHistory: any[]): SearchHistory[] => {
     }
 
     return rawHistory.map((item) => {
-        // Convert search filters from string to object if needed
-        let searchFilters;
+        // Initialize with default values to ensure proper structure
+        let searchTerms = { recipient: "", institute: "", grant: "" };
+        let searchFilters = DEFAULT_FILTER_STATE;
+
+        // Process search terms
+        try {
+            // If search terms were stored as strings in the DB
+            if (
+                item.search_recipient ||
+                item.search_grant ||
+                item.search_institution
+            ) {
+                searchTerms = {
+                    recipient: item.search_recipient || "",
+                    grant: item.search_grant || "",
+                    institute: item.search_institution || "",
+                };
+            }
+        } catch (e) {
+            console.error("Error parsing search terms:", e);
+        }
+
+        // Process search filters
         try {
             if (typeof item.search_filters === "string") {
                 searchFilters = JSON.parse(item.search_filters);
@@ -32,8 +53,6 @@ export const adaptSearchHistory = (rawHistory: any[]): SearchHistory[] => {
                 typeof item.search_filters === "object"
             ) {
                 searchFilters = item.search_filters;
-            } else {
-                searchFilters = DEFAULT_FILTER_STATE;
             }
 
             // Validate filter structure
@@ -74,11 +93,7 @@ export const adaptSearchHistory = (rawHistory: any[]): SearchHistory[] => {
 
         // Build structured search params
         const searchParams: GrantSearchParams = {
-            searchTerms: {
-                recipient: item.search_recipient,
-                grant: item.search_grant,
-                institute: item.search_institution,
-            },
+            searchTerms: searchTerms,
             filters: searchFilters,
             sortConfig: { field: "date", direction: "desc" },
         };

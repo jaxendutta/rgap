@@ -88,7 +88,7 @@ const InstitutesPage = () => {
             }}
             listConfig={{
                 type: "entities",
-                infiniteQuery: effectiveQuery,
+                query: effectiveQuery,
                 sortConfig: sortConfig,
                 emptyMessage: isSearching
                     ? "No institutes match your search criteria."

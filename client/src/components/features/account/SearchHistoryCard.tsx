@@ -25,25 +25,36 @@ interface SearchHistoryCardProps {
 
 export const SearchHistoryCard = ({ search }: SearchHistoryCardProps) => {
     const { showNotification } = useNotification();
+    const navigate = useNavigate();
 
-    // Get the search parameters
-    const searchParams = search.search_params;
+    // Ensure searchParams is properly structured
+    const searchParams = search.search_params || {
+        searchTerms: {},
+        filters: DEFAULT_FILTER_STATE,
+        sortConfig: { field: "date", direction: "desc" },
+    };
 
-    // Extract search terms
+    // Extract search terms - ensure searchTerms exists and is an object
+    const searchTermsObj =
+        typeof searchParams.searchTerms === "object"
+            ? searchParams.searchTerms
+            : { recipient: "", institute: "", grant: "" };
+
+    // Create a standardized list of search term entries
     const searchTerms = [
         {
             key: "recipient",
-            value: searchParams?.searchTerms.recipient,
+            value: searchTermsObj.recipient || "",
             icon: GraduationCap,
         },
         {
             key: "grant",
-            value: searchParams?.searchTerms.grant,
+            value: searchTermsObj.grant || "",
             icon: BookMarked,
         },
         {
             key: "institute",
-            value: searchParams?.searchTerms.institute,
+            value: searchTermsObj.institute || "",
             icon: University,
         },
     ].filter(
@@ -56,18 +67,21 @@ export const SearchHistoryCard = ({ search }: SearchHistoryCardProps) => {
     // Helper function to get active filters
     const getActiveFilters = () => {
         const activeFilters = [];
-        const filters = searchParams?.filters || {};
-
-        // Guard against missing filter properties
-        if (!filters) return [];
+        // Ensure filters is an object, defaulting to DEFAULT_FILTER_STATE if not
+        const filters =
+            typeof searchParams.filters === "object"
+                ? searchParams.filters
+                : DEFAULT_FILTER_STATE;
 
         // Date range filter
         if (
             filters.dateRange &&
             ((filters.dateRange.from !== undefined &&
-                filters.dateRange.from > FILTER_LIMITS.DATE_VALUE.MIN) ||
+                new Date(filters.dateRange.from) >
+                    FILTER_LIMITS.DATE_VALUE.MIN) ||
                 (filters.dateRange.to !== undefined &&
-                    filters.dateRange.to < FILTER_LIMITS.DATE_VALUE.MAX))
+                    new Date(filters.dateRange.to) <
+                        FILTER_LIMITS.DATE_VALUE.MAX))
         ) {
             activeFilters.push({
                 type: "dateRange",
@@ -102,19 +116,15 @@ export const SearchHistoryCard = ({ search }: SearchHistoryCardProps) => {
         // Array filters (agencies, countries, provinces, cities)
         const arrayFilters = ["agencies", "countries", "provinces", "cities"];
         arrayFilters.forEach((filterType) => {
-            // Check if the filter property exists
-            if (!filters[filterType as keyof typeof filters]) return;
-
-            const values = filters[
-                filterType as keyof typeof filters
-            ] as string[];
-            if (Array.isArray(values) && values.length > 0) {
+            // Check if the filter property exists and is an array
+            const filterValues = filters[filterType as keyof typeof filters];
+            if (Array.isArray(filterValues) && filterValues.length > 0) {
                 activeFilters.push({
                     type: filterType,
                     label:
                         filterType.charAt(0).toUpperCase() +
                         filterType.slice(1),
-                    value: values.join(", "),
+                    value: filterValues.join(", "),
                 });
             }
         });
@@ -135,18 +145,18 @@ export const SearchHistoryCard = ({ search }: SearchHistoryCardProps) => {
     const hasSearchTerms = searchTerms.length > 0;
     const hasFilters = activeFilters.length > 0;
 
-    const navigate = useNavigate();
-
-    const handleRerunSearch = (searchParams: any) => {
-        // Ensure searchParams has all required fields before navigation
+    const handleRerunSearch = () => {
         const validatedParams = {
             searchTerms: {
-                recipient: searchParams?.searchTerms?.recipient || "",
-                institute: searchParams?.searchTerms?.institute || "",
-                grant: searchParams?.searchTerms?.grant || "",
+                recipient: searchTermsObj.recipient || "",
+                institute: searchTermsObj.institute || "",
+                grant: searchTermsObj.grant || "",
             },
-            filters: searchParams?.filters || DEFAULT_FILTER_STATE,
-            sortConfig: searchParams?.sortConfig || {
+            filters:
+                typeof searchParams.filters === "object"
+                    ? searchParams.filters
+                    : DEFAULT_FILTER_STATE,
+            sortConfig: searchParams.sortConfig || {
                 field: "date",
                 direction: "desc",
             },
@@ -155,7 +165,7 @@ export const SearchHistoryCard = ({ search }: SearchHistoryCardProps) => {
         // Log the search params for debugging
         console.log("Rerunning search with params:", validatedParams);
 
-        // Navigate to search page with validated params
+        // Navigate to search page with validated params in the state
         navigate("/search", { state: { searchParams: validatedParams } });
     };
 
@@ -253,7 +263,7 @@ export const SearchHistoryCard = ({ search }: SearchHistoryCardProps) => {
                     pill={true}
                     size="sm"
                     leftIcon={Search}
-                    onClick={() => handleRerunSearch(searchParams)}
+                    onClick={handleRerunSearch}
                 >
                     <span className="hidden md:inline">Run Search</span>
                 </Button>

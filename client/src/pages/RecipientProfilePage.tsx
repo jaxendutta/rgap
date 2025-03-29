@@ -1,4 +1,4 @@
-// src/pages/RecipientProfilePage.tsx
+// Update src/pages/RecipientProfilePage.tsx
 import { useState, useMemo } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { UseInfiniteQueryResult } from "@tanstack/react-query";
@@ -26,7 +26,6 @@ import EntityHeader, {
     MetadataItem,
 } from "@/components/common/layout/EntityHeader";
 import { RecipientType } from "@/constants/data";
-import { all } from "axios";
 
 const RecipientProfilePage = () => {
     const { id } = useParams();
@@ -34,6 +33,7 @@ const RecipientProfilePage = () => {
     if (isNaN(recipientId)) {
         return <Navigate to="/pageNotFound" />;
     }
+    const entityType = "recipient";
 
     // Component state
     const [activeTab, setActiveTab] = useState<"grants" | "analytics">(
@@ -46,44 +46,30 @@ const RecipientProfilePage = () => {
     });
 
     // Use the useEntityById hook for recipient details
-    const recipientDetailsQuery = useEntityById("recipient", id);
+    const recipientDetailsQuery = useEntityById(entityType, id);
     const isLoading = recipientDetailsQuery.isLoading;
     const isError = recipientDetailsQuery.isError;
     const error = recipientDetailsQuery.error;
     const recipient = (recipientDetailsQuery.data as { data: any })?.data;
 
-    // Use useEntityGrants hook for recipient grants with infinite query
-    const recipientGrantsQuery = useEntityGrants("recipient", recipientId, {
+    // Use useEntityGrants hook for recipient grants with infinite query (for UI pagination)
+    const recipientGrantsQuery = useEntityGrants(entityType, recipientId, {
         queryType: "infinite",
         sort: grantsSortConfig,
     }) as UseInfiniteQueryResult<any, Error>;
 
     // Use useAllEntityGrants hook to get ALL grants for analytics (no pagination)
-    const allGrantsQuery = useAllEntityGrants("recipient", id);
+    const allGrants = useAllEntityGrants(entityType, recipientId);
 
     // If recipient not found and not loading
     if (!isLoading && !recipient && !isError) {
         return <Navigate to="/pageNotFound" />;
     }
 
-    // Extract all grants from query to pass to analytics components
-    const grants = useMemo(() => {
-        if (!recipientGrantsQuery.data) return [];
-
-        return recipientGrantsQuery.data.pages.flatMap(
-            (page: any) => page.data || []
-        );
-    }, [recipientGrantsQuery.data]);
-
-    // Extract all grants from query for analytics
-    const allGrants = useMemo(() => {
-        return allGrantsQuery.data || [];
-    }, [allGrantsQuery.data]);
-
     // Extract agencies for analytics
     const agencies = useMemo(() => {
-        return extractAgenciesFromGrants(grants);
-    }, [grants]);
+        return extractAgenciesFromGrants(allGrants);
+    }, [allGrants]);
 
     // Define tabs for the TabNavigation component
     const tabs = [
@@ -102,7 +88,7 @@ const RecipientProfilePage = () => {
     // Metadata for the EntityHeader
     const metadata: MetadataItem[] = [];
 
-    if (recipient.research_organization_name) {
+    if (recipient?.research_organization_name) {
         metadata.push({
             icon: University,
             text: recipient.research_organization_name,
@@ -112,7 +98,7 @@ const RecipientProfilePage = () => {
 
     metadata.push({
         icon: FileUser,
-        text: recipient.type
+        text: recipient?.type
             ? RecipientType[recipient.type as keyof typeof RecipientType]
             : "Unspecified",
     });
@@ -144,7 +130,7 @@ const RecipientProfilePage = () => {
                 icon={GraduationCap}
                 metadata={metadata}
                 actions={actions}
-                entityType="recipient"
+                entityType={entityType}
                 entityId={recipient.recipient_id}
                 isBookmarked={recipient.is_bookmarked}
                 location={formatCommaSeparated([
@@ -161,17 +147,17 @@ const RecipientProfilePage = () => {
         {
             icon: BookMarked,
             label: "Total Grants",
-            value: recipient.total_grants,
+            value: recipient?.total_grants,
         },
         {
             icon: DollarSign,
             label: "Total Funding",
-            value: formatCurrency(recipient.total_funding),
+            value: formatCurrency(recipient?.total_funding),
         },
         {
             icon: TrendingUp,
             label: "Average Grant",
-            value: recipient.total_grants
+            value: recipient?.total_grants
                 ? formatCurrency(
                       recipient.total_funding / recipient.total_grants
                   )
@@ -181,7 +167,7 @@ const RecipientProfilePage = () => {
             icon: Calendar,
             label: "Active Period",
             value:
-                recipient.first_grant_date && recipient.latest_grant_date
+                recipient?.first_grant_date && recipient?.latest_grant_date
                     ? `${new Date(
                           recipient.first_grant_date
                       ).getFullYear()} - ${new Date(
@@ -213,19 +199,19 @@ const RecipientProfilePage = () => {
             case "grants":
                 return (
                     <GrantsList
-                        grants={grants}
-                        infiniteQuery={recipientGrantsQuery}
+                        grants={allGrants}
+                        query={recipientGrantsQuery}
                         initialSortConfig={grantsSortConfig}
                         emptyMessage="This recipient has no associated grants in our database."
                         showVisualization={true}
-                        viewContext="recipient"
+                        viewContext={entityType}
                     />
                 );
 
             case "analytics":
                 return (
                     <EntityAnalyticsSection
-                        entityType="recipient"
+                        entityType={entityType}
                         entity={recipient}
                         grants={allGrants}
                         agencies={agencies}
@@ -240,8 +226,7 @@ const RecipientProfilePage = () => {
     return (
         <EntityProfilePage
             entity={recipient}
-            entityType="recipient"
-            entityTypeLabel="Recipient"
+            entityType={entityType}
             isLoading={isLoading}
             isError={isError}
             error={error}

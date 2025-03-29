@@ -1,7 +1,14 @@
 // src/components/common/ui/EntityList.tsx
 import React, { useState, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
-import { MoreHorizontal, LucideIcon, X, LineChart, Grid, List } from "lucide-react";
+import {
+    MoreHorizontal,
+    LucideIcon,
+    X,
+    LineChart,
+    Grid,
+    List,
+} from "lucide-react";
 import { SortButton } from "./SortButton";
 import { Button } from "./Button";
 import LoadingState from "./LoadingState";
@@ -13,6 +20,12 @@ import { cn } from "@/utils/cn";
 import { SortConfig } from "@/types/search";
 
 export type LayoutVariant = "list" | "grid";
+
+function isInfiniteQuery(
+    query: any
+): query is UseInfiniteQueryResult<any, Error> {
+    return query && typeof query.fetchNextPage === "function";
+}
 
 interface EntityListProps<T> {
     // Content props
@@ -33,7 +46,7 @@ interface EntityListProps<T> {
     onSortChange: (config: SortConfig) => void;
 
     // Optional infinite query props
-    infiniteQuery?: UseInfiniteQueryResult<any, Error>;
+    query?: UseInfiniteQueryResult<any, Error>;
 
     // Optional loading/error state props (for manually managing these states)
     isLoading?: boolean;
@@ -54,7 +67,7 @@ interface EntityListProps<T> {
 
     // Optional additional class
     className?: string;
-    
+
     // Layout toggle
     allowLayoutToggle?: boolean;
 }
@@ -70,7 +83,7 @@ function EntityList<T>(props: EntityListProps<T>) {
         sortOptions,
         sortConfig,
         onSortChange,
-        infiniteQuery,
+        query,
         totalCount,
         totalItems,
         visualization,
@@ -88,18 +101,28 @@ function EntityList<T>(props: EntityListProps<T>) {
     const [layoutVariant, setLayoutVariant] = useState<LayoutVariant>(variant);
 
     // Handle loading and error states - either from props or from infiniteQuery
-    const isLoading = props.isLoading !== undefined ? props.isLoading : infiniteQuery?.isLoading;
-    const isError = props.isError !== undefined ? props.isError : infiniteQuery?.isError;
-    const error = props.error !== undefined ? props.error : infiniteQuery?.error;
-    const isFetchingNextPage = infiniteQuery?.isFetchingNextPage;
-    const hasNextPage = infiniteQuery?.hasNextPage;
+    const isLoading =
+        props.isLoading !== undefined ? props.isLoading : query?.isLoading;
+    const isError =
+        props.isError !== undefined ? props.isError : query?.isError;
+    const error = props.error !== undefined ? props.error : query?.error;
+    const isFetchingNextPage = isInfiniteQuery(query)
+        ? query.isFetchingNextPage
+        : false;
+    const hasNextPage = isInfiniteQuery(query) ? query.hasNextPage : false;
 
     // Load more data when user scrolls to the bottom
     useEffect(() => {
-        if (inView && infiniteQuery && hasNextPage && !isFetchingNextPage) {
-            infiniteQuery.fetchNextPage();
+        if (
+            inView &&
+            query &&
+            isInfiniteQuery(query) &&
+            hasNextPage &&
+            !isFetchingNextPage
+        ) {
+            query.fetchNextPage();
         }
-    }, [inView, infiniteQuery, hasNextPage, isFetchingNextPage]);
+    }, [inView, query, hasNextPage, isFetchingNextPage]);
 
     // Handle sort change
     const handleSortChange = (field: string) => {
@@ -116,7 +139,7 @@ function EntityList<T>(props: EntityListProps<T>) {
 
     // Toggle layout variant
     const toggleLayoutVariant = () => {
-        setLayoutVariant(prev => prev === "list" ? "grid" : "list");
+        setLayoutVariant((prev) => (prev === "list" ? "grid" : "list"));
     };
 
     // Handle error state
@@ -129,7 +152,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                         ? error.message
                         : "Failed to load data"
                 }
-                onRetry={() => infiniteQuery?.refetch()}
+                onRetry={() => query?.refetch()}
                 size="md"
             />
         );
@@ -166,7 +189,9 @@ function EntityList<T>(props: EntityListProps<T>) {
                             <span className="font-semibold">
                                 {totalCount.toLocaleString()}
                             </span>
-                            {` ${entityType.toLowerCase()}s`}
+                            {entityType === "search"
+                                ? ` search records`
+                                : ` ${entityType.toLowerCase()}s`}
                         </span>
                     )}
                 </div>
@@ -187,7 +212,9 @@ function EntityList<T>(props: EntityListProps<T>) {
                         <Button
                             variant="secondary"
                             size="sm"
-                            leftIcon={visualizationToggle.isVisible ? X : LineChart}
+                            leftIcon={
+                                visualizationToggle.isVisible ? X : LineChart
+                            }
                             onClick={visualizationToggle.toggle}
                             disabled={items.length === 0}
                         >
@@ -198,7 +225,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                             </span>
                         </Button>
                     )}
-                    
+
                     {/* Layout Toggle Button */}
                     {allowLayoutToggle && (
                         <Button
@@ -207,8 +234,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                             leftIcon={layoutVariant === "grid" ? List : Grid}
                             onClick={toggleLayoutVariant}
                             className="hidden lg:inline-flex"
-                        >
-                        </Button>
+                        ></Button>
                     )}
                 </div>
             </div>
@@ -222,9 +248,13 @@ function EntityList<T>(props: EntityListProps<T>) {
                         exit={{ opacity: 0, height: 0, scale: 0.98 }}
                         transition={{
                             duration: 0.5,
-                            height: { type: "spring", stiffness: 100, damping: 15 },
+                            height: {
+                                type: "spring",
+                                stiffness: 100,
+                                damping: 15,
+                            },
                             opacity: { duration: 0.4, ease: "easeInOut" },
-                            scale: { duration: 0.4, ease: "easeInOut" }
+                            scale: { duration: 0.4, ease: "easeInOut" },
                         }}
                         className="overflow-hidden mt-4 mb-6"
                     >
@@ -234,11 +264,13 @@ function EntityList<T>(props: EntityListProps<T>) {
             )}
 
             {/* Items list or grid */}
-            <div className={cn(
-                layoutVariant === "grid" 
-                    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"
-                    : "space-y-4 mt-4"
-            )}>
+            <div
+                className={cn(
+                    layoutVariant === "grid"
+                        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"
+                        : "space-y-4 mt-4"
+                )}
+            >
                 {items.map((item, index) => (
                     <React.Fragment key={keyExtractor(item, index)}>
                         {renderItem(item, index)}
@@ -247,7 +279,7 @@ function EntityList<T>(props: EntityListProps<T>) {
             </div>
 
             {/* Loading indicator for infinite scroll */}
-            {infiniteQuery && (
+            {query && isInfiniteQuery(query) && (
                 <div ref={ref} className="flex justify-center py-4 h-16">
                     {isFetchingNextPage ? (
                         <LoadingState
@@ -259,7 +291,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                         <Button
                             variant="outline"
                             leftIcon={MoreHorizontal}
-                            onClick={() => infiniteQuery.fetchNextPage()}
+                            onClick={() => query.fetchNextPage()}
                         >
                             Load More
                         </Button>

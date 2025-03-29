@@ -1,4 +1,4 @@
-// src/pages/InstituteProfilePage.tsx
+// Update src/pages/InstituteProfilePage.tsx
 import { useState, useMemo } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { UseInfiniteQueryResult } from "@tanstack/react-query";
@@ -39,6 +39,7 @@ const InstituteProfilePage = () => {
     if (isNaN(instituteId)) {
         return <Navigate to="/pageNotFound" />;
     }
+    const entityType = "institute";
 
     // Component state
     const [activeTab, setActiveTab] = useState<
@@ -59,7 +60,7 @@ const InstituteProfilePage = () => {
     const [doNotShowVisualizationToggle] = useState(false);
 
     // Use the useEntityById hook for institute details
-    const instituteDetailsQuery = useEntityById("institute", id);
+    const instituteDetailsQuery = useEntityById(entityType, id);
     const isLoading = instituteDetailsQuery.isLoading;
     const isError = instituteDetailsQuery.isError;
     const error = instituteDetailsQuery.error;
@@ -67,13 +68,16 @@ const InstituteProfilePage = () => {
 
     // Use useEntityGrants hook for institute grants with infinite query (for pagination in UI)
     const instituteGrantsQuery: UseInfiniteQueryResult<any, Error> =
-        useEntityGrants("institute", id, {
+        useEntityGrants(entityType, id, {
             queryType: "infinite",
             sort: grantsSortConfig,
         });
 
     // Use useAllEntityGrants hook to get ALL grants for analytics (no pagination)
-    const allGrantsQuery = useAllEntityGrants("institute", id);
+    const allGrants = useAllEntityGrants(entityType, instituteId);
+
+    // Use useAllInstituteRecipients hook to get ALL recipients for analytics (no pagination)
+    const allRecipients = useAllInstituteRecipients(instituteId);
 
     // Use useInstituteRecipients hook for institute recipients (paginated for UI)
     const instituteRecipientsQuery = useInstituteRecipients(id, {
@@ -81,23 +85,10 @@ const InstituteProfilePage = () => {
         sort: recipientsSortConfig,
     }) as UseInfiniteQueryResult<any, Error>;
 
-    // Use useAllInstituteRecipients hook to get ALL recipients for analytics (no pagination)
-    const allRecipientsQuery = useAllInstituteRecipients(id);
-
     // If institute not found and not loading
     if (!isLoading && !institute && !isError) {
         return <Navigate to="/pageNotFound" />;
     }
-
-    // Extract all grants from query for analytics
-    const allGrants = useMemo(() => {
-        return allGrantsQuery.data || [];
-    }, [allGrantsQuery.data]);
-
-    // Extract all recipients from query for analytics
-    const allRecipients = useMemo(() => {
-        return allRecipientsQuery.data || [];
-    }, [allRecipientsQuery.data]);
 
     // Get all agencies from funding history for analytics
     const agencies: string[] = useMemo(() => {
@@ -161,7 +152,7 @@ const InstituteProfilePage = () => {
                 icon={University}
                 metadata={[]}
                 actions={actions}
-                entityType="institute"
+                entityType={entityType}
                 entityId={institute.institute_id}
                 isBookmarked={institute.is_bookmarked}
                 location={formatCommaSeparated([
@@ -260,7 +251,7 @@ const InstituteProfilePage = () => {
                         sortOptions={sortOptions}
                         sortConfig={recipientsSortConfig}
                         onSortChange={setRecipientsSortConfig}
-                        infiniteQuery={instituteRecipientsQuery}
+                        query={instituteRecipientsQuery}
                         totalCount={getTotalFromResult(
                             instituteRecipientsQuery
                         )}
@@ -271,8 +262,7 @@ const InstituteProfilePage = () => {
                             showVisualization ? (
                                 <TrendVisualizer
                                     grants={allGrants}
-                                    entityType="recipient"
-                                    viewContext="institute"
+                                    viewContext={entityType}
                                 />
                             ) : undefined
                         }
@@ -296,32 +286,18 @@ const InstituteProfilePage = () => {
                 return (
                     <GrantsList
                         grants={allGrants}
-                        infiniteQuery={instituteGrantsQuery}
+                        query={instituteGrantsQuery}
                         initialSortConfig={grantsSortConfig}
                         emptyMessage="This institute has no associated grants in our database."
                         showVisualization={true}
-                        viewContext="institute"
+                        viewContext={entityType}
                     />
                 );
 
             case "analytics":
-                // Pass all data (not paginated) to analytics components
-                const analyticsLoading =
-                    allGrantsQuery.isLoading || allRecipientsQuery.isLoading;
-
-                if (analyticsLoading) {
-                    return (
-                        <div className="flex items-center justify-center h-64">
-                            <p className="text-gray-500">
-                                Loading complete analytics data...
-                            </p>
-                        </div>
-                    );
-                }
-
                 return (
                     <EntityAnalyticsSection
-                        entityType="institute"
+                        entityType={entityType}
                         entity={institute}
                         grants={allGrants}
                         recipients={allRecipients}
@@ -337,8 +313,7 @@ const InstituteProfilePage = () => {
     return (
         <EntityProfilePage
             entity={institute}
-            entityType="institute"
-            entityTypeLabel="Institute"
+            entityType={entityType}
             isLoading={isLoading}
             isError={isError}
             error={error}

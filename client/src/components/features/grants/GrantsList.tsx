@@ -17,7 +17,7 @@ interface GrantsListProps {
     onSortChange?: (sortConfig: SortConfig) => void;
 
     // OR Infinite query mode
-    infiniteQuery?: UseInfiniteQueryResult<any, Error>;
+    query?: UseInfiniteQueryResult<any, Error>;
 
     // Entity information for fetching all grants
     entityId?: number;
@@ -37,7 +37,7 @@ interface GrantsListProps {
 const GrantsList: React.FC<GrantsListProps> = ({
     grants,
     onSortChange,
-    infiniteQuery,
+    query,
     entityId,
     entityType,
     initialSortConfig = { field: "date", direction: "desc" },
@@ -65,8 +65,8 @@ const GrantsList: React.FC<GrantsListProps> = ({
     // Get grants for visualization from props or from the infinite query (all pages)
     const getVisibleGrants = useMemo((): Grant[] => {
         // Infinite query mode - get visible pages of data
-        if (infiniteQuery?.data) {
-            return infiniteQuery.data.pages.flatMap(
+        if (query?.data) {
+            return query.data.pages.flatMap(
                 (page: { data: Grant[] }) => page.data
             );
         }
@@ -77,7 +77,7 @@ const GrantsList: React.FC<GrantsListProps> = ({
         }
 
         return [];
-    }, [infiniteQuery?.data, grants]);
+    }, [query?.data, grants]);
 
     return (
         <EntityList
@@ -98,9 +98,9 @@ const GrantsList: React.FC<GrantsListProps> = ({
             ]}
             sortConfig={sortConfig}
             onSortChange={handleSortChange}
-            infiniteQuery={infiniteQuery}
+            query={query}
             totalCount={
-                infiniteQuery?.data?.pages[0]?.metadata?.totalCount ||
+                query?.data?.pages[0]?.metadata?.totalCount ||
                 getVisibleGrants.length
             }
             totalItems={getVisibleGrants.length}
