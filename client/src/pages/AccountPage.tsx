@@ -26,10 +26,7 @@ import { useNotification } from "@/components/features/notifications/Notificatio
 import PageContainer from "@/components/common/layout/PageContainer";
 import PageHeader from "@/components/common/layout/PageHeader";
 import { useUser } from "@/hooks/api/useUser";
-import {
-    useUserSearchHistory,
-    useDeleteSearchHistory,
-} from "@/hooks/api/useSearchHistory";
+import { useUserSearchHistory } from "@/hooks/api/useSearchHistory";
 
 type SortField = "date" | "results";
 type SortDirection = "asc" | "desc";
@@ -92,8 +89,6 @@ export default function AccountPage() {
         sortConfig.direction
     );
 
-    const deleteSearchHistoryMutation = useDeleteSearchHistory();
-
     // Get search history from the hook data
     const searchHistory = searchHistoryData?.searches || [];
 
@@ -109,23 +104,6 @@ export default function AccountPage() {
 
         // Refetch with new sort params - our hook will use these parameters
         await refetchSearchHistory();
-    };
-
-    const handleRerunSearch = (searchParams: any) => {
-        navigate("/search", { state: { searchParams } });
-    };
-
-    // Handle deletion of a search history entry
-    const handleDeleteHistory = async (historyId: number) => {
-        try {
-            await deleteSearchHistoryMutation.mutateAsync(historyId);
-            showNotification("History entry deleted successfully!", "success");
-        } catch (error: any) {
-            showNotification(
-                error.message || "Failed to delete history entry",
-                "error"
-            );
-        }
     };
 
     // Profile update in Account Settings
@@ -559,10 +537,6 @@ export default function AccountPage() {
                                             >
                                                 <SearchHistoryCard
                                                     search={search}
-                                                    onRerun={handleRerunSearch}
-                                                    onDelete={
-                                                        handleDeleteHistory
-                                                    }
                                                 />
                                             </motion.div>
                                         ))}

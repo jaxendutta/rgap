@@ -23,24 +23,63 @@ export const adaptSearchHistory = (rawHistory: any[]): SearchHistory[] => {
 
     return rawHistory.map((item) => {
         // Convert search filters from string to object if needed
-        let searchFilters = item.search_filters;
+        let searchFilters;
         try {
-            if (typeof searchFilters === "string") {
-                searchFilters = JSON.parse(searchFilters);
+            if (typeof item.search_filters === "string") {
+                searchFilters = JSON.parse(item.search_filters);
+            } else if (
+                item.search_filters &&
+                typeof item.search_filters === "object"
+            ) {
+                searchFilters = item.search_filters;
+            } else {
+                searchFilters = DEFAULT_FILTER_STATE;
+            }
+
+            // Validate filter structure
+            if (!searchFilters.agencies) searchFilters.agencies = [];
+            if (!searchFilters.countries) searchFilters.countries = [];
+            if (!searchFilters.provinces) searchFilters.provinces = [];
+            if (!searchFilters.cities) searchFilters.cities = [];
+
+            if (!searchFilters.dateRange) {
+                searchFilters.dateRange = DEFAULT_FILTER_STATE.dateRange;
+            } else {
+                // Ensure dates are Date objects
+                if (
+                    searchFilters.dateRange.from &&
+                    typeof searchFilters.dateRange.from === "string"
+                ) {
+                    searchFilters.dateRange.from = new Date(
+                        searchFilters.dateRange.from
+                    );
+                }
+                if (
+                    searchFilters.dateRange.to &&
+                    typeof searchFilters.dateRange.to === "string"
+                ) {
+                    searchFilters.dateRange.to = new Date(
+                        searchFilters.dateRange.to
+                    );
+                }
+            }
+
+            if (!searchFilters.valueRange) {
+                searchFilters.valueRange = DEFAULT_FILTER_STATE.valueRange;
             }
         } catch (e) {
             console.error("Error parsing search filters:", e);
-            searchFilters = {};
+            searchFilters = DEFAULT_FILTER_STATE;
         }
 
         // Build structured search params
         const searchParams: GrantSearchParams = {
             searchTerms: {
-                recipient: item.search_recipient || "",
-                grant: item.search_grant || "",
-                institute: item.search_institution || "",
+                recipient: item.search_recipient,
+                grant: item.search_grant,
+                institute: item.search_institution,
             },
-            filters: searchFilters || DEFAULT_FILTER_STATE,
+            filters: searchFilters,
             sortConfig: { field: "date", direction: "desc" },
         };
 
@@ -50,7 +89,7 @@ export const adaptSearchHistory = (rawHistory: any[]): SearchHistory[] => {
             search_time: new Date(item.search_time),
             search_params: searchParams,
             result_count: item.result_count || 0,
-            // Include original fields for backward compatibility
+            bookmarked: !!item.bookmarked,
             ...item,
         };
     });

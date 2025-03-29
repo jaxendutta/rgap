@@ -1,4 +1,4 @@
-// src/components/features/grants/GrantsList.tsx
+// src/components/features/grants/ImprovedGrantsList.tsx
 import React, { useState, useMemo } from "react";
 import { Calendar, DollarSign } from "lucide-react";
 import { Grant } from "@/types/models";
@@ -6,20 +6,22 @@ import { GrantCard } from "./GrantCard";
 import { UseInfiniteQueryResult } from "@tanstack/react-query";
 import EntityList from "@/components/common/ui/EntityList";
 import { SortConfig } from "@/types/search";
-import {
-    TrendVisualizer,
-    ViewContext,
-} from "@/components/features/visualizations/TrendVisualizer";
+import { TrendVisualizer } from "@/components/features/visualizations/TrendVisualizer";
+
 export type GrantSortField = "date" | "value";
 export type SortDirection = "asc" | "desc";
 
 interface GrantsListProps {
     // Direct data mode
-    grants?: Grant[];
+    grants: Grant[];
     onSortChange?: (sortConfig: SortConfig) => void;
 
     // OR Infinite query mode
     infiniteQuery?: UseInfiniteQueryResult<any, Error>;
+
+    // Entity information for fetching all grants
+    entityId?: number;
+    entityType?: "recipient" | "institute";
 
     // Common props
     initialSortConfig?: SortConfig;
@@ -28,7 +30,7 @@ interface GrantsListProps {
     // Visualization props
     showVisualization?: boolean;
     visualizationInitiallyVisible?: boolean;
-    viewContext?: ViewContext;
+    viewContext?: "search" | "recipient" | "institute" | "custom";
     doNotShowVisualizationToggle?: boolean;
 }
 
@@ -36,6 +38,8 @@ const GrantsList: React.FC<GrantsListProps> = ({
     grants,
     onSortChange,
     infiniteQuery,
+    entityId,
+    entityType,
     initialSortConfig = { field: "date", direction: "desc" },
     emptyMessage = "No grants found.",
     showVisualization = true,
@@ -58,9 +62,9 @@ const GrantsList: React.FC<GrantsListProps> = ({
         }
     };
 
-    // Get all grants, not just the visible ones
-    const getAllGrants = useMemo((): Grant[] => {
-        // Infinite query mode - get ALL pages of data
+    // Get grants for visualization from props or from the infinite query (all pages)
+    const getVisibleGrants = useMemo((): Grant[] => {
+        // Infinite query mode - get visible pages of data
         if (infiniteQuery?.data) {
             return infiniteQuery.data.pages.flatMap(
                 (page: { data: Grant[] }) => page.data
@@ -78,7 +82,7 @@ const GrantsList: React.FC<GrantsListProps> = ({
     return (
         <EntityList
             entityType="grant"
-            entities={getAllGrants}
+            entities={getVisibleGrants}
             renderItem={(grant: Grant) => <GrantCard grant={grant} />}
             keyExtractor={(grant: Grant, index: number) =>
                 grant.grant_id || `grant-${index}`
@@ -97,15 +101,19 @@ const GrantsList: React.FC<GrantsListProps> = ({
             infiniteQuery={infiniteQuery}
             totalCount={
                 infiniteQuery?.data?.pages[0]?.metadata?.totalCount ||
-                getAllGrants.length
+                getVisibleGrants.length
             }
-            totalItems={getAllGrants.length}
+            totalItems={getVisibleGrants.length}
             visualization={
-                <TrendVisualizer
-                    grants={getAllGrants}
-                    viewContext={viewContext}
-                    height={350}
-                />
+                showVisualization ? (
+                    <TrendVisualizer
+                        grants={grants}
+                        entityId={entityId}
+                        entityType={entityType}
+                        viewContext={viewContext}
+                        height={350}
+                    />
+                ) : undefined
             }
             visualizationToggle={
                 showVisualization

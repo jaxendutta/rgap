@@ -1,5 +1,5 @@
 // src/components/common/ui/SortButton.tsx
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, MoveDown, MoveUp } from "lucide-react";
 import { Button } from "./Button";
 import { cn } from "@/utils/cn";
 
@@ -42,7 +42,11 @@ export const SortButton = ({
             <span className="hidden lg:flex">{label}</span>
             {isActive && (
                 <span className="text-gray-900">
-                    {direction === "asc" ? "↑" : "↓"}
+                    {direction === "asc" ? (
+                        <MoveUp size={12} />
+                    ) : (
+                        <MoveDown size={12} />
+                    )}
                 </span>
             )}
         </Button>

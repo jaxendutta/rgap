@@ -5,24 +5,18 @@ import {
     University,
     GraduationCap,
     Search,
-    PackageOpen,
-    LogIn,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import PageContainer from "@/components/common/layout/PageContainer";
 import PageHeader from "@/components/common/layout/PageHeader";
-import { Button } from "@/components/common/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
     useAllBookmarks,
-    useToggleBookmark,
     useBookmarkedEntities,
 } from "@/hooks/api/useBookmarks";
 import EntityList from "@/components/common/ui/EntityList";
 import EntityCard from "@/components/common/ui/EntityCard";
 import { GrantCard } from "@/components/features/grants/GrantCard";
 import { SearchHistoryCard } from "@/components/features/account/SearchHistoryCard";
-import { useNotification } from "@/components/features/notifications/NotificationProvider";
 import { Entity } from "@/types/models";
 import { cn } from "@/utils/cn";
 
@@ -41,9 +35,7 @@ const tabs: TabDefinition[] = [
 ];
 
 export const BookmarksPage = () => {
-    const navigate = useNavigate();
     const { user } = useAuth();
-    const { showNotification } = useNotification();
     const [activeTab, setActiveTab] = useState<Entity>("grant");
 
     // Use the hook to get bookmarked item IDs
@@ -51,7 +43,6 @@ export const BookmarksPage = () => {
         isLoading: isLoadingBookmarks,
         isError: isBookmarksError,
         error: bookmarksError,
-        refetch: refetchBookmarks,
     } = useAllBookmarks(activeTab, user?.user_id);
 
     // Use the hook to get full bookmarked entities with details
@@ -61,42 +52,6 @@ export const BookmarksPage = () => {
         isError: isEntitiesError,
         error: entitiesError,
     } = useBookmarkedEntities(activeTab, user?.user_id);
-
-    // Set up toggle bookmark mutation
-    const toggleBookmarkMutation = useToggleBookmark(activeTab);
-
-    // Handle bookmarks
-    const toggleBookmark = (id: number | string) => {
-        if (!user || !user.user_id) {
-            showNotification(
-                "You must be logged in to manage bookmarks",
-                "error"
-            );
-            return;
-        }
-
-        const isBookmarked = true; // Since we're on the bookmarks page, we're removing bookmarks
-
-        // Trigger the mutation
-        toggleBookmarkMutation.mutate(
-            {
-                user_id: user.user_id,
-                entity_id: id,
-                isBookmarked,
-            },
-            {
-                onSuccess: () => {
-                    // Refresh bookmark data after toggle
-                    refetchBookmarks();
-                },
-            }
-        );
-    };
-
-    // Handle search rerun
-    const handleRerunSearch = (searchParams: any) => {
-        navigate("/search", { state: { searchParams } });
-    };
 
     // Entity-specific render functions
     const renderItem = (item: any) => {
@@ -120,13 +75,7 @@ export const BookmarksPage = () => {
                     />
                 );
             case "search":
-                return (
-                    <SearchHistoryCard
-                        search={item}
-                        onRerun={handleRerunSearch}
-                        onDelete={(historyId) => toggleBookmark(historyId)}
-                    />
-                );
+                return <SearchHistoryCard search={item} />;
             default:
                 return null;
         }
@@ -180,36 +129,6 @@ export const BookmarksPage = () => {
     const isLoading = isLoadingBookmarks || isLoadingEntities;
     const isError = isBookmarksError || isEntitiesError;
     const errorMessage = bookmarksError || entitiesError;
-
-    // If user is not logged in, show sign-in prompt
-    if (!user) {
-        return (
-            <PageContainer>
-                <PageHeader
-                    title="Bookmarks"
-                    subtitle="Sign in to view and manage your bookmarks."
-                />
-
-                <div className="flex flex-col items-center justify-center p-10 bg-white rounded-lg border shadow-sm">
-                    <PackageOpen className="h-16 w-16 text-gray-400 mb-4" />
-                    <h3 className="text-xl font-medium text-gray-900 mb-2">
-                        Sign in to use bookmarks
-                    </h3>
-                    <p className="text-gray-600 mb-6 max-w-md text-center">
-                        You need to be signed in to save and view bookmarks.
-                        Sign in or create an account to get started.
-                    </p>
-                    <Button
-                        variant="primary"
-                        leftIcon={LogIn}
-                        onClick={() => navigate("/auth")}
-                    >
-                        Sign In
-                    </Button>
-                </div>
-            </PageContainer>
-        );
-    }
 
     return (
         <PageContainer>

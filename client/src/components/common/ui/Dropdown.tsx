@@ -106,7 +106,7 @@ export const Dropdown = ({
             </button>
 
             {isOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border">
+                <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border">
                     <div className="p-2 max-h-60 overflow-auto space-y-1">
                         {normalizedOptions.map((option) => {
                             const isSelected = multiple

@@ -53,7 +53,7 @@ const StatDisplay: React.FC<StatDisplayProps> = ({
                     1: "grid-cols-1",
                     2: "grid-cols-1 md:grid-cols-2",
                     3: "grid-cols-1 md:grid-cols-3",
-                    4: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
+                    4: "grid-cols-2 md:grid-cols-4",
                 };
                 return `grid ${colClasses[columns]} gap-4`;
         }
@@ -82,7 +82,7 @@ const StatDisplay: React.FC<StatDisplayProps> = ({
                     card: "p-3",
                     icon: "h-4 w-4 mr-1.5",
                     label: "text-sm",
-                    value: "text-2xl font-semibold",
+                    value: "text-lg lg:text-2xl font-semibold",
                 };
         }
     };
@@ -94,7 +94,7 @@ const StatDisplay: React.FC<StatDisplayProps> = ({
         expandable && !expanded ? items.slice(0, columns) : items;
 
     return (
-        <div className="px-3 lg:px-6 pt-3 lg:pt-6 pb-2 bg-gray-50 rounded-b-lg">
+        <div className="px-3 lg:px-6 py-3 lg:py-6 bg-slate-100 rounded-b-lg">
             <div className={className}>
                 <div className={cn(getLayoutClasses())}>
                     {visibleItems.map((item, index) => (

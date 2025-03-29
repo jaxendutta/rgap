@@ -3,7 +3,7 @@ import { cn } from "@/utils/cn";
 import { LucideIcon } from "lucide-react";
 import { responsive } from "@/utils/responsive";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: "primary" | "secondary" | "outline" | "destructive";
     size?: "sm" | "md" | "lg";
     leftIcon?: LucideIcon;
@@ -100,3 +100,5 @@ export const Button = ({
         </button>
     );
 };
+
+export default Button;

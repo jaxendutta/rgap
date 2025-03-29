@@ -1,8 +1,11 @@
 // src/components/common/pages/EntityProfilePage.tsx
+import React from "react";
 import Tabs, { TabItem } from "@/components/common/ui/Tabs";
 import LoadingState from "@/components/common/ui/LoadingState";
 import ErrorState from "@/components/common/ui/ErrorState";
 import PageContainer from "../layout/PageContainer";
+import { Card } from "@/components/common/ui/Card";
+import { useNavigate } from "react-router-dom";
 
 export interface EntityProfilePageProps {
     // Core data and state
@@ -26,7 +29,7 @@ export interface EntityProfilePageProps {
     renderTabContent: (tabId: string) => React.ReactNode;
 }
 
-const EntityProfilePage = ({
+const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
     entity,
     entityType,
     entityTypeLabel,
@@ -39,7 +42,9 @@ const EntityProfilePage = ({
     activeTab,
     onTabChange,
     renderTabContent,
-}: EntityProfilePageProps) => {
+}) => {
+    const navigate = useNavigate();
+
     // Handle the error state
     if (isError) {
         return (
@@ -53,6 +58,7 @@ const EntityProfilePage = ({
                     }
                     variant="default"
                     size="lg"
+                    onRetry={() => navigate(0)} // Refresh page
                     onBack={() => window.history.back()}
                 />
             </PageContainer>
@@ -65,6 +71,7 @@ const EntityProfilePage = ({
             <PageContainer>
                 <LoadingState
                     title={`Loading ${entityTypeLabel} details...`}
+                    message="Please wait while we fetch the data..."
                     fullHeight
                     size="lg"
                 />
@@ -75,16 +82,16 @@ const EntityProfilePage = ({
     return (
         <PageContainer>
             {/* Header with profile and quick stats */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+            <Card className="mb-6 overflow-hidden">
                 {/* Top section with entity details */}
                 {renderHeader()}
 
                 {/* Stats section */}
                 {renderStats()}
-            </div>
+            </Card>
 
-            {/* Tabs for page content */}
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            {/* Tabs and Content */}
+            <Card className="overflow-hidden">
                 {/* Tab navigation */}
                 <div className="border-b border-gray-200">
                     <Tabs
@@ -97,8 +104,8 @@ const EntityProfilePage = ({
                 </div>
 
                 {/* Tab content */}
-                <div className="p-4 lg:p-6">{renderTabContent(activeTab)}</div>
-            </div>
+                <div className="p-4 lg:p-6 bg-slate-100">{renderTabContent(activeTab)}</div>
+            </Card>
         </PageContainer>
     );
 };

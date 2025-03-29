@@ -1,64 +1,89 @@
 // src/pages/RecipientProfilePage.tsx
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Navigate } from "react-router-dom";
-import { BookMarked, PieChart, DollarSign } from "lucide-react";
-import { useEntityById, useEntityGrants } from "@/hooks/api/useData";
+import { UseInfiniteQueryResult } from "@tanstack/react-query";
+import {
+    BookMarked,
+    Calendar,
+    CircleArrowOutUpRight,
+    DollarSign,
+    FileUser,
+    GraduationCap,
+    PieChart,
+    TrendingUp,
+    University,
+} from "lucide-react";
+import { useAllEntityGrants, useEntityById, useEntityGrants } from "@/hooks/api/useData";
 import EntityProfilePage from "@/components/common/pages/EntityProfilePage";
-import RecipientHeader from "@/components/features/recipients/RecipientHeader";
-import RecipientStats from "@/components/features/recipients/RecipientStats";
 import GrantsList from "@/components/features/grants/GrantsList";
 import { SortConfig } from "@/types/search";
-import { AnalyticsCards } from "@/components/common/ui/AnalyticsCards";
-import { formatCurrency } from "@/utils/format";
-import { getCategoryColor } from "@/utils/chartColors";
-import { UseInfiniteQueryResult } from "@tanstack/react-query"; // Add this import
+import { EntityAnalyticsSection } from "@/components/features/analytics/EntityAnalytics";
+import { extractAgenciesFromGrants } from "@/utils/analytics";
+import StatDisplay, { StatItem } from "@/components/common/ui/StatDisplay";
+import { formatCommaSeparated, formatCurrency } from "@/utils/format";
+import EntityHeader, {
+    ActionButton,
+    MetadataItem,
+} from "@/components/common/layout/EntityHeader";
+import { RecipientType } from "@/constants/data";
+import { all } from "axios";
 
-export const RecipientProfilePage = () => {
+const RecipientProfilePage = () => {
     const { id } = useParams();
+    const recipientId = Number(id);
+    if (isNaN(recipientId)) {
+        return <Navigate to="/pageNotFound" />;
+    }
 
-    // Use the new useEntityById hook for recipient details
+    // Component state
+    const [activeTab, setActiveTab] = useState<"grants" | "analytics">(
+        "grants"
+    );
+    const [expandedStats, setExpandedStats] = useState(false);
+    const [grantsSortConfig] = useState<SortConfig>({
+        field: "date",
+        direction: "desc",
+    });
+
+    // Use the useEntityById hook for recipient details
     const recipientDetailsQuery = useEntityById("recipient", id);
     const isLoading = recipientDetailsQuery.isLoading;
     const isError = recipientDetailsQuery.isError;
     const error = recipientDetailsQuery.error;
     const recipient = (recipientDetailsQuery.data as { data: any })?.data;
 
-    // Component state
-    const [sortConfig, setSortConfig] = useState<SortConfig>({
-        field: "date",
-        direction: "desc",
-    });
-    const [activeTab, setActiveTab] = useState<"grants" | "analytics">(
-        "grants"
-    );
-    const [expandedStats, setExpandedStats] = useState(false);
+    // Use useEntityGrants hook for recipient grants with infinite query
+    const recipientGrantsQuery = useEntityGrants("recipient", recipientId, {
+        queryType: "infinite",
+        sort: grantsSortConfig,
+    }) as UseInfiniteQueryResult<any, Error>;
 
-    // Use the new useEntityGrants hook with infinite query
-    // Add explicit type annotation to fix TypeScript error
-    const recipientGrantsQuery: UseInfiniteQueryResult<any, Error> =
-        useEntityGrants("recipient", id, {
-            queryType: "infinite",
-            sort: sortConfig,
-        });
+    // Use useAllEntityGrants hook to get ALL grants for analytics (no pagination)
+    const allGrantsQuery = useAllEntityGrants("recipient", id);
 
     // If recipient not found and not loading
     if (!isLoading && !recipient && !isError) {
         return <Navigate to="/pageNotFound" />;
     }
 
-    // Get all agencies from funding history for legend
-    const agencies: string[] = recipient?.funding_history
-        ? Array.from(
-              new Set(
-                  recipient.funding_history.flatMap((entry: any) =>
-                      Object.keys(entry).filter((key) => key !== "year")
-                  )
-              )
-          )
-        : [];
+    // Extract all grants from query to pass to analytics components
+    const grants = useMemo(() => {
+        if (!recipientGrantsQuery.data) return [];
 
-    // Calculate stats for the profile overview
-    const totalFunding = recipient?.total_funding || 0;
+        return recipientGrantsQuery.data.pages.flatMap(
+            (page: any) => page.data || []
+        );
+    }, [recipientGrantsQuery.data]);
+
+    // Extract all grants from query for analytics
+    const allGrants = useMemo(() => {
+        return allGrantsQuery.data || [];
+    }, [allGrantsQuery.data]);
+
+    // Extract agencies for analytics
+    const agencies = useMemo(() => {
+        return extractAgenciesFromGrants(grants);
+    }, [grants]);
 
     // Define tabs for the TabNavigation component
     const tabs = [
@@ -74,25 +99,113 @@ export const RecipientProfilePage = () => {
         },
     ];
 
+    // Metadata for the EntityHeader
+    const metadata: MetadataItem[] = [];
+
+    if (recipient.research_organization_name) {
+        metadata.push({
+            icon: University,
+            text: recipient.research_organization_name,
+            href: `/institutes/${recipient.institute_id}`,
+        });
+    }
+
+    metadata.push({
+        icon: FileUser,
+        text: recipient.type
+            ? RecipientType[recipient.type as keyof typeof RecipientType]
+            : "Unspecified",
+    });
+
+    const actions: ActionButton[] = [
+        {
+            icon: CircleArrowOutUpRight,
+            label: "Look up",
+            onClick: () =>
+                window.open(
+                    `https://www.google.com/search?q=${encodeURIComponent(
+                        `${recipient.legal_name} ${
+                            recipient.research_organization_name || ""
+                        }`
+                    )}`,
+                    "_blank",
+                    "noopener,noreferrer"
+                ),
+            variant: "outline",
+        },
+    ];
+
     // Render functions for EntityProfilePage
     const renderHeader = () => {
         if (!recipient) return null;
-        return <RecipientHeader {...recipient} />;
-    };
-
-    const renderStats = () => {
-        if (!recipient) return null;
         return (
-            <RecipientStats
-                recipient={recipient}
-                processedGrants={recipient.grants || []}
-                agencies={agencies}
-                expandedStats={expandedStats}
-                setExpandedStats={setExpandedStats}
+            <EntityHeader
+                title={recipient.legal_name}
+                icon={GraduationCap}
+                metadata={metadata}
+                actions={actions}
+                entityType="recipient"
+                entityId={recipient.recipient_id}
+                isBookmarked={recipient.is_bookmarked}
+                location={formatCommaSeparated([
+                    recipient.city,
+                    recipient.province,
+                    recipient.country,
+                ])}
             />
         );
     };
 
+    // Primary stats for the recipient
+    const primaryStats: StatItem[] = [
+        {
+            icon: BookMarked,
+            label: "Total Grants",
+            value: recipient.total_grants,
+        },
+        {
+            icon: DollarSign,
+            label: "Total Funding",
+            value: formatCurrency(recipient.total_funding),
+        },
+        {
+            icon: TrendingUp,
+            label: "Average Grant",
+            value: recipient.total_grants
+                ? formatCurrency(
+                      recipient.total_funding / recipient.total_grants
+                  )
+                : "N/A",
+        },
+        {
+            icon: Calendar,
+            label: "Active Period",
+            value:
+                recipient.first_grant_date && recipient.latest_grant_date
+                    ? `${new Date(
+                          recipient.first_grant_date
+                      ).getFullYear()} - ${new Date(
+                          recipient.latest_grant_date
+                      ).getFullYear()}`
+                    : "N/A",
+        },
+    ];
+
+    const renderStats = () => {
+        if (!recipient) return null;
+        return (
+            <StatDisplay
+                items={primaryStats}
+                columns={4}
+                layout="grid"
+                expandable={true}
+                expanded={expandedStats}
+                onToggleExpand={() => setExpandedStats(!expandedStats)}
+            />
+        );
+    };
+
+    // Render the content for the active tab
     const renderTabContent = (activeTabId: string) => {
         if (!recipient) return null;
 
@@ -100,243 +213,25 @@ export const RecipientProfilePage = () => {
             case "grants":
                 return (
                     <GrantsList
+                        grants={grants}
                         infiniteQuery={recipientGrantsQuery}
-                        onSortChange={setSortConfig}
-                        initialSortConfig={sortConfig}
+                        initialSortConfig={grantsSortConfig}
                         emptyMessage="This recipient has no associated grants in our database."
                         showVisualization={true}
-                        visualizationInitiallyVisible={false}
                         viewContext="recipient"
                     />
                 );
 
             case "analytics":
-                // More detailed analytics that might still be useful
                 return (
-                    <div className="space-y-6">
-                        <h2 className="text-xl font-semibold">Analytics</h2>
-
-                        {/* Analytics cards for detailed metrics */}
-                        <AnalyticsCards
-                            cards={[
-                                // Funding Breakdown card
-                                {
-                                    title: "Funding Breakdown by Agency",
-                                    icon: (
-                                        <DollarSign className="h-4 w-4 mr-1.5 text-blue-600" />
-                                    ),
-                                    fields: agencies.map((agency, index) => {
-                                        const agencyTotal = recipient.grants
-                                            .filter(
-                                                (grant: any) =>
-                                                    grant.org === agency
-                                            )
-                                            .reduce(
-                                                (sum: number, grant: any) =>
-                                                    sum + grant.agreement_value,
-                                                0
-                                            );
-
-                                        const percentage =
-                                            totalFunding > 0
-                                                ? (agencyTotal / totalFunding) *
-                                                  100
-                                                : 0;
-
-                                        return {
-                                            label: agency,
-                                            icon: (
-                                                <div
-                                                    className="h-3.5 w-3.5 mr-1.5 rounded-full"
-                                                    style={{
-                                                        backgroundColor:
-                                                            getCategoryColor(
-                                                                agency,
-                                                                index
-                                                            ),
-                                                    }}
-                                                />
-                                            ),
-                                            value: (
-                                                <div className="text-right">
-                                                    <div className="font-medium text-sm">
-                                                        {formatCurrency(
-                                                            agencyTotal
-                                                        )}
-                                                    </div>
-                                                    <div className="text-xs text-gray-500">
-                                                        {percentage.toFixed(1)}%
-                                                    </div>
-                                                </div>
-                                            ),
-                                        };
-                                    }),
-                                },
-                                // Additional detailed analytics cards
-                                {
-                                    title: "Time-based Analysis",
-                                    icon: (
-                                        <PieChart className="h-4 w-4 mr-1.5 text-blue-600" />
-                                    ),
-                                    fields: [
-                                        {
-                                            label: "Average Grant Duration",
-                                            value: (() => {
-                                                if (
-                                                    recipient.grants.length ===
-                                                    0
-                                                )
-                                                    return "N/A";
-
-                                                const durations =
-                                                    recipient.grants.map(
-                                                        (grant: any) => {
-                                                            const start =
-                                                                new Date(
-                                                                    grant.agreement_start_date
-                                                                );
-                                                            const end =
-                                                                new Date(
-                                                                    grant.agreement_end_date
-                                                                );
-                                                            // Duration in months
-                                                            return Math.round(
-                                                                (end.getTime() -
-                                                                    start.getTime()) /
-                                                                    (1000 *
-                                                                        60 *
-                                                                        60 *
-                                                                        24 *
-                                                                        30)
-                                                            );
-                                                        }
-                                                    );
-
-                                                const avgDuration =
-                                                    durations.reduce(
-                                                        (
-                                                            sum: number,
-                                                            d: number
-                                                        ) => sum + d,
-                                                        0
-                                                    ) / durations.length;
-                                                return `${Math.round(
-                                                    avgDuration
-                                                )} months`;
-                                            })(),
-                                        },
-                                        {
-                                            label: "Most Active Year",
-                                            value: (() => {
-                                                if (
-                                                    recipient.grants.length ===
-                                                    0
-                                                )
-                                                    return "N/A";
-
-                                                const yearCounts: Record<
-                                                    number,
-                                                    number
-                                                > = {};
-                                                recipient.grants.forEach(
-                                                    (grant: any) => {
-                                                        const year = new Date(
-                                                            grant.agreement_start_date
-                                                        ).getFullYear();
-                                                        yearCounts[year] =
-                                                            (yearCounts[year] ||
-                                                                0) + 1;
-                                                    }
-                                                );
-
-                                                let maxYear = 0;
-                                                let maxCount = 0;
-                                                Object.entries(
-                                                    yearCounts
-                                                ).forEach(([year, count]) => {
-                                                    if (count > maxCount) {
-                                                        maxYear =
-                                                            parseInt(year);
-                                                        maxCount =
-                                                            count as number;
-                                                    }
-                                                });
-
-                                                return `${maxYear} (${maxCount} grants)`;
-                                            })(),
-                                        },
-                                        {
-                                            label: "Grant Size Trend",
-                                            value: (() => {
-                                                if (recipient.grants.length < 2)
-                                                    return "Insufficient data";
-
-                                                // Group by year and calculate average
-                                                const yearlyAvg: Record<
-                                                    number,
-                                                    {
-                                                        sum: number;
-                                                        count: number;
-                                                    }
-                                                > = {};
-                                                recipient.grants.forEach(
-                                                    (grant: any) => {
-                                                        const year = new Date(
-                                                            grant.agreement_start_date
-                                                        ).getFullYear();
-                                                        if (!yearlyAvg[year])
-                                                            yearlyAvg[year] = {
-                                                                sum: 0,
-                                                                count: 0,
-                                                            };
-                                                        yearlyAvg[year].sum +=
-                                                            grant.agreement_value;
-                                                        yearlyAvg[
-                                                            year
-                                                        ].count += 1;
-                                                    }
-                                                );
-
-                                                // Convert to array of averages by year
-                                                const averages = Object.entries(
-                                                    yearlyAvg
-                                                )
-                                                    .sort(
-                                                        ([a], [b]) =>
-                                                            parseInt(a) -
-                                                            parseInt(b)
-                                                    )
-                                                    .map(([year, data]) => ({
-                                                        year: parseInt(year),
-                                                        avg:
-                                                            data.sum /
-                                                            data.count,
-                                                    }));
-
-                                                // Check if trend is increasing or decreasing
-                                                if (averages.length < 2)
-                                                    return "Insufficient data";
-
-                                                const firstAvg =
-                                                    averages[0].avg;
-                                                const lastAvg =
-                                                    averages[
-                                                        averages.length - 1
-                                                    ].avg;
-
-                                                if (lastAvg > firstAvg * 1.1)
-                                                    return "Increasing";
-                                                if (lastAvg < firstAvg * 0.9)
-                                                    return "Decreasing";
-                                                return "Stable";
-                                            })(),
-                                        },
-                                    ],
-                                },
-                            ]}
-                        />
-                    </div>
+                    <EntityAnalyticsSection
+                        entityType="recipient"
+                        entity={recipient}
+                        grants={allGrants}
+                        agencies={agencies}
+                    />
                 );
+
             default:
                 return null;
         }

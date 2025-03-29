@@ -194,13 +194,13 @@ export const GrantCard = ({
                         <div className="flex items-start justify-between gap-2 mb-2 lg:mb-1">
                             <Link
                                 to={`/recipients/${grant.recipient_id}`}
-                                className="inline-flex items-start text-lg font-medium hover:text-blue-700 transition-colors gap-1.5 group"
+                                className="flex text-lg font-medium hover:text-blue-700 transition-colors gap-1.5 group"
                                 aria-label={`View profile for recipient ${grant.legal_name}`}
                             >
-                                <span className="inline-flex">
-                                    <GraduationCap className="h-5 w-5 mt-1 mr-1.5 flex-shrink-0" />
+                                <GraduationCap className="h-5 w-5 mt-1 align-text-bottom flex-shrink-0" />
+                                <span className="inline-block">
                                     {grant.legal_name}
-                                    <ArrowUpRight className="inline-block h-4 w-4 ml-1 mt-2.5 lg:mt-1.5 lg:opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all" />
+                                    <ArrowUpRight className="inline-block h-4 w-4 ml-1 align-text-bottom opacity-0 group-hover:opacity-100 group-hover:-translate-y-0.5 transition-all" />
                                 </span>
                             </Link>
 
@@ -1113,6 +1113,7 @@ export const GrantCard = ({
                                                                                                                 prevAmendment.agreement_end_date,
                                                                                                                 amendment.agreement_end_date
                                                                                                             )}
+
                                                                                                             )
                                                                                                         </>
                                                                                                     )}

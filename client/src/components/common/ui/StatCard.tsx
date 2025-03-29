@@ -41,7 +41,7 @@ export const StatCard = ({
             <span>{label}</span>
         </div>
         <div className={cn("flex items-center", valueClassName)}>
-            <span className="text-2xl font-bold text-gray-900">{value}</span>
+            <span className="text-lg lg:text-2xl font-bold text-gray-900">{value}</span>
             {trend === "up" && (
                 <TrendingUp className="h-5 w-5 ml-2 text-green-500" />
             )}

@@ -190,7 +190,6 @@ function EntityList<T>(props: EntityListProps<T>) {
                             leftIcon={visualizationToggle.isVisible ? X : LineChart}
                             onClick={visualizationToggle.toggle}
                             disabled={items.length === 0}
-                            className="lg:space-x-2"
                         >
                             <span className="hidden lg:inline">
                                 {visualizationToggle.isVisible
@@ -207,11 +206,8 @@ function EntityList<T>(props: EntityListProps<T>) {
                             size="sm"
                             leftIcon={layoutVariant === "grid" ? List : Grid}
                             onClick={toggleLayoutVariant}
-                            className="lg:space-x-2 hidden lg:inline-flex"
+                            className="hidden lg:inline-flex"
                         >
-                            <span className="hidden lg:inline">
-                                {layoutVariant === "grid" ? "List View" : "Grid View"}
-                            </span>
                         </Button>
                     )}
                 </div>
@@ -221,10 +217,15 @@ function EntityList<T>(props: EntityListProps<T>) {
             {visualization && visualizationToggle?.isVisible && (
                 <AnimatePresence>
                     <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
+                        initial={{ opacity: 0, height: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, height: "auto", scale: 1 }}
+                        exit={{ opacity: 0, height: 0, scale: 0.98 }}
+                        transition={{
+                            duration: 0.5,
+                            height: { type: "spring", stiffness: 100, damping: 15 },
+                            opacity: { duration: 0.4, ease: "easeInOut" },
+                            scale: { duration: 0.4, ease: "easeInOut" }
+                        }}
                         className="overflow-hidden mt-4 mb-6"
                     >
                         {visualization}

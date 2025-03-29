@@ -54,7 +54,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
             return;
         }
 
-        // Ensure entityId is defined
+        // Ensure entityId is defined and convert it to the proper type if needed
         if (!entityId) {
             showNotification("Cannot bookmark this item - missing ID", "error");
             return;
@@ -71,9 +71,10 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
                 isBookmarked: visualBookmarkState, // The current state before toggling
             },
             {
-                onError: () => {
+                onError: (error) => {
                     // Revert visual state on error
                     setVisualBookmarkState(visualBookmarkState);
+                    console.error("Bookmark toggle error: ", error);
                     showNotification(
                         `Failed to ${
                             visualBookmarkState ? "remove" : "add"
@@ -142,7 +143,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
             isLoading={toggleBookmarkMutation.isPending}
             className={customClassName}
         >
-            <span className="hidden lg:inline">
+            <span className="hidden md:inline">
                 {visualBookmarkState ? "Bookmarked" : "Bookmark"}
             </span>
         </Button>

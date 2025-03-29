@@ -43,6 +43,8 @@ export interface Institute {
     riding_number?: string;
     recipient_count?: number;
     grant_count?: number;
+    total_grants?: number;
+    total_recipients?: number;
     total_funding?: number;
     avg_funding: number;
     first_grant_date?: string;

@@ -1,14 +1,30 @@
 // src/components/features/visualizations/TrendVisualizer.tsx
-import React, { useState, useMemo } from "react";
-import { DollarSign, Hash, ChartColumnStacked, ChartColumn, ChartSpline } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import {
+    DollarSign,
+    Hash,
+    ChartColumnStacked,
+    ChartColumn,
+    ChartSpline,
+    Activity,
+    Landmark,
+    GraduationCap,
+    Calendar,
+    BookOpen,
+} from "lucide-react";
 import { Grant, GrantAmendment } from "@/types/models";
 import { Card } from "@/components/common/ui/Card";
 import { Dropdown } from "@/components/common/ui/Dropdown";
 import DataChart from "@/components/features/visualizations/DataChart";
 import { cn } from "@/utils/cn";
 import { AMENDMENT_COLORS, getCategoryColor } from "@/utils/chartColors";
+import Button from "@/components/common/ui/Button";
+import ToggleButtons from "@/components/common/ui/ToggleButtons";
+import { useEntityGrants } from "@/hooks/api/useData";
+import LoadingState from "@/components/common/ui/LoadingState";
+import { formatSentenceCase } from "@/utils/format";
 
-export type ChartType = "line" | "bar-stacked" | "bar-grouped";
+export type ChartType = "line" | "stacked" | "grouped";
 export type MetricType = "funding" | "count";
 export type GroupingDimension =
     | "org"
@@ -23,9 +39,11 @@ export type GroupingDimension =
 
 export type ViewContext = "search" | "recipient" | "institute" | "custom";
 
-interface AdvancedVisualizationProps {
-    // The grants data to visualize
-    grants: Grant[];
+interface TrendVisualizerProps {
+    // The grants data to visualize - can be direct grants or entity info to fetch all grants
+    grants?: Grant[];
+    entityId?: number;
+    entityType?: "recipient" | "institute";
 
     // Optional amendments history to visualize (for single grant view)
     amendmentsHistory?: GrantAmendment[];
@@ -42,66 +60,78 @@ interface AdvancedVisualizationProps {
     height?: number;
     className?: string;
     title?: string;
+    showControls?: boolean;
 }
 
-const DEFAULT_SEARCH_GROUPINGS: GroupingDimension[] = [
-    "org",
-    "city",
-    "province",
-    "country",
-    "recipient",
-    "institute",
-];
-const DEFAULT_RECIPIENT_GROUPINGS: GroupingDimension[] = [
-    "org",
-    "program",
-    "year",
-];
-const DEFAULT_INSTITUTE_GROUPINGS: GroupingDimension[] = [
-    "recipient",
-    "org",
-    "program",
-    "year",
-];
+// Get the icon for each grouping dimension
+const getGroupingIcon = (dimension: GroupingDimension): React.ElementType => {
+    const iconMap: Record<GroupingDimension, React.ElementType> = {
+        org: Landmark,
+        city: GraduationCap,
+        province: GraduationCap,
+        country: GraduationCap,
+        recipient: GraduationCap,
+        institute: Landmark,
+        program: BookOpen,
+        year: Calendar,
+        amendment: Activity,
+    };
 
-export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
-    grants,
+    return iconMap[dimension] || Activity;
+};
+
+// Default groupings based on context
+const getDefaultGroupings = (viewContext: ViewContext): GroupingDimension[] => {
+    switch (viewContext) {
+        case "recipient":
+            return ["org", "program", "year"];
+        case "institute":
+            return ["org", "program", "recipient", "year"];
+        case "search":
+        default:
+            return [
+                "org",
+                "city",
+                "province",
+                "country",
+                "recipient",
+                "institute",
+            ];
+    }
+};
+
+export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
+    grants: propsGrants,
+    entityId,
+    entityType,
     amendmentsHistory,
     viewContext = "search",
-    initialChartType = "bar-stacked",
+    initialChartType = "line",
     initialMetricType = "funding",
     initialGrouping,
-    availableGroupings,
+    availableGroupings: propsAvailableGroupings,
     availableMetrics = ["funding", "count"],
     height = 400,
     className,
     title,
+    showControls = true,
 }) => {
-    // If amendmentsHistory is provided, we're visualizing a single grant's amendments
+    // Determine if we're visualizing a single grant's amendments
     const isAmendmentView = !!amendmentsHistory && amendmentsHistory.length > 0;
 
-    // Add "amendment" to available groupings if we have amendment history
+    // State for loading when fetching from API
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Get appropriate available groupings
     const effectiveAvailableGroupings = useMemo(() => {
         if (isAmendmentView) {
             return ["amendment"];
         }
-        return availableGroupings || getDefaultGroupings();
-    }, [isAmendmentView, availableGroupings]);
+        return propsAvailableGroupings || getDefaultGroupings(viewContext);
+    }, [isAmendmentView, propsAvailableGroupings, viewContext]);
 
-    // Determine available groupings based on context if not explicitly provided
-    function getDefaultGroupings(): GroupingDimension[] {
-        switch (viewContext) {
-            case "recipient":
-                return DEFAULT_RECIPIENT_GROUPINGS;
-            case "institute":
-                return DEFAULT_INSTITUTE_GROUPINGS;
-            case "search":
-            default:
-                return DEFAULT_SEARCH_GROUPINGS;
-        }
-    }
-
-    // Initialize state with defaults appropriate for the context
+    // Initialize state for chart configuration
     const [chartType, setChartType] = useState<ChartType>(initialChartType);
     const [metricType, setMetricType] = useState<MetricType>(initialMetricType);
     const [groupingDimension, setGroupingDimension] =
@@ -109,6 +139,49 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
             initialGrouping ||
                 (effectiveAvailableGroupings[0] as GroupingDimension)
         );
+
+    // State for grants data
+    const [allGrants, setAllGrants] = useState<Grant[]>([]);
+
+    // Only fetch grants if we have an entityId and entityType but no grants provided
+    const shouldFetch = !!entityId && !!entityType && !propsGrants;
+
+    // Use regular (non-infinite) query to get ALL grants for visualization
+    const {
+        data: fetchedData,
+        isLoading: isFetching,
+        isError: isFetchError,
+    } = useEntityGrants(
+        entityType as "recipient" | "institute",
+        entityId || 0,
+        {
+            queryType: "regular", // Use regular query to get all data at once
+            enabled: shouldFetch,
+        }
+    ) as {
+        data?: { data: Grant[] };
+        isLoading: boolean;
+        isError: boolean;
+    };
+
+    // Update loading states based on fetch status
+    useEffect(() => {
+        setIsLoading(isFetching);
+        if (isFetchError) {
+            setError("Failed to load data for visualization");
+        } else {
+            setError(null);
+        }
+    }, [isFetching, isFetchError]);
+
+    // Update allGrants state when data is fetched or props change
+    useEffect(() => {
+        if (fetchedData?.data) {
+            setAllGrants(fetchedData.data);
+        } else if (propsGrants) {
+            setAllGrants(propsGrants);
+        }
+    }, [fetchedData, propsGrants]);
 
     // Generate display options for the dropdown
     const groupingDisplayOptions = useMemo(() => {
@@ -127,6 +200,7 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
         return effectiveAvailableGroupings.map((option) => ({
             value: option,
             label: displayLabels[option as GroupingDimension],
+            icon: getGroupingIcon(option as GroupingDimension),
         }));
     }, [effectiveAvailableGroupings]);
 
@@ -238,7 +312,7 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                 };
             });
         }
-    }, [amendmentsHistory, isAmendmentView, chartType, grants]);
+    }, [amendmentsHistory, isAmendmentView, chartType]);
 
     // Prepare data for visualization based on the selected options
     const chartData = useMemo(() => {
@@ -277,14 +351,14 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
         }
 
         // Otherwise process the regular grants data
-        if (!grants || grants.length === 0)
+        if (!allGrants || allGrants.length === 0)
             return { data: [], categories: [] };
 
         const yearMap = new Map();
         const uniqueCategories = new Set<string>();
 
         // Group data by year and the selected dimension
-        grants.forEach((grant) => {
+        allGrants.forEach((grant) => {
             // Extract year from the grant
             const year = new Date(grant.agreement_start_date).getFullYear();
             const grantValue = grant.agreement_value;
@@ -333,12 +407,13 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
 
             // Update the data based on the metric type
             if (metricType === "funding") {
-                // Sum funding values
+                // Sum funding values - ensure numeric conversion
                 yearData[categoryValue] =
-                    (yearData[categoryValue] || 0) + grantValue;
+                    (Number(yearData[categoryValue]) || 0) + Number(grantValue);
             } else {
                 // Count grants
-                yearData[categoryValue] = (yearData[categoryValue] || 0) + 1;
+                yearData[categoryValue] =
+                    (Number(yearData[categoryValue]) || 0) + 1;
             }
         });
 
@@ -353,7 +428,8 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
         // For recipient and institute dimensions, limit to top 8 by value
         if (
             (groupingDimension === "recipient" ||
-                groupingDimension === "institute") &&
+                groupingDimension === "institute" ||
+                groupingDimension === "program") &&
             categories.length > 8
         ) {
             // Aggregate values across all years for each category
@@ -403,124 +479,127 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
 
         return { data: result, categories: Array.from(uniqueCategories) };
     }, [
-        grants,
+        allGrants,
         groupingDimension,
         metricType,
         isAmendmentView,
         amendmentChartData,
+        chartType,
     ]);
 
-    // Render nothing if no data
-    if ((!grants || grants.length === 0) && !isAmendmentView) {
-        return null;
+    // If loading, show a loading state
+    if (isLoading) {
+        return <LoadingState title="Loading visualization data..." size="sm" />;
     }
 
-    // Generate title for the chart
-    const chartTitle =
-        title || `${metricType === "funding" ? "Funding" : "Grant"} Trends by `;
+    // If error, show an error message
+    if (error) {
+        return <div className="text-red-500 text-sm p-3">{error}</div>;
+    }
+
+    // If no data available, don't render anything
+    if ((!allGrants || allGrants.length === 0) && !isAmendmentView) {
+        return null;
+    }
 
     // Special title for amendment view
     const effectiveTitle = isAmendmentView
         ? "Grant Amendment History"
-        : chartTitle;
+        : title ||
+          `${metricType === "funding" ? "Funding" : "Grant"} Trends by `;
 
     return (
         <Card className={cn("p-6", className)}>
-            {/* Header with controls */}
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-3 mb-4">
-                <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap">
-                    <h3 className="text-lg lg:text-lg font-medium whitespace-nowrap">
-                        {effectiveTitle}
-                    </h3>
-                    {/* Dropdown for dimension selection - only show if not amendment view */}
-                    {!isAmendmentView && (
-                        <Dropdown
-                            value={groupingDimension}
-                            options={groupingDisplayOptions}
-                            onChange={(value) =>
-                                setGroupingDimension(value as GroupingDimension)
-                            }
-                            className="min-w-[150px]"
-                        />
-                    )}
-                </div>
+            {/* Header with controls - only show if showControls is true */}
+            {showControls && (
+                <div className="flex flex-col lg:flex-row items-center justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap">
+                        <h3 className="text-lg font-medium whitespace-nowrap">
+                            {effectiveTitle}
+                        </h3>
+                        {/* Dropdown for dimension selection - only show if not amendment view */}
+                        {!isAmendmentView && (
+                            <Dropdown
+                                value={groupingDimension}
+                                options={groupingDisplayOptions}
+                                onChange={(value) =>
+                                    setGroupingDimension(
+                                        value as GroupingDimension
+                                    )
+                                }
+                                className="min-w-[150px]"
+                            />
+                        )}
+                    </div>
 
-                <div className="flex items-center justify-between w-full py-2 lg:py-0 lg:gap-3 lg:justify-end">
-                    {/* Metric type toggle (if multiple metrics available and not in amendment view) */}
-                    {availableMetrics.length > 1 && !isAmendmentView && (
-                        <div className="flex rounded-md shadow-sm">
-                            <button
-                                onClick={() => setMetricType("funding")}
-                                className={cn(
-                                    "px-3 py-1.5 text-xs font-medium border rounded-l-md flex items-center gap-1",
-                                    metricType === "funding"
-                                        ? "bg-gray-100 text-gray-800 border-gray-300"
-                                        : "bg-white text-gray-500 hover:bg-gray-50 border-gray-200"
-                                )}
-                            >
-                                <DollarSign className="h-3.5 w-3.5" />
-                                <span className="hidden md:inline">
-                                    Funding
-                                </span>
-                            </button>
-                            <button
-                                onClick={() => setMetricType("count")}
-                                className={cn(
-                                    "px-3 py-1.5 text-xs font-medium border rounded-r-md flex items-center gap-1",
-                                    metricType === "count"
-                                        ? "bg-gray-100 text-gray-800 border-gray-300"
-                                        : "bg-white text-gray-500 hover:bg-gray-50 border-gray-200"
-                                )}
-                            >
-                                <Hash className="h-3.5 w-3.5" />
-                                <span className="hidden md:inline">Count</span>
-                            </button>
-                        </div>
-                    )}
+                    <div className="flex items-center justify-between w-full py-2 lg:py-0 lg:gap-3 lg:justify-end">
+                        {/* Metric type toggle (if multiple metrics available and not in amendment view) */}
+                        {availableMetrics.length > 1 && !isAmendmentView && (
+                            <ToggleButtons>
+                                {[
+                                    ["funding", DollarSign],
+                                    ["count", Hash],
+                                ].map(([type, Icon], index) => (
+                                    <Button
+                                        key={index}
+                                        onClick={() =>
+                                            setMetricType(type as MetricType)
+                                        }
+                                        className={cn(
+                                            "px-3 py-1.5 text-xs font-medium border flex items-center gap-1",
+                                            metricType === type
+                                                ? "bg-gray-100 text-gray-800 border-gray-300"
+                                                : "bg-white text-gray-500 hover:bg-gray-50 border-gray-200",
+                                            index === 0
+                                                ? "rounded-l-md"
+                                                : index === 1
+                                                ? "rounded-r-md"
+                                                : ""
+                                        )}
+                                    >
+                                        <Icon className="h-3.5 w-3.5" />
+                                        <span className="hidden md:inline">
+                                            {formatSentenceCase(type as string)}
+                                        </span>
+                                    </Button>
+                                ))}
+                            </ToggleButtons>
+                        )}
 
-                    {/* Chart type toggle */}
-                    <div className="flex rounded-md shadow-sm">
-                        <button
-                            onClick={() => setChartType("line")}
-                            className={cn(
-                                "px-3 py-1.5 text-xs font-medium border flex items-center gap-1",
-                                chartType === "line"
-                                    ? "bg-gray-100 text-gray-800 border-gray-300"
-                                    : "bg-white text-gray-500 hover:bg-gray-50 border-gray-200",
-                                "rounded-l-md"
-                            )}
-                        >
-                            <ChartSpline className="h-3.5 w-3.5" />
-                            <span className="hidden md:inline">Line</span>
-                        </button>
-                        <button
-                            onClick={() => setChartType("bar-stacked")}
-                            className={cn(
-                                "px-3 py-1.5 text-xs font-medium border flex items-center gap-1",
-                                chartType === "bar-stacked"
-                                    ? "bg-gray-100 text-gray-800 border-gray-300"
-                                    : "bg-white text-gray-500 hover:bg-gray-50 border-gray-200"
-                            )}
-                        >
-                            <ChartColumnStacked className="h-3.5 w-3.5" />
-                            <span className="hidden md:inline">Stacked</span>
-                        </button>
-                        <button
-                            onClick={() => setChartType("bar-grouped")}
-                            className={cn(
-                                "px-3 py-1.5 text-xs font-medium border flex items-center gap-1",
-                                chartType === "bar-grouped"
-                                    ? "bg-gray-100 text-gray-800 border-gray-300"
-                                    : "bg-white text-gray-500 hover:bg-gray-50 border-gray-200",
-                                "rounded-r-md"
-                            )}
-                        >
-                            <ChartColumn className="h-3.5 w-3.5" />
-                            <span className="hidden md:inline">Grouped</span>
-                        </button>
+                        {/* Chart type toggle */}
+                        <ToggleButtons>
+                            {[
+                                ["line", ChartSpline],
+                                ["stacked", ChartColumnStacked],
+                                ["grouped", ChartColumn],
+                            ].map(([type, Icon], index) => (
+                                <Button
+                                    key={index}
+                                    onClick={() =>
+                                        setChartType(type as ChartType)
+                                    }
+                                    className={cn(
+                                        "px-3 py-1.5 text-xs font-medium border flex items-center gap-1",
+                                        chartType === type
+                                            ? "bg-gray-100 text-gray-800 border-gray-300"
+                                            : "bg-white text-gray-500 hover:bg-gray-50 border-gray-200",
+                                        index === 0
+                                            ? "rounded-l-md"
+                                            : index === 2
+                                            ? "rounded-r-md"
+                                            : ""
+                                    )}
+                                >
+                                    <Icon className="h-3.5 w-3.5" />
+                                    <span className="hidden md:inline">
+                                        {formatSentenceCase(type as string)}
+                                    </span>
+                                </Button>
+                            ))}
+                        </ToggleButtons>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Chart display - only show if we have data */}
             {chartData.data.length > 0 && chartData.categories.length > 0 ? (
@@ -533,8 +612,8 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                         }
                         categories={chartData.categories}
                         height={height}
-                        stacked={chartType === "bar-stacked"}
-                        // Special option for amendment view to format x-axis differently
+                        stacked={chartType === "stacked"}
+                        showLegend={false}
                         isAmendmentView={isAmendmentView}
                     />
                 </div>
@@ -580,7 +659,7 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
                                           ),
                                       }}
                                   />
-                                  <span className="text-gray-600">
+                                  <span className="text-gray-600 max-w-[150px] truncate">
                                       {category}
                                   </span>
                               </div>
@@ -590,3 +669,5 @@ export const TrendVisualizer: React.FC<AdvancedVisualizationProps> = ({
         </Card>
     );
 };
+
+export default TrendVisualizer;
