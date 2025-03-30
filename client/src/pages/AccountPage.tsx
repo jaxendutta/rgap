@@ -1,6 +1,5 @@
 // src/pages/AccountPage.tsx
 import { useState, useEffect } from "react";
-import { UseInfiniteQueryResult } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
     User,
@@ -10,8 +9,6 @@ import {
     EyeOff,
     Shield,
     Calendar,
-    Search,
-    PackageOpen,
     Trash2,
     AlertCircle,
     X,
@@ -56,13 +53,16 @@ export default function AccountPage() {
     const { user, logout, updateUser } = useAuth();
     const { showNotification } = useNotification();
 
-    // Don't call the search history hook here - EntityList will call it
-
     const { deleteAccount } = useUser();
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [confirmEmail, setConfirmEmail] = useState("");
     const [emailError, setEmailError] = useState("");
+
+    // Get search history using the hook - Initialize with user_id
+    const searchHistoryQuery = user?.user_id
+        ? useUserSearchHistory(user.user_id, "search_time", "desc")
+        : undefined;
 
     // If no user is logged in, redirect to the login page
     useEffect(() => {
@@ -209,15 +209,10 @@ export default function AccountPage() {
         setEmailError("");
     };
 
+    // Function to render a search history item
     const renderSearchHistoryItem = (search: SearchHistory) => (
         <SearchHistoryCard key={search.history_id} data={search} />
     );
-
-    const searchHistoryQuery = useUserSearchHistory(
-        user.user_id,
-        "search_time",
-        "desc",
-    ) as UseInfiniteQueryResult<SearchHistory[], Error>;
 
     return (
         <PageContainer>
@@ -446,48 +441,36 @@ export default function AccountPage() {
                         </Card>
                     )}
 
-                    {/* Search History */}
                     {activeTab === "history" && (
                         <Card className="p-4 lg:p-6">
-                            <EntityList
-                                entityType="search"
-                                query={searchHistoryQuery}
-                                keyExtractor={(search) =>
-                                    search.history_id.toString()
-                                }
-                                initialSortConfig={{
-                                    field: "search_time",
-                                    direction: "desc",
-                                }}
-                                renderItem={renderSearchHistoryItem}
-                                sortOptions={[
-                                    {
-                                        label: "Date",
-                                        icon: Calendar,
+                            {user && (
+                                <EntityList
+                                    entityType="search"
+                                    query={searchHistoryQuery}
+                                    renderItem={renderSearchHistoryItem}
+                                    keyExtractor={(search) =>
+                                        `search-history-${search.history_id}`
+                                    }
+                                    variant="list"
+                                    sortOptions={[
+                                        {
+                                            label: "Date",
+                                            icon: Calendar,
+                                            field: "search_time",
+                                        },
+                                        {
+                                            label: "Results",
+                                            icon: History,
+                                            field: "result_count",
+                                        },
+                                    ]}
+                                    initialSortConfig={{
                                         field: "search_time",
-                                    },
-                                    {
-                                        label: "Results",
-                                        icon: History,
-                                        field: "result_count",
-                                    },
-                                ]}
-                                emptyState={
-                                    <div className="flex flex-col justify-center items-center space-y-4 h-64 bg-gray-100 p-8 rounded-lg text-center w-full">
-                                        <PackageOpen className="h-16 w-16 text-gray-400" />
-                                        <p className="text-gray-700 text-md">
-                                            You have no recorded search history.
-                                        </p>
-                                        <Button
-                                            variant="primary"
-                                            onClick={() => navigate("/search")}
-                                            leftIcon={Search}
-                                        >
-                                            Start exploring
-                                        </Button>
-                                    </div>
-                                }
-                            />
+                                        direction: "desc",
+                                    }}
+                                    emptyMessage="You have no recorded search history."
+                                />
+                            )}
                         </Card>
                     )}
 
@@ -525,7 +508,7 @@ export default function AccountPage() {
                                     </h2>
                                     <div className="bg-white rounded-md p-4 border border-red-300">
                                         <div className="flex items-start">
-                                            <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 mr-2" />
+                                            <AlertCircle className="h-5 w-5 mt-0.5 mr-2" />
                                             <div>
                                                 <p className="text-gray-700">
                                                     Deleting your account will:

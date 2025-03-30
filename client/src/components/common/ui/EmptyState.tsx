@@ -1,6 +1,6 @@
 // src/components/common/ui/EmptyState.tsx
 import React from "react";
-import { FileSearch, Plus, LucideIcon } from "lucide-react";
+import { Plus, LucideIcon, PackageOpen } from "lucide-react";
 import { Button } from "./Button";
 import { cn } from "@/utils/cn";
 
@@ -44,7 +44,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
     titleClassName,
     messageClassName,
 }) => {
-    const Icon = CustomIcon || FileSearch;
+    const Icon = CustomIcon || PackageOpen;
 
     // Size-specific classes
     const iconSizes = {
@@ -68,7 +68,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
     // Variant-specific classes
     const variantClasses = {
         default: "py-8",
-        card: "bg-white border border-gray-200 rounded-lg p-6",
+        card: "bg-white border border-gray-200 rounded-lg p-6 flex-grow",
     };
 
     return (
@@ -107,7 +107,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
                         <Button
                             variant="primary"
                             size={size === "sm" ? "sm" : "md"}
-                            icon={primaryAction.icon || Plus}
+                            leftIcon={primaryAction.icon || Plus}
                             onClick={primaryAction.onClick}
                         >
                             {primaryAction.label}
@@ -118,7 +118,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
                         <Button
                             variant="outline"
                             size={size === "sm" ? "sm" : "md"}
-                            icon={secondaryAction.icon}
+                            leftIcon={secondaryAction.icon}
                             onClick={secondaryAction.onClick}
                         >
                             {secondaryAction.label}

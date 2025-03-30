@@ -1,5 +1,6 @@
 // src/pages/BookmarksPage.tsx
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     BookMarked,
     University,
@@ -9,6 +10,7 @@ import {
     DollarSign,
     Hash,
 } from "lucide-react";
+import { cn } from "@/utils/cn";
 import PageContainer from "@/components/common/layout/PageContainer";
 import PageHeader from "@/components/common/layout/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,12 +18,12 @@ import {
     useAllBookmarks,
     useBookmarkedEntities,
 } from "@/hooks/api/useBookmarks";
-import EntityList from "@/components/common/ui/EntityList";
+import { Entity } from "@/types/models";
 import EntityCard from "@/components/common/ui/EntityCard";
 import { GrantCard } from "@/components/features/grants/GrantCard";
+import EntityList from "@/components/common/ui/EntityList";
+import EmptyState from "@/components/common/ui/EmptyState";
 import { SearchHistoryCard } from "@/components/features/account/SearchHistoryCard";
-import { Entity } from "@/types/models";
-import { cn } from "@/utils/cn";
 
 // Define the tab structure with correct bookmark types
 interface TabDefinition {
@@ -39,6 +41,7 @@ const tabs: TabDefinition[] = [
 
 export const BookmarksPage = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<Entity>("grant");
 
     // Use the hook to get bookmarked item IDs
@@ -115,7 +118,11 @@ export const BookmarksPage = () => {
             case "recipient":
             case "institute":
                 return [
-                    { field: "total_funding", label: "Funding", icon: DollarSign },
+                    {
+                        field: "total_funding",
+                        label: "Funding",
+                        icon: DollarSign,
+                    },
                     { field: "grant_count", label: "Grants", icon: BookMarked },
                 ];
             case "search":
@@ -134,7 +141,7 @@ export const BookmarksPage = () => {
     const errorMessage = bookmarksError || entitiesError;
 
     return (
-        <PageContainer>
+        <PageContainer className="h-full">
             {/* Header */}
             <PageHeader
                 title="Bookmarks"
@@ -183,7 +190,29 @@ export const BookmarksPage = () => {
                 initialSortConfig={{ field: "date", direction: "desc" }}
                 totalCount={bookmarkedItems.length}
                 totalItems={bookmarkedItems.length}
-                emptyMessage={`No bookmarked ${activeTab}s found.`}
+                emptyState={
+                    <EmptyState
+                        title={`Uh oh!`}
+                        message={`You have no bookmarked ${activeTab}s.`}
+                        variant="card"
+                        className="w-full"
+                        titleClassName="text-xl"
+                        messageClassName="text-base"
+                        primaryAction={{
+                            label: "Let's go bookmark some!",
+                            onClick: () => {
+                                if (activeTab === "recipient") {
+                                    navigate("/recipients");
+                                } else if (activeTab === "institute") {
+                                    navigate("/institutes");
+                                } else {
+                                    navigate("/search");
+                                }
+                            },
+                            icon: Search,
+                        }}
+                    />
+                }
                 isLoading={isLoading}
                 isError={isError}
                 error={errorMessage}

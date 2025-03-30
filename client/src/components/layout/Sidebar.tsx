@@ -6,14 +6,14 @@ import {
     University,
     GraduationCap,
     Bookmark,
-    BookOpen,
+    ChartSpline,
 } from "lucide-react";
 import { clsx } from "clsx";
 import { useState } from "react";
 
 // Reordered for mobile
 const mobileNavigation = [
-    { name: "Support", icon: BookOpen, href: "/docs" },
+    { name: "Trends", icon: ChartSpline, href: "/trends" },
     { name: "Institutes", icon: University, href: "/institutes" },
     { name: "Search", icon: Search, href: "/search" },
     { name: "Recipients", icon: GraduationCap, href: "/recipients" },
@@ -27,7 +27,7 @@ const desktopNavigation = [
     { name: "Institutes", icon: University, href: "/institutes" },
     { name: "Recipients", icon: GraduationCap, href: "/recipients" },
     { name: "Bookmarks", icon: Bookmark, href: "/bookmarks" },
-    { name: "Support", icon: BookOpen, href: "/docs" },
+    { name: "Trends", icon: ChartSpline, href: "/trends" },
 ];
 
 const Sidebar = () => {

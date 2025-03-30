@@ -1,11 +1,48 @@
 // src/pages/HomePage.tsx
-import { Link } from "react-router-dom";
-import { Search, Database, TrendingUp, UserPlus, LogIn } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+    Search,
+    Database,
+    ChartSpline,
+    UserPlus,
+    LogIn,
+    LucideIcon,
+    GraduationCap,
+} from "lucide-react";
 import PageContainer from "@/components/common/layout/PageContainer";
 import { Button } from "@/components/common/ui/Button";
 import { Card } from "@/components/common/ui/Card";
 
 export default function HomePage() {
+    const navigate = useNavigate();
+
+    const features: [title: string, description: string, icon: LucideIcon, link: string][] = [
+        [
+            "Comprehensive Data",
+            "Access and analyze over 175,000 research grants from NSERC, CIHR, and SSHRC.",
+            Database,
+            "/search",
+        ],
+        [
+            "Advanced Analytics",
+            "Visualize funding trends, analyze success rates, and track research investments.",
+            ChartSpline,
+            "/trends",
+        ],
+        [
+            "Explore Recipients",
+            "Discover researchers and institutions behind the grants.",
+            GraduationCap,
+            "/recipients",
+        ],
+        [
+            "Create Account",
+            "Sign up to save searches, bookmark grants, and more.",
+            UserPlus,
+            "/auth",
+        ],
+    ];
+
     return (
         <PageContainer>
             {/* Hero Section */}
@@ -76,61 +113,29 @@ export default function HomePage() {
             </Card>
 
             {/* Features Grid */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {/* Feature 1 */}
-                <Card
-                    className="p-6 hover:border-gray-300 transition-all duration-200"
-                    isHoverable
-                >
-                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-gray-900 text-white mb-4">
-                        <Database className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900">
-                        Comprehensive Data
-                    </h3>
-                    <p className="mt-2 text-base text-gray-500">
-                        Access and analyze over 231,000 research grants from
-                        NSERC, CIHR, and SSHRC.
-                    </p>
-                </Card>
-
-                {/* Feature 2 */}
-                <Card
-                    className="p-6 hover:border-gray-300 transition-all duration-200"
-                    isHoverable
-                >
-                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-gray-900 text-white mb-4">
-                        <TrendingUp className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900">
-                        Advanced Analytics
-                    </h3>
-                    <p className="mt-2 text-base text-gray-500">
-                        Visualize funding trends, analyze success rates, and
-                        track research investments.
-                    </p>
-                </Card>
-
-                {/* Feature 3 */}
-                <Card
-                    className="p-6 hover:border-gray-300 transition-all duration-200"
-                    isHoverable
-                >
-                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-gray-900 text-white mb-4">
-                        <UserPlus className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900">
-                        <Link to="/auth" className="hover:text-gray-700">
-                            Create Account
-                            <span aria-hidden="true" className="ml-1">
-                                →
-                            </span>
-                        </Link>
-                    </h3>
-                    <p className="mt-2 text-base text-gray-500">
-                        Sign up to save searches, bookmark grants, and more.
-                    </p>
-                </Card>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-6">
+                {features.map(([title, description, Icon, link], index) => {
+                    return (
+                        <Card
+                            key={index}
+                            className="p-6 hover:border-gray-300 transition-all duration-200"
+                            isInteractive
+                            onClick={() => {
+                                navigate(link);
+                            }}
+                        >
+                            <div className="flex items-center justify-center h-12 w-12 rounded-md bg-gray-900 text-white mb-4">
+                                <Icon className="h-6 w-6" />
+                            </div>
+                            <h3 className="text-lg font-medium text-gray-900">
+                                {title}
+                            </h3>
+                            <p className="mt-2 text-base text-gray-500">
+                                {description}
+                            </p>
+                        </Card>
+                    );
+                })}
             </div>
         </PageContainer>
     );

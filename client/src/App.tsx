@@ -15,7 +15,7 @@ import InstituteProfilePage from "@/pages/InstituteProfilePage";
 import RecipientsPage from "@/pages/RecipientsPage";
 import RecipientProfilePage from "@/pages/RecipientProfilePage";
 import BookmarksPage from "@/pages/BookmarksPage";
-import DocsPage from "@/pages/DocsPage";
+import TrendsPage from "@/pages/TrendsPage";
 import AuthPage from "@/pages/AuthPage";
 import AccountPage from "@/pages/AccountPage";
 import PageNotFound from "@/pages/PageNotFound";
@@ -69,7 +69,7 @@ function App() {
                                 </ProtectedRoute>
                             }
                         />
-                        <Route path="/docs" element={<DocsPage />} />
+                        <Route path="/trends" element={<TrendsPage />} />
                         <Route
                             path="/auth"
                             element={

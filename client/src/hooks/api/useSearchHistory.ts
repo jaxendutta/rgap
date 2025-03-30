@@ -8,7 +8,9 @@ import {
 import { SearchHistory } from "@/types/models";
 import { GrantSearchParams } from "@/types/search";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import portConfig from "../../../../config/ports.json";
+import createAPI from "@/utils/api";
+
+const API = createAPI();
 
 export const searchHistoryKeys = {
     all: ["searchHistory"] as const,
@@ -19,7 +21,7 @@ export const searchHistoryKeys = {
 };
 
 /**
- * Adapts raw search history from DB to structured GrantSearchParams format
+ * Adapts raw search history from DB to structured SearchHistory format
  */
 export const adaptSearchHistory = (rawHistory: any[]): SearchHistory[] => {
     if (!rawHistory || !Array.isArray(rawHistory)) {
@@ -55,7 +57,7 @@ export const adaptSearchHistory = (rawHistory: any[]): SearchHistory[] => {
             search_time: new Date(item.search_time),
             search_params: searchParams,
             result_count: item.result_count || 0,
-            ...item,
+            bookmarked: Boolean(item.bookmarked),
         };
     });
 };
@@ -67,39 +69,62 @@ export function useUserSearchHistory(
     userId?: number | null,
     sortField = "search_time",
     sortDirection = "desc",
-    limit = 10
-): UseInfiniteQueryResult<SearchHistory[]> {
-    interface SearchHistoryPage {
-        searches: SearchHistory[];
-        nextPage: number | null;
-    }
-
-    return useInfiniteQuery<SearchHistoryPage, Error, SearchHistory[]>({
+    limit = 20
+): UseInfiniteQueryResult<SearchHistory[], Error> {
+    return useInfiniteQuery({
         queryKey: searchHistoryKeys.list({ userId, sortField, sortDirection }),
-        queryFn: async ({ pageParam }) => {
-            if (!userId) return { searches: [], nextPage: null };
+        queryFn: async ({ pageParam = 1 }) => {
+            if (!userId)
+                return {
+                    data: [],
+                    metadata: {
+                        totalCount: 0,
+                        page: 1,
+                        pageSize: limit,
+                        totalPages: 0,
+                    },
+                };
 
-            const baseurl =
-                process.env.VITE_API_URL ||
-                `http://localhost:${portConfig.defaults.server}`;
-            const response = await fetch(
-                `${baseurl}/search-history/${userId}?sortField=${sortField}&sortDirection=${sortDirection}&page=${pageParam}&limit=${limit}`
-            );
+            try {
+                const response = await API.get(`/search-history/${userId}`, {
+                    params: {
+                        sortField,
+                        sortDirection,
+                        page: pageParam,
+                        limit,
+                    },
+                });
 
-            if (!response.ok) {
-                throw new Error("Failed to fetch search history");
+                // Process the search history data
+                const searchHistories = adaptSearchHistory(
+                    response.data.searches || []
+                );
+
+                // Return the data in a format that matches what EntityList expects for infinite queries
+                return {
+                    data: searchHistories,
+                    metadata: {
+                        totalCount: response.data.totalCount || 0,
+                        page: Number(pageParam),
+                        pageSize: limit,
+                        totalPages: Math.ceil(
+                            (response.data.totalCount || 0) / limit
+                        ),
+                    },
+                };
+            } catch (error) {
+                console.error("Error fetching search history:", error);
+                throw error;
             }
-
-            const data = await response.json();
-
-            // Adapt raw search history to structured format
-            return {
-                searches: adaptSearchHistory(data.searches || []),
-                nextPage: data.nextPage,
-            };
         },
-        initialPageParam: 0,
-        getNextPageParam: (lastPage: SearchHistoryPage) => lastPage.nextPage,
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            // If we have more pages, return the next page number
+            if (lastPage.metadata.page < lastPage.metadata.totalPages) {
+                return lastPage.metadata.page + 1;
+            }
+            return undefined;
+        },
         enabled: !!userId,
     });
 }
@@ -112,21 +137,8 @@ export function useDeleteSearchHistory() {
 
     return useMutation({
         mutationFn: async (historyId: number) => {
-            const baseurl =
-                process.env.VITE_API_URL ||
-                `http://localhost:${portConfig.defaults.server}`;
-            const response = await fetch(
-                `${baseurl}/search-history/${historyId}`,
-                {
-                    method: "DELETE",
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error("Failed to delete search history entry");
-            }
-
-            return await response.json();
+            const response = await API.delete(`/search-history/${historyId}`);
+            return response.data;
         },
         onSuccess: () => {
             // Invalidate search history queries when an entry is deleted

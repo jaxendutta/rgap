@@ -338,7 +338,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                         </Button>
                     ) : (entities?.length ?? 0) > 0 ? (
                         <p className="text-sm text-gray-500">
-                            All {entityType.toLowerCase()} loaded
+                            All {entityType.toLowerCase()}s loaded
                         </p>
                     ) : null}
                 </div>
