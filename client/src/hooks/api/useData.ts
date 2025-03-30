@@ -603,7 +603,7 @@ export function useEntityGrants(
     // Construct the endpoint
     const endpoint = `/${entityType}s/${id}/grants`;
 
-    // Force return type to be UseInfiniteQueryResult for GrantsList component
+    // Force return type to be UseInfiniteQueryResult
     if (queryType === "complete") {
         return useCompleteData(
             endpoint,

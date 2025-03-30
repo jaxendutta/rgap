@@ -29,7 +29,7 @@ interface EntityHeaderProps {
     icon: LucideIcon;
     metadata: MetadataItem[];
     actions?: ActionButton[];
-    entityType?: Entity;
+    entityType?: keyof Entity;
     entityId?: number;
     location?: string;
     isBookmarked?: boolean;

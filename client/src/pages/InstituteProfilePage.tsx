@@ -22,17 +22,16 @@ import {
 } from "@/hooks/api/useData";
 import EntityProfilePage from "@/components/common/pages/EntityProfilePage";
 import EntityList from "@/components/common/ui/EntityList";
-import GrantsList from "@/components/features/grants/GrantsList";
 import { SortConfig } from "@/types/search";
 import EntityCard from "@/components/common/ui/EntityCard";
 import { EntityAnalyticsSection } from "@/components/features/analytics/EntityAnalytics";
-import TrendVisualizer from "@/components/features/visualizations/TrendVisualizer";
 import StatDisplay from "@/components/common/ui/StatDisplay";
 import EntityHeader, {
     ActionButton,
 } from "@/components/common/layout/EntityHeader";
 import { formatCommaSeparated } from "@/utils/format";
 import { Grant, Recipient } from "@/types/models";
+import { GrantCard } from "@/components/features/grants/GrantCard";
 
 const InstituteProfilePage = () => {
     const { id } = useParams();
@@ -257,14 +256,7 @@ const InstituteProfilePage = () => {
                         totalItems={paginatedRecipients.length}
                         emptyMessage="This institute has no associated recipients in our database."
                         allowLayoutToggle={true}
-                        visualization={
-                            showVisualization ? (
-                                <TrendVisualizer
-                                    grants={allGrants}
-                                    viewContext={entityType}
-                                />
-                            ) : undefined
-                        }
+                        showVisualization={true}
                         visualizationToggle={
                             showVisualization
                                 ? {
@@ -283,13 +275,41 @@ const InstituteProfilePage = () => {
 
             case "grants":
                 return (
-                    <GrantsList
-                        grants={allGrants}
-                        query={instituteGrantsQuery}
+                    <EntityList
+                        entityType="grant"
+                        entities={allGrants}
+                        renderItem={(grant: Grant) => (
+                            <GrantCard grant={grant} />
+                        )}
+                        keyExtractor={(grant: Grant) => grant.grant_id}
+                        emptyMessage={
+                            "This institute has no associated grants in our database."
+                        }
+                        sortOptions={[
+                            {
+                                field: "agreement_start_date",
+                                label: "Date",
+                                icon: Calendar,
+                            },
+                            {
+                                field: "agreement_value",
+                                label: "Value",
+                                icon: DollarSign,
+                            },
+                        ]}
                         initialSortConfig={grantsSortConfig}
-                        emptyMessage="This institute has no associated grants in our database."
-                        showVisualization={true}
+                        query={instituteGrantsQuery}
+                        visualizationToggle={{
+                            isVisible: isVisualizationVisible,
+                            toggle: () =>
+                                setIsVisualizationVisible(
+                                    !isVisualizationVisible
+                                ),
+                            showToggleButton: true,
+                        }}
                         viewContext={entityType}
+                        entityId={instituteId}
+                        showVisualization={true}
                     />
                 );
 

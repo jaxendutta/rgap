@@ -13,9 +13,12 @@ import {
     TrendingUp,
     University,
 } from "lucide-react";
-import { useAllEntityGrants, useEntityById, useEntityGrants } from "@/hooks/api/useData";
+import {
+    useAllEntityGrants,
+    useEntityById,
+    useEntityGrants,
+} from "@/hooks/api/useData";
 import EntityProfilePage from "@/components/common/pages/EntityProfilePage";
-import GrantsList from "@/components/features/grants/GrantsList";
 import { SortConfig } from "@/types/search";
 import { EntityAnalyticsSection } from "@/components/features/analytics/EntityAnalytics";
 import { extractAgenciesFromGrants } from "@/utils/analytics";
@@ -26,7 +29,9 @@ import EntityHeader, {
     MetadataItem,
 } from "@/components/common/layout/EntityHeader";
 import { RecipientType } from "@/constants/data";
-import { Grant } from "@/types/models";
+import { Entity, Grant } from "@/types/models";
+import EntityList from "@/components/common/ui/EntityList";
+import { GrantCard } from "@/components/features/grants/GrantCard";
 
 const RecipientProfilePage = () => {
     const { id } = useParams();
@@ -34,7 +39,7 @@ const RecipientProfilePage = () => {
     if (isNaN(recipientId)) {
         return <Navigate to="/pageNotFound" />;
     }
-    const entityType = "recipient";
+    const entityType: keyof Entity = "recipient";
 
     // Component state
     const [activeTab, setActiveTab] = useState<"grants" | "analytics">(
@@ -45,6 +50,7 @@ const RecipientProfilePage = () => {
         field: "agreement_start_date",
         direction: "desc",
     });
+    const [isVisualizationVisible, setIsVisualizationVisible] = useState(false);
 
     // Use the useEntityById hook for recipient details
     const recipientDetailsQuery = useEntityById(entityType, id);
@@ -131,7 +137,7 @@ const RecipientProfilePage = () => {
                 icon={GraduationCap}
                 metadata={metadata}
                 actions={actions}
-                entityType={entityType}
+                entityType={entityType as keyof Entity}
                 entityId={recipient.recipient_id}
                 isBookmarked={recipient.is_bookmarked}
                 location={formatCommaSeparated([
@@ -199,13 +205,41 @@ const RecipientProfilePage = () => {
         switch (activeTabId) {
             case "grants":
                 return (
-                    <GrantsList
-                        grants={allGrants}
-                        query={recipientGrantsQuery}
+                    <EntityList
+                        entityType="grant"
+                        entities={allGrants || []}
+                        renderItem={(grant: Grant) => (
+                            <GrantCard grant={grant} />
+                        )}
+                        keyExtractor={(grant: Grant) => grant.grant_id}
+                        emptyMessage={
+                            "This recipient has no associated grants in our database."
+                        }
+                        sortOptions={[
+                            {
+                                field: "agreement_start_date",
+                                label: "Date",
+                                icon: Calendar,
+                            },
+                            {
+                                field: "agreement_value",
+                                label: "Value",
+                                icon: DollarSign,
+                            },
+                        ]}
                         initialSortConfig={grantsSortConfig}
-                        emptyMessage="This recipient has no associated grants in our database."
-                        showVisualization={true}
+                        query={recipientGrantsQuery}
+                        visualizationToggle={{
+                            isVisible: isVisualizationVisible,
+                            toggle: () =>
+                                setIsVisualizationVisible(
+                                    !isVisualizationVisible
+                                ),
+                            showToggleButton: true,
+                        }}
                         viewContext={entityType}
+                        entityId={recipientId}
+                        showVisualization={true}
                     />
                 );
 

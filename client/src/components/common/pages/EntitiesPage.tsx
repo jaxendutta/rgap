@@ -4,13 +4,13 @@ import PageContainer from "@/components/common/layout/PageContainer";
 import PageHeader from "@/components/common/layout/PageHeader";
 import SearchInterface from "@/components/features/search/SearchInterface";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import { LucideIcon, Search } from "lucide-react";
+import { Calendar, DollarSign, LucideIcon, Search } from "lucide-react";
 import { SortConfig } from "@/types/search";
 import EntityList from "@/components/common/ui/EntityList";
-import GrantsList from "@/components/features/grants/GrantsList";
 import { UseInfiniteQueryResult, UseQueryResult } from "@tanstack/react-query";
 import { Button } from "@/components/common/ui/Button";
 import { Grant } from "@/types/models";
+import { GrantCard } from "@/components/features/grants/GrantCard";
 
 interface HeaderConfig {
     title: string;
@@ -47,6 +47,7 @@ type SearchConfig = FullSearchConfig | SimpleSearchConfig;
 
 interface ListConfig<T> {
     type: "grants" | "entities";
+    entityId?: number;
     query: UseInfiniteQueryResult<any, Error> | UseQueryResult<any, Error>;
     sortConfig: SortConfig<T>;
     emptyMessage: string;
@@ -192,9 +193,33 @@ const EntitiesPage = <T,>({
     // Render the appropriate list component based on the type
     const renderList = () => {
         if (listConfig.type === "grants") {
+            const [isVisualizationVisible, setIsVisualizationVisible] = React.useState<boolean>(
+                listConfig.visualizationInitiallyVisible || false
+            );
             return (
-                <GrantsList
-                    grants={getEntitiesFromQuery(listConfig.query)}
+                <EntityList
+                    entityType="grant"
+                    entities={getEntitiesFromQuery(listConfig.query)}
+                    renderItem={(grant: Grant) => <GrantCard grant={grant} />}
+                    keyExtractor={(grant: Grant) => grant.grant_id}
+                    emptyMessage={
+                        "This recipient has no associated grants in our database."
+                    }
+                    sortOptions={[
+                        {
+                            field: "agreement_start_date",
+                            label: "Date",
+                            icon: Calendar,
+                        },
+                        {
+                            field: "agreement_value",
+                            label: "Value",
+                            icon: DollarSign,
+                        },
+                    ]}
+                    initialSortConfig={
+                        listConfig.sortConfig as SortConfig<Grant>
+                    }
                     query={
                         isInfiniteQuery
                             ? (listConfig.query as UseInfiniteQueryResult<
@@ -203,15 +228,15 @@ const EntitiesPage = <T,>({
                               >)
                             : undefined
                     }
-                    initialSortConfig={
-                        listConfig.sortConfig as SortConfig<Grant>
-                    }
-                    emptyMessage={listConfig.emptyMessage}
-                    showVisualization={listConfig.showVisualization}
-                    visualizationInitiallyVisible={
-                        listConfig.visualizationInitiallyVisible
-                    }
+                    visualizationToggle={{
+                        isVisible: isVisualizationVisible,
+                        toggle: () =>
+                            setIsVisualizationVisible(!isVisualizationVisible),
+                        showToggleButton: true,
+                    }}
                     viewContext={listConfig.viewContext}
+                    entityId={listConfig.entityId}
+                    showVisualization={true}
                 />
             );
         } else {

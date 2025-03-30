@@ -1,4 +1,4 @@
-// src/pages/Re// src/components/common/ui/EntityList.tsx
+// src/components/common/ui/EntityList.tsx
 import React, { useState, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import {
@@ -18,6 +18,8 @@ import { UseQueryResult, UseInfiniteQueryResult } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/utils/cn";
 import { SortConfig } from "@/types/search";
+import TrendVisualizer from "@/components/features/visualizations/TrendVisualizer";
+import { Grant } from "@/types/models";
 
 export type LayoutVariant = "list" | "grid";
 
@@ -69,19 +71,25 @@ interface EntityListProps<T> {
     totalCount?: number;
     totalItems?: number;
 
-    // Optional visualization props
-    visualization?: React.ReactNode;
+    // Optional visualization toggle props
     visualizationToggle?: {
         isVisible: boolean;
         toggle: () => void;
         showToggleButton?: boolean;
     };
 
+    // Context for visualization
+    viewContext?: "search" | "recipient" | "institute" | "custom";
+    entityId?: number;
+
     // Optional additional class
     className?: string;
 
     // Layout toggle
     allowLayoutToggle?: boolean;
+
+    // Show visualization
+    showVisualization?: boolean;
 }
 
 function EntityList<T>(props: EntityListProps<T>) {
@@ -98,10 +106,11 @@ function EntityList<T>(props: EntityListProps<T>) {
         query,
         totalCount,
         totalItems,
-        visualization,
         visualizationToggle,
+        viewContext = "search",
         className,
         allowLayoutToggle = false,
+        showVisualization = true,
     } = props;
 
     const { ref, inView } = useInView({
@@ -254,7 +263,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                         />
                     ))}
 
-                    {visualizationToggle?.showToggleButton && visualization && (
+                    {visualizationToggle?.showToggleButton && showVisualization && (
                         <Button
                             variant="secondary"
                             size="sm"
@@ -286,7 +295,7 @@ function EntityList<T>(props: EntityListProps<T>) {
             </div>
 
             {/* Visualization Section */}
-            {visualization && visualizationToggle?.isVisible && (
+            {showVisualization && visualizationToggle?.isVisible && (
                 <AnimatePresence>
                     <motion.div
                         initial={{ opacity: 0, height: 0, scale: 0.98 }}
@@ -304,7 +313,11 @@ function EntityList<T>(props: EntityListProps<T>) {
                         }}
                         className="overflow-hidden mt-4 mb-6"
                     >
-                        {visualization}
+                        <TrendVisualizer
+                            grants={entities as Grant[]}
+                            viewContext={viewContext}
+                            height={350}
+                        />
                     </motion.div>
                 </AnimatePresence>
             )}
