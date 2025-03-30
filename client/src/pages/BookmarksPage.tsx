@@ -24,10 +24,11 @@ import { GrantCard } from "@/components/features/grants/GrantCard";
 import EntityList from "@/components/common/ui/EntityList";
 import EmptyState from "@/components/common/ui/EmptyState";
 import { SearchHistoryCard } from "@/components/features/account/SearchHistoryCard";
+import { DEFAULT_SORT_CONFIG } from "@/types/search";
 
 // Define the tab structure with correct bookmark types
 interface TabDefinition {
-    id: Entity;
+    id: keyof Entity;
     name: string;
     icon: React.ElementType;
 }
@@ -42,7 +43,7 @@ const tabs: TabDefinition[] = [
 export const BookmarksPage = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState<Entity>("grant");
+    const [activeTab, setActiveTab] = useState<keyof Entity>("grant");
 
     // Use the hook to get bookmarked item IDs
     const {
@@ -185,7 +186,11 @@ export const BookmarksPage = () => {
                         : "grid"
                 }
                 sortOptions={getSortOptions()}
-                initialSortConfig={{ field: "date", direction: "desc" }}
+                initialSortConfig={
+                    DEFAULT_SORT_CONFIG[
+                        activeTab as keyof typeof DEFAULT_SORT_CONFIG
+                    ]
+                }
                 totalCount={bookmarkedItems.length}
                 totalItems={bookmarkedItems.length}
                 emptyState={

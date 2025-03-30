@@ -9,11 +9,11 @@ const API = createAPI();
 
 export const bookmarkKeys = {
     all: ["bookmarks"] as const,
-    type: (bookmarkType: Entity) =>
+    type: (bookmarkType: keyof Entity) =>
         [...bookmarkKeys.all, bookmarkType] as const,
     user: (userId: number | null | undefined) =>
         [...bookmarkKeys.all, userId] as const,
-    userType: (bookmarkType: Entity, userId: number | null | undefined) =>
+    userType: (bookmarkType: keyof Entity, userId: number | null | undefined) =>
         [...bookmarkKeys.type(bookmarkType), userId] as const,
 };
 
@@ -21,7 +21,7 @@ export const bookmarkKeys = {
  * Hook to fetch all bookmarked IDs for a given entity type and user
  */
 export function useAllBookmarks(
-    bookmarkType: Entity,
+    bookmarkType: keyof Entity,
     userId: number | null | undefined
 ) {
     return useQuery({
@@ -55,7 +55,7 @@ export function useAllBookmarks(
  * Hook to fetch all bookmarked entities with their details
  */
 export function useBookmarkedEntities(
-    bookmarkType: Entity,
+    bookmarkType: keyof Entity,
     userId: number | null | undefined
 ) {
     return useQuery({
@@ -93,9 +93,8 @@ interface ToggleBookmarkVariables {
 
 /**
  * Hook to toggle bookmark status (add or remove)
- * Improved version with direct visual feedback
  */
-export function useToggleBookmark(bookmarkType: Entity) {
+export function useToggleBookmark(bookmarkType: keyof Entity) {
     const queryClient = useQueryClient();
     const { showNotification } = useNotification();
 

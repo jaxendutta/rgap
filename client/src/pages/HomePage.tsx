@@ -113,12 +113,12 @@ export default function HomePage() {
             </Card>
 
             {/* Features Grid */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mt-6">
                 {features.map(([title, description, Icon, link], index) => {
                     return (
                         <Card
                             key={index}
-                            className="p-6 hover:border-gray-300 transition-all duration-200"
+                            className="p-6 hover:border-gray-300 hover:shadow-md transition-all duration-200"
                             isInteractive
                             onClick={() => {
                                 navigate(link);

@@ -210,7 +210,7 @@ export function useData(
 ): UseQueryResult<any, Error> | UseInfiniteQueryResult<any, Error> {
     const queryClient = useQueryClient();
     const {
-        queryType = "regular",
+        queryType = "infinite",
         pagination = { page: 1, pageSize: 20 },
         sort = { field: "date", direction: "desc" },
         userId: explicitUserId,
@@ -236,7 +236,11 @@ export function useData(
     };
 
     // Construct query key based on endpoint, params, and options
-    const queryKey = [endpoint, queryParams, { type: queryType }];
+    const queryKey = [
+        endpoint,
+        { ...params, sortField: sort.field, sortDirection: sort.direction },
+        { type: queryType, pagination, userId },
+    ];
 
     // For complete data fetch (all pages)
     if (queryType === "complete") {
@@ -261,6 +265,7 @@ export function useData(
             ) => UseQueryResult<any, Error>;
         };
     } else {
+        // For infinite queries
         const infiniteQuery = useInfiniteQuery({
             queryKey,
             queryFn: async ({ pageParam = 1 }) => {

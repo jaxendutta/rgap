@@ -3,10 +3,11 @@ import { useState, useEffect } from "react";
 import { FileSearch2, University, UserSearch } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useGrantSearch } from "@/hooks/api/useData";
-import type { GrantSortConfig as SortConfig } from "@/types/search";
+import { DEFAULT_SORT_CONFIG } from "@/types/search";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import type { GrantSearchParams } from "@/types/search";
+import type { GrantSearchParams, SortConfig } from "@/types/search";
 import EntitiesPage from "@/components/common/pages/EntitiesPage";
+import { Grant } from "@/types/models";
 
 export const SearchPage = () => {
     const location = useLocation();
@@ -23,10 +24,9 @@ export const SearchPage = () => {
 
     // UI state controls
     const [isBookmarked, setIsBookmarked] = useState(false);
-    const [sortConfig] = useState<SortConfig>({
-        field: stateSearchParams?.sortConfig?.field || "date",
-        direction: stateSearchParams?.sortConfig?.direction || "desc",
-    });
+    const [sortConfig] = useState<SortConfig<Grant>>(
+        stateSearchParams?.sortConfig || DEFAULT_SORT_CONFIG<Grant>
+    );
 
     // Initialize filters from state if available, otherwise use defaults
     const [filters, setFilters] = useState(
@@ -124,6 +124,7 @@ export const SearchPage = () => {
                 showVisualization: true,
                 visualizationInitiallyVisible: false,
                 viewContext: "search",
+                keyExtractor: (grant: Grant) => grant.grant_id,
             }}
         />
     );

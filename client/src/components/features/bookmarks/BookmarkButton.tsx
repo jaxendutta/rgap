@@ -10,7 +10,7 @@ import { Entity } from "@/types/models";
 
 interface BookmarkButtonProps {
     entityId: number;
-    entityType: Entity;
+    entityType: keyof Entity;
     isBookmarked?: boolean;
     size?: "sm" | "md" | "lg";
     variant?: "primary" | "secondary" | "outline";

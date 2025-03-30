@@ -22,9 +22,18 @@ import { SortConfig } from "@/types/search";
 export type LayoutVariant = "list" | "grid";
 
 function isInfiniteQuery(
-    query: UseInfiniteQueryResult<any, Error> | UseQueryResult<any, Error> | null | undefined
+    query:
+        | UseInfiniteQueryResult<any, Error>
+        | UseQueryResult<any, Error>
+        | null
+        | undefined
 ): query is UseInfiniteQueryResult<any, Error> {
-    return query !== null && query !== undefined && 'fetchNextPage' in query && typeof query.fetchNextPage === "function";
+    return (
+        query !== null &&
+        query !== undefined &&
+        "fetchNextPage" in query &&
+        typeof query.fetchNextPage === "function"
+    );
 }
 
 interface EntityListProps<T> {
@@ -46,7 +55,10 @@ interface EntityListProps<T> {
     initialSortConfig?: SortConfig<T>;
 
     // Optional infinite query props
-    query?: UseInfiniteQueryResult<any, Error> | UseQueryResult<any, Error> | null;
+    query?:
+        | UseInfiniteQueryResult<any, Error>
+        | UseQueryResult<any, Error>
+        | null;
 
     // Optional loading/error state props (for manually managing these states)
     isLoading?: boolean;
@@ -138,7 +150,7 @@ function EntityList<T>(props: EntityListProps<T>) {
         }
     }, [inView, query, hasNextPage, isFetchingNextPage]);
 
-    // Enhanced sort change handler that encapsulates all the sorting logic
+    // Sort change handler that encapsulates all the sorting logic
     const handleSortChange = (field: keyof T) => {
         // Determine new sort direction
         const newDirection =
@@ -155,24 +167,17 @@ function EntityList<T>(props: EntityListProps<T>) {
         // Update internal sort state
         setSortConfig(newSortConfig);
 
-        // Handle the data refresh directly if we have a query with updateSort
-        if (query && "updateSort" in query) {
-            try {
-                (query as any).updateSort({
-                    field: String(field),
-                    direction: newDirection,
-                });
-            } catch (error) {
-                console.error("Error updating sort:", error);
-                // Fallback to manual refetch if updateSort fails
-                if (isInfiniteQuery(query)) {
-                    query.refetch();
-                }
+        // If we have a query, handle the sorting by refetching with new parameters
+        if (query) {
+            // For infinite queries that have fetchNextPage
+            if (isInfiniteQuery(query)) {
+                // Reset the cache for the infinite query and refetch
+                query.refetch();
             }
-        }
-        // For queries without updateSort method, try to refetch if possible
-        else if (query && typeof query.refetch === "function") {
-            query.refetch();
+            // For regular queries, just refetch
+            else if (typeof query.refetch === "function") {
+                query.refetch();
+            }
         }
     };
 

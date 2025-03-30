@@ -104,5 +104,10 @@ export interface SearchHistory {
     bookmarked: boolean;
 }
 
-// Entity types
-export type Entity = "recipient" | "institute" | "grant" | "search";
+// Entity type mapping
+export type Entity = {
+    recipient: Recipient;
+    institute: Institute;
+    grant: Grant;
+    search: SearchHistory;
+};

@@ -26,13 +26,13 @@ export const searchGrants = async (req, res) => {
         const {
             searchTerms = {},
             filters = {},
-            sortConfig = {},
+            sortConfig = { field: "agreement_start_date", direction: "desc" },
             pagination = { page: 1, pageSize: 20 },
-            userId = null, // Get userID from request if provided
+            userId = null,
         } = req.body;
 
-        console.log("Received search request:", {
-            userId, // Log the user ID for tracking (or null)
+        console.log("Received search request with sort:", {
+            userId,
             searchTerms,
             filters,
             sortConfig,
@@ -83,26 +83,25 @@ export const searchGrants = async (req, res) => {
 
         // Create the query parameters array with proper order matching the stored procedure
         const queryParams = [
-            userId, // p_user_id
-            searchTerms.recipient || null, // p_recipient_term
-            searchTerms.institute || null, // p_institute_term
-            searchTerms.grant || null, // p_grant_term
-            fromDate, // p_from_date
-            toDate, // p_to_date
-            valueMin, // p_value_min
-            valueMax, // p_value_max
-            agenciesJson, // p_agencies
-            countriesJson, // p_countries
-            provincesJson, // p_provinces
-            citiesJson, // p_cities
-            sortConfig.field || "date", // p_sort_field
-            sortConfig.direction || "desc", // p_sort_direction
-            pageSize, // p_page_size
-            page, // p_page
+            userId,
+            searchTerms.recipient || null,
+            searchTerms.institute || null,
+            searchTerms.grant || null,
+            fromDate,
+            toDate,
+            valueMin,
+            valueMax,
+            agenciesJson,
+            countriesJson,
+            provincesJson,
+            citiesJson,
+            sortConfig.field,
+            sortConfig.direction,
+            pageSize,
+            page,
         ];
 
-        // Log the query parameters for debugging
-        console.log("Search query parameters:", queryParams);
+        console.log("Search query parameters with sort:", queryParams);
 
         // Call the stored procedure with the correct parameter order
         const [results] = await pool.query(
@@ -222,4 +221,4 @@ export const getPopularSearches = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
     */
-}
+};

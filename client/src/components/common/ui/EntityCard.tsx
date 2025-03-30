@@ -25,7 +25,7 @@ import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
 
 interface EntityCardProps {
     entity: Institute | (Recipient & { is_bookmarked?: boolean });
-    entityType: Entity;
+    entityType: keyof Entity;
     grantsCount?: number;
     totalFunding?: number;
     latestGrantDate?: string;

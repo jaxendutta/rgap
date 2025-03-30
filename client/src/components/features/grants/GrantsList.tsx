@@ -1,15 +1,12 @@
-// src/components/features/grants/ImprovedGrantsList.tsx
+// src/components/features/grants/GrantsList.tsx (simplified)
 import React, { useState, useMemo } from "react";
-import { Calendar, DollarSign } from "lucide-react";
+import { Calendar, DollarSign, LucideIcon } from "lucide-react";
 import { Grant } from "@/types/models";
 import { GrantCard } from "./GrantCard";
 import { UseInfiniteQueryResult } from "@tanstack/react-query";
 import EntityList from "@/components/common/ui/EntityList";
 import { SortConfig } from "@/types/search";
 import { TrendVisualizer } from "@/components/features/visualizations/TrendVisualizer";
-
-export type GrantSortField = "date" | "value";
-export type SortDirection = "asc" | "desc";
 
 interface GrantsListProps {
     // Complete data
@@ -45,12 +42,15 @@ const GrantsList: React.FC<GrantsListProps> = ({
     viewContext = "search",
     doNotShowVisualizationToggle = false,
 }) => {
-    // Local sort state (used in direct data mode)
-    const [sortConfig] = useState<SortConfig<Grant>>(initialSortConfig);
-
     // State for visualization
     const [isVisualizationVisible, setIsVisualizationVisible] = useState(
         visualizationInitiallyVisible
+    );
+
+    // Process the initial sort config to make it suitable for display
+    const displaySortConfig = useMemo(
+        () => initialSortConfig,
+        [initialSortConfig]
     );
 
     // Get grants for visualization from props or from the infinite query (all pages)
@@ -70,24 +70,33 @@ const GrantsList: React.FC<GrantsListProps> = ({
         return [];
     }, [query?.data, grants]);
 
+    // Define sort options for EntityList
+    const sortOptions: {
+        field: keyof Grant;
+        label: string;
+        icon: LucideIcon;
+    }[] = [
+        {
+            field: "agreement_start_date",
+            label: "Date",
+            icon: Calendar,
+        },
+        {
+            field: "agreement_value",
+            label: "Value",
+            icon: DollarSign,
+        },
+    ];
+
     return (
         <EntityList
             entityType="grant"
             entities={getVisibleGrants}
             renderItem={(grant: Grant) => <GrantCard grant={grant} />}
-            keyExtractor={(grant: Grant, index: number) =>
-                grant.grant_id || `grant-${index}`
-            }
+            keyExtractor={(grant: Grant) => grant.grant_id}
             emptyMessage={emptyMessage}
-            sortOptions={[
-                {
-                    field: "agreement_start_date",
-                    label: "Date",
-                    icon: Calendar,
-                },
-                { field: "agreement_value", label: "Value", icon: DollarSign },
-            ]}
-            initialSortConfig={sortConfig}
+            sortOptions={sortOptions}
+            initialSortConfig={displaySortConfig}
             query={query}
             totalCount={
                 query?.data?.pages[0]?.metadata?.totalCount ||

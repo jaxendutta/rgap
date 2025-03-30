@@ -18,6 +18,7 @@ import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
 import { useNavigate } from "react-router-dom";
 import { useDeleteSearchHistory } from "@/hooks/api/useSearchHistory";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
+import { DEFAULT_SORT_CONFIG } from "@/types/search";
 
 interface SearchHistoryCardProps {
     data: SearchHistory;
@@ -35,7 +36,7 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
             grant: "",
         },
         filters: DEFAULT_FILTER_STATE,
-        sortConfig: { field: "date", direction: "desc" },
+        sortConfig: { field: "agreement_start_date", direction: "desc" },
     };
 
     // Extract search terms
@@ -189,10 +190,8 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
                     : typeof searchParams.filters === "string"
                     ? JSON.parse(searchParams.filters)
                     : DEFAULT_FILTER_STATE,
-            sortConfig: searchParams.sortConfig || {
-                field: "date",
-                direction: "desc",
-            },
+            sortConfig:
+                searchParams.sortConfig || DEFAULT_SORT_CONFIG<SearchHistory>,
         };
 
         // Navigate to search page with validated params in the state
