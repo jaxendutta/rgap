@@ -27,18 +27,35 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
     const { showNotification } = useNotification();
     const navigate = useNavigate();
 
-    // Ensure searchParams is properly structured
+    // Make sure searchParams is properly structured and has a default structure if missing
     const searchParams = data.search_params || {
-        searchTerms: {},
+        searchTerms: {
+            recipient: "",
+            institute: "",
+            grant: "",
+        },
         filters: DEFAULT_FILTER_STATE,
         sortConfig: { field: "date", direction: "desc" },
     };
 
-    // Extract search terms - ensure searchTerms exists and is an object
-    const searchTermsObj =
-        typeof searchParams.searchTerms === "object"
-            ? searchParams.searchTerms
-            : { recipient: "", institute: "", grant: "" };
+    // Extract search terms
+    let searchTermsObj;
+
+    if (typeof searchParams.searchTerms === "object") {
+        // Object format - use directly
+        searchTermsObj = searchParams.searchTerms;
+    } else if (typeof searchParams.searchTerms === "string") {
+        // JSON string format - parse it
+        try {
+            searchTermsObj = JSON.parse(searchParams.searchTerms);
+        } catch (e) {
+            console.warn("Failed to parse search terms:", e);
+            searchTermsObj = { recipient: "", institute: "", grant: "" };
+        }
+    } else {
+        // Fallback to empty object
+        searchTermsObj = { recipient: "", institute: "", grant: "" };
+    }
 
     // Create a standardized list of search term entries
     const searchTerms = [
@@ -67,21 +84,32 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
     // Helper function to get active filters
     const getActiveFilters = () => {
         const activeFilters = [];
-        // Ensure filters is an object, defaulting to DEFAULT_FILTER_STATE if not
-        const filters =
-            typeof searchParams.filters === "object"
-                ? searchParams.filters
-                : DEFAULT_FILTER_STATE;
+
+        // Handle filters - ensure it's an object
+        let filters;
+
+        if (typeof searchParams.filters === "object") {
+            filters = searchParams.filters;
+        } else if (typeof searchParams.filters === "string") {
+            try {
+                filters = JSON.parse(searchParams.filters);
+            } catch (e) {
+                console.warn("Failed to parse filters:", e);
+                filters = DEFAULT_FILTER_STATE;
+            }
+        } else {
+            filters = DEFAULT_FILTER_STATE;
+        }
 
         // Date range filter
         if (
             filters.dateRange &&
             ((filters.dateRange.from !== undefined &&
                 new Date(filters.dateRange.from) >
-                    FILTER_LIMITS.DATE_VALUE.MIN) ||
+                    new Date(FILTER_LIMITS.DATE_VALUE.MIN)) ||
                 (filters.dateRange.to !== undefined &&
                     new Date(filters.dateRange.to) <
-                        FILTER_LIMITS.DATE_VALUE.MAX))
+                        new Date(FILTER_LIMITS.DATE_VALUE.MAX)))
         ) {
             activeFilters.push({
                 type: "dateRange",
@@ -98,17 +126,19 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
         if (
             filters.valueRange &&
             ((filters.valueRange.min !== undefined &&
-                filters.valueRange.min > 0) ||
+                Number(filters.valueRange.min) > 0) ||
                 (filters.valueRange.max !== undefined &&
-                    filters.valueRange.max < FILTER_LIMITS.GRANT_VALUE.MAX))
+                    Number(filters.valueRange.max) <
+                        FILTER_LIMITS.GRANT_VALUE.MAX))
         ) {
             activeFilters.push({
                 type: "valueRange",
                 label: "Value",
                 value: `${formatCurrency(
-                    filters.valueRange.min || 0
+                    Number(filters.valueRange.min) || 0
                 )} - ${formatCurrency(
-                    filters.valueRange.max || FILTER_LIMITS.GRANT_VALUE.MAX
+                    Number(filters.valueRange.max) ||
+                        FILTER_LIMITS.GRANT_VALUE.MAX
                 )}`,
             });
         }
@@ -146,6 +176,7 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
     const hasFilters = activeFilters.length > 0;
 
     const handleRerunSearch = () => {
+        // Create a validated search params object
         const validatedParams = {
             searchTerms: {
                 recipient: searchTermsObj.recipient || "",
@@ -155,15 +186,14 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
             filters:
                 typeof searchParams.filters === "object"
                     ? searchParams.filters
+                    : typeof searchParams.filters === "string"
+                    ? JSON.parse(searchParams.filters)
                     : DEFAULT_FILTER_STATE,
             sortConfig: searchParams.sortConfig || {
                 field: "date",
                 direction: "desc",
             },
         };
-
-        // Log the search params for debugging
-        console.log("Rerunning search with params:", validatedParams);
 
         // Navigate to search page with validated params in the state
         navigate("/search", { state: { searchParams: validatedParams } });
@@ -173,9 +203,9 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
     const deleteSearchHistoryMutation = useDeleteSearchHistory();
 
     // Handle deletion of a search history entry
-    const handleDeleteHistory = async (historyId: number) => {
+    const handleDeleteHistory = async () => {
         try {
-            await deleteSearchHistoryMutation.mutateAsync(historyId);
+            await deleteSearchHistoryMutation.mutateAsync(data.history_id);
             showNotification("History entry deleted successfully!", "success");
         } catch (error: any) {
             showNotification(
@@ -274,7 +304,7 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
                     pill={true}
                     size="sm"
                     leftIcon={Trash2}
-                    onClick={() => handleDeleteHistory(data.history_id)}
+                    onClick={handleDeleteHistory}
                     className="text-red-600 hover:bg-red-50"
                 >
                     <span className="hidden md:inline">Delete</span>

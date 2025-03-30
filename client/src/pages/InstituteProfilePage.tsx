@@ -51,9 +51,7 @@ const InstituteProfilePage = () => {
         field: "agreement_start_date",
         direction: "desc",
     });
-    const [recipientsSortConfig] = useState<
-        SortConfig<Recipient>
-    >({
+    const [recipientsSortConfig] = useState<SortConfig<Recipient>>({
         field: "total_funding",
         direction: "desc",
     });
@@ -214,7 +212,7 @@ const InstituteProfilePage = () => {
     };
 
     // Render functions for recipient items
-    const renderRecipientItem = (recipient: any) => {
+    const renderRecipientItem = (recipient: Recipient) => {
         return (
             <EntityCard
                 entity={recipient}
@@ -225,8 +223,7 @@ const InstituteProfilePage = () => {
     };
 
     // Key extractor for recipients
-    const keyExtractor = (recipient: any) =>
-        `recipient-${recipient.recipient_id}`;
+    const keyExtractor = (recipient: any) => recipient.recipient_id;
 
     const renderTabContent = (activeTabId: string) => {
         if (!institute) return null;

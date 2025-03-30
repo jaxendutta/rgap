@@ -12,13 +12,13 @@ const RecipientsPage = () => {
     // State for search terms, filters, and sort
     const [searchTerms, setSearchTerms] = useState({ name: "" });
     const [isSearching, setIsSearching] = useState(false);
-    const [sortConfig, setSortConfig] = useState<SortConfig>({
+    const [sortConfig, setSortConfig] = useState<SortConfig<Recipient>>({
         field: "total_funding",
         direction: "desc",
     });
     const [filters, setFilters] = useState(DEFAULT_FILTER_STATE);
 
-    // Use our new unified data hooks with bookmarking support
+    // Use unified data hooks with bookmarking support
     const recipientsQuery = useRecipients({
         queryType: "infinite",
         sort: sortConfig,
@@ -62,11 +62,10 @@ const RecipientsPage = () => {
     };
 
     // Key extractor for recipient items
-    const keyExtractor = (recipient: Recipient) =>
-        `recipient-${recipient.recipient_id}`;
+    const keyExtractor = (recipient: Recipient) => recipient.recipient_id;
 
     // Handle sorting changes
-    const handleSortChange = (newSortConfig: SortConfig) => {
+    const handleSortChange = (newSortConfig: SortConfig<Recipient>) => {
         setSortConfig(newSortConfig);
     };
 

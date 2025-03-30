@@ -199,11 +199,15 @@ export function useCompleteData(
  * Enhanced universal hook for fetching data with bookmarking support
  * Supports "complete" queryType for fetching all data
  */
+/**
+ * Enhanced universal hook for fetching data with bookmarking support
+ * Supports "complete" queryType for fetching all data
+ */
 export function useData(
     endpoint: string,
     params: Record<string, any> = {},
     options: DataFetchOptions = {}
-) {
+): UseQueryResult<any, Error> | UseInfiniteQueryResult<any, Error> {
     const queryClient = useQueryClient();
     const {
         queryType = "regular",
@@ -251,11 +255,12 @@ export function useData(
         return {
             ...completeQuery,
             updateSort,
+        } as UseQueryResult<any, Error> & {
+            updateSort: (
+                newSortConfig: SortParams
+            ) => UseQueryResult<any, Error>;
         };
-    }
-
-    // For infinite queries
-    if (queryType === "infinite") {
+    } else {
         const infiniteQuery = useInfiniteQuery({
             queryKey,
             queryFn: async ({ pageParam = 1 }) => {
@@ -302,6 +307,8 @@ export function useData(
         return {
             ...infiniteQuery,
             updateSort,
+        } as UseInfiniteQueryResult<any, Error> & {
+            updateSort: (newSortConfig: SortParams) => void;
         };
     }
 }

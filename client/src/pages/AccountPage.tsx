@@ -1,5 +1,5 @@
 // src/pages/AccountPage.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     User,
@@ -12,6 +12,8 @@ import {
     Trash2,
     AlertCircle,
     X,
+    Search,
+    Hash,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/common/ui/Card";
@@ -26,6 +28,11 @@ import { useUser } from "@/hooks/api/useUser";
 import { useUserSearchHistory } from "@/hooks/api/useSearchHistory";
 import EntityList from "@/components/common/ui/EntityList";
 import { SearchHistory } from "@/types/models";
+import createAPI from "@/utils/api";
+import EmptyState from "@/components/common/ui/EmptyState";
+import { getDataFromResult, getTotalFromResult } from "@/hooks/api/useData";
+
+const API = createAPI();
 
 const TABS = [
     { id: "profile", label: "Profile", icon: User },
@@ -41,7 +48,7 @@ export default function AccountPage() {
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
 
-    // local state for editable profile info and password fields
+    // Local state for editable profile info and password fields
     const [editName, setEditName] = useState("");
     const [editEmail, setEditEmail] = useState("");
     const [currentPassword, setCurrentPassword] = useState("");
@@ -59,10 +66,16 @@ export default function AccountPage() {
     const [confirmEmail, setConfirmEmail] = useState("");
     const [emailError, setEmailError] = useState("");
 
-    // Get search history using the hook - Initialize with user_id
-    const searchHistoryQuery = user?.user_id
-        ? useUserSearchHistory(user.user_id, "search_time", "desc")
-        : undefined;
+    // Get search history using the hook with proper infinite query pagination
+    const searchHistoryQuery = useUserSearchHistory(
+        user?.user_id,
+        "search_time",
+        "desc"
+    );
+
+    const paginatedSearchHistory = useMemo(() => {
+        return getDataFromResult(searchHistoryQuery);
+    }, [searchHistoryQuery.data]);
 
     // If no user is logged in, redirect to the login page
     useEffect(() => {
@@ -71,15 +84,16 @@ export default function AccountPage() {
         }
     }, [user, navigate]);
 
+    useEffect(() => {
+        if (user) {
+            setEditName(user.name);
+            setEditEmail(user.email);
+        }
+    }, [user]);
+
     if (!user) {
         return null;
     }
-
-    // Initialize the local state with user profile data when AccountPage loads
-    useEffect(() => {
-        setEditName(user.name);
-        setEditEmail(user.email);
-    }, [user]);
 
     // Profile update in Account Settings
     const handleProfileUpdate = async () => {
@@ -87,24 +101,14 @@ export default function AccountPage() {
         setUpdateLoading(true);
 
         try {
-            const response = await fetch("/auth/update-profile", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    user_id: user.user_id,
-                    name: editName,
-                    email: editEmail,
-                }),
+            await API.put("/auth/update-profile", {
+                user_id: user.user_id,
+                name: editName,
+                email: editEmail,
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || "Profile update failed");
-            }
-
             // Update the AuthContext with new user info
-            updateUser({ name: data.name, email: data.email });
+            updateUser({ name: editName, email: editEmail });
             showNotification("Profile updated successfully!", "success");
         } catch (err: any) {
             setUpdateError(err.message || "Profile update failed.");
@@ -124,21 +128,11 @@ export default function AccountPage() {
         setUpdateLoading(true);
 
         try {
-            const response = await fetch("/auth/update-password", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    user_id: user.user_id,
-                    currentPassword,
-                    newPassword,
-                }),
+            await API.put("/auth/update-password", {
+                user_id: user.user_id,
+                currentPassword,
+                newPassword,
             });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || "Password update failed");
-            }
 
             showNotification("Password updated successfully!", "success");
             // Clear password fields after success
@@ -210,9 +204,9 @@ export default function AccountPage() {
     };
 
     // Function to render a search history item
-    const renderSearchHistoryItem = (search: SearchHistory) => (
-        <SearchHistoryCard key={search.history_id} data={search} />
-    );
+    const renderSearchHistoryItem = (search: SearchHistory) => {
+        return <SearchHistoryCard data={search} />;
+    };
 
     return (
         <PageContainer>
@@ -261,6 +255,7 @@ export default function AccountPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.2 }}
+                    className="mt-6"
                 >
                     {/* Profile Settings */}
                     {activeTab === "profile" && (
@@ -310,6 +305,7 @@ export default function AccountPage() {
                             </div>
                         </Card>
                     )}
+
                     {/* Security Settings */}
                     {activeTab === "security" && (
                         <Card className="p-6 space-y-6">
@@ -441,15 +437,17 @@ export default function AccountPage() {
                         </Card>
                     )}
 
+                    {/* Search History Tab */}
                     {activeTab === "history" && (
                         <Card className="p-4 lg:p-6">
                             {user && (
-                                <EntityList
+                                <EntityList<SearchHistory>
                                     entityType="search"
+                                    entities={paginatedSearchHistory}
                                     query={searchHistoryQuery}
                                     renderItem={renderSearchHistoryItem}
-                                    keyExtractor={(search) =>
-                                        `search-history-${search.history_id}`
+                                    keyExtractor={(search: SearchHistory) =>
+                                        search.history_id
                                     }
                                     variant="list"
                                     sortOptions={[
@@ -460,7 +458,7 @@ export default function AccountPage() {
                                         },
                                         {
                                             label: "Results",
-                                            icon: History,
+                                            icon: Hash,
                                             field: "result_count",
                                         },
                                     ]}
@@ -468,7 +466,23 @@ export default function AccountPage() {
                                         field: "search_time",
                                         direction: "desc",
                                     }}
-                                    emptyMessage="You have no recorded search history."
+                                    emptyState={
+                                        <EmptyState
+                                            title="No Search History"
+                                            message="You haven't searched for any grants yet."
+                                            icon={History}
+                                            primaryAction={{
+                                                label: "Start Searching",
+                                                onClick: () =>
+                                                    navigate("/search"),
+                                                icon: Search,
+                                            }}
+                                        />
+                                    }
+                                    totalCount={getTotalFromResult(
+                                        searchHistoryQuery
+                                    )}
+                                    totalItems={paginatedSearchHistory.length}
                                 />
                             )}
                         </Card>

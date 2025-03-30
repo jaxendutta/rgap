@@ -14,7 +14,7 @@ import { Button } from "./Button";
 import LoadingState from "./LoadingState";
 import EmptyState from "./EmptyState";
 import ErrorState from "./ErrorState";
-import { UseInfiniteQueryResult } from "@tanstack/react-query";
+import { UseQueryResult, UseInfiniteQueryResult } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/utils/cn";
 import { SortConfig } from "@/types/search";
@@ -22,9 +22,9 @@ import { SortConfig } from "@/types/search";
 export type LayoutVariant = "list" | "grid";
 
 function isInfiniteQuery(
-    query: any
+    query: UseInfiniteQueryResult<any, Error> | UseQueryResult<any, Error> | null | undefined
 ): query is UseInfiniteQueryResult<any, Error> {
-    return query && typeof query.fetchNextPage === "function";
+    return query !== null && query !== undefined && 'fetchNextPage' in query && typeof query.fetchNextPage === "function";
 }
 
 interface EntityListProps<T> {
@@ -32,9 +32,10 @@ interface EntityListProps<T> {
     entityType: string;
     entities?: T[];
     renderItem: (item: T, index: number) => React.ReactNode;
-    keyExtractor: (item: T, index: number) => string | number;
+    keyExtractor: (item: T, index: number) => number;
     variant?: LayoutVariant;
     emptyMessage?: string;
+    emptyState?: React.ReactNode;
 
     // Sorting props
     sortOptions: Array<{
@@ -45,13 +46,12 @@ interface EntityListProps<T> {
     initialSortConfig?: SortConfig<T>;
 
     // Optional infinite query props
-    query?: UseInfiniteQueryResult<any, Error>;
+    query?: UseInfiniteQueryResult<any, Error> | UseQueryResult<any, Error> | null;
 
     // Optional loading/error state props (for manually managing these states)
     isLoading?: boolean;
     isError?: boolean;
     error?: Error | unknown;
-    emptyState?: React.ReactNode;
 
     // Optional metadata counts
     totalCount?: number;

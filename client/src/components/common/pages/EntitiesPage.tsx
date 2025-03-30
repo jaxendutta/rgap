@@ -56,7 +56,7 @@ interface ListConfig<T> {
     variant?: "list" | "grid";
     entityType?: string;
     renderItem?: (item: any) => React.ReactNode;
-    keyExtractor?: (item: any, index: number) => string;
+    keyExtractor: (item: any, index: number) => number;
     sortOptions?: Array<{
         field: string;
         label: string;
@@ -196,9 +196,16 @@ const EntitiesPage = <T,>({
                 <GrantsList
                     grants={getEntitiesFromQuery(listConfig.query)}
                     query={
-                        listConfig.query as UseInfiniteQueryResult<any, Error>
+                        isInfiniteQuery
+                            ? (listConfig.query as UseInfiniteQueryResult<
+                                  any,
+                                  Error
+                              >)
+                            : undefined
                     }
-                    initialSortConfig={listConfig.sortConfig as SortConfig<Grant>}
+                    initialSortConfig={
+                        listConfig.sortConfig as SortConfig<Grant>
+                    }
                     emptyMessage={listConfig.emptyMessage}
                     showVisualization={listConfig.showVisualization}
                     visualizationInitiallyVisible={
@@ -219,10 +226,7 @@ const EntitiesPage = <T,>({
                         listConfig.renderItem ||
                         ((item) => <div>{JSON.stringify(item)}</div>)
                     }
-                    keyExtractor={
-                        listConfig.keyExtractor ||
-                        ((_, index) => `entity-${index}`)
-                    }
+                    keyExtractor={listConfig.keyExtractor}
                     variant={listConfig.variant || "list"}
                     sortOptions={
                         listConfig.sortOptions?.map((option) => ({
@@ -231,14 +235,7 @@ const EntitiesPage = <T,>({
                         })) || []
                     }
                     initialSortConfig={listConfig.sortConfig}
-                    query={
-                        isInfiniteQuery
-                            ? (listConfig.query as UseInfiniteQueryResult<
-                                  any,
-                                  Error
-                              >)
-                            : undefined
-                    }
+                    query={listConfig.query} // Pass the query directly, regardless of type
                     isLoading={listConfig.query.isLoading}
                     isError={listConfig.query.isError}
                     error={listConfig.query.error}

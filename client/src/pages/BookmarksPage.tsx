@@ -91,15 +91,13 @@ export const BookmarksPage = () => {
     const keyExtractor = (item: any) => {
         switch (activeTab) {
             case "grant":
-                return `bookmarked-grant-${item.grant_id || item.ref_number}`;
+                return item.grant_id;
             case "recipient":
-                return `bookmarked-recipient-${item.recipient_id}`;
+                return item.recipient_id;
             case "institute":
-                return `bookmarked-institute-${item.institute_id}`;
+                return item.institute_id;
             case "search":
-                return `bookmarked-search-${item.history_id}`;
-            default:
-                return `bookmark-${Math.random()}`;
+                return item.history_id;
         }
     };
 

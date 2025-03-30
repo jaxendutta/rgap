@@ -6,9 +6,9 @@ import {
     UseInfiniteQueryResult,
 } from "@tanstack/react-query";
 import { SearchHistory } from "@/types/models";
-import { GrantSearchParams } from "@/types/search";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import createAPI from "@/utils/api";
+import { GrantSearchParams } from "@/types/search";
 
 const API = createAPI();
 
@@ -37,7 +37,7 @@ export const adaptSearchHistory = (rawHistory: any[]): SearchHistory[] => {
             }
         } catch (e) {
             console.error("Error parsing search filters:", e);
-            searchFilters = {};
+            searchFilters = DEFAULT_FILTER_STATE;
         }
 
         // Build structured search params
@@ -64,52 +64,68 @@ export const adaptSearchHistory = (rawHistory: any[]): SearchHistory[] => {
 
 /**
  * Hook to fetch user search history with adaptation to structured format
+ * This uses a direct approach with useInfiniteQuery to ensure correct typing
  */
 export function useUserSearchHistory(
     userId?: number | null,
     sortField = "search_time",
-    sortDirection = "desc",
-    limit = 20
-): UseInfiniteQueryResult<SearchHistory[], Error> {
+    sortDirection = "desc"
+): UseInfiniteQueryResult<any, Error> {
+    const pageSize = 10; // Consistent page size
+
     return useInfiniteQuery({
         queryKey: searchHistoryKeys.list({ userId, sortField, sortDirection }),
         queryFn: async ({ pageParam = 1 }) => {
-            if (!userId)
+            if (!userId) {
                 return {
                     data: [],
                     metadata: {
                         totalCount: 0,
                         page: 1,
-                        pageSize: limit,
+                        pageSize,
                         totalPages: 0,
                     },
                 };
+            }
 
             try {
+                console.log(
+                    `Fetching search history page ${pageParam} for user ${userId}`
+                );
+
+                // Use the parameters expected by the server endpoint
                 const response = await API.get(`/search-history/${userId}`, {
                     params: {
                         sortField,
                         sortDirection,
                         page: pageParam,
-                        limit,
+                        pageSize,
                     },
                 });
 
                 // Process the search history data
                 const searchHistories = adaptSearchHistory(
-                    response.data.searches || []
+                    response.data.data || []
                 );
 
-                // Return the data in a format that matches what EntityList expects for infinite queries
+                console.log(
+                    `Fetched ${searchHistories.length} search history entries`
+                );
+
+                console.log(
+                    `Search history metadata: ${JSON.stringify(
+                        response.data.metadata || {}
+                    )}`
+                );
+
+                // Return in the format expected by react-query's useInfiniteQuery
                 return {
                     data: searchHistories,
                     metadata: {
-                        totalCount: response.data.totalCount || 0,
-                        page: Number(pageParam),
-                        pageSize: limit,
-                        totalPages: Math.ceil(
-                            (response.data.totalCount || 0) / limit
-                        ),
+                        totalCount: response.data.metadata.totalCount,
+                        page: pageParam,
+                        pageSize,
+                        totalPages: response.data.metadata.totalPages,
                     },
                 };
             } catch (error) {
@@ -137,6 +153,7 @@ export function useDeleteSearchHistory() {
 
     return useMutation({
         mutationFn: async (historyId: number) => {
+            console.log(`Deleting search history entry: ${historyId}`);
             const response = await API.delete(`/search-history/${historyId}`);
             return response.data;
         },

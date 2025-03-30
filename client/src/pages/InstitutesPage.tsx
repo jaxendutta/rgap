@@ -12,13 +12,13 @@ const InstitutesPage = () => {
     // State for search terms, filters, and sort
     const [searchTerms, setSearchTerms] = useState({ name: "" });
     const [isSearching, setIsSearching] = useState(false);
-    const [sortConfig, setSortConfig] = useState<SortConfig>({
+    const [sortConfig, setSortConfig] = useState<SortConfig<Institute>>({
         field: "recipient_count",
         direction: "desc",
     });
     const [filters, setFilters] = useState(DEFAULT_FILTER_STATE);
 
-    // Use our new unified data hooks with bookmarking support
+    // Use unified data hooks with bookmarking support
     const institutesQuery = useInstitutes({
         queryType: "infinite",
         sort: sortConfig,
@@ -62,11 +62,10 @@ const InstitutesPage = () => {
     };
 
     // Key extractor for institute items
-    const keyExtractor = (institute: Institute) =>
-        `institute-${institute.institute_id}`;
+    const keyExtractor = (institute: Institute) => institute.institute_id;
 
     // Handle sorting changes
-    const handleSortChange = (newSortConfig: SortConfig) => {
+    const handleSortChange = (newSortConfig: SortConfig<Institute>) => {
         setSortConfig(newSortConfig);
     };
 
