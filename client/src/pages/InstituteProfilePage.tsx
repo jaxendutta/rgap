@@ -18,7 +18,6 @@ import {
     useInstituteRecipients,
     useAllInstituteRecipients,
     getDataFromResult,
-    getTotalFromResult,
 } from "@/hooks/api/useData";
 import EntityProfilePage from "@/components/common/pages/EntityProfilePage";
 import EntityList from "@/components/common/ui/EntityList";
@@ -106,6 +105,11 @@ const InstituteProfilePage = () => {
     const paginatedRecipients = useMemo(() => {
         return getDataFromResult(instituteRecipientsQuery);
     }, [instituteRecipientsQuery.data]);
+
+    // Extract paginated grants for the UI
+    const paginatedGrants = useMemo(() => {
+        return getDataFromResult(instituteGrantsQuery);
+    }, [instituteGrantsQuery.data]);
 
     // Define tabs for the TabNavigation component
     const tabs = [
@@ -250,12 +254,7 @@ const InstituteProfilePage = () => {
                         ]}
                         initialSortConfig={recipientsSortConfig}
                         query={instituteRecipientsQuery}
-                        totalCount={getTotalFromResult(
-                            instituteRecipientsQuery
-                        )}
-                        totalItems={paginatedRecipients.length}
                         emptyMessage="This institute has no associated recipients in our database."
-                        allowLayoutToggle={true}
                         showVisualization={true}
                         visualizationToggle={
                             showVisualization
@@ -270,6 +269,7 @@ const InstituteProfilePage = () => {
                                   }
                                 : undefined
                         }
+                        visualizationData={allGrants}
                     />
                 );
 
@@ -277,11 +277,12 @@ const InstituteProfilePage = () => {
                 return (
                     <EntityList
                         entityType="grant"
-                        entities={allGrants}
+                        entities={paginatedGrants}
                         renderItem={(grant: Grant) => (
                             <GrantCard grant={grant} />
                         )}
                         keyExtractor={(grant: Grant) => grant.grant_id}
+                        variant="list"
                         emptyMessage={
                             "This institute has no associated grants in our database."
                         }
@@ -310,6 +311,7 @@ const InstituteProfilePage = () => {
                         viewContext={entityType}
                         entityId={instituteId}
                         showVisualization={true}
+                        visualizationData={allGrants}
                     />
                 );
 

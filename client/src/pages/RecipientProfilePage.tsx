@@ -240,6 +240,7 @@ const RecipientProfilePage = () => {
                         viewContext={entityType}
                         entityId={recipientId}
                         showVisualization={true}
+                        visualizationData={allGrants}
                     />
                 );
 

@@ -327,7 +327,7 @@ export function useSearchData(
     options: DataFetchOptions = {}
 ): UseQueryResult<any, Error> | UseInfiniteQueryResult<any, Error> {
     const {
-        queryType = "infinite",
+        queryType = options.queryType,
         pagination = { page: 1, pageSize: 20 },
         userId: explicitUserId,
         enabled = true,
@@ -438,10 +438,8 @@ export function useSearchData(
                     : "success",
             fetchStatus: infiniteQuery.fetchStatus,
         } as UseQueryResult<any, Error>;
-    }
-
-    // For infinite queries
-    if (queryType === "infinite") {
+    } else {
+        // For infinite queries
         return useInfiniteQuery({
             queryKey,
             queryFn: async ({ pageParam = 1 }) => {
@@ -471,26 +469,6 @@ export function useSearchData(
             ...queryOptions,
         }) as UseInfiniteQueryResult<any, Error>;
     }
-
-    // For regular queries
-    return useQuery({
-        queryKey,
-        queryFn: async () => {
-            const payload = {
-                ...searchParams,
-                pagination: {
-                    page: pagination.page,
-                    pageSize: pagination.pageSize,
-                },
-                userId,
-            };
-
-            const response = await API.post(endpoint, payload);
-            return response.data;
-        },
-        enabled,
-        ...queryOptions,
-    }) as UseQueryResult<any, Error>;
 }
 
 /**
@@ -881,6 +859,20 @@ export function useSearchInstitutes(
 export function useGrantSearch(
     searchParams: GrantSearchParams,
     options: DataFetchOptions = {}
-) {
-    return useSearchData("/search", searchParams, options);
+): UseInfiniteQueryResult<any, Error> {
+    return useSearchData(
+        "/search",
+        searchParams,
+        options
+    ) as UseInfiniteQueryResult<any, Error>;
+}
+
+export function useAllGrantSearch(
+    searchParams: GrantSearchParams,
+    options: DataFetchOptions = {}
+): UseQueryResult<any, Error> {
+    return useSearchData("/search", searchParams, {
+        ...options,
+        queryType: "complete",
+    });
 }

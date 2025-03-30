@@ -39,7 +39,7 @@ export type GroupingDimension =
 export type ViewContext = "search" | "recipient" | "institute" | "custom";
 
 interface TrendVisualizerProps {
-    // The grants data to visualize - can be direct grants or entity info to fetch all grants
+    // The grants data to visualize
     grants?: Grant[];
     entityId?: number;
     entityType?: "recipient" | "institute";
@@ -100,7 +100,7 @@ const getDefaultGroupings = (viewContext: ViewContext): GroupingDimension[] => {
 };
 
 export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
-    grants,
+    grants = [],
     amendmentsHistory,
     viewContext = "search",
     initialChartType = "line",
@@ -113,6 +113,11 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
     title,
     showControls = true,
 }) => {
+    // Check if the data is empty
+    const hasData =
+        grants.length > 0 ||
+        (amendmentsHistory && amendmentsHistory.length > 0);
+
     // Determine if we're visualizing a single grant's amendments
     const isAmendmentView = !!amendmentsHistory && amendmentsHistory.length > 0;
 
@@ -132,6 +137,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
             initialGrouping ||
                 (effectiveAvailableGroupings[0] as GroupingDimension)
         );
+
     // Add loading and error states
     const [isLoading] = useState(false);
     const [error] = useState<string | null>(null);
@@ -304,8 +310,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
         }
 
         // Otherwise process the regular grants data
-        if (!grants || grants.length === 0)
-            return { data: [], categories: [] };
+        if (!grants || grants.length === 0) return { data: [], categories: [] };
 
         const yearMap = new Map();
         const uniqueCategories = new Set<string>();
@@ -450,9 +455,15 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
         return <div className="text-red-500 text-sm p-3">{error}</div>;
     }
 
-    // If no data available, don't render anything
-    if ((!grants || grants.length === 0) && !isAmendmentView) {
-        return null;
+    // If no data available, show a message
+    if (!hasData) {
+        return (
+            <Card className={cn("p-6", className)}>
+                <div className="text-gray-500 text-center py-4">
+                    No data available for visualization
+                </div>
+            </Card>
+        );
     }
 
     // Special title for amendment view

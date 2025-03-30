@@ -48,12 +48,13 @@ type SearchConfig = FullSearchConfig | SimpleSearchConfig;
 interface ListConfig<T> {
     type: "grants" | "entities";
     entityId?: number;
-    query: UseInfiniteQueryResult<any, Error> | UseQueryResult<any, Error>;
+    query: UseInfiniteQueryResult<any, Error>;
     sortConfig: SortConfig<T>;
     emptyMessage: string;
     showVisualization?: boolean;
+    visualizationData?: Grant[];
     visualizationInitiallyVisible?: boolean;
-    viewContext?: "search" | "recipient" | "institute" | "custom";
+    viewContext: "search" | "recipient" | "institute" | "custom";
     variant?: "list" | "grid";
     entityType?: string;
     renderItem?: (item: any) => React.ReactNode;
@@ -93,30 +94,6 @@ const EntitiesPage = <T,>({
 
         // Otherwise, it's a regular query
         return query.data?.data || [];
-    };
-
-    // Determine if this is an infinite query
-    const isInfiniteQuery = "fetchNextPage" in listConfig.query;
-
-    // Get metadata safely
-    const getMetadata = () => {
-        if (!listConfig.query.data) {
-            return { totalCount: 0 };
-        }
-
-        if (
-            isInfiniteQuery &&
-            "pages" in listConfig.query.data &&
-            listConfig.query.data.pages.length > 0
-        ) {
-            return (
-                listConfig.query.data.pages[0].metadata || {
-                    totalCount: 0,
-                }
-            );
-        }
-
-        return listConfig.query.data.metadata || { totalCount: 0 };
     };
 
     // Render the appropriate search interface
@@ -193,9 +170,10 @@ const EntitiesPage = <T,>({
     // Render the appropriate list component based on the type
     const renderList = () => {
         if (listConfig.type === "grants") {
-            const [isVisualizationVisible, setIsVisualizationVisible] = React.useState<boolean>(
-                listConfig.visualizationInitiallyVisible || false
-            );
+            const [isVisualizationVisible, setIsVisualizationVisible] =
+                React.useState<boolean>(
+                    listConfig.visualizationInitiallyVisible || false
+                );
             return (
                 <EntityList
                     entityType="grant"
@@ -220,14 +198,7 @@ const EntitiesPage = <T,>({
                     initialSortConfig={
                         listConfig.sortConfig as SortConfig<Grant>
                     }
-                    query={
-                        isInfiniteQuery
-                            ? (listConfig.query as UseInfiniteQueryResult<
-                                  any,
-                                  Error
-                              >)
-                            : undefined
-                    }
+                    query={listConfig.query}
                     visualizationToggle={{
                         isVisible: isVisualizationVisible,
                         toggle: () =>
@@ -237,12 +208,11 @@ const EntitiesPage = <T,>({
                     viewContext={listConfig.viewContext}
                     entityId={listConfig.entityId}
                     showVisualization={true}
+                    visualizationData={listConfig.visualizationData}
                 />
             );
         } else {
             const entities = getEntitiesFromQuery(listConfig.query);
-            const metadata = getMetadata();
-
             return (
                 <EntityList
                     entityType={listConfig.entityType || "entity"}
@@ -260,13 +230,12 @@ const EntitiesPage = <T,>({
                         })) || []
                     }
                     initialSortConfig={listConfig.sortConfig}
-                    query={listConfig.query} // Pass the query directly, regardless of type
+                    query={listConfig.query}
+                    viewContext={listConfig.viewContext}
                     isLoading={listConfig.query.isLoading}
                     isError={listConfig.query.isError}
                     error={listConfig.query.error}
                     emptyMessage={listConfig.emptyMessage}
-                    totalCount={metadata.totalCount || entities.length}
-                    totalItems={entities.length}
                 />
             );
         }

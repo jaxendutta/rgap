@@ -60,7 +60,9 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
 
                                 {chartMetric === "funding"
                                     ? formatCurrency(entry.value)
-                                    : `${Math.round(entry.value)} ${
+                                    : `${Math.round(
+                                          entry.value
+                                      ).toLocaleString()} ${
                                           entry.value === 1 ? "grant" : "grants"
                                       }`}
                             </span>

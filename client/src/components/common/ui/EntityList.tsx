@@ -57,19 +57,12 @@ interface EntityListProps<T> {
     initialSortConfig?: SortConfig<T>;
 
     // Optional infinite query props
-    query?:
-        | UseInfiniteQueryResult<any, Error>
-        | UseQueryResult<any, Error>
-        | null;
+    query: UseInfiniteQueryResult<any, Error> | UseQueryResult<any, Error>;
 
     // Optional loading/error state props (for manually managing these states)
     isLoading?: boolean;
     isError?: boolean;
     error?: Error | unknown;
-
-    // Optional metadata counts
-    totalCount?: number;
-    totalItems?: number;
 
     // Optional visualization toggle props
     visualizationToggle?: {
@@ -90,6 +83,7 @@ interface EntityListProps<T> {
 
     // Show visualization
     showVisualization?: boolean;
+    visualizationData?: Grant[];
 }
 
 function EntityList<T>(props: EntityListProps<T>) {
@@ -104,13 +98,13 @@ function EntityList<T>(props: EntityListProps<T>) {
         sortOptions,
         initialSortConfig,
         query,
-        totalCount,
-        totalItems,
         visualizationToggle,
         viewContext = "search",
+        entityId,
         className,
-        allowLayoutToggle = false,
+        allowLayoutToggle = true,
         showVisualization = true,
+        visualizationData,
     } = props;
 
     const { ref, inView } = useInView({
@@ -229,26 +223,30 @@ function EntityList<T>(props: EntityListProps<T>) {
         );
     }
 
+    // Get total items count for display
+    const displayTotalItems = entities.length;
+    const displayTotalCount = query
+        ? query.data?.pages[0]?.metadata?.totalCount
+        : entities.length;
+
     return (
         <div className={className}>
             {/* Header with sort controls and visualization toggle */}
             <div className="flex justify-between items-end border-b pb-2">
                 <div className="flex flex-col lg:flex-row lg:items-center">
-                    {totalCount !== undefined && totalItems !== undefined && (
-                        <span className="text-xs lg:text-sm text-gray-500 lg:ml-2">
-                            {`Showing `}
-                            <span className="font-semibold">
-                                {totalItems.toLocaleString()}
-                            </span>
-                            {` out of `}
-                            <span className="font-semibold">
-                                {totalCount.toLocaleString()}
-                            </span>
-                            {entityType === "search"
-                                ? ` search records`
-                                : ` ${entityType.toLowerCase()}s`}
+                    <span className="text-xs lg:text-sm text-gray-500 lg:ml-2">
+                        {`Showing `}
+                        <span className="font-semibold">
+                            {displayTotalItems.toLocaleString()}
                         </span>
-                    )}
+                        {` out of `}
+                        <span className="font-semibold">
+                            {displayTotalCount.toLocaleString()}
+                        </span>
+                        {entityType === "search"
+                            ? ` search records`
+                            : ` ${entityType.toLowerCase()}s`}
+                    </span>
                 </div>
                 <div className="flex items-center space-x-2">
                     {sortOptions.map((option) => (
@@ -263,23 +261,28 @@ function EntityList<T>(props: EntityListProps<T>) {
                         />
                     ))}
 
-                    {visualizationToggle?.showToggleButton && showVisualization && (
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            leftIcon={
-                                visualizationToggle.isVisible ? X : LineChart
-                            }
-                            onClick={visualizationToggle.toggle}
-                            disabled={entities?.length === 0}
-                        >
-                            <span className="hidden lg:inline">
-                                {visualizationToggle.isVisible
-                                    ? "Hide Trends"
-                                    : "Show Trends"}
-                            </span>
-                        </Button>
-                    )}
+                    {visualizationToggle?.showToggleButton &&
+                        showVisualization &&
+                        visualizationData &&
+                        visualizationData.length > 0 && (
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                leftIcon={
+                                    visualizationToggle.isVisible
+                                        ? X
+                                        : LineChart
+                                }
+                                onClick={visualizationToggle.toggle}
+                                disabled={visualizationData.length === 0}
+                            >
+                                <span className="hidden lg:inline">
+                                    {visualizationToggle.isVisible
+                                        ? "Hide Trends"
+                                        : "Show Trends"}
+                                </span>
+                            </Button>
+                        )}
 
                     {/* Layout Toggle Button */}
                     {allowLayoutToggle && (
@@ -313,11 +316,21 @@ function EntityList<T>(props: EntityListProps<T>) {
                         }}
                         className="overflow-hidden mt-4 mb-6"
                     >
-                        <TrendVisualizer
-                            grants={entities as Grant[]}
-                            viewContext={viewContext}
-                            height={350}
-                        />
+                        {/* Get loading state from either visualization data source */}
+                        {visualizationData && visualizationData.length > 0 ? (
+                            <TrendVisualizer
+                                grants={visualizationData}
+                                viewContext={viewContext}
+                                entityId={entityId}
+                                height={350}
+                            />
+                        ) : (
+                            <div className="flex justify-center items-center h-40 bg-gray-50 rounded-lg">
+                                <p className="text-gray-500">
+                                    No data available for visualization
+                                </p>
+                            </div>
+                        )}
                     </motion.div>
                 </AnimatePresence>
             )}
@@ -343,7 +356,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                     {isFetchingNextPage ? (
                         <LoadingState
                             title=""
-                            message={`Loading more ${entityType.toLowerCase()}...`}
+                            message={`Loading more ${entityType.toLowerCase()} data...`}
                             size="sm"
                         />
                     ) : hasNextPage ? (

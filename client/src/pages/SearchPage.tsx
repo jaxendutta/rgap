@@ -1,8 +1,12 @@
-// src/pages/SearchPage.tsx with proper type handling
+// src/pages/SearchPage.tsx
 import { useState, useEffect } from "react";
 import { FileSearch2, University, UserSearch } from "lucide-react";
 import { useLocation } from "react-router-dom";
-import { useGrantSearch } from "@/hooks/api/useData";
+import {
+    getDataFromResult,
+    useAllGrantSearch,
+    useGrantSearch,
+} from "@/hooks/api/useData";
 import { DEFAULT_SORT_CONFIG } from "@/types/search";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import type { GrantSearchParams, SortConfig } from "@/types/search";
@@ -36,6 +40,20 @@ export const SearchPage = () => {
     // If we came from a search history card, we want to immediately search
     const [isInitialState, setIsInitialState] = useState(!stateSearchParams);
 
+    // Create search params
+    const searchParams: Omit<GrantSearchParams, "pagination"> = {
+        searchTerms,
+        filters,
+        sortConfig,
+    };
+
+    // Use unified hook for grant search with paged results for UI
+    const searchQuery = useGrantSearch(searchParams);
+
+    // For visualization, we need ALL grant results (use complete query type)
+    const allGrantsQuery = useAllGrantSearch(searchParams);
+    const allGrants = getDataFromResult(allGrantsQuery);
+
     // Effect to run search if we have search params in location state
     useEffect(() => {
         if (stateSearchParams) {
@@ -47,18 +65,7 @@ export const SearchPage = () => {
         }
     }, [stateSearchParams]);
 
-    // Create search params
-    const searchParams: Omit<GrantSearchParams, "pagination"> = {
-        searchTerms,
-        filters,
-        sortConfig,
-    };
-
-    // Use unified hook for grant search
-    const searchQuery = useGrantSearch(searchParams, {
-        queryType: "infinite",
-        enabled: !isInitialState,
-    });
+    console.log("Total results count: ", allGrants.length);
 
     const handleSearch = (params: {
         searchTerms: Record<string, string>;
@@ -123,6 +130,7 @@ export const SearchPage = () => {
                     : "No grants match your search criteria.",
                 showVisualization: true,
                 visualizationInitiallyVisible: false,
+                visualizationData: allGrants,
                 viewContext: "search",
                 keyExtractor: (grant: Grant) => grant.grant_id,
             }}
