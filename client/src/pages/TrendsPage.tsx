@@ -229,14 +229,14 @@ export default function TrendsPage() {
 
             {/* Filter Section */}
             <div className="mb-6">
-                <div className="flex flex-wrap justify-between items-center gap-3">
+                <div className="flex justify-between items-center">
                     <Button
                         variant="secondary"
                         leftIcon={Sliders}
                         onClick={() => setIsFilterVisible(!isFilterVisible)}
-                        className="mb-4"
+                        className="py-2.5"
                     >
-                        {isFilterVisible ? "Hide Filters" : "Show Filters"}
+                        <span className="hidden lg:inline">{isFilterVisible ? "Hide Filters" : "Show Filters"}</span>
                     </Button>
 
                     {/* Date Range */}
@@ -244,6 +244,7 @@ export default function TrendsPage() {
                         label="Time Period"
                         value={dateRange}
                         onChange={setDateRange}
+                        className="p-0"
                     />
                 </div>
 
@@ -254,7 +255,6 @@ export default function TrendsPage() {
                             animate={{ opacity: 1, height: "auto" }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="overflow-hidden"
                         >
                             <Card className="p-4 mb-4">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -530,7 +530,7 @@ export default function TrendsPage() {
                 <Card.Header title="About This Dashboard" icon={Info} />
 
                 <Card.Content>
-                    <div className="text-sm text-gray-600 space-y-2">
+                    <div className="text-sm text-gray-600 space-y-4 lg:space-y-2">
                         <p>
                             This dashboard provides a comprehensive view of
                             research grant funding data. You can analyze trends

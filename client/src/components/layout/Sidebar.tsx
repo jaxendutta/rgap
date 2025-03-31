@@ -24,10 +24,10 @@ const mobileNavigation = [
 const desktopNavigation = [
     { name: "Home", icon: Home, href: "/" },
     { name: "Search", icon: Search, href: "/search" },
+    { name: "Trends", icon: ChartSpline, href: "/trends" },
     { name: "Institutes", icon: University, href: "/institutes" },
     { name: "Recipients", icon: GraduationCap, href: "/recipients" },
     { name: "Bookmarks", icon: Bookmark, href: "/bookmarks" },
-    { name: "Trends", icon: ChartSpline, href: "/trends" },
 ];
 
 const Sidebar = () => {
@@ -80,7 +80,6 @@ const Sidebar = () => {
                     })}
                 </nav>
             </div>
-
             {/* Mobile Bottom Navigation - Fixed to bottom with proper spacing */}
             <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50">
                 <nav className="max-w-md mx-auto px-2">

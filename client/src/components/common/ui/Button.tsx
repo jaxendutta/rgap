@@ -31,10 +31,10 @@ export const Button = ({
     const variants = {
         primary: "bg-gray-900 text-white hover:bg-gray-800",
         secondary:
-            "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50",
+            "bg-white text-gray-700 border border-gray-300 lg:hover:bg-gray-50",
         outline:
-            "bg-transparent text-gray-700 border border-gray-300 hover:bg-gray-50",
-        destructive: "bg-red-600 text-white hover:bg-red-700", // added destructive variant
+            "bg-transparent text-gray-700 border border-gray-300 lg:hover:bg-gray-50",
+        destructive: "bg-red-600 text-white hover:bg-red-700",
     };
 
     const sizes = {

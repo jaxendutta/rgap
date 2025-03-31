@@ -483,19 +483,16 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                 title={effectiveTitle}
             >
                 {/* Header with controls - only show if showControls is true */}
-                <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap">
-                    {/* Dropdown for dimension selection - only show if not amendment view */}
-                    {showControls && !isAmendmentView && (
-                        <Dropdown
-                            value={groupingDimension}
-                            options={groupingDisplayOptions}
-                            onChange={(value) =>
-                                setGroupingDimension(value as GroupingDimension)
-                            }
-                            className="min-w-[150px]"
-                        />
-                    )}
-                </div>
+                {showControls && !isAmendmentView && (
+                    <Dropdown
+                        value={groupingDimension}
+                        options={groupingDisplayOptions}
+                        onChange={(value) =>
+                            setGroupingDimension(value as GroupingDimension)
+                        }
+                        className="min-w-[150px]"
+                    />
+                )}
 
                 {showControls && (
                     <div className="flex items-center justify-between w-full py-2 lg:py-0 lg:gap-3 lg:justify-end">
