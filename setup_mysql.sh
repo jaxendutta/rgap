@@ -82,6 +82,7 @@ fi
 # Download MySQL if not already downloaded
 if [ ! -f "mysql-${MYSQL_VERSION}.tar.xz" ]; then
     print_status "Downloading MySQL..."
+    ulimit -f unlimited
     wget "https://cdn.mysql.com/Downloads/MySQL-${MYSQL_VERSION%.*}/mysql-${MYSQL_VERSION}-linux-glibc2.28-x86_64.tar.xz" -O "mysql-${MYSQL_VERSION}.tar.xz"
     check_error "Failed to download MySQL"
 fi
