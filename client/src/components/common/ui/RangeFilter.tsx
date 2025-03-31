@@ -130,12 +130,12 @@ export function RangeFilter<T>({
     };
 
     return (
-        <div className={cn("relative", className)} ref={dropdownRef}>
+        <div className={cn("relative z-20", className)} ref={dropdownRef}>
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "flex items-center justify-between w-full px-3 py-2 text-sm border rounded-md hover:bg-gray-50",
+                    "flex items-center justify-between w-full px-3 py-2 bg-white text-sm border rounded-md hover:shadow-sm",
                     isOpen && "border-gray-300 ring-1 ring-gray-300"
                 )}
             >

@@ -86,7 +86,7 @@ export function useCompleteData(
     const [totalCount, setTotalCount] = useState(0);
 
     const {
-        pagination = { page: 1, pageSize: 10000 }, // Use larger page size for efficiency
+        pagination = { page: 1, pageSize: 100000 }, // Use larger page size for efficiency
         sort = { field: "date", direction: "desc" },
         userId: explicitUserId,
         enabled = true,
@@ -358,7 +358,7 @@ export function useSearchData(
                     ...searchParams,
                     pagination: {
                         page: pageParam,
-                        pageSize: 10000, // Use larger page size for efficiency
+                        pageSize: 100000, // Use larger page size for efficiency
                     },
                     userId,
                 };

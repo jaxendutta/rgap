@@ -193,13 +193,10 @@ export const TimePeriodAnalytics: React.FC<{
     if (!grants || grants.length === 0) {
         return (
             <Card className="p-5">
-                <h3 className="text-lg font-medium mb-4 flex items-center">
-                    <CalendarDays className="h-5 w-5 mr-2 text-blue-600" />
-                    {title}
-                </h3>
-                <div className="text-gray-500">
-                    No grant data available for temporal / funding analysis
-                </div>
+                <Card.Header title={title} icon={CalendarDays} />
+                <Card.Content className="text-gray-500">
+                    No grant data available for temporal analysis
+                </Card.Content>
             </Card>
         );
     }
@@ -259,13 +256,9 @@ export const TimePeriodAnalytics: React.FC<{
     });
 
     return (
-        <Card className="p-5">
-            <h3 className="text-lg font-medium mb-4 flex items-center">
-                <CalendarDays className="h-5 w-5 mr-2 text-blue-600" />
-                {title}
-            </h3>
-
-            <div className="overflow-x-auto">
+        <Card>
+            <Card.Header title={title} icon={CalendarDays} />
+            <Card.Content className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead>
                         <tr>
@@ -342,7 +335,7 @@ export const TimePeriodAnalytics: React.FC<{
                         })}
                     </tbody>
                 </table>
-            </div>
+            </Card.Content>
         </Card>
     );
 };

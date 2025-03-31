@@ -11,6 +11,7 @@ import {
     GraduationCap,
     Calendar,
     BookOpen,
+    LucideIcon,
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { Grant, GrantAmendment } from "@/types/models";
@@ -59,6 +60,7 @@ interface TrendVisualizerProps {
     height?: number;
     className?: string;
     title?: string;
+    icon?: LucideIcon;
     showControls?: boolean;
 }
 
@@ -110,7 +112,8 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
     availableMetrics = ["funding", "count"],
     height = 400,
     className,
-    title,
+    title = "Trend Visualizer",
+    icon = Activity,
     showControls = true,
 }) => {
     // Check if the data is empty
@@ -473,29 +476,28 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
           `${metricType === "funding" ? "Funding" : "Grant"} Trends by `;
 
     return (
-        <Card className={cn("p-6", className)}>
-            {/* Header with controls - only show if showControls is true */}
-            {showControls && (
-                <div className="flex flex-col lg:flex-row items-center justify-between gap-3 mb-4">
-                    <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap">
-                        <h3 className="text-lg font-medium whitespace-nowrap">
-                            {effectiveTitle}
-                        </h3>
-                        {/* Dropdown for dimension selection - only show if not amendment view */}
-                        {!isAmendmentView && (
-                            <Dropdown
-                                value={groupingDimension}
-                                options={groupingDisplayOptions}
-                                onChange={(value) =>
-                                    setGroupingDimension(
-                                        value as GroupingDimension
-                                    )
-                                }
-                                className="min-w-[150px]"
-                            />
-                        )}
-                    </div>
+        <Card className={cn("", className)}>
+            <Card.Header
+                icon={icon}
+                className="flex flex-col lg:flex-row items-center justify-between gap-3"
+                title={effectiveTitle}
+            >
+                {/* Header with controls - only show if showControls is true */}
+                <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap">
+                    {/* Dropdown for dimension selection - only show if not amendment view */}
+                    {showControls && !isAmendmentView && (
+                        <Dropdown
+                            value={groupingDimension}
+                            options={groupingDisplayOptions}
+                            onChange={(value) =>
+                                setGroupingDimension(value as GroupingDimension)
+                            }
+                            className="min-w-[150px]"
+                        />
+                    )}
+                </div>
 
+                {showControls && (
                     <div className="flex items-center justify-between w-full py-2 lg:py-0 lg:gap-3 lg:justify-end">
                         {/* Metric type toggle (if multiple metrics available and not in amendment view) */}
                         {availableMetrics.length > 1 && !isAmendmentView && (
@@ -562,74 +564,77 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                             ))}
                         </ToggleButtons>
                     </div>
-                </div>
-            )}
+                )}
+            </Card.Header>
 
-            {/* Chart display - only show if we have data */}
-            {chartData.data.length > 0 && chartData.categories.length > 0 ? (
-                <div style={{ height: `${height}px` }}>
-                    <DataChart
-                        data={chartData.data}
-                        chartType={chartType === "line" ? "line" : "bar"}
-                        dataType={
-                            metricType === "funding" ? "funding" : "counts"
-                        }
-                        categories={chartData.categories}
-                        height={height}
-                        stacked={chartType === "stacked"}
-                        showLegend={false}
-                        isAmendmentView={isAmendmentView}
-                    />
-                </div>
-            ) : (
-                <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg text-gray-500">
-                    No data available for the selected visualization
-                </div>
-            )}
+            <Card.Content>
+                {/* Chart display - only show if we have data */}
+                {chartData.data.length > 0 &&
+                chartData.categories.length > 0 ? (
+                    <div style={{ height: `${height}px` }}>
+                        <DataChart
+                            data={chartData.data}
+                            chartType={chartType === "line" ? "line" : "bar"}
+                            dataType={
+                                metricType === "funding" ? "funding" : "counts"
+                            }
+                            categories={chartData.categories}
+                            height={height}
+                            stacked={chartType === "stacked"}
+                            showLegend={false}
+                            isAmendmentView={isAmendmentView}
+                        />
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg text-gray-500">
+                        No data available for the selected visualization
+                    </div>
+                )}
 
-            {/* Legend for top categories */}
-            {chartData.categories.length > 0 && (
-                <div className="flex flex-wrap justify-center mt-4 gap-3">
-                    {isAmendmentView
-                        ? Object.entries(AMENDMENT_COLORS).map(
-                              ([key, color], index) => (
+                {/* Legend for top categories */}
+                {chartData.categories.length > 0 && (
+                    <div className="flex flex-wrap justify-center mt-4 gap-3">
+                        {isAmendmentView
+                            ? Object.entries(AMENDMENT_COLORS).map(
+                                  ([key, color], index) => (
+                                      <div
+                                          className="flex items-center text-xs"
+                                          key={index}
+                                      >
+                                          <span
+                                              className="w-3 h-3 rounded-full mr-1.5"
+                                              style={{
+                                                  backgroundColor: color,
+                                              }}
+                                          />
+                                          <span className="text-gray-600">
+                                              {key}
+                                          </span>
+                                      </div>
+                                  )
+                              )
+                            : chartData.categories.map((category, index) => (
                                   <div
+                                      key={category}
                                       className="flex items-center text-xs"
-                                      key={index}
                                   >
                                       <span
                                           className="w-3 h-3 rounded-full mr-1.5"
                                           style={{
-                                              backgroundColor: color,
+                                              backgroundColor: getCategoryColor(
+                                                  category,
+                                                  index
+                                              ),
                                           }}
                                       />
-                                      <span className="text-gray-600">
-                                          {key}
+                                      <span className="text-gray-600 max-w-[150px] truncate">
+                                          {category}
                                       </span>
                                   </div>
-                              )
-                          )
-                        : chartData.categories.map((category, index) => (
-                              <div
-                                  key={category}
-                                  className="flex items-center text-xs"
-                              >
-                                  <span
-                                      className="w-3 h-3 rounded-full mr-1.5"
-                                      style={{
-                                          backgroundColor: getCategoryColor(
-                                              category,
-                                              index
-                                          ),
-                                      }}
-                                  />
-                                  <span className="text-gray-600 max-w-[150px] truncate">
-                                      {category}
-                                  </span>
-                              </div>
-                          ))}
-                </div>
-            )}
+                              ))}
+                    </div>
+                )}
+            </Card.Content>
         </Card>
     );
 };

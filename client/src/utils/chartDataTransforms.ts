@@ -119,10 +119,12 @@ export function formatChartValue(
     type: "funding" | "counts"
 ): string {
     if (type === "funding") {
-        if (value >= 1000000) {
-            return `$${(value / 1000000).toFixed(1)}M`;
+        if (value >= 1_000_000_000) {
+            return `$${(value / 1_000_000_000).toFixed(1)}B`;
+        } else if (value >= 1_000_000) {
+            return `$${(value / 1_000_000).toFixed(1)}M`;
         } else if (value >= 1000) {
-            return `$${(value / 1000).toFixed(0)}k`;
+            return `$${(value / 1000).toFixed(0)}K`;
         }
         return `$${value.toFixed(0)}`;
     } else {

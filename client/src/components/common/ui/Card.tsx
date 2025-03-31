@@ -1,6 +1,7 @@
 // src/components/common/ui/Card.tsx
 import React from "react";
 import { cn } from "@/utils/cn";
+import { LucideIcon } from "lucide-react";
 
 // Card Container
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -43,7 +44,7 @@ const Card = ({
 interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
     title?: string;
     subtitle?: React.ReactNode;
-    icon?: React.ElementType;
+    icon?: LucideIcon;
     action?: React.ReactNode;
 }
 
@@ -56,8 +57,6 @@ const CardHeader = ({
     action,
     ...props
 }: CardHeaderProps) => {
-    const IconComponent = typeof Icon === "function" ? Icon : null;
-
     return (
         <div
             className={cn(
@@ -66,29 +65,22 @@ const CardHeader = ({
             )}
             {...props}
         >
-            <div className="flex items-center">
-                {Icon && !IconComponent && (
-                    <div className="mr-3 flex-shrink-0">
-                        {Icon as React.ReactNode}
-                    </div>
-                )}
-                {Icon && IconComponent && (
-                    <Icon className="h-5 w-5 mr-3 text-blue-600 flex-shrink-0" />
-                )}
-
-                <div>
+            <div className="flex flex-col gap-0.5">
+                <div className="flex items-center gap-2">
+                    {Icon && (
+                        <Icon className="flex-shrink-0 h-4 w-4 text-blue-600" />
+                    )}
                     {title && (
-                        <h3 className="text-md font-medium text-gray-900">
+                        <h3 className="text-md font-medium whitespace-nowrap text-gray-900">
                             {title}
                         </h3>
                     )}
-                    {subtitle && (
-                        <p className="text-sm text-gray-500">{subtitle}</p>
-                    )}
-                    {children}
                 </div>
+                {subtitle && (
+                    <p className="text-xs text-gray-500">{subtitle}</p>
+                )}
             </div>
-
+            {children}
             {action && (
                 <div className="ml-auto pl-3 flex-shrink-0">{action}</div>
             )}
@@ -108,7 +100,10 @@ const CardContent = ({
     ...props
 }: CardContentProps) => {
     return (
-        <div className={cn(noPadding ? "" : "p-4", className)} {...props}>
+        <div
+            className={cn(noPadding ? "" : "p-4 lg:p-6", className)}
+            {...props}
+        >
             {children}
         </div>
     );
@@ -128,7 +123,7 @@ const CardFooter = ({
     return (
         <div
             className={cn(
-                "p-4",
+                "p-0",
                 bordered && "border-t border-gray-100",
                 className
             )}
