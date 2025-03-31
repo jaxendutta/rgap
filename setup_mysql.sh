@@ -57,6 +57,19 @@ handle_running_mysql() {
     esac
 }
 
+# Auto-select available port between 5000 and 5999
+find_available_port() {
+    for ((port=5000; port<=5999; port++)); do
+    # Use nc to check if port is actually listening
+        if ! nc -z 127.0.0.1 $port >/dev/null 2>&1; then
+            echo $port
+            return 0
+        fi
+    done
+    print_error "No available port found in range 5000–5999"
+    exit 1
+}
+
 # Check for existing MySQL processes at start
 if check_mysql_running; then
     handle_running_mysql
@@ -82,6 +95,7 @@ fi
 # Download MySQL if not already downloaded
 if [ ! -f "mysql-${MYSQL_VERSION}.tar.xz" ]; then
     print_status "Downloading MySQL..."
+    ulimit -f unlimited
     wget "https://cdn.mysql.com/Downloads/MySQL-${MYSQL_VERSION%.*}/mysql-${MYSQL_VERSION}-linux-glibc2.28-x86_64.tar.xz" -O "mysql-${MYSQL_VERSION}.tar.xz"
     check_error "Failed to download MySQL"
 fi
@@ -95,6 +109,11 @@ else
     rm -rf "mysql-${MYSQL_VERSION}.tar.xz"
 fi
 
+# Set port (auto if not set)
+print_status "Checking available MySQL ports (5000–5999)..."
+MYSQL_PORT=$(find_available_port)
+print_success "Selected port: ${MYSQL_PORT}"
+
 # Create MySQL configuration
 print_status "Creating MySQL configuration..."
 cat >"${USER_MYSQL_DIR}/my.cnf" <<EOF
@@ -103,7 +122,7 @@ basedir = ${MYSQL_DIR}/mysql-${MYSQL_VERSION}
 datadir = ${USER_MYSQL_DIR}/data
 socket = ${USER_MYSQL_DIR}/run/mysql.sock
 pid-file = ${USER_MYSQL_DIR}/run/mysql.pid
-port = ${MYSQL_PORT:-5000}
+port = ${MYSQL_PORT}
 log-error = ${USER_MYSQL_DIR}/log/error.log
 
 # Disable X Plugin

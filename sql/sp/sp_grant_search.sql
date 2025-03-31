@@ -7,6 +7,9 @@ CREATE PROCEDURE sp_grant_search(
     IN p_recipient_term VARCHAR(255),
     IN p_institute_term VARCHAR(255),
     IN p_grant_term VARCHAR(255),
+    IN p_search_recipient VARCHAR(500),
+    IN p_search_institution VARCHAR(500),
+    IN p_search_grant VARCHAR(500),
     IN p_from_date DATE,
     IN p_to_date DATE,
     IN p_value_min DECIMAL(15,2),
@@ -268,6 +271,9 @@ BEGIN
             p_recipient_term,
             p_grant_term,
             p_institute_term,
+            p_search_recipient,
+            p_search_grant,
+            p_search_institution,
             @filter_json,
             v_total_count
         );

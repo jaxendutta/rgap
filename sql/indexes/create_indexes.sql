@@ -18,3 +18,8 @@ CREATE INDEX idx_institute_location ON Institute(country, province, city);
 -- Indexes for SearchHistory
 CREATE INDEX idx_search_time ON SearchHistory(search_time);
 CREATE INDEX idx_search_user ON SearchHistory(user_id);
+
+-- Indexes for PopularSearch
+CREATE INDEX idx_time_grant ON SearchHistory(search_time, search_grant);
+CREATE INDEX idx_time_recipient ON SearchHistory(search_time, search_recipient);
+CREATE INDEX idx_time_institution ON SearchHistory(search_time, search_institution);

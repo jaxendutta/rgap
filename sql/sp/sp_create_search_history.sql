@@ -6,6 +6,9 @@ CREATE PROCEDURE sp_create_search_history(
     IN p_search_recipient VARCHAR(500),
     IN p_search_grant VARCHAR(500),
     IN p_search_institution VARCHAR(500),
+    IN p_normalized_recipient VARCHAR(500),
+    IN p_normalized_grant VARCHAR(500),
+    IN p_normalized_institution VARCHAR(500),
     IN p_search_filters JSON,
     IN p_result_count INT
 )
@@ -22,6 +25,9 @@ BEGIN
             search_recipient,
             search_grant,
             search_institution,
+            normalized_recipient,
+            normalized_grant,
+            normalized_institution,
             search_filters,
             search_time,
             result_count,
@@ -32,12 +38,15 @@ BEGIN
             NULLIF(p_search_recipient, ''),
             NULLIF(p_search_grant, ''),
             NULLIF(p_search_institution, ''),
+            NULLIF(p_normalized_recipient, ''),
+            NULLIF(p_normalized_grant, ''),
+            NULLIF(p_normalized_institution, ''),
             p_search_filters,
             NOW(),
             p_result_count,
             FALSE
         );
-        
+
         -- Return the new history ID
         SELECT LAST_INSERT_ID() as history_id;
     ELSE
