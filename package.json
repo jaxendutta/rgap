@@ -5,7 +5,7 @@
   },
   "devDependencies": {
     "@types/d3-geo": "^3.1.0",
-    "@types/react-simple-maps": "^3.0.6"
+    "@types/react-simple-maps": "^3.0.6",
     "string-similarity": "^4.0.4"
   }
 }
