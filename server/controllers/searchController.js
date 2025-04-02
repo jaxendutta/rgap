@@ -1,7 +1,6 @@
 // server/controllers/searchController.js
 import { pool } from "../config/db.js";
-import stringSimilarity from "string-similarity"; 
-
+import { findBestMatch } from "../utils/searchHelpers.js";
 
 export const getFilterOptions = async (req, res) => {
     try {
@@ -85,8 +84,14 @@ export const searchGrants = async (req, res) => {
         const valueMin = filters.valueRange?.min || 0;
         const valueMax = filters.valueRange?.max || 200000000;
 
-        const recipientNormalized = await findBestMatch(searchTerms.recipient, "recipient");
-        const instituteNormalized = await findBestMatch(searchTerms.institute, "institute");
+        const recipientNormalized = await findBestMatch(
+            searchTerms.recipient,
+            "recipient"
+        );
+        const instituteNormalized = await findBestMatch(
+            searchTerms.institute,
+            "institute"
+        );
         const grantNormalized = await findBestMatch(searchTerms.grant, "grant");
 
         // Create the query parameters array with proper order matching the stored procedure
@@ -218,65 +223,3 @@ export const searchGrants = async (req, res) => {
         });
     }
 };
-
-
-function normalizeSearchTerm(term) {
-    if (!term) {
-        return null;
-    }
-    return term 
-        .toLowerCase()
-        .replace(/\b(university|of|the|and|at|for|on|in)\b/g, "")
-        .replace(/[^a-zA-Z0-9 ]/g, "")
-        .trim();
-}
-
-async function findBestMatch(term, type) {
-
-
-    const normalized_term = normalizeSearchTerm(term);
-    if (!normalized_term) {
-        return null;
-    }
-    let q = "";
-    if (type == "grant") {
-        q = "SELECT normalized_grant FROM SearchHistory";
-    } else if (type == "recipient") {
-        q = "SELECT normalized_recipient FROM SearchHistory";
-    } else if (type == "institute") {
-        q = "SELECT DISTINCT normalized_institution FROM SearchHistory";
-    }
-    const [rows] = await pool.query(q);
-
-    let bestMatch = null;
-    let bestScore = 0;
-
-    // const stringSimilarity = require("string-similarity");
-
-
-    for (let row of rows) {
-        let rowNormalizedTerm = "";
-        if (type == "grant") {
-            rowNormalizedTerm = row.normalized_grant;
-        }
-        else if (type == "recipient") {
-            rowNormalizedTerm = row.normalized_recipient;
-        }
-        else if (type == "institute") {
-            rowNormalizedTerm = row.normalized_institution;
-        }
-        if (!rowNormalizedTerm) {
-            continue;
-        }
-        let s = stringSimilarity.compareTwoStrings(term, rowNormalizedTerm);
-        if (s > 0.7 && s > bestScore) {
-            bestScore = s;
-            bestMatch = rowNormalizedTerm;
-        }
-    }
-
-    if (bestMatch) {
-        return bestMatch;
-    }
-    return normalized_term;
-}

@@ -1,5 +1,6 @@
 // server/controllers/instituteController.js
 import { pool } from "../config/db.js";
+import { findBestMatch } from "../utils/searchHelpers.js";
 
 /**
  * Get all institutes with basic information, pagination included
@@ -221,6 +222,8 @@ export const searchInstitutes = async (req, res) => {
         const { term } = req.query;
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 20;
+        const userId = req.query.user_id || null;
+        const logSearchHistory = req.query.logSearchHistory !== "false"; // Default to true
 
         if (!term || term.trim() === "") {
             return res.status(400).json({
@@ -228,10 +231,13 @@ export const searchInstitutes = async (req, res) => {
             });
         }
 
-        // Use the stored procedure to search institutes
+        // Normalize the search term for history logging
+        const normalizedTerm = await findBestMatch(term, "institute");
+
+        // Use the stored procedure to search institutes with improved search history logging
         const [results] = await pool.query(
-            "CALL sp_search_institutes(?, ?, ?)",
-            [term, page, pageSize]
+            "CALL sp_search_institutes(?, ?, ?, ?, ?, ?)",
+            [term, normalizedTerm, page, pageSize, userId, logSearchHistory]
         );
 
         // First result set contains total count

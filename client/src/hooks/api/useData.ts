@@ -814,20 +814,24 @@ export function useSearchRecipients(
     term: string,
     options: DataFetchOptions = {}
 ) {
-    const { enabled: explicitEnabled, ...restOptions } = options;
+    const { enabled: explicitEnabled, userId, ...restOptions } = options;
 
     // Only enable if we have a search term
     const enabled =
         explicitEnabled !== false && !!term && term.trim().length > 0;
 
-    return useData(
-        "/recipients/search",
-        { term },
-        {
-            ...restOptions,
-            enabled,
-        }
-    );
+    // Add logSearchHistory parameter
+    const searchParams = {
+        term,
+        logSearchHistory: true,
+        user_id: userId,
+    };
+
+    return useData("/recipients/search", searchParams, {
+        ...restOptions,
+        enabled,
+        userId,
+    });
 }
 
 /**
@@ -837,20 +841,24 @@ export function useSearchInstitutes(
     term: string,
     options: DataFetchOptions = {}
 ) {
-    const { enabled: explicitEnabled, ...restOptions } = options;
+    const { enabled: explicitEnabled, userId, ...restOptions } = options;
 
     // Only enable if we have a search term
     const enabled =
         explicitEnabled !== false && !!term && term.trim().length > 0;
 
-    return useData(
-        "/institutes/search",
-        { term },
-        {
-            ...restOptions,
-            enabled,
-        }
-    );
+    // Add logSearchHistory parameter
+    const searchParams = {
+        term,
+        logSearchHistory: true,
+        user_id: userId,
+    };
+
+    return useData("/institutes/search", searchParams, {
+        ...restOptions,
+        enabled,
+        userId,
+    });
 }
 
 /**

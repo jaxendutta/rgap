@@ -1,5 +1,6 @@
 // server/controllers/recipientController.js
 import { pool } from "../config/db.js";
+import { findBestMatch } from "../utils/searchHelpers.js";
 
 /**
  * Get all recipients with basic information
@@ -176,6 +177,7 @@ export const searchRecipients = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 20;
         const userId = req.query.user_id || null;
+        const logSearchHistory = req.query.logSearchHistory !== "false"; // Default to true
 
         if (!term || term.trim() === "") {
             return res.status(400).json({
@@ -183,10 +185,13 @@ export const searchRecipients = async (req, res) => {
             });
         }
 
-        // Updated to include user_id parameter
+        // Normalize the search term for history logging
+        const normalizedTerm = await findBestMatch(term, "recipient");
+
+        // Updated to include search history logging
         const [results] = await pool.query(
-            "CALL sp_search_recipients(?, ?, ?, ?)",
-            [term, page, pageSize, userId]
+            "CALL sp_search_recipients(?, ?, ?, ?, ?, ?)",
+            [term, normalizedTerm, page, pageSize, userId, logSearchHistory]
         );
 
         // First result set contains total count
