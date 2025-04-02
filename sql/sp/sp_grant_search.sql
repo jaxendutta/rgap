@@ -21,7 +21,8 @@ CREATE PROCEDURE sp_grant_search(
     IN p_sort_field VARCHAR(20),
     IN p_sort_direction VARCHAR(4),
     IN p_page_size INT,
-    IN p_page INT
+    IN p_page INT,
+    IN p_log_search_history BOOLEAN
 )
 BEGIN
     DECLARE v_offset INT;
@@ -236,7 +237,7 @@ BEGIN
     DEALLOCATE PREPARE stmt;
     
     -- Log search if criteria warrant it and we're on first page
-    IF p_page = 1 AND (
+    IF p_page = 1 AND p_log_search_history AND (
         (p_recipient_term IS NOT NULL AND p_recipient_term != '') OR
         (p_institute_term IS NOT NULL AND p_institute_term != '') OR
         (p_grant_term IS NOT NULL AND p_grant_term != '') OR

@@ -16,7 +16,7 @@ import { FilterPanel } from "@/components/features/filter/FilterPanel";
 import { FilterTags } from "@/components/features/filter/FilterTags";
 import { DEFAULT_FILTER_STATE, FilterKey } from "@/constants/filters";
 import { PopularSearchesPanel } from "@/components/features/search/PopularSearchesPanel";
-import { SearchCategory } from "@/hooks/usePopularSearches";
+import { SearchCategory } from "@/hooks/api/usePopularSearches";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/utils/cn";
 import { SearchField } from "@/components/common/ui/SearchField";

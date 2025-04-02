@@ -51,7 +51,9 @@ export const SearchPage = () => {
     const searchQuery = useGrantSearch(searchParams);
 
     // For visualization, we need ALL grant results (use complete query type)
-    const allGrantsQuery = useAllGrantSearch(searchParams);
+    const allGrantsQuery = useAllGrantSearch(searchParams, {
+        logSearchHistory: false,
+    });
     const allGrants = getDataFromResult(allGrantsQuery);
 
     // Effect to run search if we have search params in location state

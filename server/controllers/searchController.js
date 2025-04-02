@@ -31,6 +31,7 @@ export const searchGrants = async (req, res) => {
             sortConfig = { field: "agreement_start_date", direction: "desc" },
             pagination = { page: 1, pageSize: 20 },
             userId = null,
+            logSearchHistory = true,
         } = req.body;
 
         console.log("Received search request with sort:", {
@@ -39,6 +40,7 @@ export const searchGrants = async (req, res) => {
             filters,
             sortConfig,
             pagination,
+            logSearchHistory,
         });
 
         // Default pagination values if not provided
@@ -108,13 +110,14 @@ export const searchGrants = async (req, res) => {
             sortConfig.direction || "desc", // p_sort_direction
             pageSize, // p_page_size
             page, // p_page
+            logSearchHistory, // p_log_search_history
         ];
 
         console.log("Search query parameters with sort:", queryParams);
 
         // Call the stored procedure with the correct parameter order
         const [results] = await pool.query(
-            "CALL sp_grant_search(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), CAST(? AS JSON), CAST(? AS JSON), CAST(? AS JSON), ?, ?, ?, ?)",
+            "CALL sp_grant_search(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), CAST(? AS JSON), CAST(? AS JSON), CAST(? AS JSON), ?, ?, ?, ?, ?)",
             queryParams
         );
 

@@ -17,7 +17,7 @@ import { Tag } from "@/components/common/ui/Tag";
 import usePopularSearches, {
     SearchCategory,
     PopularSearchTerm,
-} from "@/hooks/usePopularSearches";
+} from "@/hooks/api/usePopularSearches";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 
 interface PopularSearchesPanelProps {

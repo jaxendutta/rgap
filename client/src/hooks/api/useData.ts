@@ -858,21 +858,25 @@ export function useSearchInstitutes(
  */
 export function useGrantSearch(
     searchParams: GrantSearchParams,
-    options: DataFetchOptions = {}
+    options: DataFetchOptions & { logSearchHistory?: boolean } = {}
 ): UseInfiniteQueryResult<any, Error> {
     return useSearchData(
         "/search",
-        searchParams,
+        { ...searchParams, logSearchHistory: options.logSearchHistory },
         options
     ) as UseInfiniteQueryResult<any, Error>;
 }
 
 export function useAllGrantSearch(
     searchParams: GrantSearchParams,
-    options: DataFetchOptions = {}
+    options: DataFetchOptions & { logSearchHistory?: boolean } = {}
 ): UseQueryResult<any, Error> {
-    return useSearchData("/search", searchParams, {
-        ...options,
-        queryType: "complete",
-    });
+    return useSearchData(
+        "/search",
+        { ...searchParams, logSearchHistory: options.logSearchHistory },
+        {
+            ...options,
+            queryType: "complete",
+        }
+    );
 }
