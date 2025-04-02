@@ -13,7 +13,7 @@ import { useState } from "react";
 
 // Reordered for mobile
 const mobileNavigation = [
-    { name: "Trends", icon: ChartSpline, href: "/trends" },
+    { name: "Analytics", icon: ChartSpline, href: "/analytics" },
     { name: "Institutes", icon: University, href: "/institutes" },
     { name: "Search", icon: Search, href: "/search" },
     { name: "Recipients", icon: GraduationCap, href: "/recipients" },
@@ -24,7 +24,7 @@ const mobileNavigation = [
 const desktopNavigation = [
     { name: "Home", icon: Home, href: "/" },
     { name: "Search", icon: Search, href: "/search" },
-    { name: "Trends", icon: ChartSpline, href: "/trends" },
+    { name: "Analytics", icon: ChartSpline, href: "/analytics" },
     { name: "Institutes", icon: University, href: "/institutes" },
     { name: "Recipients", icon: GraduationCap, href: "/recipients" },
     { name: "Bookmarks", icon: Bookmark, href: "/bookmarks" },

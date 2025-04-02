@@ -10,6 +10,7 @@ import instituteRoutes from "./routes/instituteRoutes.js";
 import bookmarkRoutes from "./routes/bookmarkRoutes.js";
 import searchHistoryRoutes from "./routes/searchHistoryRoutes.js";
 import popularSearchRoutes from "./routes/popularSearchRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use("/institutes", instituteRoutes);
 app.use("/bookmark", bookmarkRoutes);
 app.use("/search-history", searchHistoryRoutes);
 app.use("/popular-search", popularSearchRoutes);
+app.use("/analytics", analyticsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
