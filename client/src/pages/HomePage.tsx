@@ -27,7 +27,7 @@ export default function HomePage() {
             "Advanced Analytics",
             "Visualize funding trends, analyze success rates, and track research investments.",
             ChartSpline,
-            "/trends",
+            "/analytics",
         ],
         [
             "Explore Recipients",
