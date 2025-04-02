@@ -23,12 +23,12 @@ import { pool } from "../config/db.js";
 export const getPopularSearchTerms = async (req, res) => {
     try {
         // Support both query params (GET) and request body (POST)
-        const dateStart = req.body.date_start || req.query.from;
-        const dateEnd = req.body.date_end || req.query.to;
+        const dateStart = req.body?.date_start || req.body?.from || req.query.from;
+        const dateEnd = req.body?.date_end || req.body?.to || req.query.to;
 
         // Get category from params, query, or body
         let category =
-            req.params.category || req.query.category || req.body.category;
+            req.params?.category || req.query?.category || req.body?.category;
 
         console.log(
             `Popular Search request - dates: ${dateStart} to ${dateEnd}, category: ${
