@@ -15,10 +15,8 @@ import { Card } from "@/components/common/ui/Card";
 import { FilterPanel } from "@/components/features/filter/FilterPanel";
 import { FilterTags } from "@/components/features/filter/FilterTags";
 import { DEFAULT_FILTER_STATE, FilterKey } from "@/constants/filters";
-import {
-    PopularSearchesPanel,
-    SearchCategory,
-} from "@/components/features/search/PopularSearchesPanel";
+import { PopularSearchesPanel } from "@/components/features/search/PopularSearchesPanel";
+import { SearchCategory } from "@/hooks/usePopularSearches";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/utils/cn";
 import { SearchField } from "@/components/common/ui/SearchField";
@@ -420,15 +418,22 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                         </motion.div>
                     )}
 
-                    {activePanelType === "popular" && (
+                    {showPopularSearches && (
                         <motion.div
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.3 }}
+                            style={{
+                                display:
+                                    activePanelType === "popular"
+                                        ? "block"
+                                        : "none",
+                            }}
                         >
                             <PopularSearchesPanel
                                 onSelect={handlePopularSearchSelect}
+                                isVisible={activePanelType === "popular"}
                             />
                         </motion.div>
                     )}

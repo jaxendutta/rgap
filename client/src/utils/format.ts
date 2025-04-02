@@ -66,6 +66,22 @@ export const formatSentenceCase = (value: string): string => {
         .join(" ");
 };
 
-export const formatCommaSeparated = (values: (string | null | undefined)[]): string => {
+export const formatCommaSeparated = (
+    values: (string | null | undefined)[]
+): string => {
     return values.filter(Boolean).join(", ");
-}
+};
+
+// Return YYYY-MM-DD format
+// This is used for API consumption
+export const formatDateOnly = (date: Date | string): string => {
+    if (!date) return "N/A";
+    try {
+        if (typeof date === "string") {
+            date = new Date(date);
+        }
+        return new Date(date).toISOString().split("T")[0];
+    } catch (e) {
+        return "Invalid Date";
+    }
+};

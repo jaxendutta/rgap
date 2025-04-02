@@ -3,14 +3,30 @@ import { cn } from "@/utils/cn";
 import { LucideIcon } from "lucide-react";
 import { responsive } from "@/utils/responsive";
 
+const variants = {
+    primary: "bg-gray-900 text-white hover:bg-gray-800",
+    secondary:
+        "bg-white text-gray-700 border border-gray-300 lg:hover:bg-gray-50",
+    outline:
+        "bg-transparent text-gray-700 border border-gray-300 lg:hover:bg-gray-50",
+    destructive: "bg-red-600 text-white hover:bg-red-700",
+    ghost: "bg-transparent text-gray-700 hover:bg-gray-50",
+};
+
+const sizes = {
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-4 py-1.5 text-sm",
+    lg: "px-6 py-3 text-md",
+};
+
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: "primary" | "secondary" | "outline" | "destructive";
-    size?: "sm" | "md" | "lg";
+    variant?: keyof typeof variants;
+    size?: keyof typeof sizes;
     leftIcon?: LucideIcon;
     rightIcon?: LucideIcon;
     isLoading?: boolean;
     pill?: boolean;
-    responsiveText?: boolean; // New prop to enable responsive text
+    responsiveText?: boolean;
     responsiveIcon?: "hideOnMobile" | "hideOnDesktop" | "always"; // Control icon visibility
 }
 
@@ -28,21 +44,6 @@ export const Button = ({
     responsiveIcon = "always", // Default always shows icon
     ...props
 }: ButtonProps) => {
-    const variants = {
-        primary: "bg-gray-900 text-white hover:bg-gray-800",
-        secondary:
-            "bg-white text-gray-700 border border-gray-300 lg:hover:bg-gray-50",
-        outline:
-            "bg-transparent text-gray-700 border border-gray-300 lg:hover:bg-gray-50",
-        destructive: "bg-red-600 text-white hover:bg-red-700",
-    };
-
-    const sizes = {
-        sm: "px-3 py-1.5 text-sm",
-        md: "px-4 py-1.5 text-sm",
-        lg: "px-6 py-3 text-md",
-    };
-
     // Handle responsive icon visibility
     const iconClasses = {
         hideOnMobile: responsive.hiddenOnMobile,

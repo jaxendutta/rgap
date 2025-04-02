@@ -5,12 +5,27 @@ import { getPopularSearchTerms } from "../controllers/popularSearchController.js
 const router = Router();
 
 /**
- * POST /popular-search/:search_term_type
- * Fetch the top 5 most popular search terms by type:
- *   0 = grant, 1 = recipient, 2 = institution
- * Requires JSON body: { "date_start": "YYYY-MM-DD", "date_end": "YYYY-MM-DD" }
- * Example: POST http://localhost:4000/popular-search/0
+ * Routes for popular search terms
+ *
+ * GET /popular-searches
+ * - Fetches popular search terms for all categories
+ * - Query params: from, to (date format: YYYY-MM-DD)
+ *
+ * GET /popular-searches/:category
+ * - Fetches popular search terms for a specific category
+ * - Path param: category (grant, recipient, institute)
+ * - Query params: from, to (date format: YYYY-MM-DD)
+ *
+ * POST /popular-searches
+ * - Alternative endpoint supporting POST method
+ * - Body: { date_start: "YYYY-MM-DD", date_end: "YYYY-MM-DD", category: "..." }
  */
-router.post("/:search_term_type", getPopularSearchTerms);
+
+// Routes for GET method (query parameters)
+router.get("/", getPopularSearchTerms);
+router.get("/:category", getPopularSearchTerms);
+
+// Routes for POST method (request body)
+router.post("/", getPopularSearchTerms);
 
 export default router;

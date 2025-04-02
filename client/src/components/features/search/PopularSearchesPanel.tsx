@@ -6,120 +6,62 @@ import {
     FileSearch2,
     BookMarked,
     Info,
+    RefreshCw,
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { Card } from "@/components/common/ui/Card";
 import { DateRangeFilter } from "@/components/common/ui/DateRangeFilter";
-import { formatDate } from "@/utils/format";
 import LoadingState from "@/components/common/ui/LoadingState";
-import createAPI from "@/utils/api";
-
-const API = createAPI();
-
-export type SearchCategory = "recipient" | "institute" | "grant";
-
-interface PopularSearchTerm {
-    text: string;
-    count: number;
-}
+import Button from "@/components/common/ui/Button";
+import { Tag } from "@/components/common/ui/Tag";
+import usePopularSearches, {
+    SearchCategory,
+    PopularSearchTerm,
+} from "@/hooks/usePopularSearches";
+import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 
 interface PopularSearchesPanelProps {
     onSelect: (category: SearchCategory, term: string) => void;
+    isVisible?: boolean;
 }
-
-// Default date range - last 30 days to current date
-const getDefaultDateRange = () => {
-    const today = new Date();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return { from: thirtyDaysAgo, to: today };
-};
 
 export const PopularSearchesPanel = ({
     onSelect,
+    isVisible = true,
 }: PopularSearchesPanelProps) => {
     const [activeCategory, setActiveCategory] =
         useState<SearchCategory>("recipient");
-    const [dateRange, setDateRange] = useState(getDefaultDateRange());
-    const [popularSearches, setPopularSearches] = useState<
-        Record<SearchCategory, PopularSearchTerm[]>
-    >({
-        recipient: [],
-        institute: [],
-        grant: [],
+    const [dateRange, setDateRange] = useState({
+        from: DEFAULT_FILTER_STATE.dateRange.from,
+        to: DEFAULT_FILTER_STATE.dateRange.to,
     });
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [initialLoad, setInitialLoad] = useState(false);
 
-    // Fetch popular searches based on the date range
-    useEffect(() => {
-        const fetchPopularSearches = async () => {
-            setIsLoading(true);
-            setError(null);
-
-            try {
-                // Format dates for API
-                const fromDate = formatDate(dateRange.from)
-                    .split("/")
-                    .join("-");
-                const toDate = formatDate(dateRange.to).split("/").join("-");
-
-                // Fetch popular searches from API
-                const response = await API.get(`/search/popular-searches`, {
-                    params: {
-                        from: fromDate,
-                        to: toDate,
-                    },
-                });
-
-                if (response.data) {
-                    setPopularSearches(response.data);
-                }
-            } catch (err) {
-                console.error("Error fetching popular searches:", err);
-                setError("Failed to load popular searches. Please try again.");
-
-                // Fallback to some mock data in case of error
-                setPopularSearches({
-                    recipient: [
-                        { text: "University of Toronto", count: 245 },
-                        { text: "McGill University", count: 187 },
-                        { text: "University of British Columbia", count: 156 },
-                        { text: "University of Alberta", count: 129 },
-                        { text: "Dalhousie University", count: 98 },
-                    ],
-                    institute: [
-                        { text: "University of Toronto", count: 312 },
-                        { text: "McGill University", count: 287 },
-                        { text: "University of British Columbia", count: 254 },
-                        { text: "University of Waterloo", count: 198 },
-                        { text: "University of Alberta", count: 176 },
-                    ],
-                    grant: [
-                        { text: "COVID-19 Research", count: 145 },
-                        { text: "Cancer Research", count: 132 },
-                        { text: "Climate Change", count: 118 },
-                        { text: "Artificial Intelligence", count: 98 },
-                        { text: "Renewable Energy", count: 87 },
-                    ],
-                });
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchPopularSearches();
-    }, [dateRange]);
+    // Use our custom hook with the enabled flag tied to visibility
+    const { popularSearches, isLoading, error, refetch } = usePopularSearches({
+        dateRange,
+        enabled: isVisible, // Only fetch when the panel is visible
+    });
 
     // Handle date range change
     const handleDateRangeChange = (newRange: { from: Date; to: Date }) => {
+        console.log("Date range changed:", newRange);
         setDateRange(newRange);
     };
+
+    // Force data fetch when the panel becomes visible for the first time
+    useEffect(() => {
+        if (isVisible && !initialLoad) {
+            console.log("Panel became visible, triggering fetch");
+            refetch();
+            setInitialLoad(true);
+        }
+    }, [isVisible, initialLoad, refetch]);
 
     return (
         <Card className="p-4">
             <div className="flex flex-col space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
                     <h3 className="text-md font-medium">Popular Searches</h3>
 
                     {/* Date Range Selector */}
@@ -127,7 +69,6 @@ export const PopularSearchesPanel = ({
                         label="Time Period"
                         value={dateRange}
                         onChange={handleDateRangeChange}
-
                     />
                 </div>
 
@@ -191,6 +132,15 @@ export const PopularSearchesPanel = ({
                             <Info className="h-4 w-4 mr-2 text-red-500" />
                             {error}
                         </p>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            leftIcon={RefreshCw}
+                            onClick={() => refetch()}
+                            className="mt-2"
+                        >
+                            Try Again
+                        </Button>
                     </div>
                 )}
 
@@ -199,21 +149,40 @@ export const PopularSearchesPanel = ({
                     <div className="space-y-2">
                         {popularSearches[activeCategory].length > 0 ? (
                             popularSearches[activeCategory].map(
-                                (term, index) => (
-                                    <button
+                                (term: PopularSearchTerm, index: number) => (
+                                    <Button
+                                        variant="ghost"
+                                        pill={true}
                                         key={index}
                                         onClick={() =>
                                             onSelect(activeCategory, term.text)
                                         }
-                                        className="flex items-center justify-between w-full p-1 lg:p-2 hover:bg-gray-50 rounded-md transition-colors text-left"
+                                        className="flex items-center justify-between w-full p-1 lg:p-2 hover:bg-gray-50 transition-colors text-left"
                                     >
-                                        <span className="text-gray-800 truncate flex-1">
-                                            {term.text}
+                                        <span className="flex items-center gap-2">
+                                            <Tag
+                                                variant="default"
+                                                pill={true}
+                                                className="mr-1"
+                                            >
+                                                #{index + 1}
+                                            </Tag>
+                                            <Tag
+                                                variant="link"
+                                                pill={true}
+                                                className="truncate w-min-0"
+                                            >
+                                                {term.text}
+                                            </Tag>
                                         </span>
-                                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full ml-2 flex-shrink-0">
+                                        <Tag
+                                            variant="secondary"
+                                            pill={true}
+                                            className="text-xs bg-gray-100 px-2 py-1 rounded-full ml-2 flex-shrink-0"
+                                        >
                                             {term.count} searches
-                                        </span>
-                                    </button>
+                                        </Tag>
+                                    </Button>
                                 )
                             )
                         ) : (
@@ -233,3 +202,5 @@ export const PopularSearchesPanel = ({
         </Card>
     );
 };
+
+export default PopularSearchesPanel;

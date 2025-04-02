@@ -7,6 +7,8 @@ import {
     LucideIcon,
 } from "lucide-react";
 import { cn } from "@/utils/cn";
+import { formatDateOnly } from "@/utils/format";
+import { Button } from "@/components/common/ui/Button";
 
 // Generic range type that can work with both dates and numbers
 export interface Range<T> {
@@ -131,11 +133,12 @@ export function RangeFilter<T>({
 
     return (
         <div className={cn("relative z-20", className)} ref={dropdownRef}>
-            <button
-                type="button"
+            <Button
+                variant="outline"
+                pill={true}
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "flex items-center justify-between w-full px-3 py-2 bg-white text-sm border rounded-md hover:shadow-sm",
+                    "flex items-center justify-between w-full px-3 py-2 bg-white text-sm border hover:shadow-sm",
                     isOpen && "border-gray-300 ring-1 ring-gray-300"
                 )}
             >
@@ -150,7 +153,7 @@ export function RangeFilter<T>({
                         isOpen && "transform rotate-180"
                     )}
                 />
-            </button>
+            </Button>
 
             {isOpen && (
                 <div 
@@ -226,9 +229,7 @@ export function RangeFilter<T>({
                                             type="date"
                                             value={
                                                 localValue.min instanceof Date
-                                                    ? (localValue.min as Date)
-                                                          .toISOString()
-                                                          .split("T")[0]
+                                                    ? formatDateOnly((localValue.min as Date))
                                                     : String(localValue.min)
                                             }
                                             onChange={(e) =>
@@ -263,9 +264,7 @@ export function RangeFilter<T>({
                                             type="date"
                                             value={
                                                 localValue.max instanceof Date
-                                                    ? (localValue.max as Date)
-                                                          .toISOString()
-                                                          .split("T")[0]
+                                                    ? formatDateOnly((localValue.max as Date))
                                                     : String(localValue.max)
                                             }
                                             onChange={(e) =>

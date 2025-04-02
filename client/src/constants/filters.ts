@@ -1,8 +1,8 @@
 // src/constants/filters.ts
 export const FILTER_LIMITS = {
     DATE_VALUE: {
-        MIN: new Date(1990, 0, 1),
-        MAX: new Date(),
+        MIN: new Date(2010, 0, 1),
+        MAX: new Date(new Date().setHours(23, 59, 59, 999)),
     },
     
     GRANT_VALUE: {

@@ -11,7 +11,8 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
-    "mysql2": "^3.14.0"
+    "mysql2": "^3.14.0",
+    "string-similarity": "^4.0.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
