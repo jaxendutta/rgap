@@ -1,6 +1,6 @@
 // src/pages/InstitutesPage.tsx
 import { useState, useEffect } from "react";
-import { University, BookMarked, Users, DollarSign } from "lucide-react";
+import { University } from "lucide-react";
 import { useInstitutes, useSearchInstitutes } from "@/hooks/api/useData";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import { SortConfig } from "@/types/search";
@@ -88,9 +88,6 @@ const InstitutesPage = () => {
         );
     };
 
-    // Key extractor for institute items
-    const keyExtractor = (institute: Institute) => institute.institute_id;
-
     return (
         <EntitiesPage
             headerConfig={{
@@ -108,29 +105,13 @@ const InstitutesPage = () => {
                 isInitialState: !isSearching,
             }}
             listConfig={{
-                type: "entities",
+                entityType: "institute",
                 query: effectiveQuery,
-                sortConfig: sortConfig,
                 emptyMessage: isSearching
                     ? "No institutes match your search criteria."
                     : "No institutes found. Try adjusting your search.",
-                entityType: "institute",
                 variant: "grid",
                 renderItem: renderInstituteItem,
-                keyExtractor: keyExtractor,
-                sortOptions: [
-                    {
-                        field: "recipient_count",
-                        label: "Recipients",
-                        icon: Users,
-                    },
-                    { field: "grant_count", label: "Grants", icon: BookMarked },
-                    {
-                        field: "total_funding",
-                        label: "Funding",
-                        icon: DollarSign,
-                    },
-                ],
                 viewContext: "custom",
             }}
         />

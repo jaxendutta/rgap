@@ -1,50 +1,99 @@
 // src/types/search.ts
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import { Grant, Recipient, Institute, SearchHistory } from "./models";
+import { Entity, Grant, EntityModel } from "./models";
+import {
+    Calendar,
+    DollarSign,
+    BookMarked,
+    Users,
+    Hash,
+    LucideIcon,
+} from "lucide-react";
 
 export interface SortConfig<T> {
     field: keyof T;
     direction: "asc" | "desc";
 }
 
-export const DEFAULT_SORT_CONFIG = <T>(entity: T): SortConfig<T> => {
-    const entityTypeToSortConfig: Record<string, SortConfig<any>> = {
-        Grant: {
-            field: "agreement_start_date" as keyof Grant,
-            direction: "desc",
-        },
-        Recipient: {
-            field: "latest_grant_date" as keyof Recipient,
-            direction: "desc",
-        },
-        Institute: {
-            field: "total_funding" as keyof Institute,
-            direction: "desc",
-        },
-        SearchHistory: {
-            field: "created_at" as keyof SearchHistory,
-            direction: "desc",
-        },
-    };
+export interface SortOption<T> {
+    label: string;
+    icon: LucideIcon;
+    field: keyof T;
+}
 
-    if (!entity) {
-        console.warn("Entity is undefined or null. Returning default sort configuration.");
-        return {
-            field: "" as keyof T,
-            direction: "asc",
-        };
+export function getSortOptions<T extends EntityModel>(
+    entityModel: T | keyof Entity,
+): SortOption<T>[] {
+    switch (entityModel) {
+        case "grant":
+            return [
+                {
+                    label: "Date",
+                    icon: Calendar,
+                    field: "agreement_start_dat" as keyof T,
+                },
+                {
+                    label: "Value",
+                    icon: DollarSign,
+                    field: "agreement_value" as keyof T,
+                },
+            ];
+
+        case "recipient":
+            return [
+                {
+                    label: "Funding",
+                    icon: DollarSign,
+                    field: "total_funding" as keyof T,
+                },
+                {
+                    label: "Grants",
+                    icon: BookMarked,
+                    field: "grant_count" as keyof T,
+                },
+                {
+                    label: "Latest",
+                    icon: Calendar,
+                    field: "latest_grant_date" as keyof T,
+                },
+            ];
+
+        case "institute":
+            return [
+                {
+                    label: "Funding",
+                    icon: DollarSign,
+                    field: "total_funding" as keyof T,
+                },
+                {
+                    label: "Recipients",
+                    icon: Users,
+                    field: "recipient_count" as keyof T,
+                },
+                {
+                    label: "Grants",
+                    icon: BookMarked,
+                    field: "grant_count" as keyof T,
+                },
+            ];
+
+        case "search":
+            return [
+                {
+                    label: "Date",
+                    icon: Calendar,
+                    field: "created_at" as keyof T,
+                },
+                {
+                    label: "Results",
+                    icon: Hash,
+                    field: "result_count" as keyof T,
+                },
+            ];
+        default:
+            return [];
     }
-    const entityType = (entity as any).constructor.name;
-    if (entityTypeToSortConfig[entityType]) {
-        return entityTypeToSortConfig[entityType];
-    } else {
-        console.warn("Unsupported entity type. Returning default sort configuration.");
-        return {
-            field: "" as keyof T,
-            direction: "asc",
-        };
-    }
-};
+}
 
 // Grant-specific search params
 export interface GrantSearchParams {

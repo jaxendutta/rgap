@@ -1,15 +1,14 @@
 // src/components/common/pages/EntitiesPage.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 import PageContainer from "@/components/common/layout/PageContainer";
 import PageHeader from "@/components/common/layout/PageHeader";
 import SearchInterface from "@/components/features/search/SearchInterface";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import { Calendar, DollarSign, LucideIcon, Search } from "lucide-react";
-import { SortConfig } from "@/types/search";
-import EntityList from "@/components/common/ui/EntityList";
+import { LucideIcon, Search } from "lucide-react";
+import EntityList, { EntityListProps } from "@/components/common/ui/EntityList";
 import { UseInfiniteQueryResult, UseQueryResult } from "@tanstack/react-query";
 import { Button } from "@/components/common/ui/Button";
-import { Grant } from "@/types/models";
+import { Grant, Entity } from "@/types/models";
 import { GrantCard } from "@/components/features/grants/GrantCard";
 import { SearchField } from "@/components/common/ui/SearchField";
 
@@ -46,32 +45,10 @@ interface SimpleSearchConfig extends BaseSearchConfig {
 
 type SearchConfig = FullSearchConfig | SimpleSearchConfig;
 
-interface ListConfig<T> {
-    type: "grants" | "entities";
-    entityId?: number;
-    query: UseInfiniteQueryResult<any, Error>;
-    sortConfig: SortConfig<T>;
-    emptyMessage: string;
-    showVisualization?: boolean;
-    visualizationData?: Grant[];
-    visualizationInitiallyVisible?: boolean;
-    viewContext: "search" | "recipient" | "institute" | "custom";
-    variant?: "list" | "grid";
-    entityType?: string;
-    renderItem?: (item: any) => React.ReactNode;
-    keyExtractor: (item: any, index: number) => number;
-    sortOptions?: Array<{
-        field: string;
-        label: string;
-        icon: LucideIcon;
-    }>;
-    onSortChange?: (config: SortConfig<T>) => void;
-}
-
 interface EntitiesPageProps<T> {
     headerConfig: HeaderConfig;
     searchConfig?: SearchConfig;
-    listConfig: ListConfig<T>;
+    listConfig: EntityListProps<T>;
 }
 
 const EntitiesPage = <T,>({
@@ -164,42 +141,16 @@ const EntitiesPage = <T,>({
 
     // Render the appropriate list component based on the type
     const renderList = () => {
-        if (listConfig.type === "grants") {
-            const [isVisualizationVisible, setIsVisualizationVisible] =
-                useState<boolean>(
-                    listConfig.visualizationInitiallyVisible || false
-                );
+        if (listConfig.entityType === "grants" as keyof Entity) {
             return (
                 <EntityList
                     entityType="grant"
                     entities={getEntitiesFromQuery(listConfig.query)}
                     renderItem={(grant: Grant) => <GrantCard grant={grant} />}
-                    keyExtractor={(grant: Grant) => grant.grant_id}
                     emptyMessage={
                         "This recipient has no associated grants in our database."
                     }
-                    sortOptions={[
-                        {
-                            field: "agreement_start_date",
-                            label: "Date",
-                            icon: Calendar,
-                        },
-                        {
-                            field: "agreement_value",
-                            label: "Value",
-                            icon: DollarSign,
-                        },
-                    ]}
-                    initialSortConfig={
-                        listConfig.sortConfig as SortConfig<Grant>
-                    }
                     query={listConfig.query}
-                    visualizationToggle={{
-                        isVisible: isVisualizationVisible,
-                        toggle: () =>
-                            setIsVisualizationVisible(!isVisualizationVisible),
-                        showToggleButton: true,
-                    }}
                     viewContext={listConfig.viewContext}
                     entityId={listConfig.entityId}
                     showVisualization={true}
@@ -210,21 +161,13 @@ const EntitiesPage = <T,>({
             const entities = getEntitiesFromQuery(listConfig.query);
             return (
                 <EntityList
-                    entityType={listConfig.entityType || "entity"}
+                    entityType={listConfig.entityType}
                     entities={entities}
                     renderItem={
                         listConfig.renderItem ||
                         ((item) => <div>{JSON.stringify(item)}</div>)
                     }
-                    keyExtractor={listConfig.keyExtractor}
                     variant={listConfig.variant || "list"}
-                    sortOptions={
-                        listConfig.sortOptions?.map((option) => ({
-                            ...option,
-                            field: option.field as keyof T,
-                        })) || []
-                    }
-                    initialSortConfig={listConfig.sortConfig}
                     query={listConfig.query}
                     viewContext={listConfig.viewContext}
                     isLoading={listConfig.query.isLoading}

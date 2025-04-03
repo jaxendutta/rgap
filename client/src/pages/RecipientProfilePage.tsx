@@ -50,7 +50,6 @@ const RecipientProfilePage = () => {
         field: "agreement_start_date",
         direction: "desc",
     });
-    const [isVisualizationVisible, setIsVisualizationVisible] = useState(false);
 
     // Use the useEntityById hook for recipient details
     const recipientDetailsQuery = useEntityById(entityType, id);
@@ -211,32 +210,10 @@ const RecipientProfilePage = () => {
                         renderItem={(grant: Grant) => (
                             <GrantCard grant={grant} />
                         )}
-                        keyExtractor={(grant: Grant) => grant.grant_id}
                         emptyMessage={
                             "This recipient has no associated grants in our database."
                         }
-                        sortOptions={[
-                            {
-                                field: "agreement_start_date",
-                                label: "Date",
-                                icon: Calendar,
-                            },
-                            {
-                                field: "agreement_value",
-                                label: "Value",
-                                icon: DollarSign,
-                            },
-                        ]}
-                        initialSortConfig={grantsSortConfig}
                         query={recipientGrantsQuery}
-                        visualizationToggle={{
-                            isVisible: isVisualizationVisible,
-                            toggle: () =>
-                                setIsVisualizationVisible(
-                                    !isVisualizationVisible
-                                ),
-                            showToggleButton: true,
-                        }}
                         viewContext={entityType}
                         entityId={recipientId}
                         showVisualization={true}

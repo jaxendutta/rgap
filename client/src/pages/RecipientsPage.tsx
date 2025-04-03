@@ -1,6 +1,6 @@
 // src/pages/RecipientsPage.tsx
 import { useState, useEffect } from "react";
-import { GraduationCap, BookMarked, Calendar, DollarSign } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import { useRecipients, useSearchRecipients } from "@/hooks/api/useData";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import { SortConfig } from "@/types/search";
@@ -88,9 +88,6 @@ const RecipientsPage = () => {
         );
     };
 
-    // Key extractor for recipient items
-    const keyExtractor = (recipient: Recipient) => recipient.recipient_id;
-
     return (
         <EntitiesPage
             headerConfig={{
@@ -109,29 +106,13 @@ const RecipientsPage = () => {
                 isInitialState: !isSearching,
             }}
             listConfig={{
-                type: "entities",
+                entityType: "recipient",
                 query: effectiveQuery,
-                sortConfig: sortConfig,
                 emptyMessage: isSearching
                     ? "No recipients match your search criteria."
                     : "No recipients found. Try adjusting your search.",
-                entityType: "recipient",
                 variant: "grid",
                 renderItem: renderRecipientItem,
-                keyExtractor: keyExtractor,
-                sortOptions: [
-                    { field: "grant_count", label: "Grants", icon: BookMarked },
-                    {
-                        field: "latest_grant_date",
-                        label: "Latest Grant",
-                        icon: Calendar,
-                    },
-                    {
-                        field: "total_funding",
-                        label: "Funding",
-                        icon: DollarSign,
-                    },
-                ],
                 viewContext: "custom",
             }}
         />

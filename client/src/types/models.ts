@@ -1,4 +1,5 @@
 // src/types/models.ts
+import { SearchCategory } from "@/hooks/api/usePopularSearches";
 import { GrantSearchParams } from "./search";
 
 // Amendment type for grant amendments
@@ -104,10 +105,20 @@ export interface SearchHistory {
     bookmarked: boolean;
 }
 
+// Popular Search
+export interface PopularSearch {
+    text: string;
+    count: number;
+    category: SearchCategory;
+}
+
 // Entity type mapping
 export type Entity = {
     recipient: Recipient;
     institute: Institute;
     grant: Grant;
     search: SearchHistory;
+    popular_search: PopularSearch;
 };
+
+export type EntityModel = Entity[keyof Entity];

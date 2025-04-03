@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import {
     MoreHorizontal,
-    LucideIcon,
     X,
     LineChart,
     Grid,
@@ -17,9 +16,9 @@ import ErrorState from "./ErrorState";
 import { UseQueryResult, UseInfiniteQueryResult } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/utils/cn";
-import { SortConfig } from "@/types/search";
+import { getSortOptions, SortConfig } from "@/types/search";
 import TrendVisualizer from "@/components/features/visualizations/TrendVisualizer";
-import { Grant } from "@/types/models";
+import { Grant, Entity } from "@/types/models";
 
 export type LayoutVariant = "list" | "grid";
 
@@ -38,23 +37,14 @@ function isInfiniteQuery(
     );
 }
 
-interface EntityListProps<T> {
+export interface EntityListProps<T> {
     // Content props
-    entityType: string;
+    entityType: keyof Entity;
     entities?: T[];
     renderItem: (item: T, index: number) => React.ReactNode;
-    keyExtractor: (item: T, index: number) => number;
     variant?: LayoutVariant;
     emptyMessage?: string;
     emptyState?: React.ReactNode;
-
-    // Sorting props
-    sortOptions: Array<{
-        field: keyof T;
-        label: string;
-        icon: LucideIcon;
-    }>;
-    initialSortConfig?: SortConfig<T>;
 
     // Optional infinite query props
     query: UseInfiniteQueryResult<any, Error> | UseQueryResult<any, Error>;
@@ -63,13 +53,6 @@ interface EntityListProps<T> {
     isLoading?: boolean;
     isError?: boolean;
     error?: Error | unknown;
-
-    // Optional visualization toggle props
-    visualizationToggle?: {
-        isVisible: boolean;
-        toggle: () => void;
-        showToggleButton?: boolean;
-    };
 
     // Context for visualization
     viewContext?: "search" | "recipient" | "institute" | "custom";
@@ -84,6 +67,7 @@ interface EntityListProps<T> {
     // Show visualization
     showVisualization?: boolean;
     visualizationData?: Grant[];
+    showVisualizationInitially?: boolean;
 }
 
 function EntityList<T>(props: EntityListProps<T>) {
@@ -91,20 +75,17 @@ function EntityList<T>(props: EntityListProps<T>) {
         entityType,
         entities = [],
         renderItem,
-        keyExtractor,
         variant = "list",
         emptyState,
         emptyMessage = "No items found.",
-        sortOptions,
-        initialSortConfig,
         query,
-        visualizationToggle,
         viewContext = "search",
         entityId,
         className,
         allowLayoutToggle = true,
         showVisualization = true,
         visualizationData,
+        showVisualizationInitially = false,
     } = props;
 
     const { ref, inView } = useInView({
@@ -115,10 +96,11 @@ function EntityList<T>(props: EntityListProps<T>) {
     // State for layout variant (if toggle is allowed)
     const [layoutVariant, setLayoutVariant] = useState<LayoutVariant>(variant);
 
+    // Get sort options from constants
+    const sortOptions = getSortOptions(entityType)
+
     // Internal sort state - initialized with initialSortConfig or the first option in sortOptions
     const [sortConfig, setSortConfig] = useState<SortConfig<T>>(() => {
-        if (initialSortConfig) return initialSortConfig;
-        // If no initial config provided, use the first option as default with "desc" direction
         if (sortOptions && sortOptions.length > 0) {
             return {
                 field: sortOptions[0].field,
@@ -228,6 +210,18 @@ function EntityList<T>(props: EntityListProps<T>) {
     const displayTotalCount = query
         ? query.data?.pages[0]?.metadata?.totalCount
         : entities.length;
+
+    const [isVisualizationVisible, setIsVisualizationVisible] =
+    useState<boolean>(
+        showVisualizationInitially || false
+    );
+
+    const visualizationToggle={
+        isVisible: isVisualizationVisible,
+        toggle: () =>
+            setIsVisualizationVisible(!isVisualizationVisible),
+        showToggleButton: true,
+    }
 
     return (
         <div className={className}>
@@ -344,7 +338,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                 )}
             >
                 {entities?.map((entity, index) => (
-                    <React.Fragment key={keyExtractor(entity, index)}>
+                    <React.Fragment key={index}>
                         {renderItem(entity, index)}
                     </React.Fragment>
                 ))}

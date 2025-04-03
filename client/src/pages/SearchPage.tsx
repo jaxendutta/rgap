@@ -7,11 +7,15 @@ import {
     useAllGrantSearch,
     useGrantSearch,
 } from "@/hooks/api/useData";
-import { DEFAULT_SORT_CONFIG } from "@/types/search";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import type { GrantSearchParams, SortConfig } from "@/types/search";
+import {
+    getSortOptions,
+    type GrantSearchParams,
+    type SortConfig,
+} from "@/types/search";
 import EntitiesPage from "@/components/common/pages/EntitiesPage";
 import { Grant } from "@/types/models";
+import { GrantCard } from "@/components/features/grants/GrantCard";
 
 export const SearchPage = () => {
     const location = useLocation();
@@ -29,7 +33,10 @@ export const SearchPage = () => {
     // UI state controls
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [sortConfig] = useState<SortConfig<Grant>>(
-        stateSearchParams?.sortConfig || DEFAULT_SORT_CONFIG<Grant>
+        stateSearchParams?.sortConfig || {
+            field: getSortOptions("grant")[0].field,
+            direction: "desc",
+        }
     );
 
     // Initialize filters from state if available, otherwise use defaults
@@ -124,17 +131,15 @@ export const SearchPage = () => {
                 showPopularSearches: true,
             }}
             listConfig={{
-                type: "grants",
+                entityType: "grant",
                 query: searchQuery,
-                sortConfig: sortConfig,
+                renderItem: (grant) => <GrantCard grant={grant as Grant} />,
                 emptyMessage: isInitialState
                     ? "Enter search terms above to begin exploring grants."
                     : "No grants match your search criteria.",
                 showVisualization: true,
-                visualizationInitiallyVisible: false,
                 visualizationData: allGrants,
                 viewContext: "search",
-                keyExtractor: (grant: Grant) => grant.grant_id,
             }}
         />
     );

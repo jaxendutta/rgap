@@ -1,15 +1,7 @@
 // src/pages/BookmarksPage.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-    BookMarked,
-    University,
-    GraduationCap,
-    Search,
-    Calendar,
-    DollarSign,
-    Hash,
-} from "lucide-react";
+import { BookMarked, University, GraduationCap, Search } from "lucide-react";
 import { cn } from "@/utils/cn";
 import PageContainer from "@/components/common/layout/PageContainer";
 import PageHeader from "@/components/common/layout/PageHeader";
@@ -24,7 +16,6 @@ import { GrantCard } from "@/components/features/grants/GrantCard";
 import EntityList from "@/components/common/ui/EntityList";
 import EmptyState from "@/components/common/ui/EmptyState";
 import { SearchHistoryCard } from "@/components/features/account/SearchHistoryCard";
-import { DEFAULT_SORT_CONFIG } from "@/types/search";
 
 // Define the tab structure with correct bookmark types
 interface TabDefinition {
@@ -88,52 +79,6 @@ export const BookmarksPage = () => {
         }
     };
 
-    // Entity-specific key extractors
-    const keyExtractor = (item: any) => {
-        switch (activeTab) {
-            case "grant":
-                return item.grant_id;
-            case "recipient":
-                return item.recipient_id;
-            case "institute":
-                return item.institute_id;
-            case "search":
-                return item.history_id;
-        }
-    };
-
-    // Define sort options based on active tab
-    const getSortOptions = () => {
-        switch (activeTab) {
-            case "grant":
-                return [
-                    {
-                        field: "agreement_start_date",
-                        label: "Date",
-                        icon: Calendar,
-                    },
-                    { field: "agreement_value", label: "Value", icon: Search },
-                ];
-            case "recipient":
-            case "institute":
-                return [
-                    {
-                        field: "total_funding",
-                        label: "Funding",
-                        icon: DollarSign,
-                    },
-                    { field: "grant_count", label: "Grants", icon: BookMarked },
-                ];
-            case "search":
-                return [
-                    { field: "search_time", label: "Date", icon: Calendar },
-                    { field: "result_count", label: "Results", icon: Hash },
-                ];
-            default:
-                return [];
-        }
-    };
-
     // Check for loading or error states
     const isLoading = isLoadingBookmarks || isLoadingEntities;
     const isError = isBookmarksError || isEntitiesError;
@@ -178,21 +123,13 @@ export const BookmarksPage = () => {
             <EntityList
                 entityType={activeTab}
                 entities={bookmarkedItems}
+                query={useBookmarkedEntities(activeTab, user?.user_id)}
                 renderItem={renderItem}
-                keyExtractor={keyExtractor}
                 variant={
                     activeTab === "search" || activeTab === "grant"
                         ? "list"
                         : "grid"
                 }
-                sortOptions={getSortOptions()}
-                initialSortConfig={
-                    DEFAULT_SORT_CONFIG[
-                        activeTab as keyof typeof DEFAULT_SORT_CONFIG
-                    ]
-                }
-                totalCount={bookmarkedItems.length}
-                totalItems={bookmarkedItems.length}
                 emptyState={
                     <EmptyState
                         title={`Uh oh!`}
