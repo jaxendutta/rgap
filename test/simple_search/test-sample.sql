@@ -1,3 +1,4 @@
+-- Sample query for sp_search_institutes
 SELECT 
   i.institute_id,
   i.name,
