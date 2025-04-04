@@ -1,0 +1,15 @@
++--------------+-----------------------------------------------+--------------------------------+-----------+----------+---------+-------------+---------------+-------------------+---------------+
+| recipient_id | legal_name                                    | research_organization_name     | city      | province | country | grant_count | total_funding | latest_grant_date | is_bookmarked |
++--------------+-----------------------------------------------+--------------------------------+-----------+----------+---------+-------------+---------------+-------------------+---------------+
+|        48121 | University of Toronto                         | University of Toronto          | Toronto   | ON       | CA      |          50 |  563224716.00 | 2024-06-01        |             1 |
+|        48091 | McGill University                             | McGill University              | Montreal  | QC       | CA      |          44 |  352018809.00 | 2024-04-01        |             0 |
+|         3718 | The University of British Columbia            | University of British Columbia | Vancouver | BC       | CA      |          61 |  245939355.00 | 2024-06-01        |             1 |
+|         3747 | University of Calgary                         | University of Calgary          | Calgary   | AB       | CA      |          35 |  241187491.00 | 2024-06-01        |             0 |
+|         3727 | University of Ottawa                          | University of Ottawa           | Ottawa    | ON       | CA      |          38 |  212661333.00 | 2024-06-01        |             0 |
+|         3737 | Dalhousie University                          | Dalhousie University           | Truro     | NS       | CA      |          26 |  199004611.00 | 2023-09-01        |             0 |
+|         3776 | University of Alberta                         | University of Alberta          | Edmonton  | AB       | CA      |          41 |  170048085.00 | 2024-04-01        |             0 |
+|        10528 | Concordia University                          | Concordia University           | Montreal  | QC       | CA      |          27 |  164652502.00 | 2023-04-01        |             0 |
+|         3753 | York University                               | York University                | Toronto   | ON       | CA      |          33 |  156081305.00 | 2023-04-01        |             0 |
+|        48990 | University of Toronto - University of Toronto | University of Toronto          | Toronto   | ON       | CA      |           4 |  144470973.00 | 2019-04-01        |             0 |
++--------------+-----------------------------------------------+--------------------------------+-----------+----------+---------+-------------+---------------+-------------------+---------------+
+10 rows in set (0.95 sec)
