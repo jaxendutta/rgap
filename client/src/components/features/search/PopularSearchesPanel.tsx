@@ -51,6 +51,15 @@ export const PopularSearchesPanel = ({
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+
+    function swapDayMonth(dateStr: string): string {
+        const regex = /\b(\d{2})-(\d{2})-(\d{4})\b/g;
+        return dateStr.replace(regex, (match, day, month, year) => {
+            return `${year}-${month}-${day}`;
+        });
+    }
+
+
     // Fetch popular searches based on the date range
     useEffect(() => {
         const fetchPopularSearches = async () => {
@@ -59,21 +68,52 @@ export const PopularSearchesPanel = ({
 
             try {
                 // Format dates for API
-                const fromDate = formatDate(dateRange.from)
+                const fromDate = swapDayMonth(formatDate(dateRange.from)
                     .split("/")
-                    .join("-");
-                const toDate = formatDate(dateRange.to).split("/").join("-");
+                    .join("-"));
+                const toDate = swapDayMonth(formatDate(dateRange.to).split("/").join("-"));
 
                 // Fetch popular searches from API
-                const response = await API.get(`/search/popular-searches`, {
+                /*
+                const response = await API.get(`/popular-searches`, {
                     params: {
                         from: fromDate,
                         to: toDate,
                     },
-                });
+                });*/
+                const response0 = await API.post(`/popular-search/0`,
+                    {
+                        date_start: fromDate,
+                        date_end: toDate,
+                    });
+                const response1 = await API.post(`/popular-search/1`,
+                    {
+                        date_start: fromDate,
+                        date_end: toDate,
+                    });
+                const response2 = await API.post(`/popular-search/2`, 
+                    {
+                        date_start: fromDate,
+                        date_end: toDate,
+                    });
+                const response = {
+                    recipient: response1.data[0].map(item => ({
+                        text: item.search_term,
+                        count: item.frequency
+                    })),
+                    institute: response2.data[0].map(item => ({
+                        text: item.search_term,
+                        count: item.frequency
+                    })),
+                    grant: response0.data[0].map(item => ({
+                        text: item.search_term,
+                        count: item.frequency
+                    })),
+                };
+                //console.log(response1)
 
-                if (response.data) {
-                    setPopularSearches(response.data);
+                if (response1.data && response2.data && response0.data) {
+                    setPopularSearches(response);
                 }
             } catch (err) {
                 console.error("Error fetching popular searches:", err);

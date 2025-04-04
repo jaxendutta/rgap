@@ -27,8 +27,8 @@ import { pool } from "../config/db.js";
  *   POST http://localhost:4000/popular-search/0
  *   Body:
  *   {
- *     "date_start": "2024-01-01",
- *     "date_end": "2024-12-31"
+ *     "date_start": "2024-01-01 00:00:00",
+ *     "date_end": "2024-12-31 23:59:59"
  *   }
  */
 
@@ -37,8 +37,12 @@ export const getPopularSearchTerms = async (req, res) => {
         const { search_term_type } = req.params;
         const { date_start, date_end } = req.body;
         // Get user from database using stored procedure
-        const [results] = await pool.query("CALL sp_get_popular_search(?,?,?);", [date_start, date_end, search_term_type]);
+        const [results] = await pool.query("CALL sp_get_popular_search(?, ?, ?)", [`${date_start} 00:00:00`, `${date_end} 23:59:59`, search_term_type]);
         res.status(200).json(results);
+
+        //console.log({ search_term_type,date_start, date_end })
+        //console.log(results)
+        
     } catch (error) {
         console.error(`Error getting popular search terms: ${error.message}`);
         res.status(409).json({ message: error.message });
