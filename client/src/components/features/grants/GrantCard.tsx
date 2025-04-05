@@ -209,12 +209,12 @@ export const GrantCard = ({
                                 <Tag
                                     icon={Calendar1}
                                     size="md"
-                                    pill={true}
                                     variant="outline"
                                     className="hidden lg:flex"
-                                >
-                                    {formatDate(grant.agreement_start_date)}
-                                </Tag>
+                                    text={formatDate(
+                                        grant.agreement_start_date
+                                    )}
+                                />
                                 <span className="font-medium text-lg lg:text-xl">
                                     {formatCurrency(grant.agreement_value)}
                                 </span>
@@ -235,33 +235,29 @@ export const GrantCard = ({
                             <Tag
                                 icon={University}
                                 size="md"
-                                pill={true}
                                 variant="link"
                                 onClick={() =>
                                     (window.location.href = `/institutes/${grant.institute_id}`)
                                 }
+                                text={grant.research_organization_name}
                                 className="group w-full lg:w-auto"
-                            >
-                                <span className="flex items-center justify-between w-full gap-1.5">
-                                    {grant.research_organization_name}
-                                </span>
-                            </Tag>
+                            />
 
                             {/* Grant Title - Handle empty case */}
                             <Tag
                                 icon={BookMarked}
                                 size="md"
-                                pill={true}
                                 variant="outline"
                                 className={cn(
                                     !hasValue("agreement_title_en") &&
                                         "text-gray-400 italic",
                                     "w-full lg:w-min"
                                 )}
-                            >
-                                {grant.agreement_title_en ||
-                                    "No Agreement Title Record Found"}
-                            </Tag>
+                                text={
+                                    grant.agreement_title_en ||
+                                    "No Agreement Title Record Found"
+                                }
+                            />
                         </Tags>
 
                         {/* Tags */}
@@ -272,11 +268,9 @@ export const GrantCard = ({
                                         key={index}
                                         icon={tag.icon}
                                         size="sm"
-                                        pill={true}
                                         variant="default"
-                                    >
-                                        {tag.text}
-                                    </Tag>
+                                        text={tag.text}
+                                    />
                                 ))}
                             </Tags>
                         </div>

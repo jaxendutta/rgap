@@ -4,7 +4,7 @@ import { LucideIcon } from "lucide-react";
 import { responsive } from "@/utils/responsive";
 
 const variants = {
-    primary: "bg-gray-900 text-white hover:bg-gray-800",
+    primary: "bg-gray-800 text-white hover:bg-gray-800",
     secondary:
         "bg-white text-gray-700 border border-gray-300 lg:hover:bg-gray-50",
     outline:
@@ -14,8 +14,8 @@ const variants = {
 };
 
 const sizes = {
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-4 py-1.5 text-sm",
+    sm: "px-3 py-2 text-sm",
+    md: "px-3 py-2.5 text-sm",
     lg: "px-6 py-3 text-md",
 };
 
@@ -26,8 +26,8 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
     rightIcon?: LucideIcon;
     isLoading?: boolean;
     pill?: boolean;
-    responsiveText?: boolean;
-    responsiveIcon?: "hideOnMobile" | "hideOnDesktop" | "always"; // Control icon visibility
+    responsiveText?: "hideOnMobile" | "hideOnDesktop" | "always" | "firstWord";
+    responsiveIcon?: "hideOnMobile" | "hideOnDesktop" | "always";
 }
 
 export const Button = ({
@@ -38,10 +38,10 @@ export const Button = ({
     leftIcon: LeftIcon,
     rightIcon: RightIcon,
     isLoading,
-    pill=false,
+    pill=true,
     disabled,
-    responsiveText = false, // Default is false to maintain backward compatibility
-    responsiveIcon = "always", // Default always shows icon
+    responsiveText = "always",
+    responsiveIcon = "always",
     ...props
 }: ButtonProps) => {
     // Handle responsive icon visibility
@@ -70,12 +70,12 @@ export const Button = ({
             ) : (
                 <>
                     {LeftIcon && (
-                        <span className={cn("", iconClasses[responsiveIcon])}>
+                        <span className={cn(iconClasses[responsiveIcon])}>
                             <LeftIcon className="w-4 h-4 flex-shrink-0" />
                         </span>
                     )}
 
-                    {responsiveText ? (
+                    {responsiveText === "firstWord" ? (
                         <>
                             <span className={responsive.visibleOnlyOnMobile}>
                                 {/* Short text for mobile */}
@@ -87,6 +87,14 @@ export const Button = ({
                                 {children}
                             </span>
                         </>
+                    ) : responsiveText === "hideOnMobile" ? (
+                        <span className={responsive.hiddenOnMobile}>
+                            {children}
+                        </span>
+                    ) : responsiveText === "hideOnDesktop" ? (
+                        <span className={responsive.visibleOnlyOnMobile}>
+                            {children}
+                        </span>
                     ) : (
                         children
                     )}

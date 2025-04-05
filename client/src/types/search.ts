@@ -10,6 +10,23 @@ import {
     LucideIcon,
 } from "lucide-react";
 
+// Search History
+export interface SearchHistory {
+    history_id: number;
+    search_time: Date;
+    search_params: GrantSearchParams;
+    result_count: number;
+    bookmarked: boolean;
+}
+
+// Popular Search
+export interface PopularSearch {
+    text: string;
+    count: number;
+    category: SearchCategory;
+    index?: number;
+}
+
 export interface SortConfig<T> {
     field: keyof T;
     direction: "asc" | "desc";
@@ -133,3 +150,4 @@ export interface SearchResponse {
 export type ChartType = "line" | "bar";
 export type ProfileTab = "grants" | "analytics" | "recipients";
 export type ChartMetric = "funding" | "grants" | "counts";
+export type SearchCategory = "recipient" | "institute" | "grant";

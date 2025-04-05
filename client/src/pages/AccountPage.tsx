@@ -8,18 +8,15 @@ import {
     Eye,
     EyeOff,
     Shield,
-    Calendar,
     Trash2,
     AlertCircle,
     X,
     Search,
-    Hash,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/common/ui/Card";
 import { Button } from "@/components/common/ui/Button";
 import { SearchHistoryCard } from "@/components/features/account/SearchHistoryCard";
-import { cn } from "@/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
 import PageContainer from "@/components/common/layout/PageContainer";
@@ -27,24 +24,25 @@ import PageHeader from "@/components/common/layout/PageHeader";
 import { useUser } from "@/hooks/api/useUser";
 import { useUserSearchHistory } from "@/hooks/api/useSearchHistory";
 import EntityList from "@/components/common/ui/EntityList";
-import { SearchHistory } from "@/types/models";
+import { SearchHistory } from "@/types/search";
 import createAPI from "@/utils/api";
 import EmptyState from "@/components/common/ui/EmptyState";
-import { getDataFromResult, getTotalFromResult } from "@/hooks/api/useData";
+import { getDataFromResult } from "@/hooks/api/useData";
+import Tabs, { TabItem } from "@/components/common/ui/Tabs";
 
 const API = createAPI();
 
-const TABS = [
+const tabs: TabItem[] = [
     { id: "profile", label: "Profile", icon: User },
     { id: "security", label: "Security", icon: Shield },
     { id: "history", label: "History", icon: History },
     { id: "logout", label: "Sign Out", icon: LogOut },
-] as const;
+];
 
 export default function AccountPage() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] =
-        useState<(typeof TABS)[number]["id"]>("profile");
+        useState<(typeof tabs)[number]["id"]>("profile");
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
 
@@ -217,35 +215,14 @@ export default function AccountPage() {
             />
 
             {/* Tabs */}
-            <div className="flex space-x-2 lg:space-x-4">
-                {TABS.map(({ id, label, icon: Icon }) => {
-                    const isActive = activeTab === id;
-                    const isLogout = id === "logout";
-
-                    return (
-                        <button
-                            key={id}
-                            onClick={() => setActiveTab(id)}
-                            className={cn(
-                                "w-full flex items-center py-3 rounded-lg transition-all duration-200 gap-0.5 lg:gap-2",
-                                isActive
-                                    ? isLogout
-                                        ? "bg-red-600 text-white hover:bg-red-700"
-                                        : "bg-gray-900 text-white hover:bg-gray-800"
-                                    : isLogout
-                                    ? "bg-red-50 text-red-600 hover:bg-red-100"
-                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200",
-                                "flex-col lg:flex-row",
-                                "px-2 lg:px-4",
-                                "text-sm lg:text-base"
-                            )}
-                        >
-                            <Icon className="h-6 w-6 mb-1 sm:mb-0" />
-                            <span>{label}</span>
-                        </button>
-                    );
-                })}
-            </div>
+            <Tabs
+                tabs={tabs}
+                activeTab={activeTab}
+                onChange={(tabId) => setActiveTab(tabId as string)}
+                variant="pills"
+                size="md"
+                fullWidth={true}
+            />
 
             {/* Content */}
             <AnimatePresence mode="wait">
@@ -446,26 +423,7 @@ export default function AccountPage() {
                                     entities={paginatedSearchHistory}
                                     query={searchHistoryQuery}
                                     renderItem={renderSearchHistoryItem}
-                                    keyExtractor={(search: SearchHistory) =>
-                                        search.history_id
-                                    }
                                     variant="list"
-                                    sortOptions={[
-                                        {
-                                            label: "Date",
-                                            icon: Calendar,
-                                            field: "search_time",
-                                        },
-                                        {
-                                            label: "Results",
-                                            icon: Hash,
-                                            field: "result_count",
-                                        },
-                                    ]}
-                                    initialSortConfig={{
-                                        field: "search_time",
-                                        direction: "desc",
-                                    }}
                                     emptyState={
                                         <EmptyState
                                             title="No Search History"
@@ -479,10 +437,6 @@ export default function AccountPage() {
                                             }}
                                         />
                                     }
-                                    totalCount={getTotalFromResult(
-                                        searchHistoryQuery
-                                    )}
-                                    totalItems={paginatedSearchHistory.length}
                                 />
                             )}
                         </Card>

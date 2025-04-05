@@ -9,17 +9,17 @@ import {
     Sparkles,
     LucideIcon,
 } from "lucide-react";
+import { cn } from "@/utils/cn";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/ui/Button";
 import { Card } from "@/components/common/ui/Card";
 import { FilterPanel } from "@/components/features/filter/FilterPanel";
 import { FilterTags } from "@/components/features/filter/FilterTags";
-import { DEFAULT_FILTER_STATE, FilterKey } from "@/constants/filters";
 import { PopularSearchesPanel } from "@/components/features/search/PopularSearchesPanel";
-import { SearchCategory } from "@/hooks/api/usePopularSearches";
-import { AnimatePresence, motion } from "framer-motion";
-import { cn } from "@/utils/cn";
 import { SearchField } from "@/components/common/ui/SearchField";
+import { SearchCategory } from "@/types/search";
+import { DEFAULT_FILTER_STATE, FilterKey } from "@/constants/filters";
 
 export interface SearchField {
     key: string;
@@ -339,14 +339,9 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                                     ? "bg-blue-100 hover:bg-blue-100 rounded-full text-blue-600 border border-blue-300"
                                     : "shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:rounded-full"
                             )}
+                            responsiveText="firstWord"
                         >
-                            <span>
-                                Popular
-                                <span className="hidden lg:inline">
-                                    {" "}
-                                    Searches
-                                </span>
-                            </span>
+                            Popular Searches
                         </Button>
                     )}
                     <Button
@@ -362,8 +357,9 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                                 ? "bg-blue-100 hover:bg-blue-100 rounded-full text-blue-600 border border-blue-300"
                                 : "shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:rounded-full"
                         )}
+                        responsiveText="hideOnMobile"
                     >
-                        <span className="hidden lg:inline">Filters</span>
+                        Filters
                     </Button>
                 </div>
 
@@ -381,8 +377,9 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                                     ? "bg-blue-100 hover:bg-blue-100 rounded-full text-blue-600 border border-blue-300"
                                     : "shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:rounded-full"
                             )}
+                            responsiveText="hideOnMobile"
                         >
-                            <span className="hidden lg:inline">Bookmark</span>
+                            Bookmark
                         </Button>
                     )}
                     <Button

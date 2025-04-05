@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import createAPI from "@/utils/api";
-import { GrantSearchParams } from "@/types/search";
+import { GrantSearchParams, SearchCategory } from "@/types/search";
 
 const API = createAPI();
 
@@ -475,7 +475,7 @@ export function useSearchData(
  * Hook for retrieving a specific entity by ID with bookmark information
  */
 export function useEntityById(
-    entityType: "recipient" | "institute" | "grant",
+    entityType: SearchCategory,
     id: number | string | undefined,
     options: Omit<DataFetchOptions, "queryType" | "pagination"> = {}
 ) {

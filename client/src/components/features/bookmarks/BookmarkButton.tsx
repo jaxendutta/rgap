@@ -136,7 +136,6 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
         <Button
             size={size}
             variant={buttonVariant}
-            pill={true}
             leftIcon={visualBookmarkState ? BookmarkCheck : BookmarkPlus}
             onClick={handleToggleBookmark}
             disabled={toggleBookmarkMutation.isPending}

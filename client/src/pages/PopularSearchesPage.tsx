@@ -1,7 +1,6 @@
 // src/pages/PopularSearchesPage.tsx
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { UseInfiniteQueryResult } from "@tanstack/react-query";
 import {
     UserRoundSearch,
     University,
@@ -10,20 +9,78 @@ import {
     BookMarked,
     ArrowRight,
 } from "lucide-react";
+import PageContainer from "@/components/common/layout/PageContainer";
+import PageHeader from "@/components/common/layout/PageHeader";
 import { Card } from "@/components/common/ui/Card";
 import { DateRangeFilter } from "@/components/common/ui/DateRangeFilter";
-import PageHeader from "@/components/common/layout/PageHeader";
-import PageContainer from "@/components/common/layout/PageContainer";
-import { Button } from "@/components/common/ui/Button";
+import EmptyState from "@/components/common/ui/EmptyState";
 import Tabs from "@/components/common/ui/Tabs";
 import EntityList from "@/components/common/ui/EntityList";
-import usePopularSearches, {
-    SearchCategory,
-} from "@/hooks/api/usePopularSearches";
+import { Button } from "@/components/common/ui/Button";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import { SortConfig } from "@/types/search";
-import { PopularSearch, Entity } from "@/types/models";
-import EmptyState from "@/components/common/ui/EmptyState";
+import { PopularSearch, SearchCategory } from "@/types/search";
+import { getDataFromResult } from "@/hooks/api/useData";
+import { usePopularSearches } from "@/hooks/api/usePopularSearches";
+
+const PopularSearchCard = (item: PopularSearch) => {
+    const navigate = useNavigate();
+
+    // Handle search term selection
+    const handleSelectTerm = (category: SearchCategory, term: string) => {
+        // Create search terms for navigation
+        const searchTerms: Record<string, string> = {
+            recipient: category === "recipient" ? term : "",
+            institute: category === "institute" ? term : "",
+            grant: category === "grant" ? term : "",
+        };
+
+        // Navigate to the search page with search parameters in state
+        navigate("/search", {
+            state: {
+                searchParams: {
+                    searchTerms,
+                    filters: DEFAULT_FILTER_STATE,
+                },
+            },
+        });
+    };
+
+    return (
+        <Card className="p-3 hover:border-gray-300 transition-all">
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
+                        {(item.index !== undefined && item.index < 1000
+                            ? item.index
+                            : 0) + 1}
+                    </div>
+                    <div className="flex flex-col truncate">
+                        <span className="font-medium">{item.text}</span>
+                        <span className="text-sm text-gray-500">
+                            {item.count} searches
+                        </span>
+                    </div>
+                </div>
+
+                <Button
+                    size="sm"
+                    variant="outline"
+                    leftIcon={Search}
+                    className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    onClick={() =>
+                        handleSelectTerm(
+                            item.category as SearchCategory,
+                            item.text
+                        )
+                    }
+                    responsiveText={"firstWord"}
+                >
+                    Search
+                </Button>
+            </div>
+        </Card>
+    );
+};
 
 const PopularSearchesPage = () => {
     const navigate = useNavigate();
@@ -40,10 +97,6 @@ const PopularSearchesPage = () => {
         from: DEFAULT_FILTER_STATE.dateRange.from,
         to: DEFAULT_FILTER_STATE.dateRange.to,
     });
-    const [sortConfig] = useState<SortConfig<PopularSearch>>({
-        field: "count",
-        direction: "desc",
-    });
 
     // Update URL when category changes
     useEffect(() => {
@@ -51,7 +104,7 @@ const PopularSearchesPage = () => {
         setSearchParams(searchParams);
     }, [activeCategory, searchParams, setSearchParams]);
 
-    // Define the tabs for the interface
+    // Define the tabs configuration
     const tabs = [
         {
             id: "recipient",
@@ -70,104 +123,23 @@ const PopularSearchesPage = () => {
         },
     ];
 
-    // Fetch popular searches with pagination
-    const { popularSearches, isLoading, error, refetch } =
-        usePopularSearches({
-            dateRange,
-            enabled: true,
-        });
-    
-    // Calculate total items from the search results
-    const totalItems = Array.isArray(popularSearches) ? popularSearches.length : 0;
+    // Fetch popular searches with infinite pagination
+    const popularSearchesQuery = usePopularSearches({
+        dateRange,
+        category: activeCategory,
+        limit: 20,
+        enabled: true,
+    });
 
-    // Sort items based on current sort config
-    const sortedItems = useMemo(() => {
-        const { field, direction } = sortConfig;
-        return [...popularSearches].sort((a, b) => {
-            const aVal = a[field];
-            const bVal = b[field];
+    // Extract data from query using the same helpers as other entity lists
+    const searchTerms = useMemo(() => {
+        return getDataFromResult(popularSearchesQuery);
+    }, [popularSearchesQuery.data]);
 
-            if (typeof aVal === "number" && typeof bVal === "number") {
-                return direction === "asc" ? aVal - bVal : bVal - aVal;
-            }
-
-            if (typeof aVal === "string" && typeof bVal === "string") {
-                return direction === "asc"
-                    ? aVal.localeCompare(bVal)
-                    : bVal.localeCompare(aVal);
-            }
-
-            return 0;
-        });
-    }, [popularSearches, sortConfig]);
-
-    // Handle date range change
+    // Date range change handler
     const handleDateRangeChange = (newRange: { from: Date; to: Date }) => {
         setDateRange(newRange);
     };
-
-    // Handle search term selection
-    const handleSelectTerm = (category: SearchCategory, term: string) => {
-        // Navigate to the search page with the selected term and set state to trigger immediate search
-        const searchTerms: Record<string, string> = {
-            recipient: category === "recipient" ? term : "",
-            institute: category === "institute" ? term : "",
-            grant: category === "grant" ? term : "",
-        };
-
-        // Navigate to the search page with search parameters in state
-        navigate("/search", {
-            state: {
-                searchParams: {
-                    searchTerms,
-                    filters: DEFAULT_FILTER_STATE,
-                },
-            },
-        });
-    };
-
-    // Render a search term item
-    const renderSearchTermItem = (item: Entity["popular_search"]) => (
-        <Card className="p-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
-            <div className="flex items-center gap-3 w-full truncate">
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
-                    {(item.index !== undefined ? item.index : 0) + 1}
-                </div>
-                <div className="flex flex-col truncate">
-                    <span className="font-medium truncate">{item.text}</span>
-                    <span className="text-sm text-gray-500 truncate">
-                        {item.count} searches
-                    </span>
-                </div>
-            </div>
-
-            <Button
-                size="sm"
-                variant="secondary"
-                pill={true}
-                leftIcon={Search}
-                className="p-2 transition-colors hover:text-blue-600 hover:shadow-sm hover:border-blue-200"
-                onClick={() => handleSelectTerm(item.category, item.text)}
-            />
-        </Card>
-    );
-
-    // Create a mock query result that matches the expected interface
-    const mockQueryResult = useMemo(() => ({
-        data: {
-            pages: [
-                {
-                    totalItems,
-                    items: sortedItems,
-                },
-            ],
-            pageParams: [0],
-        },
-        isLoading,
-        isError: !!error,
-        error,
-        refetch,
-    } as UseInfiniteQueryResult<any, Error>), [totalItems, sortedItems, isLoading, error, refetch]);
 
     return (
         <PageContainer>
@@ -175,49 +147,47 @@ const PopularSearchesPage = () => {
                 title="Popular Searches"
                 subtitle="Discover trending search terms across our database"
             />
-            <div className="mb-4">
-                <DateRangeFilter
-                    label="Time Period"
-                    value={dateRange}
-                    onChange={handleDateRangeChange}
-                />
-            </div>
 
-            <Card className="mb-8">
-                {/* Category Tabs */}
+            <div className="flex flex-col-reverse lg:flex-row items-center justify-between gap-4 mb-6">
                 <Tabs
                     tabs={tabs}
                     activeTab={activeCategory}
                     onChange={(tabId) =>
                         setActiveCategory(tabId as SearchCategory)
                     }
-                    variant="underline"
+                    variant="pills"
                     size="md"
                     fullWidth={true}
                 />
 
-                {/* Search Terms List using EntityList */}
-                <EntityList<PopularSearch>
-                    entityType={`popular_search`}
-                    entities={sortedItems}
-                    renderItem={(item) => renderSearchTermItem(item)}
-                    variant="list"
-                    query={mockQueryResult}
-                    emptyState={
-                        <EmptyState
-                            title="No Popular Searches Found"
-                            message="Try selecting a different date range or category."
-                            icon={BookMarked}
-                            primaryAction={{
-                                label: "Go to Search",
-                                icon: ArrowRight,
-                                onClick: () => navigate("/search"),
-                            }}
-                        />
-                    }
-                    className="p-4"
+                <DateRangeFilter
+                    label="Time Period"
+                    value={dateRange}
+                    onChange={handleDateRangeChange}
+                    className="w-full lg:w-auto"
                 />
-            </Card>
+            </div>
+
+            <EntityList
+                entityType="popular_search"
+                entities={searchTerms}
+                renderItem={PopularSearchCard}
+                variant="grid"
+                query={popularSearchesQuery}
+                emptyState={
+                    <EmptyState
+                        title="No Popular Searches Found"
+                        message="Try selecting a different date range or category."
+                        icon={BookMarked}
+                        variant={"card"}
+                        primaryAction={{
+                            label: "Go to Search",
+                            icon: ArrowRight,
+                            onClick: () => navigate("/search"),
+                        }}
+                    />
+                }
+            />
         </PageContainer>
     );
 };

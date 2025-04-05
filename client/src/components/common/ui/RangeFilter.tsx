@@ -134,8 +134,7 @@ export function RangeFilter<T>({
     return (
         <div className={cn("relative z-20", className)} ref={dropdownRef}>
             <Button
-                variant="outline"
-                pill={true}
+                variant="outline"                
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
                     "flex items-center justify-between w-full px-3 py-2 bg-white text-sm border hover:shadow-sm",

@@ -235,8 +235,9 @@ export default function TrendsPage() {
                         leftIcon={Sliders}
                         onClick={() => setIsFilterVisible(!isFilterVisible)}
                         className="py-2.5"
+                        responsiveText="hideOnMobile"
                     >
-                        <span className="hidden lg:inline">{isFilterVisible ? "Hide Filters" : "Show Filters"}</span>
+                        {isFilterVisible ? "Hide Filters" : "Show Filters"}
                     </Button>
 
                     {/* Date Range */}
@@ -318,9 +319,8 @@ export default function TrendsPage() {
                                             )
                                         )
                                     }
-                                >
-                                    {agency}
-                                </Tag>
+                                    text={agency}
+                                />
                             ))}
 
                             {selectedCountries.map((country) => (
@@ -335,9 +335,8 @@ export default function TrendsPage() {
                                             )
                                         )
                                     }
-                                >
-                                    {country}
-                                </Tag>
+                                    text={country}
+                                />
                             ))}
 
                             {selectedProvinces.map((province) => (
@@ -352,9 +351,8 @@ export default function TrendsPage() {
                                             )
                                         )
                                     }
-                                >
-                                    {province}
-                                </Tag>
+                                    text={province}
+                                />
                             ))}
 
                             {selectedCities.map((city) => (
@@ -369,9 +367,8 @@ export default function TrendsPage() {
                                             )
                                         )
                                     }
-                                >
-                                    {city}
-                                </Tag>
+                                    text={city}
+                                />
                             ))}
 
                             {/* Clear All Button */}
@@ -379,9 +376,8 @@ export default function TrendsPage() {
                                 variant="ghost"
                                 onRemove={resetFilters}
                                 className="ml-auto cursor-pointer hover:bg-gray-100"
-                            >
-                                Clear All Filters
-                            </Tag>
+                                text={"Clear All"}
+                            />
                         </Tags>
                     </div>
                 )}

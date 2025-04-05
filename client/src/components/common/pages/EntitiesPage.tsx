@@ -131,8 +131,9 @@ const EntitiesPage = <T,>({
                         leftIcon={Search}
                         onClick={handleSearch}
                         className="bg-gray-900 hover:bg-gray-800"
+                        responsiveText={"hideOnMobile"}
                     >
-                        <span className="hidden lg:inline">Search</span>
+                        Search
                     </Button>
                 </div>
             );
@@ -141,7 +142,7 @@ const EntitiesPage = <T,>({
 
     // Render the appropriate list component based on the type
     const renderList = () => {
-        if (listConfig.entityType === "grants" as keyof Entity) {
+        if (listConfig.entityType === ("grants" as keyof Entity)) {
             return (
                 <EntityList
                     entityType="grant"
@@ -159,23 +160,7 @@ const EntitiesPage = <T,>({
             );
         } else {
             const entities = getEntitiesFromQuery(listConfig.query);
-            return (
-                <EntityList
-                    entityType={listConfig.entityType}
-                    entities={entities}
-                    renderItem={
-                        listConfig.renderItem ||
-                        ((item) => <div>{JSON.stringify(item)}</div>)
-                    }
-                    variant={listConfig.variant || "list"}
-                    query={listConfig.query}
-                    viewContext={listConfig.viewContext}
-                    isLoading={listConfig.query.isLoading}
-                    isError={listConfig.query.isError}
-                    error={listConfig.query.error}
-                    emptyMessage={listConfig.emptyMessage}
-                />
-            );
+            return <EntityList {...listConfig} entities={entities} />;
         }
     };
 

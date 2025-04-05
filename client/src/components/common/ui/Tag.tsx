@@ -42,7 +42,7 @@ const iconSpacing = {
 
 export interface TagProps {
     /** The text content of the tag */
-    children: React.ReactNode;
+    text: string;
 
     /** Icon to show before the text */
     icon?: LucideIcon;
@@ -70,12 +70,12 @@ export interface TagProps {
 }
 
 export const Tag: React.FC<TagProps> = ({
-    children,
+    text,
     icon: Icon,
     variant = "default",
     size = "md",
     onRemove,
-    pill = false,
+    pill = true,
     className,
     iconProps,
     onClick,
@@ -103,7 +103,7 @@ export const Tag: React.FC<TagProps> = ({
                 />
             )}
 
-            <span className="truncate flex-1">{children}</span>
+            <span className="truncate flex-1">{text}</span>
             {onClick && (
                 <ArrowUpRight
                     className={cn(

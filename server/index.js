@@ -57,7 +57,7 @@ app.use("/recipients", recipientRoutes);
 app.use("/institutes", instituteRoutes);
 app.use("/bookmark", bookmarkRoutes);
 app.use("/search-history", searchHistoryRoutes);
-app.use("/popular-searches", popularSearchRoutes);
+app.use("/search/popular", popularSearchRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

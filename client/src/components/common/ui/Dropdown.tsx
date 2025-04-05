@@ -85,8 +85,7 @@ export const Dropdown = ({
     return (
         <div className="relative" ref={dropdownRef}>
             <Button
-                variant={"outline"}
-                pill={true}
+                variant={"outline"}                
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
                     "flex items-center justify-between w-full px-3 py-2 text-sm border lg:hover:bg-gray-50",

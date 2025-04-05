@@ -248,19 +248,16 @@ const EntityCard = ({
                             <Tag
                                 key={index}
                                 icon={item.icon}
-                                size="sm"
-                                pill={true}
+                                size="sm"                                
                                 variant={item.link ? "link" : "outline"}
                                 onClick={
                                     item.link
                                         ? () => navigate(item.link)
                                         : undefined
                                 }
-                            >
-                                <span className="truncate max-w-full">
-                                    {item.text}
-                                </span>
-                            </Tag>
+                                text={item.text}
+                                className="truncate max-w-full"
+                            />
                         ))}
                     </Tags>
                 </div>

@@ -1,13 +1,7 @@
 // src/components/common/ui/EntityList.tsx
 import React, { useState, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
-import {
-    MoreHorizontal,
-    X,
-    LineChart,
-    Grid,
-    List,
-} from "lucide-react";
+import { MoreHorizontal, X, LineChart, Grid, List } from "lucide-react";
 import { SortButton } from "./SortButton";
 import { Button } from "./Button";
 import LoadingState from "./LoadingState";
@@ -90,16 +84,12 @@ function EntityList<T>(props: EntityListProps<T>) {
 
     const { ref, inView } = useInView({
         threshold: 0.1,
-        rootMargin: "0px 0px 500px 0px", // Trigger 500px before reaching the end
+        rootMargin: "0px 0px 500px 0px",
     });
 
-    // State for layout variant (if toggle is allowed)
     const [layoutVariant, setLayoutVariant] = useState<LayoutVariant>(variant);
+    const sortOptions = getSortOptions(entityType);
 
-    // Get sort options from constants
-    const sortOptions = getSortOptions(entityType)
-
-    // Internal sort state - initialized with initialSortConfig or the first option in sortOptions
     const [sortConfig, setSortConfig] = useState<SortConfig<T>>(() => {
         if (sortOptions && sortOptions.length > 0) {
             return {
@@ -107,11 +97,9 @@ function EntityList<T>(props: EntityListProps<T>) {
                 direction: "desc",
             };
         }
-        // Fallback
         return { field: "id" as keyof T, direction: "desc" };
     });
 
-    // Handle loading and error states - either from props or from infiniteQuery
     const isLoading =
         props.isLoading !== undefined ? props.isLoading : query?.isLoading;
     const isError =
@@ -122,7 +110,6 @@ function EntityList<T>(props: EntityListProps<T>) {
         : false;
     const hasNextPage = isInfiniteQuery(query) ? query.hasNextPage : false;
 
-    // Load more data when user scrolls to the bottom
     useEffect(() => {
         if (
             inView &&
@@ -135,43 +122,44 @@ function EntityList<T>(props: EntityListProps<T>) {
         }
     }, [inView, query, hasNextPage, isFetchingNextPage]);
 
-    // Sort change handler that encapsulates all the sorting logic
     const handleSortChange = (field: keyof T) => {
-        // Determine new sort direction
         const newDirection =
             field === sortConfig.field && sortConfig.direction === "desc"
                 ? "asc"
                 : "desc";
 
-        // Create new sort config
         const newSortConfig = {
             field,
             direction: newDirection as "asc" | "desc",
         };
 
-        // Update internal sort state
         setSortConfig(newSortConfig);
 
-        // If we have a query, handle the sorting by refetching with new parameters
         if (query) {
-            // For infinite queries that have fetchNextPage
             if (isInfiniteQuery(query)) {
-                // Reset the cache for the infinite query and refetch
                 query.refetch();
-            }
-            // For regular queries, just refetch
-            else if (typeof query.refetch === "function") {
+            } else if (typeof query.refetch === "function") {
                 query.refetch();
             }
         }
     };
 
-    // Toggle layout variant
     const toggleLayoutVariant = () => {
         setLayoutVariant((prev) => (prev === "list" ? "grid" : "list"));
     };
 
-    // Handle error state
+    const [isVisualizationVisible, setIsVisualizationVisible] =
+        useState<boolean>(showVisualizationInitially || false);
+
+    const visualizationToggle = React.useMemo(() => {
+        return {
+            isVisible: isVisualizationVisible,
+            toggle: () => setIsVisualizationVisible((prev) => !prev),
+            showToggleButton: !!visualizationData?.length,
+        };
+    }, [isVisualizationVisible, visualizationData]);
+
+    // Render content based on loading, error, or empty states
     if (isError && error) {
         return (
             <ErrorState
@@ -187,12 +175,10 @@ function EntityList<T>(props: EntityListProps<T>) {
         );
     }
 
-    // Handle initial loading state
     if (isLoading && entities?.length === 0) {
         return <LoadingState title={`Loading ${entityType}...`} size="md" />;
     }
 
-    // Handle empty state
     if (!isLoading && entities?.length === 0) {
         return (
             emptyState || (
@@ -205,23 +191,10 @@ function EntityList<T>(props: EntityListProps<T>) {
         );
     }
 
-    // Get total items count for display
     const displayTotalItems = entities.length;
     const displayTotalCount = query
         ? query.data?.pages[0]?.metadata?.totalCount
         : entities.length;
-
-    const [isVisualizationVisible, setIsVisualizationVisible] =
-    useState<boolean>(
-        showVisualizationInitially || false
-    );
-
-    const visualizationToggle={
-        isVisible: isVisualizationVisible,
-        toggle: () =>
-            setIsVisualizationVisible(!isVisualizationVisible),
-        showToggleButton: true,
-    }
 
     return (
         <div className={className}>
@@ -237,9 +210,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                         <span className="font-semibold">
                             {displayTotalCount.toLocaleString()}
                         </span>
-                        {entityType === "search"
-                            ? ` search records`
-                            : ` ${entityType.toLowerCase()}s`}
+                        {displayTotalCount > 1 ? ` records` : ` record`}
                     </span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -269,12 +240,11 @@ function EntityList<T>(props: EntityListProps<T>) {
                                 }
                                 onClick={visualizationToggle.toggle}
                                 disabled={visualizationData.length === 0}
+                                responsiveText="hideOnMobile"
                             >
-                                <span className="hidden lg:inline">
-                                    {visualizationToggle.isVisible
-                                        ? "Hide Trends"
-                                        : "Show Trends"}
-                                </span>
+                                {visualizationToggle.isVisible
+                                    ? "Hide Trends"
+                                    : "Show Trends"}
                             </Button>
                         )}
 
@@ -282,11 +252,10 @@ function EntityList<T>(props: EntityListProps<T>) {
                     {allowLayoutToggle && (
                         <Button
                             variant="secondary"
-                            size="sm"
                             leftIcon={layoutVariant === "grid" ? List : Grid}
                             onClick={toggleLayoutVariant}
                             className="hidden lg:inline-flex"
-                        ></Button>
+                        />
                     )}
                 </div>
             </div>
@@ -310,7 +279,6 @@ function EntityList<T>(props: EntityListProps<T>) {
                         }}
                         className="overflow-hidden mt-4 mb-6"
                     >
-                        {/* Get loading state from either visualization data source */}
                         {visualizationData && visualizationData.length > 0 ? (
                             <TrendVisualizer
                                 grants={visualizationData}
@@ -350,7 +318,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                     {isFetchingNextPage ? (
                         <LoadingState
                             title=""
-                            message={`Loading more ${entityType.toLowerCase()} data...`}
+                            message={`Loading more data...`}
                             size="sm"
                         />
                     ) : hasNextPage ? (
@@ -363,7 +331,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                         </Button>
                     ) : (entities?.length ?? 0) > 0 ? (
                         <p className="text-sm text-gray-500">
-                            All {entityType.toLowerCase()}s loaded
+                            All records loaded
                         </p>
                     ) : null}
                 </div>

@@ -1,7 +1,8 @@
 // src/components/common/ui/Tabs.tsx
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/utils/cn";
+import { motion } from "framer-motion";
 
 export interface TabItem {
     id: string;
@@ -36,11 +37,25 @@ const Tabs: React.FC<TabsProps> = ({
     className,
     tabClassName,
 }) => {
+    // Refs for each tab button to measure positions
+    const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+    // State to track the position and dimensions of the active pill background
+    const [pillStyle, setPillStyle] = useState({
+        left: 0,
+        width: 0,
+        height: 0,
+        top: 0,
+    });
+
+    // Track if the component has mounted to prevent initial animation
+    const [hasMounted, setHasMounted] = useState(false);
+
     // Size-specific styles with vertical padding
     const sizeClasses = {
-        sm: "text-sm py-2 px-2",
-        md: "text-md py-3 px-3",
-        lg: "text-base py-4 px-4",
+        sm: "text-sm py-1.5 px-3",
+        md: "text-md py-1.5 px-4",
+        lg: "text-base py-2 px-5",
     };
 
     // Variant-specific styles
@@ -48,8 +63,8 @@ const Tabs: React.FC<TabsProps> = ({
         switch (variant) {
             case "pills":
                 return isActive
-                    ? "bg-blue-600 text-white rounded-md"
-                    : "text-gray-600 hover:bg-gray-100 rounded-md";
+                    ? "text-white relative z-10" // Text is white, but the background is handled by the sliding pill
+                    : "text-gray-600 hover:text-gray-900 relative z-10"; // Just the text color changes on hover
             case "underline":
                 return isActive
                     ? "border-b-2 border-blue-500 text-blue-600"
@@ -62,30 +77,104 @@ const Tabs: React.FC<TabsProps> = ({
         }
     };
 
-    // Orientation-specific container classes
-    const containerClasses =
+    // Update pill position based on the active tab
+    useEffect(() => {
+        if (variant !== "pills" || !tabRefs.current.length) return;
+
+        const activeIndex = tabs.findIndex((tab) => tab.id === activeTab);
+        if (activeIndex === -1) return;
+
+        const activeTabElement = tabRefs.current[activeIndex];
+        if (!activeTabElement) return;
+
+        const rect = activeTabElement.getBoundingClientRect();
+        const parentRect =
+            activeTabElement.parentElement?.getBoundingClientRect();
+
+        if (parentRect) {
+            setPillStyle({
+                left:
+                    orientation === "horizontal"
+                        ? activeTabElement.offsetLeft
+                        : 0,
+                top:
+                    orientation === "vertical" ? activeTabElement.offsetTop : 0,
+                width:
+                    orientation === "horizontal"
+                        ? rect.width
+                        : parentRect.width,
+                height:
+                    orientation === "vertical"
+                        ? rect.height
+                        : parentRect.height,
+            });
+        }
+
+        // Mark as mounted after first position calculation
+        if (!hasMounted) {
+            setHasMounted(true);
+        }
+    }, [activeTab, tabs, variant, orientation, hasMounted]);
+
+    // Reset references when tabs change
+    useEffect(() => {
+        tabRefs.current = tabRefs.current.slice(0, tabs.length);
+    }, [tabs]);
+
+    // Orientation-specific container classes with special handling for pills variant
+    const containerClasses = cn(
         orientation === "vertical"
             ? "flex flex-col"
-            : "flex flex-row items-center border-b border-gray-200";
+            : "flex flex-row items-center",
+        variant !== "pills" && "border-b border-gray-200",
+        variant === "pills" && "bg-gray-200 p-1 rounded-full relative",
+    );
 
     return (
         <div className={cn(containerClasses, className)}>
-            {tabs.map((tab) => {
+            {/* Sliding background pill */}
+            {variant === "pills" && (
+                <motion.div
+                    className="absolute bg-gray-800 rounded-full z-0"
+                    initial={false}
+                    animate={{
+                        left: pillStyle.left,
+                        top: pillStyle.top,
+                        width: pillStyle.width,
+                        height: pillStyle.height,
+                    }}
+                    transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                        duration: 0.3,
+                    }}
+                    style={{
+                        position: "absolute",
+                    }}
+                />
+            )}
+
+            {tabs.map((tab, index) => {
                 const isActive = activeTab === tab.id;
                 const Icon = tab.icon;
 
                 return (
                     <button
                         key={tab.id}
+                        ref={(el) => {
+                            tabRefs.current[index] = el;
+                        }}
                         onClick={() => !tab.disabled && onChange(tab.id)}
                         disabled={tab.disabled}
                         className={cn(
-                            "flex items-center font-medium transition-colors relative",
+                            "flex items-center justify-center font-medium transition-colors relative",
                             sizeClasses[size],
                             getVariantClasses(isActive),
-                            fullWidth && "flex-1 justify-center",
+                            fullWidth && "flex-1",
                             tab.disabled && "opacity-50 cursor-not-allowed",
-                            tabClassName
+                            variant === "pills" && "rounded-full",
+                            tabClassName,
                         )}
                     >
                         {Icon && (

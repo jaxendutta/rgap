@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import MainLayout from "@/components/layout/MainLayout";
 import HomePage from "@/pages/HomePage";
 import SearchPage from "@/pages/SearchPage";
+import PopularSearchesPage from "@/pages/PopularSearchesPage";
 import InstitutesPage from "@/pages/InstitutesPage";
 import InstituteProfilePage from "@/pages/InstituteProfilePage";
 import RecipientsPage from "@/pages/RecipientsPage";
@@ -45,6 +46,7 @@ function App() {
                     <Routes>
                         <Route path="/" element={<HomePage />} />
                         <Route path="/search" element={<SearchPage />} />
+                        <Route path="/search/popular" element={<PopularSearchesPage />} />
                         <Route
                             path="/institutes"
                             element={<InstitutesPage />}

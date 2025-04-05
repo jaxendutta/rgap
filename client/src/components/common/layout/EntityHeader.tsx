@@ -75,7 +75,6 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                                 leftIcon={MapPin}
                                 rightIcon={showMap ? ChevronUp : ChevronDown}
                                 size="sm"
-                                pill={true}
                                 onClick={() => setShowMap(!showMap)}
                                 className="text-blue-600 border-blue-200 hover:bg-blue-50"
                             >
@@ -92,14 +91,10 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                                 variant={action.variant || "outline"}
                                 leftIcon={action.icon}
                                 size="sm"
-                                pill={true}
                                 onClick={action.onClick}
+                                responsiveText={"hideOnMobile"}
                             >
-                                {
-                                    <span className="hidden lg:inline">
-                                        {action.label}
-                                    </span>
-                                }
+                                {action.label}
                             </Button>
                         ))}
 
@@ -134,10 +129,8 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                                         ? "link"
                                         : "outline"
                                 }
-                                pill={true}
-                            >
-                                {item.text}
-                            </Tag>
+                                text={item.text}
+                            />
                         ))}
                     </Tags>
                 )}

@@ -107,7 +107,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
                         <Button
                             variant="primary"
                             size={size === "sm" ? "sm" : "md"}
-                            leftIcon={primaryAction.icon || Plus}
+                            rightIcon={primaryAction.icon || Plus}                            
                             onClick={primaryAction.onClick}
                         >
                             {primaryAction.label}

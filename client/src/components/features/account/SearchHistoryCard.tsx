@@ -13,12 +13,11 @@ import { Card } from "@/components/common/ui/Card";
 import { formatCurrency } from "@/utils/format";
 import { DEFAULT_FILTER_STATE, FILTER_LIMITS } from "@/constants/filters";
 import Tag, { Tags } from "@/components/common/ui/Tag";
-import { SearchHistory } from "@/types/models";
+import { SearchHistory } from "@/types/search";
 import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
 import { useNavigate } from "react-router-dom";
 import { useDeleteSearchHistory } from "@/hooks/api/useSearchHistory";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
-import { DEFAULT_SORT_CONFIG } from "@/types/search";
 
 interface SearchHistoryCardProps {
     data: SearchHistory;
@@ -190,8 +189,7 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
                     : typeof searchParams.filters === "string"
                     ? JSON.parse(searchParams.filters)
                     : DEFAULT_FILTER_STATE,
-            sortConfig:
-                searchParams.sortConfig || DEFAULT_SORT_CONFIG<SearchHistory>,
+            sortConfig: searchParams.sortConfig,
         };
 
         // Navigate to search page with validated params in the state
@@ -231,12 +229,10 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
                         <Tag
                             key={index}
                             variant={"outline"}
-                            pill={true}
                             icon={Icon}
                             size="sm"
-                        >
-                            <span className="text-xs lg:text-sm">{text}</span>
-                        </Tag>
+                            text={text}
+                        />
                     ))}
                 </Tags>
 
@@ -249,10 +245,8 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
                                 icon={Icon}
                                 variant="primary"
                                 size="md"
-                                pill={true}
-                            >
-                                "{value}"
-                            </Tag>
+                                text={value}
+                            />
                         ))}
                     </Tags>
                 )}
@@ -265,12 +259,8 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
                                 key={`filter-${index}`}
                                 variant="outline"
                                 size="sm"
-                            >
-                                <span className="font-medium">
-                                    {filter.label}:
-                                </span>{" "}
-                                {filter.value}
-                            </Tag>
+                                text={`${filter.label}: ${filter.value}`}
+                            />
                         ))}
                     </Tags>
                 )}
@@ -289,7 +279,6 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
                 {/* Run Search Button */}
                 <Button
                     variant="secondary"
-                    pill={true}
                     size="sm"
                     leftIcon={Search}
                     onClick={handleRerunSearch}
@@ -300,7 +289,6 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
                 {/* Delete Button */}
                 <Button
                     variant="outline"
-                    pill={true}
                     size="sm"
                     leftIcon={Trash2}
                     onClick={handleDeleteHistory}

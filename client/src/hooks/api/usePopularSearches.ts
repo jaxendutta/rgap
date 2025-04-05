@@ -1,148 +1,148 @@
-// src/hooks/usePopularSearches.ts
-import { useState, useEffect, useCallback } from "react";
+// src/hooks/api/usePopularSearches.ts
+import { useInfiniteQuery } from "@tanstack/react-query";
 import createAPI from "@/utils/api";
 import { formatDateOnly } from "@/utils/format";
+import { PopularSearch, SearchCategory } from "@/types/search";
 
 const API = createAPI();
 
-export type SearchCategory = "recipient" | "institute" | "grant";
-
-export interface PopularSearchTerm {
-    text: string;
-    count: number;
+export interface PopularSearchesParams {
+    dateRange: {
+        from: Date;
+        to: Date;
+    };
+    category?: SearchCategory;
+    limit?: number;
+    enabled?: boolean;
 }
 
-export type PopularSearches = Record<SearchCategory, PopularSearchTerm[]>;
+export const popularSearchesQueryKey = {
+    all: () => ["popularSearches"] as const,
+    lists: () => [...popularSearchesQueryKey.all(), "list"] as const,
+    infinite: (params: PopularSearchesParams) =>
+        [
+            ...popularSearchesQueryKey.lists(),
+            {
+                from: formatDateOnly(params.dateRange.from),
+                to: formatDateOnly(params.dateRange.to),
+                category: params.category,
+                limit: params.limit,
+            },
+            "infinite",
+        ] as const,
+};
 
-interface DateRange {
-    from: Date;
-    to: Date;
-}
+/**
+ * Hook to fetch popular search terms with infinite pagination
+ */
+export function usePopularSearches({
+    dateRange,
+    category,
+    limit = 10,
+    enabled = true,
+}: PopularSearchesParams) {
+    // Format dates for API as YYYY-MM-DD
+    const fromDate = formatDateOnly(dateRange.from);
+    const toDate = formatDateOnly(dateRange.to);
 
-interface UsePopularSearchesOptions {
-    dateRange: DateRange;
-    enabled?: boolean; // Flag to control if data fetching should happen automatically
-}
+    return useInfiniteQuery({
+        queryKey: popularSearchesQueryKey.infinite({
+            dateRange,
+            category,
+            limit,
+        }),
+        queryFn: async ({ pageParam = 1 }) => {
+            try {
+                const params: Record<string, any> = {
+                    from: fromDate,
+                    to: toDate,
+                    limit,
+                    page: pageParam,
+                };
 
-interface UsePopularSearchesResult {
-    popularSearches: PopularSearches;
-    isLoading: boolean;
-    error: string | null;
-    refetch: () => Promise<void>;
-    hasData: boolean; // Flag to indicate if data has been loaded at least once
+                // Add category if provided
+                if (category) {
+                    params.category = category;
+                }
+
+                const response = await API.get("/search/popular", {
+                    params,
+                });
+
+                return {
+                    data: processPopularSearchesData(response.data, category),
+                    metadata: response.data.metadata || {
+                        totalCount: 0,
+                        totalPages: 1,
+                        page: pageParam,
+                        pageSize: limit,
+                    },
+                };
+            } catch (error) {
+                console.error("Error fetching popular searches:", error);
+                throw error;
+            }
+        },
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            const { page, totalPages } = lastPage.metadata;
+
+            // If current page is less than total pages, return next page number
+            if (page < totalPages) {
+                return page + 1;
+            }
+            // Otherwise, return undefined to signal end of pagination
+            return undefined;
+        },
+        enabled,
+        staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    });
 }
 
 /**
- * Custom hook to fetch popular search terms
- * @param options - Object containing dateRange and enabled flag
- * @returns Object with popularSearches data, loading state, error state, and refetch function
+ * Process API response to match our model structure
  */
-export const usePopularSearches = (
-    options: UsePopularSearchesOptions
-): UsePopularSearchesResult => {
-    const { dateRange, enabled = true } = options;
+function processPopularSearchesData(
+    apiResponse: any,
+    specificCategory?: SearchCategory
+): PopularSearch[] {
+    if (!apiResponse || (!apiResponse.results && !apiResponse.data)) {
+        return [];
+    }
 
-    const [popularSearches, setPopularSearches] = useState<PopularSearches>({
-        recipient: [],
-        institute: [],
-        grant: [],
-    });
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-    const [hasData, setHasData] = useState<boolean>(false);
+    // Handle different response formats
+    const resultsObject = apiResponse.results || apiResponse.data || {};
 
-    // Define fetch function to allow manual refetching
-    const fetchPopularSearches = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
+    // If a specific category is requested and exists in the response
+    if (specificCategory && resultsObject[specificCategory]) {
+        return resultsObject[specificCategory].map(
+            (item: any, index: number) => ({
+                ...item,
+                category: specificCategory,
+                index,
+            })
+        );
+    }
 
-        try {
-            // Format dates for API as YYYY-MM-DD
-            const fromDate = formatDateOnly(dateRange.from);
-            const toDate = formatDateOnly(dateRange.to);
+    // Otherwise combine all categories
+    const allSearches: PopularSearch[] = [];
 
-            console.log(
-                `Fetching popular searches from ${fromDate} to ${toDate}`
-            );
-
-            // Call API
-            const response = await API.get("/popular-searches", {
-                params: {
-                    from: fromDate,
-                    to: toDate,
-                },
-            });
-
-            // Process response
-            if (response.data) {
-                console.log("Popular search response:", response.data);
-
-                // Validate the response structure and provide defaults for missing categories
-                const data = response.data;
-                const validData: PopularSearches = {
-                    recipient: Array.isArray(data.recipient)
-                        ? data.recipient
-                        : [],
-                    institute: Array.isArray(data.institute)
-                        ? data.institute
-                        : [],
-                    grant: Array.isArray(data.grant) ? data.grant : [],
-                };
-
-                setPopularSearches(validData);
-                setHasData(true);
-            }
-        } catch (err: any) {
-            console.error("Error fetching popular searches:", err);
-            setError(err?.message || "Failed to load popular searches");
-
-            // Mock data only in development for better debugging
-            if (process.env.NODE_ENV === "development") {
-                console.warn("Using mock data for development");
-                setPopularSearches({
-                    recipient: [
-                        { text: "University of Toronto", count: 245 },
-                        { text: "McGill University", count: 187 },
-                        { text: "University of British Columbia", count: 156 },
-                        { text: "University of Alberta", count: 129 },
-                        { text: "Dalhousie University", count: 98 },
-                    ],
-                    institute: [
-                        { text: "University of Toronto", count: 312 },
-                        { text: "McGill University", count: 287 },
-                        { text: "University of British Columbia", count: 254 },
-                        { text: "University of Waterloo", count: 198 },
-                        { text: "University of Alberta", count: 176 },
-                    ],
-                    grant: [
-                        { text: "COVID-19 Research", count: 145 },
-                        { text: "Cancer Research", count: 132 },
-                        { text: "Climate Change", count: 118 },
-                        { text: "Artificial Intelligence", count: 98 },
-                        { text: "Renewable Energy", count: 87 },
-                    ],
+    // Process each category in the response
+    Object.entries(resultsObject).forEach(
+        ([category, searches]: [string, any]) => {
+            if (Array.isArray(searches)) {
+                searches.forEach((search: any, index: number) => {
+                    allSearches.push({
+                        ...search,
+                        category: category as SearchCategory,
+                        index,
+                    });
                 });
-                setHasData(true);
             }
-        } finally {
-            setIsLoading(false);
         }
-    }, [dateRange.from, dateRange.to]);
+    );
 
-    // Fetch data when date range changes or when enabled status changes
-    useEffect(() => {
-        if (enabled) {
-            fetchPopularSearches();
-        }
-    }, [fetchPopularSearches, enabled]);
-
-    return {
-        popularSearches,
-        isLoading,
-        error,
-        refetch: fetchPopularSearches,
-        hasData,
-    };
-};
+    return allSearches;
+}
 
 export default usePopularSearches;

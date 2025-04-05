@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
 // Import directly from JSON
@@ -11,6 +11,9 @@ export default defineConfig({
         alias: {
             "@": path.resolve(__dirname, "./src"),
         },
+    },
+    css: {
+        postcss: "./postcss.config.js",
     },
     server: {
         port: parseInt(process.env.PORT || String(portConfig.defaults.client)),
