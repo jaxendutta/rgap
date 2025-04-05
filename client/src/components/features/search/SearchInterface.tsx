@@ -374,12 +374,12 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                             onClick={onBookmark}
                             className={cn(
                                 isBookmarked
-                                    ? "bg-blue-100 hover:bg-blue-100 rounded-full text-blue-600 border border-blue-300"
-                                    : "shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:rounded-full"
+                                    ? "bg-blue-100 hover:bg-blue-100 text-blue-600 border border-blue-300"
+                                    : "hover:bg-blue-50 hover:text-blue-600"
                             )}
                             responsiveText="hideOnMobile"
                         >
-                            Bookmark
+                            Bookmark Search
                         </Button>
                     )}
                     <Button

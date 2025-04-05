@@ -108,8 +108,8 @@ export const Tag: React.FC<TagProps> = ({
                 <ArrowUpRight
                     className={cn(
                         iconSizes[size],
-                        "flex-shrink-0 transition-transform duration-200",
-                        "group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                        "text-blue-400 flex-shrink-0 transition-transform duration-300 ease-in-out",
+                        "group-hover:text-blue-600"
                     )}
                 />
             )}
