@@ -39,7 +39,7 @@ const Sidebar = () => {
             {/* Desktop Sidebar */}
             <div
                 className={clsx(
-                    "hidden lg:block border-r min-h-screen transition-all duration-300 ease-in-out",
+                    "hidden lg:block shadow-sm border-r border-gray-200 min-h-screen transition-all duration-300 ease-in-out",
                     isExpanded ? "w-48" : "w-16"
                 )}
                 onMouseEnter={() => setIsExpanded(true)}
@@ -81,7 +81,7 @@ const Sidebar = () => {
                 </nav>
             </div>
             {/* Mobile Bottom Navigation - Fixed to bottom with proper spacing */}
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50">
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
                 <nav className="max-w-md mx-auto px-2">
                     <div className="flex items-center justify-between h-16">
                         {mobileNavigation.map((item) => {

@@ -415,31 +415,26 @@ export default function AccountPage() {
                     )}
 
                     {/* Search History Tab */}
-                    {activeTab === "history" && (
-                        <Card className="p-4 lg:p-6">
-                            {user && (
-                                <EntityList<SearchHistory>
-                                    entityType="search"
-                                    entities={paginatedSearchHistory}
-                                    query={searchHistoryQuery}
-                                    renderItem={renderSearchHistoryItem}
-                                    variant="list"
-                                    emptyState={
-                                        <EmptyState
-                                            title="No Search History"
-                                            message="You haven't searched for any grants yet."
-                                            icon={History}
-                                            primaryAction={{
-                                                label: "Start Searching",
-                                                onClick: () =>
-                                                    navigate("/search"),
-                                                icon: Search,
-                                            }}
-                                        />
-                                    }
+                    {activeTab === "history" && user && (
+                        <EntityList<SearchHistory>
+                            entityType="search"
+                            entities={paginatedSearchHistory}
+                            query={searchHistoryQuery}
+                            renderItem={renderSearchHistoryItem}
+                            variant="list"
+                            emptyState={
+                                <EmptyState
+                                    title="No Search History"
+                                    message="You haven't searched for any grants yet."
+                                    icon={History}
+                                    primaryAction={{
+                                        label: "Start Searching",
+                                        onClick: () => navigate("/search"),
+                                        icon: Search,
+                                    }}
                                 />
-                            )}
-                        </Card>
+                            }
+                        />
                     )}
 
                     {/* Logout Confirmation */}

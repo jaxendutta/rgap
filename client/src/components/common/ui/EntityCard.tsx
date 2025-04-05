@@ -264,7 +264,7 @@ const EntityCard = ({
             )}
 
             {/* Stats Section - Adaptive grid layout */}
-            <div className="pt-3 border-t">
+            <div className="pt-3 border-t border-slate-400">
                 <div className="flex flex-wrap gap-2">
                     {statItems.map((stat, index) => (
                         <div

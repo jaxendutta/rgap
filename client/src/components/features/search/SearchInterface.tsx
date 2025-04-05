@@ -281,8 +281,8 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
         return (
             <div
                 className={cn(
-                    "bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4",
-                    "flex flex-col lg:flex-row items-center space-y-2 lg:space-y-0 justify-between"
+                    "bg-amber-50 border border-amber-200 rounded-xl p-4",
+                    "flex flex-col lg:flex-row items-center mt-2 lg:space-y-0 justify-between"
                 )}
             >
                 <div className="flex items-start">
@@ -322,7 +322,7 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2 sm:gap-3 border-b pb-3 mt-4">
+            <div className="flex flex-wrap gap-2 sm:gap-3 border-b border-slate-400 pb-3 mt-4">
                 {/* Left side - Panel Controls */}
                 <div className="flex gap-2">
                     {showPopularSearches && (
@@ -336,8 +336,8 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                             onClick={() => togglePanel("popular")}
                             className={cn(
                                 activePanelType === "popular"
-                                    ? "bg-blue-100 hover:bg-blue-100 rounded-full text-blue-600 border border-blue-300"
-                                    : "shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:rounded-full"
+                                    ? "bg-blue-100 hover:bg-blue-200 text-blue-600 border border-blue-300"
+                                    : "bg-white shadow-sm hover:text-blue-600 hover:border-blue-300"
                             )}
                             responsiveText="firstWord"
                         >
@@ -354,8 +354,8 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                         onClick={() => togglePanel("filters")}
                         className={cn(
                             activePanelType === "filters"
-                                ? "bg-blue-100 hover:bg-blue-100 rounded-full text-blue-600 border border-blue-300"
-                                : "shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:rounded-full"
+                                ? "bg-blue-100 hover:bg-blue-200 text-blue-600 border border-blue-300"
+                                : "bg-white shadow-sm hover:text-blue-600 hover:border-blue-300"
                         )}
                         responsiveText="hideOnMobile"
                     >
@@ -395,7 +395,7 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
             </div>
 
             {/* Panels Area */}
-            <div className="transition-all duration-800 ease-in-out mt-4 relative">
+            <div className="transition-all duration-800 ease-in-out relative">
                 <AnimatePresence>
                     {activePanelType === "filters" && (
                         <motion.div

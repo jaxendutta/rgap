@@ -125,6 +125,7 @@ export interface GrantSearchParams {
         page: number;
         pageSize: number;
     };
+    userId?: number;
 }
 
 export interface SearchResponseMetadata {

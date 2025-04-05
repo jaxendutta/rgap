@@ -54,7 +54,7 @@ export const Button = ({
     return (
         <button
             className={cn(
-                "flex items-center justify-center font-medium gap-2",
+                "flex items-center justify-center font-medium gap-2 cursor-pointer",
                 "transition-colors transition-all duration-800 ease-in-out",
                 pill ? "rounded-full" : "rounded-md",
                 variants[variant],

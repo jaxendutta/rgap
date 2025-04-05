@@ -130,6 +130,9 @@ const Tabs: React.FC<TabsProps> = ({
         variant === "pills" && "bg-gray-200 p-1 rounded-full relative",
     );
 
+    // Number of tabs to determine if full width is needed
+    const manyTabs = tabs.length > 3;
+
     return (
         <div className={cn(containerClasses, className)}>
             {/* Sliding background pill */}
@@ -168,7 +171,8 @@ const Tabs: React.FC<TabsProps> = ({
                         onClick={() => !tab.disabled && onChange(tab.id)}
                         disabled={tab.disabled}
                         className={cn(
-                            "flex items-center justify-center font-medium transition-colors relative",
+                            "flex items-center justify-center font-medium transition-colors relative gap-2",
+                            manyTabs && "flex-col md:flex-row",
                             sizeClasses[size],
                             getVariantClasses(isActive),
                             fullWidth && "flex-1",
@@ -180,9 +184,8 @@ const Tabs: React.FC<TabsProps> = ({
                         {Icon && (
                             <Icon
                                 className={cn(
-                                    "h-4 w-4",
-                                    !tab.label && "h-5 w-5",
-                                    tab.label && "mr-2"
+                                    "h-4 w-4 flex-shrink-0",
+                                    manyTabs && "md:h-4 md:w-4 h-6 w-6"
                                 )}
                             />
                         )}

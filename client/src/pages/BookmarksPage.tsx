@@ -109,7 +109,7 @@ export const BookmarksPage = () => {
                 emptyState={
                     <EmptyState
                         title={`Uh oh!`}
-                        message={`You have no bookmarked ${activeTab}s.`}
+                        message={`You have no bookmarked ${activeTab} records.`}
                         variant="card"
                         className="w-full"
                         titleClassName="text-xl"

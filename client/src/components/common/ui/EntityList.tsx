@@ -192,14 +192,12 @@ function EntityList<T>(props: EntityListProps<T>) {
     }
 
     const displayTotalItems = entities.length;
-    const displayTotalCount = query
-        ? query.data?.pages[0]?.metadata?.totalCount
-        : entities.length;
+    const displayTotalCount = query?.data?.pages?.[0]?.metadata?.totalCount ?? entities.length;
 
     return (
         <div className={className}>
             {/* Header with sort controls and visualization toggle */}
-            <div className="flex justify-between items-end border-b pb-2">
+            <div className="flex justify-between items-end border-b border-slate-400 pb-2">
                 <div className="flex flex-col lg:flex-row lg:items-center">
                     <span className="text-xs lg:text-sm text-gray-500 lg:ml-2">
                         {`Showing `}
@@ -277,7 +275,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                             opacity: { duration: 0.4, ease: "easeInOut" },
                             scale: { duration: 0.4, ease: "easeInOut" },
                         }}
-                        className="overflow-hidden mt-4 mb-6"
+                        className="overflow-hidden"
                     >
                         {visualizationData && visualizationData.length > 0 ? (
                             <TrendVisualizer
@@ -300,9 +298,10 @@ function EntityList<T>(props: EntityListProps<T>) {
             {/* Items list or grid */}
             <div
                 className={cn(
+                    "mt-4",
                     layoutVariant === "grid"
-                        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4"
-                        : "space-y-4 mt-4"
+                        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                        : "space-y-4"
                 )}
             >
                 {entities?.map((entity, index) => (

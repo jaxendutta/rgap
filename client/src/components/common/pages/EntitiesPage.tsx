@@ -173,12 +173,10 @@ const EntitiesPage = <T,>({
             />
 
             {/* Search interface */}
-            {searchConfig && (
-                <div className="mb-6">{renderSearchInterface()}</div>
-            )}
+            {searchConfig && renderSearchInterface()}
 
             {/* Content */}
-            <div className="mt-4">{renderList()}</div>
+            {renderList()}
         </PageContainer>
     );
 };

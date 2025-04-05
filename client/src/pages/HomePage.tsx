@@ -1,5 +1,5 @@
 // src/pages/HomePage.tsx
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
     Search,
     Database,
@@ -16,7 +16,12 @@ import { Card } from "@/components/common/ui/Card";
 export default function HomePage() {
     const navigate = useNavigate();
 
-    const features: [title: string, description: string, icon: LucideIcon, link: string][] = [
+    const features: [
+        title: string,
+        description: string,
+        icon: LucideIcon,
+        link: string
+    ][] = [
         [
             "Comprehensive Data",
             "Access and analyze over 175,000 research grants from NSERC, CIHR, and SSHRC.",
@@ -46,70 +51,64 @@ export default function HomePage() {
     return (
         <PageContainer>
             {/* Hero Section */}
-            <Card className="hover:border-gray-300 transition-all duration-200">
-                <Card.Content noPadding className="px-6 lg:px-8 py-14">
-                    <div className="text-center">
-                        <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl md:text-6xl leading-tight flex justify-center items-center">
-                            <span
-                                style={{
-                                    fontSize: "inherit",
-                                    fontWeight: "inherit",
-                                    display: "inline-block",
-                                    padding: "0 0.5rem",
-                                }}
+            <Card className="px-6 lg:px-8 py-14 hover:border-gray-300 transition-all duration-200">
+                <div className="text-center">
+                    <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl md:text-6xl leading-tight flex justify-center items-center">
+                        <span
+                            style={{
+                                fontSize: "inherit",
+                                fontWeight: "inherit",
+                                display: "inline-block",
+                                padding: "0 0.5rem",
+                            }}
+                        >
+                            [
+                        </span>
+                        <span className="inline-block">
+                            Research Grant Analytics Platform
+                        </span>
+                        <span
+                            style={{
+                                fontSize: "inherit",
+                                fontWeight: "inherit",
+                                display: "inline-block",
+                                padding: "0 0.5rem",
+                            }}
+                        >
+                            ]
+                        </span>
+                    </h1>
+
+                    <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+                        Explore and analyze research funding data from Canada's
+                        three major research funding agencies: NSERC, CIHR, and
+                        SSHRC.
+                    </p>
+
+                    <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                leftIcon={Search}
+                                className="pl-6 pr-8 md:text-lg"
+                                onClick={() => navigate("/search")}
                             >
-                                [
-                            </span>
-                            <span className="inline-block">
-                                Research Grant Analytics Platform
-                            </span>
-                            <span
-                                style={{
-                                    fontSize: "inherit",
-                                    fontWeight: "inherit",
-                                    display: "inline-block",
-                                    padding: "0 0.5rem",
-                                }}
+                                Start Exploring
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                leftIcon={LogIn}
+                                className="pl-6 pr-8 md:text-lg"
+                                onClick={() => navigate("/auth")}
                             >
-                                ]
-                            </span>
-                        </h1>
-
-                        <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-                            Explore and analyze research funding data from
-                            Canada's three major research funding agencies:
-                            NSERC, CIHR, and SSHRC.
-                        </p>
-
-                        <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                <Button
-                                    variant="primary"
-                                    size="lg"
-                                    leftIcon={Search}
-                                    className="pl-6 pr-8 md:text-lg"
-                                    onClick={() => {}} // Using button with Link component
-                                >
-                                    <Link to="/search" className="text-white">
-                                        Start Exploring
-                                    </Link>
-                                </Button>
-
-                                <Button
-                                    variant="outline"
-                                    size="lg"
-                                    leftIcon={LogIn}
-                                    className="pl-6 pr-8 md:text-lg"
-                                    onClick={() => {}} // Using button with Link component
-                                >
-                                    <Link to="/auth" className="text-gray-700">
-                                        Your Account
-                                    </Link>
-                                </Button>
-                            </div>
+                                Your Account
+                            </Button>
                         </div>
                     </div>
-                </Card.Content>
+                </div>
             </Card>
 
             {/* Features Grid */}

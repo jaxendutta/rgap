@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
@@ -6,14 +7,11 @@ import path from "path";
 import portConfig from "../config/ports.json";
 
 export default defineConfig({
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "./src"),
         },
-    },
-    css: {
-        postcss: "./postcss.config.js",
     },
     server: {
         port: parseInt(process.env.PORT || String(portConfig.defaults.client)),

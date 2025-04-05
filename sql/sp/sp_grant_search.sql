@@ -237,7 +237,7 @@ BEGIN
     DEALLOCATE PREPARE stmt;
     
     -- Log search if criteria warrant it and we're on first page
-    IF p_page = 1 AND p_log_search_history AND (
+    IF p_page = 1 AND p_log_search_history AND p_user_id IS NOT NULL AND (
         (p_recipient_term IS NOT NULL AND p_recipient_term != '') OR
         (p_institute_term IS NOT NULL AND p_institute_term != '') OR
         (p_grant_term IS NOT NULL AND p_grant_term != '') OR
@@ -278,6 +278,12 @@ BEGIN
             @filter_json,
             v_total_count
         );
+        
+        -- Return the history ID as a separate result set
+        SELECT LAST_INSERT_ID() AS history_id;
+    ELSE
+        -- Return NULL history_id if we didn't log the search
+        SELECT NULL AS history_id;
     END IF;
     
     -- Clean up temporary tables

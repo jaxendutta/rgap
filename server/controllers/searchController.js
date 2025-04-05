@@ -94,9 +94,13 @@ export const searchGrants = async (req, res) => {
         );
         const grantNormalized = await findBestMatch(searchTerms.grant, "grant");
 
+        // IMPORTANT FIX: Ensure userId is valid - treat falsy values as NULL explicitly
+        // This prevents the foreign key constraint error
+        const normalizedUserId = userId ? userId : null;
+
         // Create the query parameters array with proper order matching the stored procedure
         const queryParams = [
-            userId, // p_user_id
+            normalizedUserId, // p_user_id - explicitly use null if userId is falsy
             searchTerms.recipient || null, // p_recipient_term
             searchTerms.institute || null, // p_institute_term
             searchTerms.grant || null, // p_grant_term
@@ -115,7 +119,7 @@ export const searchGrants = async (req, res) => {
             sortConfig.direction || "desc", // p_sort_direction
             pageSize, // p_page_size
             page, // p_page
-            logSearchHistory, // p_log_search_history
+            logSearchHistory && normalizedUserId !== null, // p_log_search_history - Only log history if we have a user ID
         ];
 
         console.log("Search query parameters with sort:", queryParams);
@@ -131,6 +135,31 @@ export const searchGrants = async (req, res) => {
 
         // The second result set contains the actual data
         const grantsData = results[1] || [];
+
+        // The third result set might contain the history_id if search was logged
+        let historyId = null;
+        let isBookmarked = false;
+
+        if (results.length > 2 && results[2] && results[2][0]) {
+            // Extract historyId from the result
+            historyId = results[2][0].history_id;
+
+            // If a historyId was returned, check if it's bookmarked
+            if (historyId && normalizedUserId) {
+                try {
+                    const [bookmarkResult] = await pool.query(
+                        "SELECT bookmarked FROM SearchHistory WHERE history_id = ?",
+                        [historyId]
+                    );
+
+                    if (bookmarkResult.length > 0) {
+                        isBookmarked = !!bookmarkResult[0].bookmarked;
+                    }
+                } catch (error) {
+                    console.warn("Error checking bookmark status:", error);
+                }
+            }
+        }
 
         console.log(
             `Search found ${totalCount} total grants, returning ${grantsData.length} for this page`
@@ -183,6 +212,8 @@ export const searchGrants = async (req, res) => {
                 totalPages: Math.ceil(totalCount / pageSize),
                 filters: filters,
                 searchTerms: searchTerms,
+                historyId: historyId,
+                bookmarked: isBookmarked,
             },
         });
     } catch (error) {

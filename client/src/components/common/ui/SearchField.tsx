@@ -29,7 +29,7 @@ export const SearchField: React.FC<SearchFieldProps> = ({
                         onEnter();
                     }
                 }}
-                className="w-full pl-12 pr-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-300"
+                className="w-full pl-12 pr-4 py-2 bg-white shadow-xs rounded-full border border-gray-200 focus:outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-300"
             />
         </div>
     );
