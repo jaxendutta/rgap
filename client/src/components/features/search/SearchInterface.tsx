@@ -13,7 +13,6 @@ import { cn } from "@/utils/cn";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/common/ui/Button";
-import { Card } from "@/components/common/ui/Card";
 import { FilterPanel } from "@/components/features/filter/FilterPanel";
 import { FilterTags } from "@/components/features/filter/FilterTags";
 import { PopularSearchesPanel } from "@/components/features/search/PopularSearchesPanel";
@@ -395,7 +394,7 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
             </div>
 
             {/* Panels Area */}
-            <div className="transition-all duration-800 ease-in-out relative">
+            <div className="transition-all duration-300 ease-in-out relative mt-4">
                 <AnimatePresence>
                     {activePanelType === "filters" && (
                         <motion.div
@@ -404,14 +403,12 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <Card className="p-4 mb-4">
-                                {filters && (
-                                    <FilterPanel
-                                        filters={filters}
-                                        onChange={handleFilterChange}
-                                    />
-                                )}
-                            </Card>
+                            {filters && (
+                                <FilterPanel
+                                    filters={filters}
+                                    onChange={handleFilterChange}
+                                />
+                            )}
                         </motion.div>
                     )}
 

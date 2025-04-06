@@ -22,9 +22,14 @@ import { PopularSearch, SearchCategory } from "@/types/search";
 import { getDataFromResult } from "@/hooks/api/useData";
 import { usePopularSearches } from "@/hooks/api/usePopularSearches";
 
-const PopularSearchCard = (item: PopularSearch) => {
-    const navigate = useNavigate();
-
+// Extract PopularSearchCard to separate component to fix hook ordering issues
+const PopularSearchCard = ({
+    item,
+    navigate,
+}: {
+    item: PopularSearch;
+    navigate: ReturnType<typeof useNavigate>;
+}) => {
     // Handle search term selection
     const handleSelectTerm = (category: SearchCategory, term: string) => {
         // Create search terms for navigation
@@ -141,6 +146,11 @@ const PopularSearchesPage = () => {
         setDateRange(newRange);
     };
 
+    // Create a render function that properly passes navigate to the component
+    const renderPopularSearchCard = (item: PopularSearch) => {
+        return <PopularSearchCard item={item} navigate={navigate} />;
+    };
+
     return (
         <PageContainer>
             <PageHeader
@@ -148,7 +158,7 @@ const PopularSearchesPage = () => {
                 subtitle="Discover trending search terms across our database"
             />
 
-            <div className="flex flex-col-reverse lg:flex-row items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col-reverse lg:flex-row items-center justify-between gap-4 w-full mb-6">
                 <Tabs
                     tabs={tabs}
                     activeTab={activeCategory}
@@ -156,8 +166,8 @@ const PopularSearchesPage = () => {
                         setActiveCategory(tabId as SearchCategory)
                     }
                     variant="pills"
-                    size="md"
                     fullWidth={true}
+                    className="w-full lg:w-auto"
                 />
 
                 <DateRangeFilter
@@ -171,7 +181,7 @@ const PopularSearchesPage = () => {
             <EntityList
                 entityType="popular_search"
                 entities={searchTerms}
-                renderItem={PopularSearchCard}
+                renderItem={renderPopularSearchCard}
                 variant="grid"
                 query={popularSearchesQuery}
                 emptyState={

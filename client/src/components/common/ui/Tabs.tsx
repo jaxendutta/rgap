@@ -175,7 +175,7 @@ const Tabs: React.FC<TabsProps> = ({
                             manyTabs && "flex-col md:flex-row",
                             sizeClasses[size],
                             getVariantClasses(isActive),
-                            fullWidth && "flex-1",
+                            fullWidth && "w-full",
                             tab.disabled && "opacity-50 cursor-not-allowed",
                             variant === "pills" && "rounded-full",
                             tabClassName,

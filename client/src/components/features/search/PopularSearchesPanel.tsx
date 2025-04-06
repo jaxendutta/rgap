@@ -131,7 +131,6 @@ export const PopularSearchesPanel = ({
                                 `/search/popular?category=${activeCategory}`
                             );
                         }}
-                        responsiveText="hideOnMobile"
                     >
                         View All
                     </Button>
