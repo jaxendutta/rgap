@@ -12,6 +12,11 @@ import {
     AlertCircle,
     X,
     Search,
+    Mail,
+    UserCircle,
+    Lock,
+    Save,
+    RefreshCw,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/common/ui/Card";
@@ -29,6 +34,8 @@ import createAPI from "@/utils/api";
 import EmptyState from "@/components/common/ui/EmptyState";
 import { getDataFromResult } from "@/hooks/api/useData";
 import Tabs, { TabItem } from "@/components/common/ui/Tabs";
+import InputField from "@/components/common/ui/InputField";
+import Tag from "@/components/common/ui/Tag";
 
 const API = createAPI();
 
@@ -45,6 +52,7 @@ export default function AccountPage() {
         useState<(typeof tabs)[number]["id"]>("profile");
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     // Local state for editable profile info and password fields
     const [editName, setEditName] = useState("");
@@ -243,42 +251,51 @@ export default function AccountPage() {
                                 </h2>
                                 <Button
                                     variant="outline"
+                                    leftIcon={Save}
                                     onClick={handleProfileUpdate}
                                     disabled={updateLoading}
+                                    isLoading={updateLoading}
                                 >
-                                    Save
+                                    Save Changes
                                 </Button>
                             </div>
+
                             {updateError && (
-                                <p className="text-red-600">{updateError}</p>
+                                <Tag
+                                    icon={AlertCircle}
+                                    text={updateError}
+                                    variant="danger"
+                                    size="md"
+                                    className="w-full justify-start"
+                                />
                             )}
+
                             <div className="grid grid-cols-1 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Full Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={editName}
-                                        onChange={(e) =>
-                                            setEditName(e.target.value)
-                                        }
-                                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Email Address
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={editEmail}
-                                        onChange={(e) =>
-                                            setEditEmail(e.target.value)
-                                        }
-                                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                                    />
-                                </div>
+                                <InputField
+                                    label="Full Name"
+                                    id="edit-name"
+                                    icon={UserCircle}
+                                    value={editName}
+                                    onChange={(e) =>
+                                        setEditName(e.target.value)
+                                    }
+                                    placeholder="Your full name"
+                                    required
+                                />
+
+                                <InputField
+                                    label="Email Address"
+                                    id="edit-email"
+                                    icon={Mail}
+                                    type="email"
+                                    value={editEmail}
+                                    onChange={(e) =>
+                                        setEditEmail(e.target.value)
+                                    }
+                                    placeholder="Your email address"
+                                    required
+                                    helperText="This email will be used for account recovery"
+                                />
                             </div>
                         </Card>
                     )}
@@ -292,124 +309,101 @@ export default function AccountPage() {
                                 </h2>
                                 <Button
                                     variant="outline"
+                                    leftIcon={RefreshCw}
                                     onClick={handlePasswordUpdate}
                                     disabled={updateLoading}
+                                    isLoading={updateLoading}
                                 >
-                                    Update
+                                    Update Password
                                 </Button>
                             </div>
+
                             {updateError && (
-                                <p className="text-red-600">{updateError}</p>
+                                <Tag
+                                    icon={AlertCircle}
+                                    text={updateError}
+                                    variant="danger"
+                                    size="md"
+                                    className="w-full justify-start"
+                                />
                             )}
+
                             <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Current Password
-                                    </label>
-                                    <div className="mt-1 relative">
-                                        <input
-                                            type={
-                                                showCurrentPassword
-                                                    ? "text"
-                                                    : "password"
-                                            }
-                                            value={currentPassword}
-                                            onChange={(e) =>
-                                                setCurrentPassword(
-                                                    e.target.value
-                                                )
-                                            }
-                                            className="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setShowCurrentPassword(
-                                                    !showCurrentPassword
-                                                )
-                                            }
-                                            className="absolute inset-y-0 right-0 flex items-center pr-3"
-                                        >
-                                            {showCurrentPassword ? (
-                                                <EyeOff className="h-4 w-4 text-gray-400" />
-                                            ) : (
-                                                <Eye className="h-4 w-4 text-gray-400" />
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
+                                <InputField
+                                    label="Current Password"
+                                    id="current-password"
+                                    icon={Lock}
+                                    trailingIcon={
+                                        showCurrentPassword ? EyeOff : Eye
+                                    }
+                                    onTrailingIconClick={() =>
+                                        setShowCurrentPassword(
+                                            !showCurrentPassword
+                                        )
+                                    }
+                                    type={
+                                        showCurrentPassword
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    value={currentPassword}
+                                    onChange={(e) =>
+                                        setCurrentPassword(e.target.value)
+                                    }
+                                    placeholder="Enter your current password"
+                                    required
+                                />
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        New Password
-                                    </label>
-                                    <div className="mt-1 relative">
-                                        <input
-                                            type={
-                                                showNewPassword
-                                                    ? "text"
-                                                    : "password"
-                                            }
-                                            value={newPassword}
-                                            onChange={(e) =>
-                                                setNewPassword(e.target.value)
-                                            }
-                                            className="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setShowNewPassword(
-                                                    !showNewPassword
-                                                )
-                                            }
-                                            className="absolute inset-y-0 right-0 flex items-center pr-3"
-                                        >
-                                            {showNewPassword ? (
-                                                <EyeOff className="h-4 w-4 text-gray-400" />
-                                            ) : (
-                                                <Eye className="h-4 w-4 text-gray-400" />
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
+                                <InputField
+                                    label="New Password"
+                                    id="new-password"
+                                    icon={Lock}
+                                    trailingIcon={
+                                        showNewPassword ? EyeOff : Eye
+                                    }
+                                    onTrailingIconClick={() =>
+                                        setShowNewPassword(!showNewPassword)
+                                    }
+                                    type={showNewPassword ? "text" : "password"}
+                                    value={newPassword}
+                                    onChange={(e) =>
+                                        setNewPassword(e.target.value)
+                                    }
+                                    placeholder="Enter new password"
+                                    required
+                                    helperText="Use a strong password with at least 8 characters"
+                                />
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Confirm New Password
-                                    </label>
-                                    <div className="mt-1 relative">
-                                        <input
-                                            type={
-                                                showNewPassword
-                                                    ? "text"
-                                                    : "password"
-                                            }
-                                            value={confirmNewPassword}
-                                            onChange={(e) =>
-                                                setConfirmNewPassword(
-                                                    e.target.value
-                                                )
-                                            }
-                                            className="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setShowNewPassword(
-                                                    !showNewPassword
-                                                )
-                                            }
-                                            className="absolute inset-y-0 right-0 flex items-center pr-3"
-                                        >
-                                            {showNewPassword ? (
-                                                <EyeOff className="h-4 w-4 text-gray-400" />
-                                            ) : (
-                                                <Eye className="h-4 w-4 text-gray-400" />
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
+                                <InputField
+                                    label="Confirm New Password"
+                                    id="confirm-password"
+                                    icon={Lock}
+                                    trailingIcon={
+                                        showConfirmPassword ? EyeOff : Eye
+                                    }
+                                    onTrailingIconClick={() =>
+                                        setShowConfirmPassword(
+                                            !showConfirmPassword
+                                        )
+                                    }
+                                    type={
+                                        showConfirmPassword
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    value={confirmNewPassword}
+                                    onChange={(e) =>
+                                        setConfirmNewPassword(e.target.value)
+                                    }
+                                    placeholder="Confirm new password"
+                                    required
+                                    error={
+                                        newPassword !== confirmNewPassword &&
+                                        confirmNewPassword.length > 0
+                                            ? "Passwords don't match"
+                                            : ""
+                                    }
+                                />
                             </div>
                         </Card>
                     )}
@@ -548,33 +542,19 @@ export default function AccountPage() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label
-                                            htmlFor="confirm-email"
-                                            className="block text-sm font-medium text-gray-700"
-                                        >
-                                            Please enter your email (
-                                            {user?.email}) to confirm:
-                                        </label>
-                                        <input
+                                        <InputField
+                                            label={`Please enter your email (${user?.email}) to confirm:`}
                                             id="confirm-email"
                                             type="email"
+                                            icon={Mail}
                                             value={confirmEmail}
                                             onChange={(e) => {
                                                 setConfirmEmail(e.target.value);
                                                 setEmailError("");
                                             }}
-                                            className={`w-full px-3 py-2 border ${
-                                                emailError
-                                                    ? "border-red-500"
-                                                    : "border-gray-300"
-                                            } rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500`}
                                             placeholder="Enter your email"
+                                            error={emailError}
                                         />
-                                        {emailError && (
-                                            <p className="text-red-500 text-xs mt-1">
-                                                {emailError}
-                                            </p>
-                                        )}
                                     </div>
 
                                     <div className="flex justify-end gap-3 pt-4 border-t">

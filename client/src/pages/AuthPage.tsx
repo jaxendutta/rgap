@@ -1,17 +1,44 @@
-import { useState } from "react";
-import { Eye, EyeOff, ArrowRight, X } from "lucide-react";
+// src/pages/AuthPage.tsx
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+    Eye,
+    EyeOff,
+    LogIn,
+    UserPlus,
+    AlertCircle,
+    Mail,
+    User,
+    Lock,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
+import { Card } from "@/components/common/ui/Card";
+import { Button } from "@/components/common/ui/Button";
+import Tabs, { TabItem } from "@/components/common/ui/Tabs";
+import Tag from "@/components/common/ui/Tag";
+import InputField from "@/components/common/ui/InputField";
+import { motion, AnimatePresence } from "framer-motion";
 import portConfig from "../../../config/ports.json";
 
+// Define tabs for authentication modes
+const authTabs: TabItem[] = [
+    { id: "signin", label: "Sign In", icon: LogIn },
+    { id: "signup", label: "Sign Up", icon: UserPlus },
+];
+
 export default function AuthPage() {
-    const [isLogin, setIsLogin] = useState(true);
+    const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    // Form fields
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [name, setName] = useState("");
+
+    // UI state
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -19,17 +46,54 @@ export default function AuthPage() {
     const { login } = useAuth();
     const { showNotification } = useNotification();
 
+    // Reset form when switching tabs
+    useEffect(() => {
+        setError("");
+    }, [activeTab]);
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError("");
         setLoading(true);
 
         try {
-            if (!isLogin) {
-                // Sign Up mode
-                const baseurl =
-                    process.env.VITE_API_URL ||
-                    `http://localhost:${portConfig.defaults.server}`;
+            const isSignIn = activeTab === "signin";
+            const baseurl =
+                process.env.VITE_API_URL ||
+                `http://localhost:${portConfig.defaults.server}`;
+
+            if (isSignIn) {
+                // Sign In logic
+                const response = await fetch(`${baseurl}/auth/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password }),
+                    credentials: "include",
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Login failed");
+                }
+
+                login({
+                    user_id: data.user_id,
+                    email: data.email,
+                    name: data.name,
+                    searches: data.searches || [],
+                });
+
+                showNotification("Welcome back to RGAP!", "success");
+                navigate("/account");
+            } else {
+                // Sign Up logic
+                if (password !== confirmPassword) {
+                    setError("Passwords do not match");
+                    setLoading(false);
+                    return;
+                }
+
                 const response = await fetch(`${baseurl}/auth/signup`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -39,6 +103,7 @@ export default function AuthPage() {
                         password,
                         confirmPassword,
                     }),
+                    credentials: "include",
                 });
 
                 const data = await response.json();
@@ -54,35 +119,11 @@ export default function AuthPage() {
                     name: data.name,
                     searches: [],
                 });
+
                 showNotification(
                     "Account created successfully! Welcome to RGAP.",
                     "success"
                 );
-                navigate("/account");
-            } else {
-                // Login mode
-                const baseurl =
-                    process.env.VITE_API_URL ||
-                    `http://localhost:${portConfig.defaults.server}`;
-                const response = await fetch(`${baseurl}/auth/login`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, password }),
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.message || "Login failed");
-                }
-
-                login({
-                    user_id: data.user_id,
-                    email: data.email,
-                    name: data.name,
-                    searches: data.searches || [],
-                });
-                showNotification("Welcome back to RGAP!", "success");
                 navigate("/account");
             }
         } catch (err: any) {
@@ -96,14 +137,10 @@ export default function AuthPage() {
     };
 
     return (
-        <div className="h-full bg-white flex items-center justify-center p-3 lg:p-6">
-            <div className="bg-white w-full max-w-5xl flex flex-col lg:flex-row rounded-lg border hover:border-gray-300 transition-all duration-200">
-                {/* Left Side - Hidden on mobile */}
-                <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-12 relative">
-                    {/* Centered divider with padding from edges */}
-                    <div className="absolute right-0 top-12 bottom-12 flex items-center">
-                        <div className="w-px h-full mx-12 bg-gray-200" />
-                    </div>
+        <div className="h-full flex items-center justify-center p-3 lg:p-6">
+            <Card className="w-full max-w-5xl flex flex-col lg:flex-row overflow-hidden">
+                {/* Left Side - Branding (Hidden on mobile) */}
+                <div className="hidden lg:flex lg:w-1/2 bg-gray-50 items-center justify-center p-12 relative">
                     <div className="text-center">
                         <img
                             src="/rgap.svg"
@@ -113,7 +150,7 @@ export default function AuthPage() {
                         <h1 className="mt-6 text-3xl font-semibold text-gray-900">
                             RGAP
                         </h1>
-                        <p className="mt-2 text-m text-gray-600">
+                        <p className="mt-2 text-gray-600">
                             [ Research Grant Analytics Platform ]
                         </p>
                         <h2 className="mt-4 text-2xl font-semibold text-gray-900">
@@ -123,244 +160,228 @@ export default function AuthPage() {
                 </div>
 
                 {/* Right Side - Auth Form */}
-                <div className="w-full lg:w-1/2 p-8 lg:p-12">
+                <div className="w-full lg:w-1/2 p-6 lg:p-12">
                     {/* Logo for mobile view */}
-                    <div className="lg:hidden text-center mb-4">
-                        <h1 className="mt-4 text-2xl font-semibold text-gray-900">
-                            Welcome.
+                    <div className="lg:hidden text-center mb-6">
+                        <img
+                            src="/rgap.svg"
+                            alt="RGAP Logo"
+                            className="h-14 w-14 mx-auto"
+                        />
+                        <h1 className="mt-2 text-xl font-semibold text-gray-900">
+                            Welcome to RGAP
                         </h1>
                     </div>
-                    <div className="max-w-md mx-auto">
-                        {/* Mode Toggle */}
-                        <div className="flex justify-center space-x-4 mb-8">
-                            <button
-                                onClick={() => {
-                                    setIsLogin(true);
-                                    setError(""); // Clear error when switching tabs
-                                }}
-                                className={`pb-2 px-4 font-medium border-b-2 transition-colors duration-300 ${
-                                    isLogin
-                                        ? "border-gray-900 text-gray-900 text-md"
-                                        : "border-transparent text-gray-500 hover:text-gray-700 text-sm"
-                                }`}
-                            >
-                                Sign In
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setIsLogin(false);
-                                    setError(""); // Clear error when switching tabs
-                                }}
-                                className={`pb-2 px-4 font-medium border-b-2 transition-colors duration-300 ${
-                                    !isLogin
-                                        ? "border-gray-900 text-gray-900 text-md"
-                                        : "border-transparent text-gray-500 hover:text-gray-700 text-sm"
-                                }`}
-                            >
-                                Sign Up
-                            </button>
-                        </div>
 
-                        <form
-                            onSubmit={handleSubmit}
-                            className="space-y-6 relative"
-                        >
-                            {/* Name field - Only shown during signup */}
-                            {!isLogin && (
-                                <div className="transition-all duration-300 ease-in-out overflow-hidden h-[66px] mb-6">
-                                    <label
-                                        htmlFor="name"
-                                        className="block text-sm font-medium text-gray-700"
-                                    >
-                                        Full Name
-                                    </label>
-                                    <div className="mt-1">
-                                        <input
+                    <div className="max-w-md mx-auto">
+                        {/* Modern Tab Navigation */}
+                        <Tabs
+                            tabs={authTabs}
+                            activeTab={activeTab}
+                            onChange={(tab) =>
+                                setActiveTab(tab as "signin" | "signup")
+                            }
+                            variant="pills"
+                            size="md"
+                            fullWidth={true}
+                            className="mb-6"
+                        />
+
+                        {/* Form Content with Animation */}
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={activeTab}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <form
+                                    onSubmit={handleSubmit}
+                                    className="space-y-5"
+                                >
+                                    {/* Name field - Only shown during signup */}
+                                    {activeTab === "signup" && (
+                                        <InputField
+                                            label="Full Name"
                                             id="name"
-                                            name="name"
-                                            type="text"
-                                            required={!isLogin}
+                                            icon={User}
                                             value={name}
                                             onChange={(e) =>
                                                 setName(e.target.value)
                                             }
-                                            className="block w-full rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm"
+                                            placeholder="Enter your full name"
+                                            required
                                         />
-                                    </div>
-                                </div>
-                            )}
+                                    )}
 
-                            <div>
-                                <label
-                                    htmlFor="email"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    Email address
-                                </label>
-                                <div className="mt-1">
-                                    <input
+                                    {/* Email field */}
+                                    <InputField
+                                        label="Email Address"
                                         id="email"
-                                        name="email"
+                                        icon={Mail}
                                         type="email"
-                                        autoComplete="email"
-                                        required
                                         value={email}
                                         onChange={(e) =>
                                             setEmail(e.target.value)
                                         }
-                                        className="block w-full rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm"
+                                        placeholder="Enter your email address"
+                                        autoComplete="email"
+                                        required
                                     />
-                                </div>
-                            </div>
 
-                            <div>
-                                <label
-                                    htmlFor="password"
-                                    className="block text-sm font-medium text-gray-700"
-                                >
-                                    {isLogin ? "Password" : "New Password"}
-                                </label>
-                                <div className="mt-1 relative">
-                                    <input
+                                    {/* Password field */}
+                                    <InputField
+                                        label={
+                                            activeTab === "signin"
+                                                ? "Password"
+                                                : "Create Password"
+                                        }
                                         id="password"
-                                        name="password"
+                                        icon={Lock}
+                                        trailingIcon={
+                                            showPassword ? EyeOff : Eye
+                                        }
+                                        onTrailingIconClick={() =>
+                                            setShowPassword(!showPassword)
+                                        }
                                         type={
                                             showPassword ? "text" : "password"
                                         }
-                                        autoComplete={
-                                            isLogin
-                                                ? "current-password"
-                                                : "new-password"
-                                        }
-                                        required
                                         value={password}
                                         onChange={(e) =>
                                             setPassword(e.target.value)
                                         }
-                                        className="block w-full rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm pr-10"
+                                        placeholder={
+                                            activeTab === "signin"
+                                                ? "Enter your password"
+                                                : "Create a strong password"
+                                        }
+                                        autoComplete={
+                                            activeTab === "signin"
+                                                ? "current-password"
+                                                : "new-password"
+                                        }
+                                        required
+                                        helperText={
+                                            activeTab === "signup"
+                                                ? "Use a strong password with at least 8 characters"
+                                                : undefined
+                                        }
                                     />
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setShowPassword(!showPassword)
-                                            }
-                                            className="focus:outline-none"
-                                            aria-label={
-                                                showPassword
-                                                    ? "Hide password"
-                                                    : "Show password"
-                                            }
-                                        >
-                                            {showPassword ? (
-                                                <EyeOff className="h-4 w-4 text-gray-400" />
-                                            ) : (
-                                                <Eye className="h-4 w-4 text-gray-400" />
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Confirm Password field - Only shown during signup */}
-                            {!isLogin && (
-                                <div className="transition-all duration-300 ease-in-out overflow-hidden h-[66px] mb-6">
-                                    <label
-                                        htmlFor="confirmPassword"
-                                        className="block text-sm font-medium text-gray-700"
-                                    >
-                                        Confirm Password
-                                    </label>
-                                    <div className="mt-1 relative">
-                                        <input
-                                            id="confirmPassword"
-                                            name="confirmPassword"
+                                    {/* Confirm Password field - Only shown during signup */}
+                                    {activeTab === "signup" && (
+                                        <InputField
+                                            label="Confirm Password"
+                                            id="confirm-password"
+                                            icon={Lock}
+                                            trailingIcon={
+                                                showConfirmPassword
+                                                    ? EyeOff
+                                                    : Eye
+                                            }
+                                            onTrailingIconClick={() =>
+                                                setShowConfirmPassword(
+                                                    !showConfirmPassword
+                                                )
+                                            }
                                             type={
-                                                showPassword
+                                                showConfirmPassword
                                                     ? "text"
                                                     : "password"
                                             }
-                                            autoComplete="new-password"
-                                            required={!isLogin}
                                             value={confirmPassword}
                                             onChange={(e) =>
                                                 setConfirmPassword(
                                                     e.target.value
                                                 )
                                             }
-                                            className="block w-full rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-gray-500 focus:outline-none focus:ring-gray-500 sm:text-sm pr-10"
+                                            placeholder="Confirm your password"
+                                            autoComplete="new-password"
+                                            required
+                                            error={
+                                                confirmPassword.length > 0 &&
+                                                password !== confirmPassword
+                                                    ? "Passwords don't match"
+                                                    : ""
+                                            }
                                         />
-                                        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                    )}
+
+                                    {/* Forgot Password Link - Only shown during login */}
+                                    {activeTab === "signin" && (
+                                        <div className="flex justify-end">
                                             <button
                                                 type="button"
-                                                onClick={() =>
-                                                    setShowPassword(
-                                                        !showPassword
-                                                    )
-                                                }
-                                                className="focus:outline-none"
-                                                aria-label={
-                                                    showPassword
-                                                        ? "Hide password"
-                                                        : "Show password"
-                                                }
+                                                className="text-sm font-medium text-blue-600 hover:text-blue-500"
                                             >
-                                                {showPassword ? (
-                                                    <EyeOff className="h-4 w-4 text-gray-400" />
-                                                ) : (
-                                                    <Eye className="h-4 w-4 text-gray-400" />
-                                                )}
+                                                Forgot your password?
                                             </button>
                                         </div>
-                                    </div>
-                                </div>
-                            )}
+                                    )}
 
-                            {/* Forgot Password Link - Only shown during login */}
-                            {isLogin && (
-                                <div className="flex items-center justify-end">
-                                    <button
-                                        type="button"
-                                        className="text-sm font-medium text-gray-600 hover:text-gray-500"
+                                    {/* Error Message */}
+                                    {error && (
+                                        <Tag
+                                            icon={AlertCircle}
+                                            text={error}
+                                            variant="danger"
+                                            size="md"
+                                            className="w-full justify-start"
+                                        />
+                                    )}
+
+                                    {/* Submit Button */}
+                                    <Button
+                                        type="submit"
+                                        variant="primary"
+                                        size="lg"
+                                        rightIcon={
+                                            activeTab === "signin"
+                                                ? LogIn
+                                                : UserPlus
+                                        }
+                                        isLoading={loading}
+                                        className="w-full mt-6 bg-gray-900 hover:bg-gray-800"
                                     >
-                                        Forgot your password?
-                                    </button>
-                                </div>
-                            )}
+                                        {activeTab === "signin"
+                                            ? "Sign In"
+                                            : "Create Account"}
+                                    </Button>
+                                </form>
+                            </motion.div>
+                        </AnimatePresence>
 
-                            {error && (
-                                <div className="rounded-md bg-red-50 p-4 relative">
-                                    <p className="text-sm text-red-700">
-                                        {error}
-                                    </p>
+                        {/* Switch mode text for mobile */}
+                        <p className="mt-6 text-center text-sm text-gray-500 lg:hidden">
+                            {activeTab === "signin" ? (
+                                <>
+                                    New to RGAP?{" "}
                                     <button
+                                        className="font-medium text-blue-600 hover:text-blue-500"
+                                        onClick={() => setActiveTab("signup")}
                                         type="button"
-                                        className="absolute top-2 right-2 text-red-700 hover:text-red-900"
-                                        onClick={() => setError("")}
                                     >
-                                        <X className="h-4 w-4 opacity-50 hover:opacity-100 transition-opacity" />
+                                        Create an account
                                     </button>
-                                </div>
+                                </>
+                            ) : (
+                                <>
+                                    Already have an account?{" "}
+                                    <button
+                                        className="font-medium text-blue-600 hover:text-blue-500"
+                                        onClick={() => setActiveTab("signin")}
+                                        type="button"
+                                    >
+                                        Sign in
+                                    </button>
+                                </>
                             )}
-
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="flex w-full justify-center items-center rounded-lg border border-transparent bg-gray-900 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {loading ? (
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                    <>
-                                        {isLogin ? "Sign In" : "Create Account"}
-                                        <ArrowRight className="ml-2 h-4 w-4" />
-                                    </>
-                                )}
-                            </button>
-                        </form>
+                        </p>
                     </div>
                 </div>
-            </div>
+            </Card>
         </div>
     );
 }
