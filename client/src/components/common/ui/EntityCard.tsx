@@ -102,7 +102,7 @@ const EntityCard = ({
         0;
     const funding = totalFunding ?? entity.total_funding ?? 0;
     const recipients = isInstitute()
-        ? recipientsCount ?? (entity as Institute).recipient_count ?? 0
+        ? recipientsCount ?? (entity as Institute).recipients_count ?? 0
         : null;
     const latestDate = latestGrantDate ?? entity.latest_grant_date;
 

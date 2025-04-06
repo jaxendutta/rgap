@@ -85,7 +85,7 @@ export function getSortOptions<T extends EntityModel>(
                 {
                     label: "Recipients",
                     icon: Users,
-                    field: "recipient_count" as keyof T,
+                    field: "recipients_count" as keyof T,
                 },
                 {
                     label: "Grants",

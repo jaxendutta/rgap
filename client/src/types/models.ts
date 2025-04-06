@@ -41,7 +41,7 @@ export interface Institute {
     postal_code?: string;
     riding_name_en?: string;
     riding_number?: string;
-    recipient_count?: number;
+    recipients_count?: number;
     grant_count?: number;
     total_grants?: number;
     total_recipients?: number;
