@@ -24,7 +24,7 @@ import EntityList from "@/components/common/ui/EntityList";
 import { SortConfig } from "@/types/search";
 import EntityCard from "@/components/common/ui/EntityCard";
 import { EntityAnalyticsSection } from "@/components/features/analytics/EntityAnalytics";
-import StatDisplay from "@/components/common/ui/StatDisplay";
+import StatDisplay from "@/components/features/analytics/StatDisplay";
 import EntityHeader, {
     ActionButton,
 } from "@/components/common/layout/EntityHeader";

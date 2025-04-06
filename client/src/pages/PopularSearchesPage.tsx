@@ -12,7 +12,7 @@ import {
 import PageContainer from "@/components/common/layout/PageContainer";
 import PageHeader from "@/components/common/layout/PageHeader";
 import { Card } from "@/components/common/ui/Card";
-import { DateRangeFilter } from "@/components/common/ui/DateRangeFilter";
+import { DateRangeFilter } from "@/components/features/filter/DateRangeFilter";
 import EmptyState from "@/components/common/ui/EmptyState";
 import Tabs from "@/components/common/ui/Tabs";
 import EntityList from "@/components/common/ui/EntityList";

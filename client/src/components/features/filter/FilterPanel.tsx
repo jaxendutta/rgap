@@ -1,9 +1,9 @@
 // src/components/features/filter/FilterPanel.tsx
 import { DEFAULT_FILTER_STATE, FILTER_LIMITS } from "@/constants/filters";
 import { MultiSelect } from "@/components/common/ui/MultiSelect";
-import type { RangeValue } from "@/components/common/ui/ValueRangeFilter";
-import { ValueRangeFilter } from "@/components/common/ui/ValueRangeFilter";
-import { DateRangeFilter } from "@/components/common/ui/DateRangeFilter";
+import type { RangeValue } from "@/components/features/filter/ValueRangeFilter";
+import { ValueRangeFilter } from "@/components/features/filter/ValueRangeFilter";
+import { DateRangeFilter } from "@/components/features/filter/DateRangeFilter";
 import { useFilterOptions } from "@/hooks/api/useFilterOptions";
 import { LoadingSpinner } from "@/components/common/ui/LoadingSpinner";
 import { Earth, Landmark, LocateFixed, Radar } from "lucide-react";

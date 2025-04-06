@@ -13,6 +13,7 @@ import { cn } from "@/utils/cn";
 import { getSortOptions, SortConfig } from "@/types/search";
 import TrendVisualizer from "@/components/features/visualizations/TrendVisualizer";
 import { Grant, Entity } from "@/types/models";
+import { Card } from "./Card";
 
 export type LayoutVariant = "list" | "grid";
 
@@ -176,7 +177,7 @@ function EntityList<T>(props: EntityListProps<T>) {
     }
 
     if (isLoading && entities?.length === 0) {
-        return <LoadingState title={`Loading ${entityType}...`} size="md" />;
+        return <LoadingState title={`Loading ${entityType} records...`} size="md" />;
     }
 
     if (!isLoading && entities?.length === 0) {
@@ -192,26 +193,27 @@ function EntityList<T>(props: EntityListProps<T>) {
     }
 
     const displayTotalItems = entities.length;
-    const displayTotalCount = query?.data?.pages?.[0]?.metadata?.totalCount ?? entities.length;
+    const displayTotalCount =
+        query?.data?.pages?.[0]?.metadata?.totalCount ?? entities.length;
 
     return (
-        <div className={className}>
+        <div className={cn("flex flex-col gap-2 pt-2", className)}>
             {/* Header with sort controls and visualization toggle */}
-            <div className="flex justify-between items-end border-b border-slate-400 pb-2">
-                <div className="flex flex-col lg:flex-row lg:items-center">
-                    <span className="text-xs lg:text-sm text-gray-500 lg:ml-2">
-                        {`Showing `}
-                        <span className="font-semibold">
-                            {displayTotalItems.toLocaleString()}
-                        </span>
-                        {` out of `}
-                        <span className="font-semibold">
-                            {displayTotalCount.toLocaleString()}
-                        </span>
-                        {displayTotalCount > 1 ? ` records` : ` record`}
+            <Card variant="default" className="flex justify-between items-center rounded-4xl p-2 bg-transparent shadow-none">
+                <span className="text-xs md:text-sm text-gray-500 px-2">
+                    {`Fetched `}
+                    <span className="font-semibold">
+                        {displayTotalItems.toLocaleString()}
                     </span>
-                </div>
-                <div className="flex items-center space-x-2">
+                    {` out of `}
+                    <span className="font-semibold">
+                        {displayTotalCount.toLocaleString()}
+                    </span>
+                    {displayTotalCount > 1 ? ` records` : ` record`}
+                </span>
+
+                {/* Sort controls */}
+                <div className="flex items-center gap-2">
                     {sortOptions.map((option) => (
                         <SortButton
                             key={String(option.field)}
@@ -256,7 +258,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                         />
                     )}
                 </div>
-            </div>
+            </Card>
 
             {/* Visualization Section */}
             {showVisualization && visualizationToggle?.isVisible && (
@@ -298,7 +300,7 @@ function EntityList<T>(props: EntityListProps<T>) {
             {/* Items list or grid */}
             <div
                 className={cn(
-                    "mt-4",
+                    "mt-2",
                     layoutVariant === "grid"
                         ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
                         : "space-y-4"

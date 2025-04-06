@@ -16,9 +16,10 @@ import { Button } from "@/components/common/ui/Button";
 import { FilterPanel } from "@/components/features/filter/FilterPanel";
 import { FilterTags } from "@/components/features/filter/FilterTags";
 import { PopularSearchesPanel } from "@/components/features/search/PopularSearchesPanel";
-import { SearchField } from "@/components/common/ui/SearchField";
+import { SearchField } from "@/components/features/search/SearchField";
 import { SearchCategory } from "@/types/search";
 import { DEFAULT_FILTER_STATE, FilterKey } from "@/constants/filters";
+import { Card } from "@/components/common/ui/Card";
 
 export interface SearchField {
     key: string;
@@ -278,50 +279,38 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
         if (!showBanner || isInitialState) return null;
 
         return (
-            <div
+            <Card
+                role="alert"
                 className={cn(
-                    "bg-amber-50 border border-amber-200 rounded-xl p-4",
-                    "flex flex-col lg:flex-row items-center mt-2 lg:space-y-0 justify-between"
+                    "bg-amber-50 border-dashed border-amber-500 rounded-3xl p-3.5 shadow-none",
+                    "flex flex-inline gap-2 animate-bounce",
                 )}
             >
-                <div className="flex items-start">
-                    <AlertCircle className="h-5 w-5 text-amber-500 mr-2 mt-1 flex-shrink-0" />
-                    <span className="text-amber-700">
-                        Search terms have changed. Search again to see updated
-                        results.
-                    </span>
-                </div>
-                <Button
-                    className="w-full lg:w-auto border-dashed border-amber-400 text-amber-700 hover:bg-amber-100 hover:border-solid transition-all duration-200"
-                    variant="outline"
-                    leftIcon={SearchIcon}
-                    onClick={performSearch}
-                    size="sm"
-                >
-                    Search Again
-                </Button>
-            </div>
+                <AlertCircle className="inline-block h-4 w-4 mt-1 text-amber-500 flex-shrink-0" />
+                <span className="text-amber-700 text-sm md:text-base">
+                    Search terms have changed. Press the search button to see
+                    updated results.
+                </span>
+            </Card>
         );
     };
 
     return (
-        <div className={className}>
+        <div className={cn("flex flex-col gap-2 md:gap-3 lg:gap-4", className)}>
             {/* Search Fields */}
-            <div className="grid gap-4">
-                {fields.map(({ key, icon: Icon, placeholder }: SearchField) => (
-                    <SearchField
-                        key={key}
-                        icon={Icon}
-                        placeholder={placeholder}
-                        value={searchTerms[key] || ""}
-                        onChange={(value) => handleInputChange(key, value)}
-                        onEnter={performSearch}
-                    />
-                ))}
-            </div>
+            {fields.map(({ key, icon: Icon, placeholder }: SearchField) => (
+                <SearchField
+                    key={key}
+                    icon={Icon}
+                    placeholder={placeholder}
+                    value={searchTerms[key] || ""}
+                    onChange={(value) => handleInputChange(key, value)}
+                    onEnter={performSearch}
+                />
+            ))}
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2 sm:gap-3 border-b border-slate-400 pb-3 mt-4">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
                 {/* Left side - Panel Controls */}
                 <div className="flex gap-2">
                     {showPopularSearches && (
@@ -394,7 +383,7 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
             </div>
 
             {/* Panels Area */}
-            <div className="transition-all duration-300 ease-in-out relative mt-4">
+            <div className="transition-all duration-300 ease-in-out pb-2">
                 <AnimatePresence>
                     {activePanelType === "filters" && (
                         <motion.div

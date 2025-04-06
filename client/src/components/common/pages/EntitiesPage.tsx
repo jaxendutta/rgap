@@ -10,7 +10,7 @@ import { UseInfiniteQueryResult, UseQueryResult } from "@tanstack/react-query";
 import { Button } from "@/components/common/ui/Button";
 import { Grant, Entity } from "@/types/models";
 import { GrantCard } from "@/components/features/grants/GrantCard";
-import { SearchField } from "@/components/common/ui/SearchField";
+import { SearchField } from "@/components/features/search/SearchField";
 
 interface HeaderConfig {
     title: string;

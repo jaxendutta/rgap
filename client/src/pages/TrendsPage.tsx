@@ -21,7 +21,7 @@ import { TrendVisualizer } from "@/components/features/visualizations/TrendVisua
 import { MultiSelect } from "@/components/common/ui/MultiSelect";
 import { useFilterOptions } from "@/hooks/api/useFilterOptions";
 import { useAllGrantSearch } from "@/hooks/api/useData";
-import { DateRangeFilter } from "@/components/common/ui/DateRangeFilter";
+import { DateRangeFilter } from "@/components/features/filter/DateRangeFilter";
 import LoadingState from "@/components/common/ui/LoadingState";
 import ErrorState from "@/components/common/ui/ErrorState";
 import Tag, { Tags } from "@/components/common/ui/Tag";
@@ -36,7 +36,7 @@ import { AGENCY_COLORS } from "@/utils/chartColors";
 import { GrantSearchParams } from "@/types/search";
 import { Grant } from "@/types/models";
 import EmptyState from "@/components/common/ui/EmptyState";
-import StatDisplay from "@/components/common/ui/StatDisplay";
+import StatDisplay from "@/components/features/analytics/StatDisplay";
 import { AnimatePresence, motion } from "framer-motion";
 import { TimePeriodAnalytics } from "@/components/features/analytics/EntityAnalytics";
 

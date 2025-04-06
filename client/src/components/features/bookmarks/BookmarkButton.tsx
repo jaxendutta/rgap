@@ -1,5 +1,6 @@
 // src/components/features/bookmarks/BookmarkButton.tsx
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { BookmarkPlus, BookmarkCheck } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +30,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
 }) => {
     const { user } = useAuth();
     const { showNotification } = useNotification();
+    const navigate = useNavigate();
 
     // Keep track of the visual/UI state of the bookmark button
     const [visualBookmarkState, setVisualBookmarkState] = useState<boolean>(
@@ -49,7 +51,8 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
         if (!user || !user.user_id) {
             showNotification(
                 "You must be logged in to bookmark items",
-                "error"
+                "error",
+                () => navigate("/auth")
             );
             return;
         }

@@ -22,7 +22,7 @@ import EntityProfilePage from "@/components/common/pages/EntityProfilePage";
 import { SortConfig } from "@/types/search";
 import { EntityAnalyticsSection } from "@/components/features/analytics/EntityAnalytics";
 import { extractAgenciesFromGrants } from "@/utils/analytics";
-import StatDisplay, { StatItem } from "@/components/common/ui/StatDisplay";
+import StatDisplay, { StatItem } from "@/components/features/analytics/StatDisplay";
 import { formatCommaSeparated, formatCurrency } from "@/utils/format";
 import EntityHeader, {
     ActionButton,

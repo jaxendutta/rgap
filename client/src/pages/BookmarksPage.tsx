@@ -14,7 +14,7 @@ import EntityCard from "@/components/common/ui/EntityCard";
 import { GrantCard } from "@/components/features/grants/GrantCard";
 import EntityList from "@/components/common/ui/EntityList";
 import EmptyState from "@/components/common/ui/EmptyState";
-import { SearchHistoryCard } from "@/components/features/account/SearchHistoryCard";
+import { SearchHistoryCard } from "@/components/features/search/SearchHistoryCard";
 import Tabs, { TabItem } from "@/components/common/ui/Tabs";
 
 const tabs: TabItem[] = [

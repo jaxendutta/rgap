@@ -143,7 +143,7 @@ export const PopularSearchesPanel = ({
                     onChange={(tabId) =>
                         setActiveCategory(tabId as SearchCategory)
                     }
-                    variant="underline"
+                    variant="pills"
                     size="sm"
                     fullWidth={true}
                 />

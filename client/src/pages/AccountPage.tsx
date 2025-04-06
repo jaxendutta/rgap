@@ -16,7 +16,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/common/ui/Card";
 import { Button } from "@/components/common/ui/Button";
-import { SearchHistoryCard } from "@/components/features/account/SearchHistoryCard";
+import { SearchHistoryCard } from "@/components/features/search/SearchHistoryCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
 import PageContainer from "@/components/common/layout/PageContainer";

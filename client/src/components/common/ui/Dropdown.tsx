@@ -88,7 +88,7 @@ export const Dropdown = ({
                 variant={"outline"}                
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "flex items-center justify-between w-full px-3 py-2 text-sm border lg:hover:bg-gray-50",
+                    "flex items-center justify-between w-full px-3 py-2 text-sm border hover:shadow-sm",
                     isOpen && "border-gray-300 ring-1 ring-gray-300",
                     className
                 )}
@@ -107,7 +107,7 @@ export const Dropdown = ({
             </Button>
 
             {isOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-white rounded-md shadow-lg border">
+                <div className="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-300 overflow-hidden">
                     <div className="p-2 max-h-60 overflow-auto space-y-1">
                         {normalizedOptions.map((option) => {
                             const isSelected = multiple

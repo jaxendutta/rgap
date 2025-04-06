@@ -12,7 +12,7 @@ const PageContainer: React.FC<PageContainerProps> = ({
 }) => {
     return (
         <div
-            className={`max-w-7xl mx-auto p-1.5 lg:p-6 space-y-6 ${className}`}
+            className={`max-w-7xl mx-auto p-1.5 lg:p-6 ${className}`}
         >
             {children}
         </div>
