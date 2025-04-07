@@ -78,7 +78,7 @@ export const BookmarksPage = () => {
     const errorMessage = bookmarksError || entitiesError;
 
     return (
-        <PageContainer className="h-full">
+        <PageContainer>
             {/* Header */}
             <PageHeader
                 title="Bookmarks"
@@ -93,6 +93,7 @@ export const BookmarksPage = () => {
                 variant="pills"
                 size="md"
                 fullWidth={true}
+                className="mb-4"
             />
 
             {/* Entity List */}

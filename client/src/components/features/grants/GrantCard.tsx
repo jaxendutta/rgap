@@ -20,13 +20,10 @@ import {
     DollarSign,
     FileText,
     AlertCircle,
-    Globe,
     History,
     TrendingUp,
     TrendingDown,
-    FileEdit,
     CornerDownRight,
-    CalendarDays,
     Layers,
     LineChart,
     Hourglass,
@@ -39,6 +36,7 @@ import { cn } from "@/utils/cn";
 import Tag, { Tags } from "@/components/common/ui/Tag";
 import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
 import { TrendVisualizer } from "../visualizations/TrendVisualizer";
+import Tabs, { TabContent, TabItem } from "@/components/common/ui/Tabs";
 
 interface GrantCardProps {
     grant: Grant;
@@ -182,6 +180,27 @@ export const GrantCard = ({
         },
         { icon: Landmark, text: grant.org },
     ].filter((tag) => !tag.hide);
+
+    const tabs: TabItem[] = [
+        {
+            id: "details",
+            label: "Details",
+            icon: FileText,
+        },
+        {
+            id: "funding",
+            label: "Funding Timeline",
+            icon: LineChart,
+        },
+    ];
+
+    if (hasAmendments) {
+        tabs.splice(1, 0, {
+            id: "versions",
+            label: "Version History",
+            icon: History,
+        });
+    }
 
     return (
         <Card isHoverable className="p-4 transition-all duration-300">
@@ -368,84 +387,44 @@ export const GrantCard = ({
                 {/* Expanded Content */}
                 <div
                     className={cn(
-                        "overflow-hidden transition-all duration-300 ease-in-out",
+                        "flex flex-col gap-2 overflow-hidden transition-all duration-300 ease-in-out",
                         isExpanded
-                            ? "opacity-100 max-h-[2000px] mt-2 lg:mt-4 pt-2 border-t"
+                            ? "opacity-100 max-h-[2000px] pt-4"
                             : "opacity-0 max-h-0"
                     )}
                 >
                     {/* Tabs */}
-                    <div className="border-b mb-4">
-                        <div className="flex -mb-px">
-                            <button
-                                className={cn(
-                                    "px-2 lg:px-4 py-1 lg:py-2 text-sm font-medium border-b-2 transition-colors",
-                                    activeTab === "details"
-                                        ? "border-blue-500 text-blue-600"
-                                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                                )}
-                                onClick={() => setActiveTab("details")}
-                            >
-                                <span className="flex items-start">
-                                    <FileText className="h-4 w-4 mr-1.5 mt-0.5 shrink-0" />
-                                    <span className="mr-1 hidden lg:flex">
-                                        Grant
-                                    </span>
-                                    <span>Details</span>
-                                </span>
-                            </button>
-
-                            {hasAmendments && (
-                                <button
-                                    className={cn(
-                                        "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
-                                        activeTab === "versions"
-                                            ? "border-blue-500 text-blue-600"
-                                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                                    )}
-                                    onClick={() => setActiveTab("versions")}
-                                >
-                                    <span className="flex items-start">
-                                        <History className="h-4 w-4 mr-1.5 mt-0.5 shrink-0" />
-                                        <span className="mr-1 hidden lg:flex">
-                                            Version
-                                        </span>
-                                        <span>History</span>
-                                    </span>
-                                </button>
-                            )}
-
-                            <button
-                                className={cn(
-                                    "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
-                                    activeTab === "funding"
-                                        ? "border-blue-500 text-blue-600"
-                                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                                )}
-                                onClick={() => setActiveTab("funding")}
-                            >
-                                <span className="flex items-start">
-                                    <LineChart className="h-4 w-4 mr-1.5 mt-0.5 shrink-0" />
-                                    Funding Timeline
-                                </span>
-                            </button>
-                        </div>
-                    </div>
+                    <Tabs
+                        className="mb-2"
+                        variant="pills"
+                        fullWidth={true}
+                        activeTab={activeTab}
+                        onChange={(tabId: string) =>
+                            setActiveTab(
+                                tabId as "details" | "versions" | "funding"
+                            )
+                        }
+                        tabs={tabs}
+                    />
 
                     {/* Tab Content */}
-                    <div className="p-1">
+                    <TabContent activeTab={activeTab}>
                         {/* Details Tab */}
                         {activeTab === "details" && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Auto-flowing sections */}
                                 <div className="md:contents">
                                     {/* Reference Info - Styled as a card for better visual separation */}
-                                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
-                                        <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-center">
-                                            <FileText className="h-4 w-4 mr-1.5 text-blue-600" />
-                                            Grant Information
-                                        </h3>
-                                        <div className="text-sm space-y-1">
+                                    <Card>
+                                        <Card.Header
+                                            title="Grant Information"
+                                            icon={Database}
+                                            size="sm"
+                                        />
+                                        <Card.Content
+                                            size={"sm"}
+                                            className="text-sm text-gray-700 space-y-1"
+                                        >
                                             <div className="grid grid-cols-12 gap-2">
                                                 <span className="col-span-5 text-gray-500 self-start">
                                                     Reference Number
@@ -503,16 +482,20 @@ export const GrantCard = ({
                                                     </span>
                                                 </div>
                                             )}
-                                        </div>
-                                    </div>
+                                        </Card.Content>
+                                    </Card>
 
                                     {/* Financial Summary */}
-                                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
-                                        <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-center">
-                                            <DollarSign className="h-4 w-4 mr-1.5 text-blue-600" />
-                                            Financial Information
-                                        </h3>
-                                        <div className="text-sm space-y-1">
+                                    <Card>
+                                        <Card.Header
+                                            title="Funding Summary"
+                                            icon={DollarSign}
+                                            size={"sm"}
+                                        />
+                                        <Card.Content
+                                            size={"sm"}
+                                            className="text-sm text-gray-700 space-y-1"
+                                        >
                                             <div className="grid grid-cols-12 gap-2 items-center">
                                                 <span className="col-span-5 text-gray-500 self-start">
                                                     Current Value
@@ -598,16 +581,20 @@ export const GrantCard = ({
                                                         </span>
                                                     </div>
                                                 )}
-                                        </div>
-                                    </div>
+                                        </Card.Content>
+                                    </Card>
 
                                     {/* Timeline */}
-                                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
-                                        <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-center">
-                                            <CalendarDays className="h-4 w-4 mr-1.5 text-blue-600" />
-                                            Timeline
-                                        </h3>
-                                        <div className="text-sm space-y-1">
+                                    <Card>
+                                        <Card.Header
+                                            title="Funding Timeline"
+                                            icon={Calendar}
+                                            size={"sm"}
+                                        />
+                                        <Card.Content
+                                            size={"sm"}
+                                            className="text-sm text-gray-700 space-y-1"
+                                        >
                                             <div className="grid grid-cols-12 gap-2">
                                                 <span className="col-span-5 text-gray-500 self-start">
                                                     Start Date
@@ -634,91 +621,31 @@ export const GrantCard = ({
                                                     Duration
                                                 </span>
                                                 <span className="col-span-7 text-gray-800">
-                                                    {(() => {
-                                                        try {
-                                                            // Check if start and end dates are the same or if end date is missing
-                                                            const start =
-                                                                new Date(
-                                                                    grant.agreement_start_date
-                                                                );
-                                                            if (
-                                                                !grant.agreement_end_date
-                                                            ) {
-                                                                return "One-time payment";
-                                                            }
-
-                                                            const end =
-                                                                new Date(
-                                                                    grant.agreement_end_date
-                                                                );
-
-                                                            // If same day or end date is before start date (data error)
-                                                            if (
-                                                                end.getTime() <=
-                                                                start.getTime()
-                                                            ) {
-                                                                return "One-time payment";
-                                                            }
-
-                                                            // Continue with normal duration calculation for multi-day grants
-                                                            const diffMonths =
-                                                                (end.getFullYear() -
-                                                                    start.getFullYear()) *
-                                                                    12 +
-                                                                end.getMonth() -
-                                                                start.getMonth();
-                                                            const years =
-                                                                Math.floor(
-                                                                    diffMonths /
-                                                                        12
-                                                                );
-                                                            const months =
-                                                                diffMonths % 12;
-
-                                                            if (
-                                                                years > 0 &&
-                                                                months > 0
-                                                            ) {
-                                                                return `${years} ${
-                                                                    years === 1
-                                                                        ? "year"
-                                                                        : "years"
-                                                                } and ${months} ${
-                                                                    months === 1
-                                                                        ? "month"
-                                                                        : "months"
-                                                                }`;
-                                                            } else if (
-                                                                years > 0
-                                                            ) {
-                                                                return `${years} ${
-                                                                    years === 1
-                                                                        ? "year"
-                                                                        : "years"
-                                                                }`;
-                                                            } else {
-                                                                return `${months} ${
-                                                                    months === 1
-                                                                        ? "month"
-                                                                        : "months"
-                                                                }`;
-                                                            }
-                                                        } catch (e) {
-                                                            return "Unknown duration";
-                                                        }
-                                                    })()}
+                                                    {formatDateDiff(
+                                                        grant.agreement_start_date,
+                                                        grant.agreement_end_date
+                                                    ) === "Same date"
+                                                        ? "One-time payment"
+                                                        : formatDateDiff(
+                                                              grant.agreement_start_date,
+                                                              grant.agreement_end_date
+                                                          )}
                                                 </span>
                                             </div>
-                                        </div>
-                                    </div>
+                                        </Card.Content>
+                                    </Card>
 
                                     {/* Location */}
-                                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
-                                        <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-center">
-                                            <Globe className="h-4 w-4 mr-1.5 text-blue-600" />
-                                            Location
-                                        </h3>
-                                        <div className="text-sm space-y-1">
+                                    <Card>
+                                        <Card.Header
+                                            title="Location"
+                                            icon={MapPin}
+                                            size={"sm"}
+                                        />
+                                        <Card.Content
+                                            size="sm"
+                                            className="text-sm text-gray-700 space-y-1"
+                                        >
                                             <div className="grid grid-cols-12 gap-2">
                                                 <span className="col-span-5 text-gray-500 self-start">
                                                     Country
@@ -784,68 +711,74 @@ export const GrantCard = ({
                                                         : "Not specified"}
                                                 </span>
                                             </div>
-                                        </div>
-                                    </div>
+                                        </Card.Content>
+                                    </Card>
 
                                     {/* Program Information */}
-                                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
-                                        <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-start">
-                                            <BookOpen className="h-4 w-4 mt-0.5 mr-1.5 flex-shrink-0 text-blue-600" />
-                                            {hasValue("prog_title_en")
-                                                ? "Program: " +
-                                                  grant.prog_title_en
-                                                : "Program Information"}
-                                        </h3>
-                                        <div className="text-sm text-gray-700">
-                                            <span
-                                                className={
-                                                    hasValue("prog_purpose_en")
-                                                        ? "col-span-7 text-gray-800"
-                                                        : "col-span-7 text-gray-400 italic"
-                                                }
-                                            >
-                                                {grant.prog_purpose_en ||
-                                                    "Program purpose not specified"}
-                                            </span>
-                                        </div>
-                                    </div>
+                                    <Card>
+                                        <Card.Header
+                                            title={
+                                                grant.prog_title_en ||
+                                                "Program Information"
+                                            }
+                                            subtitle={
+                                                grant.prog_title_en
+                                                    ? "Program Information"
+                                                    : "Unspecified Program Name"
+                                            }
+                                            icon={BookOpen}
+                                            size={"sm"}
+                                        />
+                                        <Card.Content
+                                            size="sm"
+                                            className="text-sm text-gray-700 p-4"
+                                        >
+                                            {hasValue("prog_purpose_en")
+                                                ? grant.prog_purpose_en
+                                                : "Program purpose not specified"}
+                                        </Card.Content>
+                                    </Card>
 
                                     {/* Description */}
-                                    <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
-                                        <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-start">
-                                            <FileEdit className="h-4 w-4 mt-0.5 mr-1.5 flex-shrink-0 text-blue-600" />
-                                            {hasValue("agreement_title_en")
-                                                ? "Agreement: " +
-                                                  grant.agreement_title_en
-                                                : "Agreement Description"}
-                                        </h3>
-                                        <div className="text-sm text-gray-700">
-                                            <span
-                                                className={
-                                                    hasValue("description_en")
-                                                        ? "col-span-7 text-gray-800"
-                                                        : "col-span-7 text-gray-400 italic"
-                                                }
-                                            >
-                                                {grant.description_en ||
-                                                    "Agreement description not specified"}
-                                            </span>
-                                        </div>
-                                    </div>
+                                    <Card>
+                                        <Card.Header
+                                            title={
+                                                grant.agreement_title_en ||
+                                                "Agreement Description"
+                                            }
+                                            subtitle={
+                                                grant.agreement_title_en
+                                                    ? "Agreement Description"
+                                                    : "Unspecified Agreement Description"
+                                            }
+                                            icon={FileText}
+                                            size={"sm"}
+                                        />
+                                        <Card.Content
+                                            size="sm"
+                                            className="text-sm text-gray-700 p-4"
+                                        >
+                                            {grant.description_en ||
+                                                "Agreement description not specified"}
+                                        </Card.Content>
+                                    </Card>
 
                                     {/* Expected Results */}
                                     {hasValue("expected_results_en") && (
-                                        <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
-                                            <h3 className="text-sm font-semibold text-gray-800 pb-2 mb-3 border-b border-gray-100 flex items-center">
-                                                <AlertCircle className="h-4 w-4 mr-1.5 text-blue-600" />
-                                                Expected Results
-                                            </h3>
-                                            <div className="text-sm text-gray-700">
-                                                <p>
-                                                    {grant.expected_results_en}
-                                                </p>
-                                            </div>
-                                        </div>
+                                        <Card>
+                                            <Card.Header
+                                                title="Expected Results"
+                                                icon={AlertCircle}
+                                                size={"sm"}
+                                            />
+                                            <Card.Content
+                                                size="sm"
+                                                className="text-sm text-gray-700 p-4"
+                                            >
+                                                {grant.expected_results_en ||
+                                                    "Not specified"}
+                                            </Card.Content>
+                                        </Card>
                                     )}
                                 </div>
                             </div>
@@ -855,7 +788,7 @@ export const GrantCard = ({
                         {activeTab === "versions" && hasAmendments && (
                             <div>
                                 {/* Timeline header */}
-                                <div className="mb-6 bg-gray-50 p-3 lg:p-4 rounded-lg">
+                                <div className="mb-6 bg-gray-50 p-3 lg:p-4 rounded-xl">
                                     <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                                         <Layers className="h-4 w-4 mr-1.5" />
                                         Version Timeline
@@ -970,7 +903,7 @@ export const GrantCard = ({
                                                             </div>
 
                                                             {/* Amendment card */}
-                                                            <div className="bg-white border rounded-lg shadow-sm">
+                                                            <div className="bg-white border border-slate-200 rounded-lg shadow-sm">
                                                                 <div className="p-3 lg:p-4">
                                                                     <div className="flex justify-between items-start">
                                                                         <div>
@@ -1016,7 +949,7 @@ export const GrantCard = ({
                                                                 {(hasChanges ||
                                                                     amendment.additional_information_en) &&
                                                                     prevAmendment && (
-                                                                        <div className="border-t px-4 py-3 bg-gray-50 rounded-b-lg">
+                                                                        <div className="border-t border-slate-300 px-4 py-3 bg-gray-50 rounded-b-lg">
                                                                             {hasChanges && (
                                                                                 <>
                                                                                     <p className="text-xs font-medium text-gray-600 mb-2">
@@ -1053,7 +986,7 @@ export const GrantCard = ({
                                                                                                         {formatCurrency(
                                                                                                             amendment.agreement_value
                                                                                                         )}
-                                                                                                        {amendment.agreement_value >
+                                                                                                        {amendment.agreement_value >=
                                                                                                         prevAmendment.agreement_value
                                                                                                             ? ` (+${formatCurrency(
                                                                                                                   amendment.agreement_value -
@@ -1211,7 +1144,7 @@ export const GrantCard = ({
                                                     amendments[
                                                         amendments.length - 1
                                                     ].agreement_value ? (
-                                                        grant.agreement_value >
+                                                        grant.agreement_value >=
                                                         amendments[
                                                             amendments.length -
                                                                 1
@@ -1248,16 +1181,11 @@ export const GrantCard = ({
                                         </div>
                                     ) : (
                                         <div className="text-center text-sm text-gray-500 py-4">
-                                            <p>
-                                                No amendment history available
-                                                for this grant.
-                                            </p>
-                                            <p>
-                                                Current value:
-                                                {formatCurrency(
+                                            {`No amendment history available for this grant.
+                                            Current value:
+                                                ${formatCurrency(
                                                     grant.agreement_value
-                                                )}
-                                            </p>
+                                                )}`}
                                         </div>
                                     )}
                                 </div>
@@ -1277,7 +1205,7 @@ export const GrantCard = ({
                                 )}
                             </div>
                         )}
-                    </div>
+                    </TabContent>
                 </div>
             </div>
         </Card>

@@ -52,70 +52,60 @@ export const TopRecipientsAnalysis = ({
     recipients: any[];
     totalFunding: number;
 }) => {
-    if (!recipients || recipients.length === 0) {
-        return (
-            <Card className="p-4">
-                <h3 className="text-lg font-medium mb-2 flex items-center">
-                    <GraduationCap className="h-5 w-5 mr-2 text-blue-600" />
-                    Top Recipients
-                </h3>
-                <p className="text-gray-500">No recipient data available</p>
-            </Card>
-        );
-    }
-
-    // Get top 5 recipients by funding
-    const topRecipients = [...recipients]
-        .sort((a, b) => b.total_funding - a.total_funding)
-        .slice(0, 5);
-
     return (
-        <Card className="p-4">
-            <h3 className="text-lg font-medium mb-4 flex items-center">
-                <GraduationCap className="h-5 w-5 mr-2 text-blue-600" />
-                Top Recipients
-            </h3>
+        <Card>
+            <Card.Header title="Top Recipients" icon={GraduationCap} />
+            <Card.Content className="text-gray-500 flex flex-col gap-3">
+                {!recipients || recipients.length === 0 ? (
+                    <div className="text-gray-500">
+                        No recipient data available
+                    </div>
+                ) : (
+                    [...recipients]
+                        .sort((a, b) => b.total_funding - a.total_funding)
+                        .slice(0, 5)
+                        .map((recipient, index) => {
+                            const percentage =
+                                (recipient.total_funding / totalFunding) * 100;
 
-            <div className="space-y-4">
-                {topRecipients.map((recipient, index) => {
-                    const percentage =
-                        (recipient.total_funding / totalFunding) * 100;
-
-                    return (
-                        <div
-                            key={recipient.recipient_id}
-                            className="flex items-center"
-                        >
-                            <div className="pl-2 pr-4 text-sm font-medium text-gray-500 flex-shrink-0 text-center">
-                                #{index + 1}
-                            </div>
-                            <div className="w-48 md:w-64 text-sm overflow-hidden">
-                                <a
-                                    href={`/recipients/${recipient.recipient_id}`}
-                                    className="text-blue-600 hover:underline font-medium truncate block"
-                                >
-                                    {recipient.legal_name}
-                                </a>
-                                <span className="text-xs text-gray-500 truncate block">
-                                    {recipient.grant_count} grants
-                                </span>
-                            </div>
-                            <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden mx-3">
+                            return (
                                 <div
-                                    className="h-full bg-blue-500 rounded-full"
-                                    style={{ width: `${percentage}%` }}
-                                ></div>
-                            </div>
-                            <div className="w-24 text-right text-sm font-medium">
-                                {formatCurrency(recipient.total_funding)}
-                            </div>
-                            <div className="w-16 text-right text-sm text-gray-500">
-                                {percentage.toFixed(1)}%
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
+                                    key={recipient.recipient_id}
+                                    className="flex items-center"
+                                >
+                                    <div className="pl-2 pr-4 text-sm font-medium text-gray-500 flex-shrink-0 text-center">
+                                        #{index + 1}
+                                    </div>
+                                    <div className="w-48 md:w-64 text-sm overflow-hidden">
+                                        <a
+                                            href={`/recipients/${recipient.recipient_id}`}
+                                            className="text-blue-600 hover:underline font-medium truncate block"
+                                        >
+                                            {recipient.legal_name}
+                                        </a>
+                                        <span className="text-xs text-gray-500 truncate block">
+                                            {recipient.grant_count} grants
+                                        </span>
+                                    </div>
+                                    <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden mx-3">
+                                        <div
+                                            className="h-full bg-blue-500 rounded-full"
+                                            style={{ width: `${percentage}%` }}
+                                        ></div>
+                                    </div>
+                                    <div className="w-24 text-right text-sm font-medium">
+                                        {formatCurrency(
+                                            recipient.total_funding
+                                        )}
+                                    </div>
+                                    <div className="w-16 text-right text-sm text-gray-500">
+                                        {percentage.toFixed(1)}%
+                                    </div>
+                                </div>
+                            );
+                        })
+                )}
+            </Card.Content>
         </Card>
     );
 };
@@ -153,13 +143,9 @@ export const AgencyBreakdown = ({
     }
 
     return (
-        <Card className="p-5">
-            <h3 className="text-lg font-medium mb-4 flex items-center">
-                <University className="h-5 w-5 mr-2 text-blue-600" />
-                Funding by Agency
-            </h3>
-
-            <div className="space-y-3">
+        <Card>
+            <Card.Header title="Funding by Agency" icon={University} />
+            <Card.Content>
                 {sortedAgencies.map(({ agency, funding, percentage }) => (
                     <div key={agency} className="flex flex-col">
                         <div className="flex justify-between items-center mb-1">
@@ -179,7 +165,7 @@ export const AgencyBreakdown = ({
                         </div>
                     </div>
                 ))}
-            </div>
+            </Card.Content>
         </Card>
     );
 };
@@ -378,8 +364,7 @@ export const EntityAnalyticsSection = ({
             : null;
 
     return (
-        <div className="space-y-8">
-            {/* Key Performance Metrics - summary of the most important stats */}
+        <div className="flex flex-col gap-5">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* KPI 1: Funding Growth */}
                 <KpiCard
@@ -419,7 +404,7 @@ export const EntityAnalyticsSection = ({
                         title="Recipient Diversity"
                         value={
                             <div>
-                                <span>
+                                <span className="italic">
                                     {recipientDiversity?.rating || "No data"}
                                 </span>
                                 {recipientDiversity && (
@@ -457,7 +442,7 @@ export const EntityAnalyticsSection = ({
                     title="Agency Distribution"
                     value={
                         <div>
-                            <span>{agencyAnalysis.specialization}</span>
+                            <span className="italic">{agencyAnalysis.specialization}</span>
                             {agencyAnalysis.topAgency && (
                                 <span className="block text-xs text-gray-600 mt-1">
                                     {agencyAnalysis.topAgency}:{" "}
@@ -511,119 +496,93 @@ export const EntityAnalyticsSection = ({
                 )}
 
                 {/* Entity-specific stats card */}
-                <Card className="p-4">
-                    <h3 className="text-lg font-medium mb-4 flex items-center">
-                        {entityType === "institute" ? (
-                            <>
-                                <Users className="h-5 w-5 mr-2 text-blue-600" />
-                                Recipient Statistics
-                            </>
-                        ) : (
-                            <>
-                                <BookMarked className="h-5 w-5 mr-2 text-blue-600" />
-                                Grant Statistics
-                            </>
-                        )}
-                    </h3>
+                <Card>
+                    <Card.Header
+                        title={
+                            entityType === "institute"
+                                ? "Recipient Statistics"
+                                : "Grant Statistics"
+                        }
+                        icon={entityType === "institute" ? Users : BookMarked}
+                    />
 
-                    <div className="space-y-3">
-                        {/* Display entity-specific stats */}
-                        <>
-                            {(entityType === "institute"
-                                ? [
-                                      [
-                                          "Active Recipients",
-                                          activeRecipientsData?.text,
-                                      ],
-                                      [
-                                          "Funding per Recipient",
-                                          recipients.length > 0
-                                              ? formatCurrency(
-                                                    (entity.total_funding ||
-                                                        0) / recipients.length
-                                                )
-                                              : "N/A",
-                                      ],
-                                      [
-                                          "Funding per Grant",
-                                          grants.length > 0
-                                              ? formatCurrency(
-                                                    (entity.total_funding ||
-                                                        0) / grants.length
-                                                )
-                                              : "N/A",
-                                      ],
-                                      [
-                                          "Grants per Recipient",
-                                          recipients.length > 0
-                                              ? (
-                                                    grants.length /
+                    <Card.Content className="flex flex-col gap-1">
+                        {(entityType === "institute"
+                            ? [
+                                  [
+                                      "Active Recipients",
+                                      activeRecipientsData?.text,
+                                  ],
+                                  [
+                                      "Funding per Recipient",
+                                      recipients.length > 0
+                                          ? formatCurrency(
+                                                (entity.total_funding || 0) /
                                                     recipients.length
-                                                ).toFixed(1)
-                                              : "N/A",
-                                      ],
-                                  ]
-                                : [
-                                      [
-                                          "Mean Grant Value",
-                                          formatCurrency(
-                                              entity.total_funding || 0
-                                          ),
-                                      ],
-                                      [
-                                          "Mean Grant Duration",
-                                          grantDuration.text,
-                                      ],
-                                      [
-                                          "Activity Period",
-                                          fundingGrowth.yearsSpan
-                                              ? `${fundingGrowth.yearsSpan} years`
-                                              : "N/A",
-                                      ],
-                                      [
-                                          "Most Active Year",
-                                          // calculate
-                                          // get the year with the most grants
-                                          (() => {
-                                              const yearCounts = grants.reduce(
-                                                  (acc, grant) => {
-                                                      const year = new Date(
-                                                          grant.agreement_start_date
-                                                      ).getFullYear();
-                                                      acc[year] =
-                                                          (acc[year] || 0) + 1;
-                                                      return acc;
-                                                  },
-                                                  {} as Record<string, number>
-                                              );
+                                            )
+                                          : "N/A",
+                                  ],
+                                  [
+                                      "Funding per Grant",
+                                      grants.length > 0
+                                          ? formatCurrency(
+                                                (entity.total_funding || 0) /
+                                                    grants.length
+                                            )
+                                          : "N/A",
+                                  ],
+                                  [
+                                      "Grants per Recipient",
+                                      recipients.length > 0
+                                          ? (
+                                                grants.length /
+                                                recipients.length
+                                            ).toFixed(1)
+                                          : "N/A",
+                                  ],
+                              ]
+                            : [
+                                  [
+                                      "Mean Grant Value",
+                                      formatCurrency(entity.total_funding || 0),
+                                  ],
+                                  ["Mean Grant Duration", grantDuration.text],
+                                  [
+                                      "Most Active Year",
+                                      // calculate
+                                      // get the year with the most grants
+                                      (() => {
+                                          const yearCounts = grants.reduce(
+                                              (acc, grant) => {
+                                                  const year = new Date(
+                                                      grant.agreement_start_date
+                                                  ).getFullYear();
+                                                  acc[year] =
+                                                      (acc[year] || 0) + 1;
+                                                  return acc;
+                                              },
+                                              {} as Record<string, number>
+                                          );
 
-                                              if (
-                                                  Object.keys(yearCounts)
-                                                      .length === 0
-                                              )
-                                                  return "N/A";
+                                          if (
+                                              Object.keys(yearCounts).length ===
+                                              0
+                                          )
+                                              return "N/A";
 
-                                              return Object.entries(
-                                                  yearCounts
-                                              ).sort(
-                                                  (a, b) => b[1] - a[1]
-                                              )[0][0];
-                                          })(),
-                                      ],
-                                  ]
-                            ).map(([label, value], index: number) => (
-                                <div
-                                    key={index}
-                                    className="flex justify-between py-2 border-b"
-                                >
-                                    <span className="text-gray-600">
-                                        {label}
-                                    </span>
-                                    <span className="font-medium">{value}</span>
-                                </div>
-                            ))}
-                        </>
-                    </div>
+                                          return Object.entries(
+                                              yearCounts
+                                          ).sort((a, b) => b[1] - a[1])[0][0];
+                                      })(),
+                                  ],
+                              ]
+                        ).map(([label, value], index: number) => (
+                            <div key={index} className="flex justify-between">
+                                {label}
+                                <span className="font-medium">{value}</span>
+                            </div>
+                        ))}
+                    </Card.Content>
                 </Card>
             </div>
         </div>

@@ -283,7 +283,7 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
                 role="alert"
                 className={cn(
                     "bg-amber-50 border-dashed border-amber-500 rounded-3xl p-3.5 shadow-none",
-                    "flex flex-inline gap-2 animate-bounce",
+                    "flex flex-inline gap-2 animate-bounce"
                 )}
             >
                 <AlertCircle className="inline-block h-4 w-4 mt-1 text-amber-500 flex-shrink-0" />
@@ -385,34 +385,37 @@ export const SearchInterface: React.FC<SearchInterfaceProps> = ({
             {/* Panels Area */}
             <div className="transition-all duration-300 ease-in-out pb-2">
                 <AnimatePresence>
-                    {activePanelType === "filters" && (
+                    {activePanelType === "filters" && filters && (
                         <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
+                            initial={{ height: 0 }}
+                            animate={{ height: "auto" }}
+                            exit={{ height: 0 }}
+                            transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 30,
+                            }}
+                            style={{ overflow: "hidden" }}
                         >
-                            {filters && (
-                                <FilterPanel
-                                    filters={filters}
-                                    onChange={handleFilterChange}
-                                />
-                            )}
+                            <FilterPanel
+                                filters={filters}
+                                onChange={handleFilterChange}
+                            />
                         </motion.div>
                     )}
-
-                    {showPopularSearches && (
+                </AnimatePresence>
+                <AnimatePresence>
+                    {activePanelType === "popular" && showPopularSearches && (
                         <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
-                            style={{
-                                display:
-                                    activePanelType === "popular"
-                                        ? "block"
-                                        : "none",
+                            initial={{ height: 0 }}
+                            animate={{ height: "auto" }}
+                            exit={{ height: 0 }}
+                            transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 30,
                             }}
+                            style={{ overflow: "hidden" }}
                         >
                             <PopularSearchesPanel
                                 onSelect={handlePopularSearchSelect}

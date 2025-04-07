@@ -8,6 +8,7 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
     isHoverable?: boolean;
     isInteractive?: boolean;
     variant?: "default" | "outline" | "filled";
+    size?: "sm" | "md" | "lg";
     disableOverflow?: boolean;
 }
 
@@ -17,6 +18,7 @@ const Card = ({
     isHoverable = false,
     isInteractive = false,
     variant = "default",
+    size = "md",
     disableOverflow = false,
     ...props
 }: CardProps) => {
@@ -46,6 +48,7 @@ interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
     subtitle?: React.ReactNode;
     icon?: LucideIcon;
     action?: React.ReactNode;
+    size?: "sm" | "md";
 }
 
 const CardHeader = ({
@@ -55,12 +58,14 @@ const CardHeader = ({
     subtitle,
     icon: Icon,
     action,
+    size="md",
     ...props
 }: CardHeaderProps) => {
     return (
         <div
             className={cn(
-                "p-4 border-b border-gray-100 flex items-center justify-between",
+                "border-b border-gray-100 flex items-center justify-between",
+                size === "md" ? "p-4" : "py-2.5 px-4",
                 className
             )}
             {...props}
@@ -68,12 +73,16 @@ const CardHeader = ({
             <div className="flex flex-col gap-0.5">
                 <div className="flex items-center gap-2">
                     {Icon && (
-                        <Icon className="flex-shrink-0 h-4 w-4 text-blue-600" />
+                        <Icon className={cn("flex-shrink-0 text-blue-600",
+                            size === "md" ? "h-4 w-4" : "h-3.5 w-3.5",
+                        )} />
                     )}
                     {title && (
-                        <h3 className="text-md font-medium whitespace-nowrap text-gray-900">
+                        <span className={cn("font-medium whitespace-nowrap text-gray-700",
+                            size === "md" ? "text-md" : "text-sm",
+                        )}>
                             {title}
-                        </h3>
+                        </span>
                     )}
                 </div>
                 {subtitle && (
@@ -91,17 +100,26 @@ const CardHeader = ({
 // Card Content
 interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
     noPadding?: boolean;
+    size?: "sm" | "md" | "lg";
 }
 
 const CardContent = ({
     children,
     className,
     noPadding = false,
+    size = "md",
     ...props
 }: CardContentProps) => {
     return (
         <div
-            className={cn(noPadding ? "" : "p-4 lg:p-6", className)}
+            className={cn(
+                noPadding
+                    ? ""
+                    : size === "md"
+                    ? "p-4"
+                    : "p-2 lg:p-4",
+                className
+            )}
             {...props}
         >
             {children}

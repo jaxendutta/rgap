@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/utils/cn";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export interface TabItem {
     id: string;
@@ -127,7 +127,7 @@ const Tabs: React.FC<TabsProps> = ({
             ? "flex flex-col"
             : "flex flex-row items-center",
         variant !== "pills" && "border-b border-gray-200",
-        variant === "pills" && "bg-gray-200 p-1 rounded-full relative",
+        variant === "pills" && "bg-gray-200 p-1 rounded-full relative"
     );
 
     // Number of tabs to determine if full width is needed
@@ -178,7 +178,7 @@ const Tabs: React.FC<TabsProps> = ({
                             fullWidth && "w-full",
                             tab.disabled && "opacity-50 cursor-not-allowed",
                             variant === "pills" && "rounded-full",
-                            tabClassName,
+                            tabClassName
                         )}
                     >
                         {Icon && (
@@ -208,6 +208,27 @@ const Tabs: React.FC<TabsProps> = ({
                 );
             })}
         </div>
+    );
+};
+
+export const TabContent: React.FC<{
+    activeTab: string;
+    children: React.ReactNode;
+    className?: string;
+}> = ({ activeTab, children, className }) => {
+    return (
+        <AnimatePresence mode="wait">
+            <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+                className={className}
+            >
+                {children}
+            </motion.div>
+        </AnimatePresence>
     );
 };
 

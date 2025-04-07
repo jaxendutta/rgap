@@ -145,7 +145,7 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                                 : "max-h-0 opacity-0"
                         )}
                     >
-                        <div className="border rounded-lg overflow-hidden bg-gray-50">
+                        <div className="border border-slate-200 rounded-lg overflow-hidden bg-gray-50">
                             <div className="p-4">
                                 <LocationMap
                                     title={title}

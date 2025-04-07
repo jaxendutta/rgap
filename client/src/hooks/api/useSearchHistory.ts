@@ -5,10 +5,9 @@ import {
     useInfiniteQuery,
     UseInfiniteQueryResult,
 } from "@tanstack/react-query";
-import { SearchHistory } from "@/types/models";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import createAPI from "@/utils/api";
-import { GrantSearchParams } from "@/types/search";
+import { GrantSearchParams, SearchHistory } from "@/types/search";
 
 const API = createAPI();
 

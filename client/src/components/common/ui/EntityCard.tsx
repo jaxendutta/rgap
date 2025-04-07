@@ -249,7 +249,7 @@ const EntityCard = ({
                                 key={index}
                                 icon={item.icon}
                                 size="sm"                                
-                                variant={item.link ? "link" : "outline"}
+                                variant={item.link ? "link" : "secondary"}
                                 onClick={
                                     item.link
                                         ? () => navigate(item.link)
@@ -269,7 +269,7 @@ const EntityCard = ({
                     {statItems.map((stat, index) => (
                         <div
                             key={index}
-                            className="bg-white border border-gray-100 rounded-lg p-2 flex-1"
+                            className="bg-slate-50 border border-slate-100 rounded-lg p-2 flex-1"
                         >
                             <div className="flex items-center text-xs text-blue-700 mb-1">
                                 {stat.icon && (

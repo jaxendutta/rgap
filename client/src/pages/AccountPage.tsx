@@ -18,7 +18,6 @@ import {
     Save,
     RefreshCw,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/common/ui/Card";
 import { Button } from "@/components/common/ui/Button";
 import { SearchHistoryCard } from "@/components/features/search/SearchHistoryCard";
@@ -33,7 +32,7 @@ import { SearchHistory } from "@/types/search";
 import createAPI from "@/utils/api";
 import EmptyState from "@/components/common/ui/EmptyState";
 import { getDataFromResult } from "@/hooks/api/useData";
-import Tabs, { TabItem } from "@/components/common/ui/Tabs";
+import Tabs, { TabContent, TabItem } from "@/components/common/ui/Tabs";
 import InputField from "@/components/common/ui/InputField";
 import Tag from "@/components/common/ui/Tag";
 
@@ -233,15 +232,7 @@ export default function AccountPage() {
             />
 
             {/* Content */}
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.2 }}
-                    className="mt-6"
-                >
+            <TabContent activeTab={activeTab} className="mt-6">
                     {/* Profile Settings */}
                     {activeTab === "profile" && (
                         <Card className="p-6 space-y-6">
@@ -581,8 +572,7 @@ export default function AccountPage() {
                             </div>
                         </div>
                     )}
-                </motion.div>
-            </AnimatePresence>
+            </TabContent>
         </PageContainer>
     );
 }

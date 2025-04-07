@@ -172,11 +172,13 @@ const EntitiesPage = <T,>({
                 subtitle={headerConfig.subtitle}
             />
 
-            {/* Search interface */}
-            {searchConfig && renderSearchInterface()}
+            <div className="flex flex-col gap-4">
+                {/* Search interface */}
+                {searchConfig && renderSearchInterface()}
 
-            {/* Content */}
-            {renderList()}
+                {/* Content */}
+                {renderList()}
+            </div>
         </PageContainer>
     );
 };

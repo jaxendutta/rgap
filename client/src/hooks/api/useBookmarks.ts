@@ -4,6 +4,7 @@ import { useNotification } from "@/components/features/notifications/Notificatio
 import { Entity } from "@/types/models";
 import createAPI from "@/utils/api";
 import { formatSentenceCase } from "@/utils/format";
+import { adaptSearchHistory } from "./useSearchHistory";
 
 const API = createAPI();
 
@@ -36,6 +37,12 @@ export function useAllBookmarks(
                 const response = await API.get(
                     `/bookmark/${bookmarkType}/ids/${userId}`
                 );
+
+                // Adapt the response data if necessary
+                if (bookmarkType === "search") {
+                    return adaptSearchHistory(response.data) || [];
+                }
+
                 return response.data;
             } catch (error) {
                 console.error(
@@ -70,6 +77,12 @@ export function useBookmarkedEntities(
                 const response = await API.get(
                     `/bookmark/${bookmarkType}/${userId}`
                 );
+
+                // Adapt the response data if necessary
+                if (bookmarkType === "search") {
+                    return adaptSearchHistory(response.data) || [];
+                }
+
                 return response.data;
             } catch (error) {
                 console.error(

@@ -1,6 +1,6 @@
 // src/components/common/pages/EntityProfilePage.tsx
 import React from "react";
-import Tabs, { TabItem } from "@/components/common/ui/Tabs";
+import Tabs, { TabItem, TabContent } from "@/components/common/ui/Tabs";
 import LoadingState from "@/components/common/ui/LoadingState";
 import ErrorState from "@/components/common/ui/ErrorState";
 import PageContainer from "../layout/PageContainer";
@@ -89,20 +89,22 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
             </Card>
 
             {/* Tabs and Content */}
-            <Card className="overflow-hidden">
+            <Card className="flex flex-col gap-6 bg-slate-50 p-4 lg:p-6 overflow-hidden">
                 {/* Tab navigation */}
-                <div className="border-b border-gray-200">
-                    <Tabs
-                        tabs={tabs}
-                        activeTab={activeTab}
-                        onChange={onTabChange}
-                        variant="underline"
-                        fullWidth={true}
-                    />
-                </div>
+                <Tabs
+                    tabs={tabs}
+                    activeTab={activeTab}
+                    onChange={onTabChange}
+                    variant="pills"
+                    fullWidth={true}
+                />
 
                 {/* Tab content */}
-                <div className="p-4 lg:p-6 bg-slate-100">{renderTabContent(activeTab)}</div>
+                <TabContent
+                    activeTab={activeTab}
+                >
+                    {renderTabContent(activeTab)}
+                </TabContent>
             </Card>
         </PageContainer>
     );

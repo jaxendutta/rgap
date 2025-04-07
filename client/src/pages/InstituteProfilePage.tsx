@@ -28,7 +28,7 @@ import StatDisplay from "@/components/features/analytics/StatDisplay";
 import EntityHeader, {
     ActionButton,
 } from "@/components/common/layout/EntityHeader";
-import { formatCommaSeparated } from "@/utils/format";
+import { formatCommaSeparated, formatCurrency } from "@/utils/format";
 import { Grant, Recipient } from "@/types/models";
 import { GrantCard } from "@/components/features/grants/GrantCard";
 
@@ -53,9 +53,6 @@ const InstituteProfilePage = () => {
         field: "total_funding",
         direction: "desc",
     });
-    const [showVisualization] = useState(true);
-    const [isVisualizationVisible, setIsVisualizationVisible] = useState(true);
-    const [doNotShowVisualizationToggle] = useState(false);
 
     // Use the useEntityById hook for institute details
     const instituteDetailsQuery = useEntityById(entityType, id);
@@ -191,7 +188,7 @@ const InstituteProfilePage = () => {
         {
             icon: DollarSign,
             label: "Total Funding",
-            value: institute?.total_funding.toLocaleString(),
+            value: formatCurrency(institute?.total_funding),
         },
         {
             icon: Calendar,
@@ -225,9 +222,6 @@ const InstituteProfilePage = () => {
         );
     };
 
-    // Key extractor for recipients
-    const keyExtractor = (recipient: any) => recipient.recipient_id;
-
     const renderTabContent = (activeTabId: string) => {
         if (!institute) return null;
 
@@ -238,37 +232,10 @@ const InstituteProfilePage = () => {
                         entityType="recipient"
                         entities={paginatedRecipients}
                         renderItem={renderRecipientItem}
-                        keyExtractor={keyExtractor}
                         variant="grid"
-                        sortOptions={[
-                            {
-                                field: "total_funding",
-                                label: "Funding",
-                                icon: DollarSign,
-                            },
-                            {
-                                field: "grant_count",
-                                label: "Grants",
-                                icon: BookMarked,
-                            },
-                        ]}
-                        initialSortConfig={recipientsSortConfig}
                         query={instituteRecipientsQuery}
                         emptyMessage="This institute has no associated recipients in our database."
                         showVisualization={true}
-                        visualizationToggle={
-                            showVisualization
-                                ? {
-                                      isVisible: isVisualizationVisible,
-                                      toggle: () =>
-                                          setIsVisualizationVisible(
-                                              !isVisualizationVisible
-                                          ),
-                                      showToggleButton:
-                                          !doNotShowVisualizationToggle,
-                                  }
-                                : undefined
-                        }
                         visualizationData={allGrants}
                     />
                 );
@@ -281,33 +248,11 @@ const InstituteProfilePage = () => {
                         renderItem={(grant: Grant) => (
                             <GrantCard grant={grant} />
                         )}
-                        keyExtractor={(grant: Grant) => grant.grant_id}
                         variant="list"
                         emptyMessage={
                             "This institute has no associated grants in our database."
                         }
-                        sortOptions={[
-                            {
-                                field: "agreement_start_date",
-                                label: "Date",
-                                icon: Calendar,
-                            },
-                            {
-                                field: "agreement_value",
-                                label: "Value",
-                                icon: DollarSign,
-                            },
-                        ]}
-                        initialSortConfig={grantsSortConfig}
                         query={instituteGrantsQuery}
-                        visualizationToggle={{
-                            isVisible: isVisualizationVisible,
-                            toggle: () =>
-                                setIsVisualizationVisible(
-                                    !isVisualizationVisible
-                                ),
-                            showToggleButton: true,
-                        }}
                         viewContext={entityType}
                         entityId={instituteId}
                         showVisualization={true}

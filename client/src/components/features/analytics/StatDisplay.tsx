@@ -144,7 +144,7 @@ const StatDisplay: React.FC<StatDisplayProps> = ({
         <div className="group-hover:bg-gray-50">
             <div
                 className={cn(
-                    "bg-slate-100 px-3 lg:px-6 py-3 lg:py-6 transition-colors duration-200",
+                    "bg-slate-50 px-3 lg:px-6 py-3 lg:py-6 transition-colors duration-200",
                     roundedBottom && "rounded-b-xl",
                     className
                 )}

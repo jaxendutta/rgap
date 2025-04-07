@@ -39,7 +39,7 @@ export interface SortOption<T> {
 }
 
 export function getSortOptions<T extends EntityModel>(
-    entityModel: T | keyof Entity,
+    entityModel: T | keyof Entity
 ): SortOption<T>[] {
     switch (entityModel) {
         case "grant":
@@ -59,19 +59,19 @@ export function getSortOptions<T extends EntityModel>(
         case "recipient":
             return [
                 {
-                    label: "Funding",
-                    icon: DollarSign,
-                    field: "total_funding" as keyof T,
-                },
-                {
                     label: "Grants",
-                    icon: BookMarked,
+                    icon: Hash,
                     field: "grant_count" as keyof T,
                 },
                 {
                     label: "Latest",
                     icon: Calendar,
                     field: "latest_grant_date" as keyof T,
+                },
+                {
+                    label: "Funding",
+                    icon: DollarSign,
+                    field: "total_funding" as keyof T,
                 },
             ];
 

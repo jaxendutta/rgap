@@ -163,7 +163,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
             {coordinates ? (
                 <ComposableMap
                     projection="geoMercator"
-                    style={{ width: "100%", height: "100%" }}
+                    style={{ width: "100%", height: "97.5%" }}
                 >
                     <ZoomableGroup center={coordinates} zoom={zoom}>
                         <Geographies geography={geoUrl}>
@@ -213,7 +213,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
             )}
 
             {locationDisplay && (
-                <div className="text-center text-xs text-gray-500 truncate">
+                <div className="py-1 text-center text-xs text-gray-500 truncate">
                     {locationDisplay}
                 </div>
             )}
