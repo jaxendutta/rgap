@@ -1,7 +1,7 @@
 // src/components/common/ui/ToggleButton.tsx
 import React, { ReactElement } from "react";
 import { cn } from "@/utils/cn";
-import { ButtonProps, Button } from "./Button";
+import { ButtonProps, Button } from "@/components/common/ui/Button";
 
 interface ToggleButtonsProps {
     children: React.ReactNode;

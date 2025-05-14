@@ -522,7 +522,7 @@ export default function TrendsPage() {
             <TimePeriodAnalytics grants={filteredGrants} />
 
             {/* Bottom Information Card */}
-            <Card className="mb-6">
+            <Card className="my-6">
                 <Card.Header title="About This Dashboard" icon={Info} />
 
                 <Card.Content>

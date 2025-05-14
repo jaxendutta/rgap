@@ -138,7 +138,7 @@ const Tabs: React.FC<TabsProps> = ({
             {/* Sliding background pill */}
             {variant === "pills" && (
                 <motion.div
-                    className="absolute bg-gray-800 rounded-full z-0"
+                    className="absolute bg-gray-900 rounded-full z-0"
                     initial={false}
                     animate={{
                         left: pillStyle.left,
