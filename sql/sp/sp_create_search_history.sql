@@ -1,4 +1,5 @@
 -- File: sql/sp/sp_create_search_history.sql
+/*
 DELIMITER $$
 DROP PROCEDURE IF EXISTS sp_create_search_history$$
 CREATE PROCEDURE sp_create_search_history(
@@ -55,3 +56,65 @@ BEGIN
     END IF;
 END $$
 DELIMITER ;
+*/
+
+-- PostgreSQL version of sp_create_search_history.sql
+CREATE OR REPLACE FUNCTION create_search_history(
+    p_user_id INTEGER,
+    p_search_recipient VARCHAR(500),
+    p_search_grant VARCHAR(500),
+    p_search_institution VARCHAR(500),
+    p_normalized_recipient VARCHAR(500),
+    p_normalized_grant VARCHAR(500),
+    p_normalized_institution VARCHAR(500),
+    p_search_filters JSONB,
+    p_result_count INTEGER
+)
+RETURNS TABLE(history_id INTEGER) 
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_history_id INTEGER;
+BEGIN
+    -- Check if at least one search term is provided
+    IF (
+        (p_search_recipient IS NOT NULL AND p_search_recipient != '') OR
+        (p_search_grant IS NOT NULL AND p_search_grant != '') OR
+        (p_search_institution IS NOT NULL AND p_search_institution != '')
+    ) THEN
+        -- Only insert if there's at least one valid search term
+        INSERT INTO "SearchHistory" (
+            user_id,
+            search_recipient,
+            search_grant,
+            search_institution,
+            normalized_recipient,
+            normalized_grant,
+            normalized_institution,
+            search_filters,
+            search_time,
+            result_count,
+            bookmarked
+        )
+        VALUES (
+            p_user_id,
+            NULLIF(p_search_recipient, ''),
+            NULLIF(p_search_grant, ''),
+            NULLIF(p_search_institution, ''),
+            NULLIF(p_normalized_recipient, ''),
+            NULLIF(p_normalized_grant, ''),
+            NULLIF(p_normalized_institution, ''),
+            p_search_filters,
+            NOW(),
+            p_result_count,
+            FALSE
+        )
+        RETURNING history_id INTO v_history_id;
+        
+        RETURN QUERY SELECT v_history_id;
+    ELSE
+        -- No valid search terms, return NULL to indicate no record was created
+        RETURN QUERY SELECT NULL::INTEGER;
+    END IF;
+END;
+$$;

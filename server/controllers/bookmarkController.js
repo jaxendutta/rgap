@@ -1,265 +1,276 @@
-// server/controllers/bookmarkController.js
-import { pool } from "../config/db.js";
+// server/controllers/instituteController.js
+import supabase from "../config/db.js";
 
-// Helper function to check if user exists
-const checkUserExists = async (userId) => {
-    const [rows] = await pool.query("CALL sp_check_user_exists(?)", [userId]);
-    return rows[0][0].user_exists === 1;
-};
-
-// Helper function to handle bookmarking response
-const handleBookmarkResponse = (result, entityType) => {
-    if (result.status === "exists") {
-        return {
-            status: 204,
-            message: `${entityType} bookmark already exists`,
-        };
-    }
-    return {
-        status: 201,
-        message: `${entityType} bookmark added successfully`,
-    };
-};
-
-// Helper function to handle unbookmarking response
-const handleUnbookmarkResponse = (result, entityType) => {
-    if (result.status === "not_found") {
-        return {
-            status: 404,
-            message: `${entityType} bookmark does not exist`,
-        };
-    }
-    return {
-        status: 200,
-        message: `${entityType} bookmark removed successfully`,
-    };
-};
-
-/**
- * Generic bookmark handler for all entity types
- * @param {string} entityType - Type of entity (grant, recipient, institute, search)
- * @param {number|string} entityId - ID of the entity to bookmark
- * @param {number} userId - User's ID
- * @param {boolean} isRemoving - Whether we're removing the bookmark (true) or adding it (false)
- * @returns {Promise<{status: number, message: string}>}
- */
-const handleBookmark = async (entityType, entityId, userId, isRemoving) => {
-    let procedure, entityLabel;
-
-    // Configure based on entity type
-    switch (entityType) {
-        case "grant":
-            procedure = isRemoving
-                ? "sp_delete_grant_bookmark"
-                : "sp_save_grant_bookmark";
-            entityLabel = "Grant";
-            break;
-        case "recipient":
-            procedure = isRemoving
-                ? "sp_delete_recipient_bookmark"
-                : "sp_save_recipient_bookmark";
-            entityLabel = "Recipient";
-            break;
-        case "institute":
-            procedure = isRemoving
-                ? "sp_delete_institute_bookmark"
-                : "sp_save_institute_bookmark";
-            entityLabel = "Institute";
-            break;
-        case "search":
-            // Special handling for search histories (they're toggled rather than created/deleted)
-            procedure = "sp_toggle_search_bookmark";
-            entityLabel = "Search";
-            break;
-        default:
-            throw new Error(`Unknown entity type: ${entityType}`);
-    }
-
-    // Check if entityId is valid
-    if (!entityId || entityId === "undefined") {
-        throw new Error(`Invalid ${entityLabel} ID: ${entityId}`);
-    }
-
-    // Call the appropriate stored procedure
-    const [results] = await pool.query(`CALL ${procedure}(?, ?)`, [
-        userId,
-        entityId,
-    ]);
-    const result = results[0][0];
-
-    // Return appropriate response
-    if (entityType === "search") {
-        // Search bookmarks use a toggle procedure that returns true/false for the new state
-        return {
-            status: 200,
-            message: result.bookmarked
-                ? "Search bookmark added"
-                : "Search bookmark removed",
-            bookmarked: result.bookmarked,
-        };
-    } else {
-        // Other entity types use separate add/remove procedures
-        return isRemoving
-            ? handleUnbookmarkResponse(result, entityLabel)
-            : handleBookmarkResponse(result, entityLabel);
-    }
-};
-
-/**
- * Generic function to get bookmarked IDs for an entity type
- * @param {string} entityType - Type of entity
- * @param {number} userId - User's ID
- * @returns {Promise<Array>}
- */
-const getBookmarkedIds = async (entityType, userId) => {
-    // Different procedure names for different entity types
-    const procedures = {
-        grant: "sp_get_bookmarked_grant_ids",
-        recipient: "sp_get_bookmarked_recipient_ids",
-        institute: "sp_get_bookmarked_institute_ids",
-        search: "sp_get_bookmarked_search_ids",
-    };
-
-    const procedure = procedures[entityType];
-    if (!procedure) {
-        throw new Error(`Unknown entity type: ${entityType}`);
-    }
-
-    const [results] = await pool.query(`CALL ${procedure}(?)`, [userId]);
-    return results[0];
-};
-
-/**
- * Generic function to get detailed bookmarked entities
- * @param {string} entityType - Type of entity
- * @param {number} userId - User's ID
- * @returns {Promise<Array>}
- */
-const getBookmarkedEntities = async (entityType, userId) => {
-    // Different procedure names for different entity types
-    const procedures = {
-        grant: "sp_get_bookmarked_grants",
-        recipient: "sp_get_bookmarked_recipients_with_stats",
-        institute: "sp_get_bookmarked_institutes_with_stats",
-        search: "sp_get_bookmarked_searches",
-    };
-
-    const procedure = procedures[entityType];
-    if (!procedure) {
-        throw new Error(`Unknown entity type: ${entityType}`);
-    }
-
-    const [results] = await pool.query(`CALL ${procedure}(?)`, [userId]);
-    return results[0];
-};
-
-/*
- * Toggle bookmark for any entity type
- */
-export const toggleBookmark = async (req, res) => {
+// Save grant bookmark
+export const saveGrantBookmark = async (req, res) => {
     try {
-        const { entityType, entityId } = req.params;
-        const { user_id, isBookmarked } = req.body;
+        const userId = req.user?.id;
+        const { grantId } = req.body;
 
-        if (!user_id) {
-            return res.status(400).json({ message: "User ID is required" });
-        }
+        // Call the save_grant_bookmark function
+        const { data, error } = await supabase.rpc("save_grant_bookmark", {
+            p_user_id: userId,
+            p_grant_id: parseInt(grantId),
+        });
 
-        if (!entityType || !entityId || entityId === "undefined") {
-            return res
-                .status(400)
-                .json({ message: "Entity type and valid ID are required" });
-        }
+        if (error) throw error;
 
-        // Validate that the entity type is supported
-        const validTypes = ["grant", "recipient", "institute", "search"];
-        if (!validTypes.includes(entityType)) {
-            return res.status(400).json({ message: "Invalid entity type" });
-        }
+        res.json({ status: data[0].status });
+    } catch (error) {
+        console.error("Save grant bookmark error:", error);
+        res.status(500).json({
+            message: "Failed to save bookmark",
+            error: error.message,
+        });
+    }
+};
 
-        const result = await handleBookmark(
-            entityType,
-            entityId,
-            user_id,
-            isBookmarked
-        );
-        return res.status(result.status).json({
-            message: result.message,
-            bookmarked: result.bookmarked, // Only returned for search bookmarks
+// Delete grant bookmark
+export const deleteGrantBookmark = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const { grantId } = req.params;
+
+        // Call the delete_grant_bookmark function
+        const { data, error } = await supabase.rpc("delete_grant_bookmark", {
+            p_user_id: userId,
+            p_grant_id: parseInt(grantId),
+        });
+
+        if (error) throw error;
+
+        res.json({ status: data[0].status });
+    } catch (error) {
+        console.error("Delete grant bookmark error:", error);
+        res.status(500).json({
+            message: "Failed to delete bookmark",
+            error: error.message,
+        });
+    }
+};
+
+// Get bookmarked grants
+export const getBookmarkedGrants = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+
+        // Call the get_bookmarked_grants function
+        const { data, error } = await supabase.rpc("get_bookmarked_grants", {
+            p_user_id: userId,
+        });
+
+        if (error) throw error;
+
+        // Format the response
+        res.json({
+            grants: data.map((item) => ({
+                id: item.grant_id,
+                refNumber: item.ref_number,
+                agreementValue: item.agreement_value,
+                agreementStartDate: item.agreement_start_date,
+                agreementEndDate: item.agreement_end_date,
+                agreementTitleEn: item.agreement_title_en,
+                legalName: item.legal_name,
+                researchOrganizationName: item.research_organization_name,
+                instituteId: item.institute_id,
+                city: item.city,
+                province: item.province,
+                country: item.country,
+                org: item.org,
+                orgTitle: item.org_title,
+                progTitleEn: item.prog_title_en,
+                progPurposeEn: item.prog_purpose_en,
+            })),
         });
     } catch (error) {
-        console.error(
-            `Error toggling ${req.params.entityType} bookmark:`,
-            error
-        );
-        return res.status(500).json({ message: error.message });
+        console.error("Get bookmarked grants error:", error);
+        res.status(500).json({
+            message: "Failed to get bookmarked grants",
+            error: error.message,
+        });
     }
 };
 
-/*
- * Get bookmarked IDs for any entity type
- */
-export const getBookmarkIds = async (req, res) => {
+// Save recipient bookmark
+export const saveRecipientBookmark = async (req, res) => {
     try {
-        const { entityType, user_id } = req.params;
+        const userId = req.user?.id;
+        const { recipientId } = req.body;
 
-        if (!user_id) {
-            return res.status(400).json({ message: "User ID is required" });
-        }
+        // Call the save_recipient_bookmark function
+        const { data, error } = await supabase.rpc("save_recipient_bookmark", {
+            p_user_id: userId,
+            p_recipient_id: parseInt(recipientId),
+        });
 
-        // Validate that the entity type is supported
-        const validTypes = ["grant", "recipient", "institute", "search"];
-        if (!validTypes.includes(entityType)) {
-            return res.status(400).json({ message: "Invalid entity type" });
-        }
+        if (error) throw error;
 
-        // Check if user exists
-        const userExists = await checkUserExists(user_id);
-        if (!userExists) {
-            return res.status(404).json({ message: "User does not exist" });
-        }
-
-        const ids = await getBookmarkedIds(entityType, user_id);
-        return res.status(200).json(ids);
+        res.json({ status: data[0].status });
     } catch (error) {
-        console.error(
-            `Error getting ${req.params.entityType} bookmark IDs:`,
-            error
-        );
-        return res.status(500).json({ message: error.message });
+        console.error("Save recipient bookmark error:", error);
+        res.status(500).json({
+            message: "Failed to save bookmark",
+            error: error.message,
+        });
     }
 };
 
-/*
- * Get bookmarked entities with details for any entity type
- */
-export const getBookmarks = async (req, res) => {
+// Delete recipient bookmark
+export const deleteRecipientBookmark = async (req, res) => {
     try {
-        const { entityType, user_id } = req.params;
+        const userId = req.user?.id;
+        const { recipientId } = req.params;
 
-        if (!user_id) {
-            return res.status(400).json({ message: "User ID is required" });
-        }
-
-        // Validate that the entity type is supported
-        const validTypes = ["grant", "recipient", "institute", "search"];
-        if (!validTypes.includes(entityType)) {
-            return res.status(400).json({ message: "Invalid entity type" });
-        }
-
-        // Check if user exists
-        const userExists = await checkUserExists(user_id);
-        if (!userExists) {
-            return res.status(404).json({ message: "User does not exist" });
-        }
-
-        const bookmarks = await getBookmarkedEntities(entityType, user_id);
-        return res.status(200).json(bookmarks);
-    } catch (error) {
-        console.error(
-            `Error getting bookmarked ${req.params.entityType}:`,
-            error
+        // Call the delete_recipient_bookmark function
+        const { data, error } = await supabase.rpc(
+            "delete_recipient_bookmark",
+            {
+                p_user_id: userId,
+                p_recipient_id: parseInt(recipientId),
+            }
         );
-        return res.status(500).json({ message: error.message });
+
+        if (error) throw error;
+
+        res.json({ status: data[0].status });
+    } catch (error) {
+        console.error("Delete recipient bookmark error:", error);
+        res.status(500).json({
+            message: "Failed to delete bookmark",
+            error: error.message,
+        });
+    }
+};
+
+// Get bookmarked recipients
+export const getBookmarkedRecipients = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+
+        // Call the get_bookmarked_recipients_with_stats function
+        const { data, error } = await supabase.rpc(
+            "get_bookmarked_recipients_with_stats",
+            {
+                p_user_id: userId,
+            }
+        );
+
+        if (error) throw error;
+
+        // Format the response
+        res.json({
+            recipients: data.map((item) => ({
+                id: item.recipient_id,
+                legalName: item.legal_name,
+                type: item.type,
+                instituteId: item.institute_id,
+                researchOrganizationName: item.research_organization_name,
+                city: item.city,
+                province: item.province,
+                country: item.country,
+                grantCount: item.grant_count,
+                totalFunding: item.total_funding,
+                firstGrantDate: item.first_grant_date,
+                latestGrantDate: item.latest_grant_date,
+            })),
+        });
+    } catch (error) {
+        console.error("Get bookmarked recipients error:", error);
+        res.status(500).json({
+            message: "Failed to get bookmarked recipients",
+            error: error.message,
+        });
+    }
+};
+
+// Save institute bookmark
+export const saveInstituteBookmark = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const { instituteId } = req.body;
+
+        // Call the save_institute_bookmark function
+        const { data, error } = await supabase.rpc("save_institute_bookmark", {
+            p_user_id: userId,
+            p_institute_id: parseInt(instituteId),
+        });
+
+        if (error) throw error;
+
+        res.json({ status: data[0].status });
+    } catch (error) {
+        console.error("Save institute bookmark error:", error);
+        res.status(500).json({
+            message: "Failed to save bookmark",
+            error: error.message,
+        });
+    }
+};
+
+// Delete institute bookmark
+export const deleteInstituteBookmark = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const { instituteId } = req.params;
+
+        // Call the delete_institute_bookmark function
+        const { data, error } = await supabase.rpc(
+            "delete_institute_bookmark",
+            {
+                p_user_id: userId,
+                p_institute_id: parseInt(instituteId),
+            }
+        );
+
+        if (error) throw error;
+
+        res.json({ status: data[0].status });
+    } catch (error) {
+        console.error("Delete institute bookmark error:", error);
+        res.status(500).json({
+            message: "Failed to delete bookmark",
+            error: error.message,
+        });
+    }
+};
+
+// Get bookmarked institutes
+export const getBookmarkedInstitutes = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+
+        // Call the get_bookmarked_institutes_with_stats function
+        const { data, error } = await supabase.rpc(
+            "get_bookmarked_institutes_with_stats",
+            {
+                p_user_id: userId,
+            }
+        );
+
+        if (error) throw error;
+
+        // Format the response
+        res.json({
+            institutes: data.map((item) => ({
+                id: item.institute_id,
+                name: item.name,
+                country: item.country,
+                province: item.province,
+                city: item.city,
+                postalCode: item.postal_code,
+                ridingNameEn: item.riding_name_en,
+                ridingNumber: item.riding_number,
+                recipientCount: item.recipient_count,
+                grantCount: item.grant_count,
+                totalFunding: item.total_funding,
+                latestGrantDate: item.latest_grant_date,
+            })),
+        });
+    } catch (error) {
+        console.error("Get bookmarked institutes error:", error);
+        res.status(500).json({
+            message: "Failed to get bookmarked institutes",
+            error: error.message,
+        });
     }
 };

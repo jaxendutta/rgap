@@ -1,4 +1,5 @@
 -- File: sql/sp/sp_sort_grant.sql
+/*
 DELIMITER $$
 DROP PROCEDURE IF EXISTS sp_sort_grant$$
 CREATE PROCEDURE sp_sort_grant(
@@ -58,3 +59,99 @@ BEGIN
     DEALLOCATE PREPARE stmt;
 END$$
 DELIMITER ;
+*/
+
+-- PostgreSQL version of sp_sort_grant.sql
+CREATE OR REPLACE FUNCTION sort_grant(
+    p_sort_field VARCHAR(20),
+    p_sort_direction VARCHAR(4),
+    p_page_size INTEGER,
+    p_page INTEGER
+)
+RETURNS TABLE(
+    ref_number VARCHAR(50),
+    latest_amendment_number INTEGER,
+    amendment_date DATE,
+    agreement_number VARCHAR(50),
+    latest_value DECIMAL(15,2),
+    foreign_currency_type VARCHAR(3),
+    foreign_currency_value DECIMAL(15,2),
+    agreement_start_date DATE,
+    agreement_end_date DATE,
+    agreement_title_en TEXT,
+    description_en TEXT,
+    expected_results_en TEXT,
+    legal_name VARCHAR(255),
+    research_organization_name VARCHAR(255),
+    institute_id INTEGER,
+    recipient_id INTEGER,
+    city VARCHAR(100),
+    province VARCHAR(50),
+    country VARCHAR(50),
+    org VARCHAR(5),
+    org_title VARCHAR(100),
+    prog_id INTEGER,
+    name_en VARCHAR(255),
+    amendments_history JSONB
+) 
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_offset INTEGER;
+    v_order_clause TEXT;
+BEGIN
+    -- Calculate offset
+    v_offset := (p_page - 1) * p_page_size;
+    
+    -- Set defaults
+    p_page_size := COALESCE(p_page_size, 20);
+    p_page := COALESCE(p_page, 1);
+    
+    -- Determine sort order
+    IF p_sort_field = 'value' THEN
+        IF p_sort_direction = 'asc' THEN
+            v_order_clause := 'ORDER BY latest_value ASC';
+        ELSE
+            v_order_clause := 'ORDER BY latest_value DESC';
+        END IF;
+    ELSE
+        IF p_sort_direction = 'asc' THEN
+            v_order_clause := 'ORDER BY agreement_start_date ASC';
+        ELSE
+            v_order_clause := 'ORDER BY agreement_start_date DESC';
+        END IF;
+    END IF;
+    
+    -- Use temporary table approach for flexibility
+    CREATE TEMP TABLE IF NOT EXISTS temp_grant_search_results (
+        ref_number VARCHAR(50),
+        latest_amendment_number INTEGER,
+        latest_amendment_date DATE,
+        agreement_number VARCHAR(50),
+        latest_value DECIMAL(15,2),
+        foreign_currency_type VARCHAR(3),
+        foreign_currency_value DECIMAL(15,2),
+        agreement_start_date DATE,
+        agreement_end_date DATE,
+        agreement_title_en TEXT,
+        description_en TEXT,
+        expected_results_en TEXT,
+        legal_name VARCHAR(255),
+        research_organization_name VARCHAR(255),
+        institute_id INTEGER,
+        recipient_id INTEGER,
+        city VARCHAR(100),
+        province VARCHAR(50),
+        country VARCHAR(50),
+        org VARCHAR(5),
+        org_title VARCHAR(100),
+        prog_id INTEGER,
+        name_en VARCHAR(255),
+        amendments_history JSONB
+    );
+    
+    -- Return results
+    RETURN QUERY EXECUTE 'SELECT * FROM temp_grant_search_results ' || v_order_clause || ' LIMIT $1 OFFSET $2'
+    USING p_page_size, v_offset;
+END;
+$$;

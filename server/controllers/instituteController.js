@@ -1,298 +1,235 @@
 // server/controllers/instituteController.js
-import { pool } from "../config/db.js";
-import { findBestMatch } from "../utils/searchHelpers.js";
+import supabase from "../config/db.js";
 
-/**
- * Get all institutes with basic information, pagination included
- */
+// Get all institutes with pagination
 export const getAllInstitutes = async (req, res) => {
     try {
-        // Apply pagination parameters if provided
-        const page = parseInt(req.query.page) || 1;
-        const pageSize = parseInt(req.query.pageSize) || 20;
+        const { page = 1, pageSize = 20 } = req.query;
+        const userId = req.user?.id;
 
-        // Use stored procedure for getting institutes with stats
-        const userId = req.query.user_id || null;
-        const [results] = await pool.query(
-            "CALL sp_get_all_institutes(?, ?, ?)",
-            [page, pageSize, userId]
-        );
-
-        // First result set contains total count
-        const totalCount = results[0][0].total_count;
-
-        // Second result set contains institutes data
-        const institutes = results[1] || [];
-
-        res.json({
-            message: "Institutes retrieved successfully",
-            data: institutes,
-            metadata: {
-                count: institutes.length,
-                totalCount,
-                page,
-                pageSize,
-                totalPages: Math.ceil(totalCount / pageSize),
-            },
+        // Call the get_all_institutes function
+        const { data, error } = await supabase.rpc("get_all_institutes", {
+            p_page: parseInt(page),
+            p_page_size: parseInt(pageSize),
+            p_user_id: userId,
         });
-    } catch (error) {
-        console.error("Error fetching institutes:", error);
-        res.status(500).json({
-            error: "Failed to retrieve institutes",
-            details: error.message,
-        });
-    }
-};
 
-/**
- * Get detailed information about a specific institute
- */
-export const getInstituteById = async (req, res) => {
-    try {
-        const instituteId = req.params.id;
-        const userId = req.query.user_id || null;
+        if (error) throw error;
 
-        // Check if the instituteId is valid
-        if (!instituteId || isNaN(parseInt(instituteId))) {
-            return res.status(400).json({
-                error: "Invalid institute ID",
-                details: "The institute ID must be a valid number.",
-            });
-        }
-
-        // Parse the ID to ensure it's a number
-        const parsedId = parseInt(instituteId);
-
-        // Use the stored procedure to get comprehensive institute details
-        const [results] = await pool.query("CALL sp_institute_details(?, ?)", [
-            parsedId,
-            userId,
-        ]);
-
-        // The stored procedure returns multiple result sets
-        if (!results[0] || results[0].length === 0) {
-            return res.status(404).json({
-                error: "Institute not found",
-            });
-        }
-
-        // First result set: Institute basic info with aggregated stats
-        const instituteInfo = results[0][0];
-
-        // Second result set: Institute's recipients
-        const recipients = results[1] || [];
-
-        // Third result set: Institute's grants
-        const grants = results[2] || [];
-
-        // Fourth result set: Funding history by year and agency
-        const fundingHistory = results[3] || [];
+        // Process results - extract the total count from the first row
+        const totalCount = data.length > 0 ? data[0].total_count : 0;
 
         // Format the response
-        const formattedGrants = grants.map((grant) => ({
-            ...grant,
-            agreement_value: parseFloat(grant.agreement_value) || 0,
-        }));
-
-        // Format recipients
-        const formattedRecipients = recipients.map((recipient) => ({
-            ...recipient,
-            total_funding: parseFloat(recipient.total_funding) || 0,
-        }));
-
-        // Process funding history for visualization
-        const fundingData = processFundingHistory(fundingHistory);
-
         res.json({
-            message: "Institute details retrieved successfully",
-            data: {
-                ...instituteInfo,
-                total_funding: parseFloat(instituteInfo.total_funding) || 0,
-                avg_funding: parseFloat(instituteInfo.avg_funding) || 0,
-                recipients: formattedRecipients,
-                grants: formattedGrants,
-                funding_history: fundingData,
-            },
+            totalCount,
+            institutes: data.map((item) => ({
+                id: item.institute_id,
+                name: item.name,
+                country: item.country,
+                province: item.province,
+                city: item.city,
+                postalCode: item.postal_code,
+                ridingNameEn: item.riding_name_en,
+                ridingNumber: item.riding_number,
+                recipientCount: item.recipient_count,
+                grantCount: item.grant_count,
+                totalFunding: item.total_funding,
+                latestGrantDate: item.latest_grant_date,
+                isBookmarked: item.is_bookmarked,
+            })),
         });
     } catch (error) {
-        console.error("Error fetching institute details:", error);
+        console.error("Get all institutes error:", error);
         res.status(500).json({
-            error: "Failed to retrieve institute details",
-            details: error.message,
+            message: "Failed to get institutes",
+            error: error.message,
         });
     }
 };
 
-/**
- * Get grants for a specific institute
- */
-export const getInstituteGrants = async (req, res) => {
+// Get institute details
+export const getInstituteDetails = async (req, res) => {
     try {
-        const instituteId = req.params.id;
-        const page = parseInt(req.query.page) || 1;
-        const pageSize = parseInt(req.query.pageSize) || 20;
-        const sortField = req.query.sortField || "date";
-        const sortDirection = req.query.sortDirection || "desc";
-        const userId = req.query.user_id || null;
+        const { id } = req.params;
+        const userId = req.user?.id;
 
-        const [results] = await pool.query(
-            "CALL sp_entity_grants(NULL, ?, ?, ?, ?, ?, ?)",
-            [instituteId, sortField, sortDirection, pageSize, page, userId]
+        // Call the institute_details function
+        const { data, error } = await supabase.rpc("institute_details", {
+            p_institute_id: parseInt(id),
+            p_user_id: userId,
+        });
+
+        if (error) throw error;
+
+        // Process results - note that this function returns multiple result sets
+        // We need to determine which records belong to which set based on structure
+
+        // Group 1: Institute info
+        const instituteData = data.filter(
+            (row) => row.institute_id && row.name
+        )[0];
+
+        // Group 2: Recipients
+        const recipients = data.filter(
+            (row) => row.recipient_id && row.legal_name
         );
 
-        // First result set contains the total count
-        const totalCount = results[0][0].total_count;
+        // Group 3: Grants
+        const grants = data.filter((row) => row.grant_id && row.ref_number);
 
-        // Second result set contains the grants data
-        const grants = results[1] || [];
+        // Group 4: Funding history
+        const fundingHistory = data.filter((row) => row.year && row.agency);
 
+        // Format the response
         res.json({
-            message: "Institute grants retrieved successfully",
-            data: grants,
-            metadata: {
-                count: grants.length,
-                totalCount,
-                page,
-                pageSize,
-                totalPages: Math.ceil(totalCount / pageSize),
-            },
+            institute: instituteData
+                ? {
+                      id: instituteData.institute_id,
+                      name: instituteData.name,
+                      country: instituteData.country,
+                      province: instituteData.province,
+                      city: instituteData.city,
+                      postalCode: instituteData.postal_code,
+                      ridingNameEn: instituteData.riding_name_en,
+                      ridingNumber: instituteData.riding_number,
+                      totalRecipients: instituteData.total_recipients,
+                      totalGrants: instituteData.total_grants,
+                      totalFunding: instituteData.total_funding,
+                      avgFunding: instituteData.avg_funding,
+                      firstGrantDate: instituteData.first_grant_date,
+                      latestGrantDate: instituteData.latest_grant_date,
+                      fundingAgenciesCount:
+                          instituteData.funding_agencies_count,
+                      isBookmarked: instituteData.is_bookmarked,
+                  }
+                : null,
+            recipients: recipients.map((r) => ({
+                id: r.recipient_id,
+                legalName: r.legal_name,
+                type: r.type,
+                grantsCount: r.grants_count,
+                totalFunding: r.total_funding,
+                firstGrantDate: r.first_grant_date,
+                latestGrantDate: r.latest_grant_date,
+                isBookmarked: r.is_bookmarked,
+            })),
+            grants: grants.map((g) => ({
+                id: g.grant_id,
+                refNumber: g.ref_number,
+                agreementValue: g.agreement_value,
+                agreementStartDate: g.agreement_start_date,
+                agreementEndDate: g.agreement_end_date,
+                agreementTitleEn: g.agreement_title_en,
+                recipientName: g.recipient_name,
+                org: g.org,
+                orgTitle: g.org_title,
+                progTitleEn: g.prog_title_en,
+                isBookmarked: g.is_bookmarked,
+            })),
+            fundingHistory: fundingHistory.map((f) => ({
+                year: f.year,
+                agency: f.agency,
+                grantCount: f.grant_count,
+                totalValue: f.total_value,
+                avgValue: f.avg_value,
+                programCount: f.program_count,
+                recipientCount: f.recipient_count,
+            })),
         });
     } catch (error) {
-        console.error("Error fetching institute grants:", error);
+        console.error("Institute details error:", error);
         res.status(500).json({
-            error: "Failed to retrieve institute grants",
-            details: error.message,
+            message: "Failed to get institute details",
+            error: error.message,
         });
     }
 };
 
-/**
- * Get recipients for a specific institute
- */
-export const getInstituteRecipients = async (req, res) => {
-    try {
-        const instituteId = req.params.id;
-        const page = parseInt(req.query.page) || 1;
-        const pageSize = parseInt(req.query.pageSize) || 20;
-        const userId = req.query.user_id || null; // Add user_id from query params
-
-        // Use the stored procedure to get paginated recipients
-        const [results] = await pool.query(
-            "CALL sp_institute_recipients(?, ?, ?, ?)",
-            [instituteId, page, pageSize, userId]
-        );
-
-        // First result set contains total count
-        const totalCount = results[0][0].total_count;
-
-        // Second result set contains recipients data
-        const recipients = results[1] || [];
-
-        // Format recipient funding values
-        const formattedRecipients = recipients.map((recipient) => ({
-            ...recipient,
-            total_funding: parseFloat(recipient.total_funding) || 0,
-        }));
-
-        res.json({
-            message: "Institute recipients retrieved successfully",
-            data: formattedRecipients,
-            metadata: {
-                count: formattedRecipients.length,
-                totalCount,
-                page,
-                pageSize,
-                totalPages: Math.ceil(totalCount / pageSize),
-            },
-        });
-    } catch (error) {
-        console.error("Error fetching institute recipients:", error);
-        res.status(500).json({
-            error: "Failed to retrieve institute recipients",
-            details: error.message,
-        });
-    }
-};
-
-/**
- * Search institutes by name
- */
+// Search institutes
 export const searchInstitutes = async (req, res) => {
     try {
-        const { term } = req.query;
-        const page = parseInt(req.query.page) || 1;
-        const pageSize = parseInt(req.query.pageSize) || 20;
-        const userId = req.query.user_id || null;
-        const logSearchHistory = req.query.logSearchHistory !== "false"; // Default to true
+        const { term, page = 1, pageSize = 20, logSearch = true } = req.query;
+        const userId = req.user?.id;
 
-        if (!term || term.trim() === "") {
-            return res.status(400).json({
-                error: "Search term is required",
-            });
-        }
+        // Call the search_institutes function
+        const { data, error } = await supabase.rpc("search_institutes", {
+            p_term: term,
+            p_normalized_term: term?.toLowerCase(),
+            p_page: parseInt(page),
+            p_page_size: parseInt(pageSize),
+            p_user_id: userId,
+            p_log_search_history: logSearch,
+        });
 
-        // Normalize the search term for history logging
-        const normalizedTerm = await findBestMatch(term, "institute");
+        if (error) throw error;
 
-        // Use the stored procedure to search institutes with improved search history logging
-        const [results] = await pool.query(
-            "CALL sp_search_institutes(?, ?, ?, ?, ?, ?)",
-            [term, normalizedTerm, page, pageSize, userId, logSearchHistory]
-        );
+        // Process results - extract the total count from the first row
+        const totalCount = data.length > 0 ? data[0].total_count : 0;
 
-        // First result set contains total count
-        const totalCount = results[0][0].total_count;
-
-        // Second result set contains institutes data
-        const institutes = results[1] || [];
-
-        // Format institute funding values
-        const formattedInstitutes = institutes.map((institute) => ({
-            ...institute,
-            total_funding: parseFloat(institute.total_funding) || 0,
-        }));
-
+        // Format the response
         res.json({
-            message: "Institutes search completed",
-            data: formattedInstitutes,
-            metadata: {
-                term,
-                count: formattedInstitutes.length,
-                totalCount,
-                page,
-                pageSize,
-                totalPages: Math.ceil(totalCount / pageSize),
-            },
+            totalCount,
+            institutes: data.map((item) => ({
+                id: item.institute_id,
+                name: item.name,
+                country: item.country,
+                province: item.province,
+                city: item.city,
+                recipientsCount: item.recipients_count,
+                grantCount: item.grant_count,
+                totalFunding: item.total_funding,
+                latestGrantDate: item.latest_grant_date,
+                isBookmarked: item.is_bookmarked,
+            })),
         });
     } catch (error) {
-        console.error("Error searching institutes:", error);
+        console.error("Institute search error:", error);
         res.status(500).json({
-            error: "Failed to search institutes",
-            details: error.message,
+            message: "Failed to search institutes",
+            error: error.message,
         });
     }
 };
 
-/**
- * Helper function to process funding history data for visualization
- */
-export const processFundingHistory = (fundingHistory) => {
-    // Group by year
-    const yearMap = new Map();
+// Get institute recipients
+export const getInstituteRecipients = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { page = 1, pageSize = 20 } = req.query;
+        const userId = req.user?.id;
 
-    fundingHistory.forEach((entry) => {
-        const year = entry.year;
-        const agency = entry.agency;
-        const value = parseFloat(entry.total_value) || 0;
+        // Call the institute_recipients function
+        const { data, error } = await supabase.rpc("institute_recipients", {
+            p_institute_id: parseInt(id),
+            p_page: parseInt(page),
+            p_page_size: parseInt(pageSize),
+            p_user_id: userId,
+        });
 
-        if (!yearMap.has(year)) {
-            yearMap.set(year, { year });
-        }
+        if (error) throw error;
 
-        const yearData = yearMap.get(year);
-        yearData[agency] = value;
-    });
+        // Process results - extract the total count from the first row
+        const totalCount = data.length > 0 ? data[0].total_count : 0;
 
-    // Convert to array and sort by year
-    return Array.from(yearMap.values()).sort((a, b) => a.year - b.year);
+        // Format the response
+        res.json({
+            totalCount,
+            recipients: data.map((item) => ({
+                id: item.recipient_id,
+                legalName: item.legal_name,
+                type: item.type,
+                grantCount: item.grant_count,
+                totalFunding: item.total_funding,
+                firstGrantDate: item.first_grant_date,
+                latestGrantDate: item.latest_grant_date,
+                isBookmarked: item.is_bookmarked,
+            })),
+        });
+    } catch (error) {
+        console.error("Institute recipients error:", error);
+        res.status(500).json({
+            message: "Failed to get institute recipients",
+            error: error.message,
+        });
+    }
 };

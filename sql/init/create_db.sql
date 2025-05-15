@@ -1,4 +1,5 @@
 -- File: sql/init/create_db.sql
+/*
 DROP DATABASE IF EXISTS rgap;
 DROP USER IF EXISTS 'rgap_user'@'localhost';
 DROP USER IF EXISTS 'rgap_user'@'%';
@@ -22,3 +23,14 @@ FLUSH PRIVILEGES;
 
 -- Enable loading local files
 SET GLOBAL local_infile = 1;
+*/
+
+-- PostgreSQL schema setup
+-- No need to create database as Supabase provides it
+
+-- Create schema if it doesn't exist
+CREATE SCHEMA IF NOT EXISTS public;
+
+-- Enable necessary extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pg_trgm;

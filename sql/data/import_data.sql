@@ -1,4 +1,5 @@
 -- File: sql/data/import_data.sql
+/*
 -- Purpose: Transform data from temp_grants table into normalized schema
 -- Heavily optimized for MySQL 8.0.41 and large datasets
 
@@ -217,4 +218,196 @@ SET SESSION unique_checks = 1;
 SET SESSION foreign_key_checks = 1;
 
 -- Commit the transaction
+COMMIT;
+*/
+
+-- PostgreSQL version of import_data.sql
+-- Optimized for PostgreSQL and large datasets
+
+-- Performance settings
+SET work_mem = '256MB';
+SET maintenance_work_mem = '512MB';
+
+-- Transaction for consistency
+BEGIN;
+
+-- ========================================================================
+-- STEP 1: Insert Organizations (Funding Agencies)
+-- ========================================================================
+INSERT INTO "Organization" (org, org_title)
+SELECT DISTINCT 
+    org,
+    org_title
+FROM temp_grants
+WHERE org IS NOT NULL AND org != ''
+ON CONFLICT (org) DO NOTHING;
+
+-- ========================================================================
+-- STEP 2: Insert Programs
+-- ========================================================================
+WITH new_programs AS (
+    SELECT DISTINCT
+        prog_name_en,
+        prog_purpose_en,
+        naics_identifier
+    FROM temp_grants
+    WHERE prog_name_en IS NOT NULL AND prog_name_en != ''
+)
+INSERT INTO "Program" (name_en, purpose_en, naics_identifier)
+SELECT 
+    prog_name_en,
+    prog_purpose_en,
+    naics_identifier
+FROM new_programs
+ON CONFLICT (name_en) DO NOTHING;
+
+-- ========================================================================
+-- STEP 3: Insert Institutes
+-- ========================================================================
+WITH new_institutes AS (
+    SELECT DISTINCT
+        research_organization_name AS name,
+        recipient_country AS country,
+        recipient_province AS province,
+        recipient_city AS city,
+        recipient_postal_code AS postal_code,
+        federal_riding_name_en AS riding_name_en,
+        federal_riding_number AS riding_number
+    FROM temp_grants
+    WHERE research_organization_name IS NOT NULL 
+    AND research_organization_name != ''
+)
+INSERT INTO "Institute" (
+    name, country, province, city, postal_code, riding_name_en, riding_number
+)
+SELECT * FROM new_institutes
+ON CONFLICT DO NOTHING;
+
+-- Create a lookup CTE for faster institute references
+CREATE TEMP TABLE institute_lookup AS
+SELECT 
+    name, 
+    country, 
+    province, 
+    institute_id 
+FROM "Institute";
+
+-- ========================================================================
+-- STEP 4: Insert Recipients - Heavily optimized
+-- ========================================================================
+-- Create a table for unique recipient-institute combinations
+CREATE TEMP TABLE temp_recipients AS
+WITH distinct_recipients AS (
+    SELECT DISTINCT
+        tg.recipient_legal_name AS legal_name,
+        i.institute_id,
+        tg.recipient_type AS type
+    FROM temp_grants tg
+    JOIN institute_lookup i ON tg.research_organization_name = i.name 
+    AND (tg.recipient_country = i.country OR (tg.recipient_country IS NULL AND i.country IS NULL))
+    AND (tg.recipient_province = i.province OR (tg.recipient_province IS NULL AND i.province IS NULL))
+    WHERE tg.recipient_legal_name IS NOT NULL 
+    AND tg.recipient_legal_name != ''
+    AND tg.research_organization_name IS NOT NULL
+    AND tg.research_organization_name != ''
+)
+SELECT * FROM distinct_recipients;
+
+-- Insert the unique recipients
+INSERT INTO "Recipient" (legal_name, institute_id, type)
+SELECT legal_name, institute_id, type
+FROM temp_recipients
+ON CONFLICT DO NOTHING;
+
+-- Create a lookup table for recipients
+CREATE TEMP TABLE recipient_lookup AS
+SELECT r.legal_name, r.institute_id, r.recipient_id
+FROM "Recipient" r;
+
+-- ========================================================================
+-- STEP 5: Insert Grants - Using the existing amendments_history JSON
+-- ========================================================================
+INSERT INTO "ResearchGrant" (
+    ref_number, latest_amendment_number, amendment_date, agreement_number,
+    agreement_value, foreign_currency_type, foreign_currency_value,
+    agreement_start_date, agreement_end_date, agreement_title_en,
+    description_en, expected_results_en, additional_information_en, 
+    org, recipient_id, prog_id, amendments_history
+)
+SELECT 
+    tg.ref_number,
+    CASE 
+        WHEN tg.latest_amendment_number = '' THEN NULL
+        ELSE CAST(tg.latest_amendment_number AS INTEGER)
+    END,
+    CASE 
+        WHEN tg.amendment_date = '' THEN NULL
+        ELSE TO_DATE(tg.amendment_date, 'YYYY-MM-DD')
+    END,
+    tg.agreement_number,
+    CASE 
+        WHEN tg.agreement_value = '' THEN NULL
+        ELSE CAST(REPLACE(REPLACE(tg.agreement_value, ',', ''), '$', '') AS DECIMAL(15,2))
+    END,
+    tg.foreign_currency_type,
+    CASE 
+        WHEN tg.foreign_currency_value = '' THEN NULL
+        ELSE CAST(REPLACE(REPLACE(tg.foreign_currency_value, ',', ''), '$', '') AS DECIMAL(15,2))
+    END,
+    CASE 
+        WHEN tg.agreement_start_date = '' THEN NULL
+        ELSE TO_DATE(tg.agreement_start_date, 'YYYY-MM-DD')
+    END,
+    CASE 
+        WHEN tg.agreement_end_date = '' THEN NULL
+        ELSE TO_DATE(tg.agreement_end_date, 'YYYY-MM-DD')
+    END,
+    tg.agreement_title_en,
+    tg.description_en,
+    tg.expected_results_en,
+    tg.additional_information_en,
+    tg.org,
+    r.recipient_id,
+    p.prog_id,
+    -- Handle the amendments_history JSON
+    CASE 
+        -- If amendments_history already exists as JSON and is valid, convert to JSONB
+        WHEN tg.amendments_history IS NOT NULL 
+            AND tg.amendments_history != ''
+            AND tg.amendments_history != 'NULL'
+            AND LEFT(tg.amendments_history, 1) = '['
+            AND tg.amendments_history::JSON IS NOT NULL
+        THEN tg.amendments_history::JSONB
+        ELSE NULL
+    END
+FROM temp_grants tg
+LEFT JOIN institute_lookup i ON tg.research_organization_name = i.name
+  AND (tg.recipient_country = i.country OR (tg.recipient_country IS NULL AND i.country IS NULL))
+  AND (tg.recipient_province = i.province OR (tg.recipient_province IS NULL AND i.province IS NULL))
+LEFT JOIN recipient_lookup r ON tg.recipient_legal_name = r.legal_name AND i.institute_id = r.institute_id
+LEFT JOIN "Program" p ON tg.prog_name_en = p.name_en
+WHERE tg.ref_number IS NOT NULL AND tg.id IS NOT NULL
+  AND r.recipient_id IS NOT NULL -- Add this to ensure we only insert grants with a valid recipient
+GROUP BY 
+    tg.id, tg.ref_number, tg.latest_amendment_number, tg.amendment_date,
+    tg.agreement_number, tg.agreement_value, tg.foreign_currency_type,
+    tg.foreign_currency_value, tg.agreement_start_date, tg.agreement_end_date,
+    tg.agreement_title_en, tg.description_en, tg.expected_results_en,
+    tg.additional_information_en, tg.org, r.recipient_id, p.prog_id,
+    tg.amendments_history;
+
+-- ========================================================================
+-- STEP 6: Clean up all temporary tables
+-- ========================================================================
+DROP TABLE IF EXISTS institute_lookup;
+DROP TABLE IF EXISTS temp_recipients;
+DROP TABLE IF EXISTS recipient_lookup;
+
+-- Analyze tables for query optimization
+ANALYZE "Organization";
+ANALYZE "Program";
+ANALYZE "Institute";
+ANALYZE "Recipient";
+ANALYZE "ResearchGrant";
+
 COMMIT;

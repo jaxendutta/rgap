@@ -1,4 +1,5 @@
 -- File: sql/sp/sp_get_filter_options.sql
+/*
 DELIMITER $$
 DROP PROCEDURE IF EXISTS sp_get_filter_options$$
 CREATE PROCEDURE sp_get_filter_options()
@@ -34,3 +35,55 @@ BEGIN
     ORDER BY name;
 END $$
 DELIMITER ;
+*/
+
+-- PostgreSQL version of sp_get_filter_options.sql
+CREATE OR REPLACE FUNCTION get_filter_options()
+RETURNS TABLE(
+    filter_type TEXT,
+    filter_values TEXT[]
+) 
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Return agencies
+    RETURN QUERY 
+    SELECT 
+        'agencies'::TEXT, 
+        ARRAY_AGG(DISTINCT org)
+    FROM "Organization"
+    WHERE org IS NOT NULL AND org != '';
+
+    -- Return countries
+    RETURN QUERY 
+    SELECT 
+        'countries'::TEXT, 
+        ARRAY_AGG(DISTINCT country)
+    FROM "Institute"
+    WHERE country IS NOT NULL AND country != '';
+
+    -- Return provinces
+    RETURN QUERY 
+    SELECT 
+        'provinces'::TEXT, 
+        ARRAY_AGG(DISTINCT province)
+    FROM "Institute"
+    WHERE province IS NOT NULL AND province != '';
+
+    -- Return cities
+    RETURN QUERY 
+    SELECT 
+        'cities'::TEXT, 
+        ARRAY_AGG(DISTINCT city)
+    FROM "Institute"
+    WHERE city IS NOT NULL AND city != '';
+    
+    -- Return institutes
+    RETURN QUERY 
+    SELECT 
+        'institutes'::TEXT, 
+        ARRAY_AGG(DISTINCT name)
+    FROM "Institute"
+    WHERE name IS NOT NULL AND name != '';
+END;
+$$;
