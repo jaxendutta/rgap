@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CircleArrowUp, User } from "lucide-react";
+import { GiAbstract014 } from "react-icons/gi";
 
 const Header = () => {
     const [showScrollTop, setShowScrollTop] = useState(false);
@@ -62,14 +63,15 @@ const Header = () => {
                 {/* Logo */}
                 <div className="flex items-center space-x-2">
                     <Link href="/" className="flex items-center">
-                        <img
+                        {/*<img
                             src="/rgap.svg"
                             alt="RGAP Logo"
                             className="h-5 w-5 mr-2"
-                        />
-                        <span className="text-xl font-semibold">RGAP</span>
+                        />*/}
+                        <GiAbstract014 className="h-6 w-6 text-gray-900 mr-2" />
+                        <span className="text-xl font-semibold">[ RGAP ]</span>
                         <span className="hidden sm:inline ml-2 text-sm text-gray-600">
-                            [ Research Grant Analytics Platform ]
+                            Research Grant Analytics Platform
                         </span>
                     </Link>
                 </div>
@@ -88,7 +90,7 @@ const Header = () => {
                         <CircleArrowUp className="h-6 w-6" />
                     </button>
                     <Link
-                        href={isLoggedIn ? "/account" : "/auth"}
+                        href={isLoggedIn ? "/account" : "/login"}
                         className="p-1 text-gray-600 hover:text-gray-800"
                     >
                         <User className="h-6 w-6" />

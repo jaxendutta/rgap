@@ -60,10 +60,10 @@ export default function HomePage() {
             <span className="inline-block px-2">]</span>
           </p>
           
-          <span className="mt-2 text-xl text-gray-600 block">
-            [ Research Grants Analytics Platform ]
+          <span className="mt-1 text-xl text-gray-600 block italic">
+            Research Grants Analytics Platform
           </span>
-          <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+          <p className="mt-3 md:mt-5 max-w-md mx-auto text-base text-gray-500 md:max-w-3xl">
             Explore and analyze research funding data from Canada's
             three major research funding agencies: NSERC, CIHR, and
             SSHRC.
@@ -113,7 +113,7 @@ export default function HomePage() {
               <h3 className="text-lg font-medium text-gray-900">
                 {title}
               </h3>
-              <p className="mt-2 text-base text-gray-500">
+              <p className="mt-2 text-sm text-gray-500">
                 {description}
               </p>
             </Card>
