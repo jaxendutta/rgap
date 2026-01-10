@@ -8,7 +8,7 @@ import SearchInterface from '@/components/features/search/SearchInterface';
 import { GrantCard } from '@/components/features/grants/GrantCard';
 import EmptyState from '@/components/ui/EmptyState';
 import { Search as SearchIcon, FileSearch2 } from 'lucide-react';
-import { Grant } from '@/types/database';
+import { GrantWithDetails } from '@/types/database';
 import PageContainer from '@/components/layout/PageContainer';
 
 // ============================================================================
@@ -44,7 +44,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     // Check if we have any search terms
     const hasSearchTerms = !!(recipient || institute || grant);
 
-    let grants: Grant[] = [];
+    let grants: GrantWithDetails[] = [];
 
     if (hasSearchTerms) {
         // Build dynamic SQL query
@@ -83,14 +83,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         const result = await db.query(`
             SELECT 
                 g.*,
-                r.legal_name as recipient_name,
-                r.type as recipient_type,
-                i.name as institute_name,
-                i.city,
-                i.province,
-                i.country,
-                p.prog_title_en as program_name,
-                o.org_name_en as organization_name,
+                r.*,
+                i.*,
+                p.*,
+                o.*,
                 ${userId ? `
                     EXISTS(
                         SELECT 1 FROM bookmarked_grants bg 
@@ -99,10 +95,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     ) as is_bookmarked
                 ` : 'false as is_bookmarked'}
             FROM grants g
-            JOIN recipients r ON g.recipient_id = r.recipient_id
-            JOIN institutes i ON r.institute_id = i.institute_id
-            LEFT JOIN programs p ON g.prog_id = p.prog_id
-            LEFT JOIN organizations o ON g.org_id = o.org_id
+            INNER JOIN recipients r ON g.recipient_id = r.recipient_id
+            INNER JOIN institutes i ON r.institute_id = i.institute_id
+            INNER JOIN programs p ON g.prog_id = p.prog_id
+            INNER JOIN organizations o ON g.org = o.org
             ${whereClause}
             ORDER BY g.agreement_start_date DESC
             LIMIT 100
@@ -150,8 +146,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         </div>
 
                         <div className="space-y-4">
-                            {grants.map((grant) => (
-                                <GrantCard key={grant.grant_id} grant={grant} />
+                            {grants.map((grant: GrantWithDetails) => (
+                                <GrantCard key={grant.grant_id} {...grant} />
                             ))}
                         </div>
                     </>

@@ -21,7 +21,9 @@ export interface User {
  */
 export interface Organization {
     org: 'NSERC' | 'CIHR' | 'SSHRC';
-    title: string;
+    org_fr: 'CRSNG' | 'IRSC' | 'CRSH';
+    org_title_en: string;
+    org_title_fr: string;
 }
 
 /**
@@ -69,22 +71,22 @@ export interface Recipient {
  */
 export interface Grant {
     grant_id: number;
-    ref_number: string | null;
-    latest_amendment_number: number | null;
-    amendment_date: Date | null;
-    agreement_number: string | null;
-    agreement_value: number | null;
+    ref_number: string;
+    latest_amendment_number: number;
+    amendment_date: Date;
+    agreement_number: string;
+    agreement_value: number;
     foreign_currency_type: string | null;
     foreign_currency_value: number | null;
-    agreement_start_date: Date | null;
-    agreement_end_date: Date | null;
-    agreement_title_en: string | null;
-    description_en: string | null;
-    expected_results_en: string | null;
-    additional_information_en: string | null;
-    org: string | null;
-    recipient_id: number | null;
-    prog_id: number | null;
+    agreement_start_date: Date;
+    agreement_end_date?: Date;
+    agreement_title_en: string;
+    description_en: string;
+    expected_results_en: string;
+    additional_information_en: string;
+    org: string;
+    recipient_id: number;
+    prog_id: number;
     amendments_history: GrantAmendment[] | null;
 }
 
@@ -211,26 +213,9 @@ export interface RecipientWithStats extends Recipient {
 /**
  * Grant with full details (joins with recipient, institute, program, org)
  */
-export interface GrantWithDetails extends Grant {
-    // Recipient info
-    recipient_name?: string;
-    recipient_type?: 'I' | 'P';
-
-    // Institute info
-    institute_name?: string;
-    city?: string;
-    province?: string;
-    country?: string;
-
-    // Program info
-    program_name?: string;
-
-    // Organization info
-    organization_name?: string;
-
-    // UI state
+export type GrantWithDetails = Grant & Recipient & Institute & Program & Organization & {
     is_bookmarked?: boolean;
-}
+};
 
 // ============================================================================
 // TYPE UTILITIES

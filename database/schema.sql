@@ -22,15 +22,16 @@ CREATE INDEX idx_users_username ON users(username);
 -- Organizations Table
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS organizations (
-    org_id SERIAL PRIMARY KEY,
-    org_name_en VARCHAR(100) NOT NULL UNIQUE
+    org VARCHAR(5) PRIMARY KEY,
+    org_fr VARCHAR(5) NOT NULL UNIQUE,
+    org_title_en VARCHAR(100) NOT NULL UNIQUE,
+    org_title_fr VARCHAR(100) NOT NULL UNIQUE
 );
 
-INSERT INTO organizations (org_name_en) VALUES
-    ('Natural Sciences and Engineering Research Council'),
-    ('Canadian Institutes of Health Research'),
-    ('Social Sciences and Humanities Research Council')
-ON CONFLICT (org_name_en) DO NOTHING;
+INSERT INTO organizations (org, org_fr, org_title_en, org_title_fr) VALUES
+    ('NSERC', 'CRSNG', 'Natural Sciences and Engineering Research Council', 'Conseil de recherches en sciences naturelles et en génie du Canada'),
+    ('CIHR', 'IRSC', 'Canadian Institutes of Health Research', 'Instituts de recherche en santé du Canada'),
+    ('SSHRC', 'CRSH', 'Social Sciences and Humanities Research Council', 'Conseil de recherches en sciences humaines du Canada');
 
 -- ============================================================================
 -- Programs Table
@@ -39,11 +40,11 @@ CREATE TABLE IF NOT EXISTS programs (
     prog_id SERIAL PRIMARY KEY,
     prog_title_en VARCHAR(255) UNIQUE NOT NULL,
     prog_purpose_en TEXT,
-    org_id INTEGER,
-    FOREIGN KEY (org_id) REFERENCES organizations(org_id) ON DELETE SET NULL
+    org VARCHAR(5),
+    FOREIGN KEY (org) REFERENCES organizations(org) ON DELETE SET NULL
 );
 
-CREATE INDEX idx_programs_org ON programs(org_id);
+CREATE INDEX idx_programs_org ON programs(org);
 CREATE INDEX idx_programs_title ON programs(prog_title_en);
 
 -- ============================================================================
@@ -67,7 +68,7 @@ CREATE INDEX idx_institutes_location ON institutes(province, city);
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS recipients (
     recipient_id SERIAL PRIMARY KEY,
-    type VARCHAR(1),                   -- REMOVED "NOT NULL" constraint
+    type VARCHAR(1),
     business_number VARCHAR(50),
     legal_name VARCHAR(255) NOT NULL,
     operating_name VARCHAR(255),
@@ -103,16 +104,16 @@ CREATE TABLE IF NOT EXISTS grants (
     -- Foreign keys
     recipient_id INTEGER NOT NULL,
     prog_id INTEGER,
-    org_id INTEGER,
+    org VARCHAR(5),
     
     FOREIGN KEY (recipient_id) REFERENCES recipients(recipient_id) ON DELETE RESTRICT,
     FOREIGN KEY (prog_id) REFERENCES programs(prog_id) ON DELETE SET NULL,
-    FOREIGN KEY (org_id) REFERENCES organizations(org_id) ON DELETE SET NULL
+    FOREIGN KEY (org) REFERENCES organizations(org) ON DELETE SET NULL
 );
 
 CREATE INDEX idx_grants_recipient ON grants(recipient_id);
 CREATE INDEX idx_grants_program ON grants(prog_id);
-CREATE INDEX idx_grants_org ON grants(org_id);
+CREATE INDEX idx_grants_org ON grants(org);
 CREATE INDEX idx_grants_date ON grants(agreement_start_date DESC);
 CREATE INDEX idx_grants_value ON grants(agreement_value DESC);
 CREATE INDEX idx_grants_ref ON grants(ref_number);

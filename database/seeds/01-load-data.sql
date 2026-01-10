@@ -103,7 +103,6 @@ WHERE recipient_province IS NOT NULL;
 -- STEP 4: Performance Indexes (Speed up the Inserts)
 -- ============================================================================
 DO $$ BEGIN RAISE NOTICE 'Indexing staging table...'; END $$;
-CREATE INDEX idx_temp_org ON temp_grants(org_title);
 CREATE INDEX idx_temp_prog ON temp_grants(prog_name_en);
 CREATE INDEX idx_temp_loc ON temp_grants(research_organization_name, recipient_city, recipient_country);
 CREATE INDEX idx_temp_recip ON temp_grants(recipient_legal_name);
@@ -114,17 +113,12 @@ CREATE INDEX idx_temp_recip ON temp_grants(recipient_legal_name);
 DO $$ BEGIN RAISE NOTICE 'Inserting normalized data...'; END $$;
 
 -- Organizations
-INSERT INTO organizations (org_name_en)
-SELECT DISTINCT 
-    CASE WHEN POSITION(' | ' IN org_title) > 0 THEN SUBSTRING(org_title FROM 1 FOR POSITION(' | ' IN org_title) - 1) ELSE org_title END
-FROM temp_grants WHERE org_title IS NOT NULL AND org_title != ''
-ON CONFLICT (org_name_en) DO NOTHING;
+-- Already there from schema.sql
 
 -- Programs
-INSERT INTO programs (prog_title_en, prog_purpose_en, org_id)
-SELECT DISTINCT tg.prog_name_en, tg.prog_purpose_en, o.org_id
-FROM temp_grants tg
-JOIN organizations o ON o.org_name_en = CASE WHEN POSITION(' | ' IN tg.org_title) > 0 THEN SUBSTRING(tg.org_title FROM 1 FOR POSITION(' | ' IN tg.org_title) - 1) ELSE tg.org_title END
+INSERT INTO programs (prog_title_en, prog_purpose_en, org)
+SELECT DISTINCT tg.prog_name_en, tg.prog_purpose_en, o.org
+FROM temp_grants tg, organizations o
 WHERE tg.prog_name_en IS NOT NULL AND tg.prog_name_en != ''
 ON CONFLICT (prog_title_en) DO NOTHING;
 
@@ -148,23 +142,23 @@ INSERT INTO grants (
     agreement_value, foreign_currency_type, foreign_currency_value,
     agreement_start_date, agreement_end_date, agreement_title_en,
     description_en, expected_results_en, additional_information_en,
-    recipient_id, prog_id, org_id
+    recipient_id, prog_id, org
 )
 SELECT DISTINCT
     tg.ref_number, tg.latest_amendment_number, NULLIF(tg.amendment_date, '')::DATE, tg.agreement_number,
     NULLIF(tg.agreement_value, '')::DECIMAL(15,2), tg.foreign_currency_type, NULLIF(tg.foreign_currency_value, '')::DECIMAL(15,2),
     NULLIF(tg.agreement_start_date, '')::DATE, NULLIF(tg.agreement_end_date, '')::DATE,
     tg.agreement_title_en, tg.description_en, tg.expected_results_en, tg.additional_information_en,
-    r.recipient_id, p.prog_id, o.org_id
+    r.recipient_id, p.prog_id, o.org
 FROM temp_grants tg
+JOIN organizations o ON tg.org = o.org
 JOIN institutes i ON tg.research_organization_name = i.name AND tg.recipient_city = i.city AND COALESCE(tg.recipient_country, 'CA') = i.country
-JOIN recipients r ON tg.recipient_legal_name = r.legal_name AND i.institute_id = r.institute_id
+JOIN recipients r ON tg.recipient_legal_name = r.legal_name AND r.institute_id = i.institute_id
 LEFT JOIN programs p ON tg.prog_name_en = p.prog_title_en
-LEFT JOIN organizations o ON o.org_name_en = CASE WHEN POSITION(' | ' IN tg.org_title) > 0 THEN SUBSTRING(tg.org_title FROM 1 FOR POSITION(' | ' IN tg.org_title) - 1) ELSE tg.org_title END
 WHERE tg.ref_number IS NOT NULL AND r.recipient_id IS NOT NULL;
 
 -- Cleanup
 DROP TABLE temp_grants;
 
--- FIX: Wrapped in DO block
+-- Needs to be wrapped in DO block
 DO $$ BEGIN RAISE NOTICE 'Database Load Complete!'; END $$;
