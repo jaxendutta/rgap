@@ -24,14 +24,6 @@ import { Institute, Recipient, Entity, EntityType } from "@/types/database";
 import { RECIPIENT_TYPE_LABELS } from "@/constants/data";
 import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
 
-function isInstitute(entity: Entity): entity is Institute & Partial<Entity> {
-  return 'institute_id' in entity;
-}
-
-function isRecipient(entity: Entity): entity is Recipient & Partial<Entity> {
-  return 'recipient_id' in entity;
-}
-
 interface EntityCardProps {
     entity: (Institute | Recipient) & { is_bookmarked?: boolean };
     entityType: EntityType;
