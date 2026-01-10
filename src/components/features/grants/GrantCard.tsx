@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from "react";
-import { ResearchGrant } from "@/types/database";
+import { Grant } from "@/types/database";
 import { Card } from "@/components/ui/Card";
 import {
     formatCSV,
@@ -41,7 +41,7 @@ import { TrendVisualizer } from "../visualizations/TrendVisualizer";
 import Tabs, { TabContent, TabItem } from "@/components/ui/Tabs";
 
 interface GrantCardProps {
-    grant: ResearchGrant;
+    grant: Grant;
     isBookmarked?: boolean;
 }
 
@@ -55,7 +55,7 @@ export const GrantCard = ({
     >("details");
 
     // Check if a field has a value
-    const hasValue = (field: keyof ResearchGrant) =>
+    const hasValue = (field: keyof Grant) =>
         !!grant[field] && (grant[field] as unknown as string).trim() !== "";
 
     // Check for optional fields existence before use

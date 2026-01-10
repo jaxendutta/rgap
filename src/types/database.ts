@@ -67,7 +67,7 @@ export interface Recipient {
 /**
  * Research grant
  */
-export interface ResearchGrant {
+export interface Grant {
     grant_id: number;
     ref_number: string | null;
     latest_amendment_number: number | null;
@@ -211,7 +211,7 @@ export interface RecipientWithStats extends Recipient {
 /**
  * Grant with full details (joins with recipient, institute, program, org)
  */
-export interface GrantWithDetails extends ResearchGrant {
+export interface GrantWithDetails extends Grant {
     // Recipient info
     recipient_name?: string;
     recipient_type?: 'I' | 'P';

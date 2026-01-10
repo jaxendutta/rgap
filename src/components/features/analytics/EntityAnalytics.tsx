@@ -1,6 +1,6 @@
 // src/components/features/analytics/EntityAnalytics.tsx
 import React, { useState } from "react";
-import { ResearchGrant, Institute, Recipient } from "@/types/database";
+import { Grant, Institute, Recipient } from "@/types/database";
 import { Card } from "@/components/ui/Card";
 import { TrendVisualizer } from "@/components/features/visualizations/TrendVisualizer";
 import {
@@ -172,7 +172,7 @@ export const AgencyBreakdown = ({
 
 // Advanced time-period analysis component
 export const TimePeriodAnalytics: React.FC<{
-    grants: ResearchGrant[];
+    grants: Grant[];
     title?: string;
     periodType?: "yearly" | "quarterly" | "monthly";
 }> = ({ grants, title = "Temporal Analysis", periodType = "yearly" }) => {
@@ -217,7 +217,7 @@ export const TimePeriodAnalytics: React.FC<{
         acc[period].grants.push(grant);
 
         return acc;
-    }, {} as Record<string, { count: number; total: number; avg: number; grants: ResearchGrant[] }>);
+    }, {} as Record<string, { count: number; total: number; avg: number; grants: Grant[] }>);
 
     // Calculate averages
     Object.values(periodData).forEach((data) => {
@@ -336,7 +336,7 @@ export const EntityAnalyticsSection = ({
 }: {
     entityType: "institute" | "recipient";
     entity: Institute | Recipient;
-    grants: ResearchGrant[];
+    grants: Grant[];
     recipients?: Recipient[];
     agencies?: string[];
 }) => {

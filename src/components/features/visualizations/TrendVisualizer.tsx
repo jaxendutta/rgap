@@ -14,7 +14,7 @@ import {
     LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ResearchGrant, GrantAmendment } from "@/types/database";
+import { Grant, GrantAmendment } from "@/types/database";
 import { Card } from "@/components/ui/Card";
 import { Dropdown } from "@/components/ui/Dropdown";
 import DataChart from "@/components/features/visualizations/DataChart";
@@ -41,7 +41,7 @@ export type ViewContext = "search" | "recipient" | "institute" | "custom";
 
 interface TrendVisualizerProps {
     // The grants data to visualize
-    grants?: ResearchGrant[];
+    grants?: Grant[];
     entityId?: number;
     entityType?: "recipient" | "institute";
 

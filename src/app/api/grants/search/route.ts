@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { calculateOffset, generatePagination } from '@/lib/utils';
-import { ResearchGrant } from '@/types/database';
+import { Grant } from '@/types/database';
 
 export async function GET(request: NextRequest) {
     try {
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
 
         // Get paginated results
         const offset = calculateOffset(page, pageSize);
-        const dataResult = await db.query<ResearchGrant>(
+        const dataResult = await db.query<Grant>(
             `SELECT * FROM grant_details 
        ${whereClause}
        ORDER BY agreement_start_date DESC

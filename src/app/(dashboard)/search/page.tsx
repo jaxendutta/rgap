@@ -8,7 +8,7 @@ import SearchInterface from '@/components/features/search/SearchInterface';
 import { GrantCard } from '@/components/features/grants/GrantCard';
 import EmptyState from '@/components/ui/EmptyState';
 import { Search as SearchIcon, FileSearch2 } from 'lucide-react';
-import { ResearchGrant } from '@/types/database';
+import { Grant } from '@/types/database';
 import PageContainer from '@/components/layout/PageContainer';
 
 interface SearchPageProps {
@@ -28,7 +28,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     // Check if we have any search terms
     const hasSearchTerms = !!(recipient || institute || grant);
 
-    let grants: ResearchGrant[] = [];
+    let grants: Grant[] = [];
 
     if (hasSearchTerms) {
         // Build dynamic SQL query
