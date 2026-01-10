@@ -214,9 +214,9 @@ export const GrantCard = ({
                         {/* Recipient Name with Bookmark button inline */}
                         <div className="flex items-start justify-between gap-2 mb-2 lg:mb-1">
                             <Link
-                                to={`/recipients/${grant.recipient_id}`}
+                                href={`/recipients/${grant.recipient_id}`}
                                 className="flex text-lg font-medium hover:text-blue-700 transition-colors gap-1.5 group"
-                                aria-label={`View profile for recipient ${grant.legal_name}`}
+                                aria-label={`View profile for recipient ${grant.recipient}`}
                             >
                                 <GraduationCap className="h-5 w-5 mt-1 align-text-bottom flex-shrink-0" />
                                 <span className="inline-block">

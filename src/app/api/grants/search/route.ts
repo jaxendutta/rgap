@@ -1,87 +1,83 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { calculateOffset, generatePagination } from '@/lib/utils';
-import { Grant } from '@/types/database';
 
 export async function GET(request: NextRequest) {
+    const searchParams = request.nextUrl.searchParams;
+    const q = searchParams.get('q') || '';
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const offset = (page - 1) * limit;
+
+    // Build filters
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (q) {
+        conditions.push(`(
+      g.agreement_title_en ILIKE $${paramIndex} OR 
+      g.description_en ILIKE $${paramIndex} OR
+      r.legal_name ILIKE $${paramIndex} OR
+      p.prog_title_en ILIKE $${paramIndex}
+    )`);
+        params.push(`%${q}%`);
+        paramIndex++;
+    }
+
+    const whereClause = conditions.length > 0
+        ? 'WHERE ' + conditions.join(' AND ')
+        : '';
+
     try {
-        const { searchParams } = new URL(request.url);
-
-        // Parse query parameters
-        const query = searchParams.get('q') || '';
-        const page = parseInt(searchParams.get('page') || '1');
-        const pageSize = Math.min(parseInt(searchParams.get('pageSize') || '20'), 100);
-        const org = searchParams.get('org');
-        const minValue = searchParams.get('minValue');
-        const maxValue = searchParams.get('maxValue');
-
-        // Build WHERE clause
-        const conditions: string[] = [];
-        const params: any[] = [];
-        let paramIndex = 1;
-
-        if (query) {
-            conditions.push(`(
-        agreement_title_en ILIKE $${paramIndex} OR
-        description_en ILIKE $${paramIndex} OR
-        ref_number ILIKE $${paramIndex}
-      )`);
-            params.push(`%${query}%`);
-            paramIndex++;
-        }
-
-        if (org) {
-            conditions.push(`org = $${paramIndex}`);
-            params.push(org);
-            paramIndex++;
-        }
-
-        if (minValue) {
-            conditions.push(`agreement_value >= $${paramIndex}`);
-            params.push(parseFloat(minValue));
-            paramIndex++;
-        }
-
-        if (maxValue) {
-            conditions.push(`agreement_value <= $${paramIndex}`);
-            params.push(parseFloat(maxValue));
-            paramIndex++;
-        }
-
-        const whereClause = conditions.length > 0
-            ? `WHERE ${conditions.join(' AND ')}`
-            : '';
-
         // Get total count
-        const countResult = await db.query(
-            `SELECT COUNT(*) as count FROM grant_details ${whereClause}`,
-            params
-        );
-        const totalCount = parseInt(countResult.rows[0].count);
+        const countQuery = `
+      SELECT COUNT(*) as total
+      FROM grants g
+      JOIN recipients r ON g.recipient_id = r.recipient_id
+      LEFT JOIN programs p ON g.prog_id = p.prog_id
+      LEFT JOIN organizations o ON g.org_id = o.org_id
+      ${whereClause}
+    `;
 
-        // Get paginated results
-        const offset = calculateOffset(page, pageSize);
-        const dataResult = await db.query<Grant>(
-            `SELECT * FROM grant_details 
-       ${whereClause}
-       ORDER BY agreement_start_date DESC
-       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
-            [...params, pageSize, offset]
-        );
+        const countResult = await db.query(countQuery, params);
+        const total = parseInt(countResult.rows[0].total);
+
+        // Get data - UPDATED TO FETCH LOCATION DATA
+        const dataQuery = `
+      SELECT 
+        g.*,
+        r.legal_name as recipient_legal_name,
+        r.operating_name as recipient_operating_name,
+        p.prog_title_en,
+        o.org_name_en,
+        i.city as recipient_city,       -- Added
+        i.province as recipient_province, -- Added
+        i.country as recipient_country    -- Added
+      FROM grants g
+      JOIN recipients r ON g.recipient_id = r.recipient_id
+      JOIN institutes i ON r.institute_id = i.institute_id -- Added JOIN
+      LEFT JOIN programs p ON g.prog_id = p.prog_id
+      LEFT JOIN organizations o ON g.org_id = o.org_id
+      ${whereClause}
+      ORDER BY g.agreement_value DESC NULLS LAST
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+
+        const dataResult = await db.query(dataQuery, [...params, limit, offset]);
 
         return NextResponse.json({
-            success: true,
             data: dataResult.rows,
-            pagination: generatePagination(page, pageSize, totalCount),
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
         });
     } catch (error) {
-        console.error('Search error:', error);
+        console.error('Search API Error:', error);
         return NextResponse.json(
-            {
-                success: false,
-                error: 'Failed to search grants',
-                message: error instanceof Error ? error.message : 'Unknown error',
-            },
+            { error: 'Internal Server Error' },
             { status: 500 }
         );
     }

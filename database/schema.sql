@@ -1,5 +1,6 @@
+-- database/schema.sql
 -- RGAP PostgreSQL Database Schema
--- Updated to match government CSV data structure
+-- Updated for Robustness (ELT Friendly)
 
 -- ============================================================================
 -- Users Table
@@ -11,7 +12,6 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP,
-    
     CONSTRAINT email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
 );
 
@@ -26,7 +26,6 @@ CREATE TABLE IF NOT EXISTS organizations (
     org_name_en VARCHAR(100) NOT NULL UNIQUE
 );
 
--- Insert default organizations
 INSERT INTO organizations (org_name_en) VALUES
     ('Natural Sciences and Engineering Research Council'),
     ('Canadian Institutes of Health Research'),
@@ -41,7 +40,6 @@ CREATE TABLE IF NOT EXISTS programs (
     prog_title_en VARCHAR(255) UNIQUE NOT NULL,
     prog_purpose_en TEXT,
     org_id INTEGER,
-    
     FOREIGN KEY (org_id) REFERENCES organizations(org_id) ON DELETE SET NULL
 );
 
@@ -49,16 +47,15 @@ CREATE INDEX idx_programs_org ON programs(org_id);
 CREATE INDEX idx_programs_title ON programs(prog_title_en);
 
 -- ============================================================================
--- Institutes Table
+-- Institutes Table (RELAXED)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS institutes (
     institute_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    country VARCHAR(10) DEFAULT 'CA',
-    province VARCHAR(50),
+    country VARCHAR(50) DEFAULT 'CA',  -- Changed from VARCHAR(2) to 50
+    province VARCHAR(50),              -- Changed from VARCHAR(2) to 50
     city VARCHAR(100),
     postal_code VARCHAR(10),
-    
     CONSTRAINT uq_institute_location UNIQUE (name, city, country)
 );
 
@@ -66,11 +63,11 @@ CREATE INDEX idx_institutes_name ON institutes(name);
 CREATE INDEX idx_institutes_location ON institutes(province, city);
 
 -- ============================================================================
--- Recipients Table
+-- Recipients Table (RELAXED)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS recipients (
     recipient_id SERIAL PRIMARY KEY,
-    type VARCHAR(1) NOT NULL,
+    type VARCHAR(1),                   -- REMOVED "NOT NULL" constraint
     business_number VARCHAR(50),
     legal_name VARCHAR(255) NOT NULL,
     operating_name VARCHAR(255),
@@ -85,7 +82,7 @@ CREATE INDEX idx_recipients_type ON recipients(type);
 CREATE INDEX idx_recipients_institute ON recipients(institute_id);
 
 -- ============================================================================
--- Grants Table (matches CSV column names!)
+-- Grants Table
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS grants (
     grant_id SERIAL PRIMARY KEY,
@@ -124,7 +121,7 @@ CREATE INDEX idx_grants_ref ON grants(ref_number);
 CREATE INDEX idx_grants_title_search ON grants USING GIN (to_tsvector('english', COALESCE(agreement_title_en, '')));
 
 -- ============================================================================
--- Bookmarks Tables
+-- Bookmarks & History (Standard)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS bookmarked_grants (
     id SERIAL PRIMARY KEY,
@@ -132,7 +129,6 @@ CREATE TABLE IF NOT EXISTS bookmarked_grants (
     grant_id INTEGER NOT NULL,
     bookmarked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     notes TEXT,
-    
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (grant_id) REFERENCES grants(grant_id) ON DELETE CASCADE,
     UNIQUE(user_id, grant_id)
@@ -144,7 +140,6 @@ CREATE TABLE IF NOT EXISTS bookmarked_recipients (
     recipient_id INTEGER NOT NULL,
     bookmarked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     notes TEXT,
-    
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (recipient_id) REFERENCES recipients(recipient_id) ON DELETE CASCADE,
     UNIQUE(user_id, recipient_id)
@@ -156,15 +151,11 @@ CREATE TABLE IF NOT EXISTS bookmarked_institutes (
     institute_id INTEGER NOT NULL,
     bookmarked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     notes TEXT,
-    
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (institute_id) REFERENCES institutes(institute_id) ON DELETE CASCADE,
     UNIQUE(user_id, institute_id)
 );
 
--- ============================================================================
--- Search History Table
--- ============================================================================
 CREATE TABLE IF NOT EXISTS search_history (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
@@ -172,7 +163,6 @@ CREATE TABLE IF NOT EXISTS search_history (
     filters JSONB,
     result_count INTEGER,
     searched_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
