@@ -6,9 +6,9 @@ import {
     CircleDollarSign,
     LucideIcon,
 } from "lucide-react";
-import { cn } from "@/utils/cn";
-import { formatDateOnly } from "@/utils/format";
-import { Button } from "@/components/common/ui/Button";
+import { cn } from "@/lib/utils";
+import { formatDateOnly } from "@/lib/format";
+import { Button } from "@/components/ui/Button";
 
 // Generic range type that can work with both dates and numbers
 export interface Range<T> {

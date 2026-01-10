@@ -1,7 +1,7 @@
 // src/components/common/ui/DateRangeFilter.tsx
 import { Calendar } from "lucide-react";
 import { FILTER_LIMITS } from "@/constants/filters";
-import { formatDate } from "@/utils/format";
+import { formatDate } from "@/lib/format";
 import { RangeFilter, Range } from "@/components/features/filter/RangeFilter";
 
 export interface DateRange {

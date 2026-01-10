@@ -1,7 +1,7 @@
 // src/components/features/analytics/EntityAnalytics.tsx
 import React, { useState } from "react";
-import { Grant, Institute, Recipient } from "@/types/models";
-import { Card } from "@/components/common/ui/Card";
+import { ResearchGrant, Institute, Recipient } from "@/types/database";
+import { Card } from "@/components/ui/Card";
 import { TrendVisualizer } from "@/components/features/visualizations/TrendVisualizer";
 import {
     Activity,
@@ -15,15 +15,15 @@ import {
     Users,
     CalendarDays,
 } from "lucide-react";
-import { formatCurrency } from "@/utils/format";
-import { cn } from "@/utils/cn";
+import { formatCurrency } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import {
     calculateFundingGrowth,
     calculateAgencySpecialization,
     calculateRecipientConcentration,
     calculateActiveRecipients,
     calculateAvgGrantDuration,
-} from "@/utils/analytics";
+} from "@/lib/analytics";
 
 // Reusable KPI Card component
 export const KpiCard = ({
@@ -172,7 +172,7 @@ export const AgencyBreakdown = ({
 
 // Advanced time-period analysis component
 export const TimePeriodAnalytics: React.FC<{
-    grants: Grant[];
+    grants: ResearchGrant[];
     title?: string;
     periodType?: "yearly" | "quarterly" | "monthly";
 }> = ({ grants, title = "Temporal Analysis", periodType = "yearly" }) => {
@@ -217,7 +217,7 @@ export const TimePeriodAnalytics: React.FC<{
         acc[period].grants.push(grant);
 
         return acc;
-    }, {} as Record<string, { count: number; total: number; avg: number; grants: Grant[] }>);
+    }, {} as Record<string, { count: number; total: number; avg: number; grants: ResearchGrant[] }>);
 
     // Calculate averages
     Object.values(periodData).forEach((data) => {
@@ -336,7 +336,7 @@ export const EntityAnalyticsSection = ({
 }: {
     entityType: "institute" | "recipient";
     entity: Institute | Recipient;
-    grants: Grant[];
+    grants: ResearchGrant[];
     recipients?: Recipient[];
     agencies?: string[];
 }) => {

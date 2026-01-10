@@ -8,14 +8,14 @@ import {
     Clock,
     Trash2,
 } from "lucide-react";
-import { Button } from "@/components/common/ui/Button";
-import { Card } from "@/components/common/ui/Card";
-import { formatCurrency } from "@/utils/format";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { formatCurrency } from "@/lib/format";
 import { DEFAULT_FILTER_STATE, FILTER_LIMITS } from "@/constants/filters";
-import Tag, { Tags } from "@/components/common/ui/Tag";
-import { SearchHistory } from "@/types/search";
-import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
-import { useNavigate } from "react-router-dom";
+import Tag, { Tags } from "@/components/ui/Tag";
+import { SearchHistory } from "@/types/database";
+import BookmarkButton from "@/components/features/bookmarks/BookmarkButton";
+import { useRouter } from "next/navigation";
 import { useDeleteSearchHistory } from "@/hooks/api/useSearchHistory";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
 
@@ -25,7 +25,7 @@ interface SearchHistoryCardProps {
 
 export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
     const { showNotification } = useNotification();
-    const navigate = useNavigate();
+    const router = useRouter();
 
     // Make sure searchParams is properly structured and has a default structure if missing
     const searchParams = data.search_params || {
@@ -193,7 +193,7 @@ export const SearchHistoryCard = ({ data }: SearchHistoryCardProps) => {
         };
 
         // Navigate to search page with validated params in the state
-        navigate("/search", { state: { searchParams: validatedParams } });
+        router.push("/search", { state: { searchParams: validatedParams } });
     };
 
     // Delete search history mutation

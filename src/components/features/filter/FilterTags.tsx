@@ -1,9 +1,9 @@
 // src/components/features/filter/FilterTags.tsx
 import React from "react";
 import { X, LucideIcon } from "lucide-react";
-import { formatDate, formatCurrency } from "@/utils/format";
+import { formatDate, formatCurrency } from "@/lib/format";
 import { FILTER_LIMITS, DEFAULT_FILTER_STATE } from "@/constants/filters";
-import { cn } from "@/utils/cn";
+import { cn } from "@/lib/utils";
 
 type FilterKey =
     | "dateRange"

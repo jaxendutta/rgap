@@ -1,4 +1,4 @@
-// src/components/common/ui/SearchField.tsx
+// src/components/ui/SearchField.tsx
 import React from "react";
 
 interface SearchFieldProps {

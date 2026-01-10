@@ -1,7 +1,7 @@
 // src/components/common/ui/ValueRangeFilter.tsx
 import { CircleDollarSign, Calendar } from "lucide-react";
 import { FILTER_LIMITS } from "@/constants/filters";
-import { formatDate, formatCurrency } from "@/utils/format";
+import { formatDate, formatCurrency } from "@/lib/format";
 import { RangeFilter } from "@/components/features/filter/RangeFilter";
 
 export interface RangeValue {

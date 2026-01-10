@@ -6,7 +6,7 @@ import {
     ChevronUp,
     ChevronDown,
 } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 
 export interface StatItem {

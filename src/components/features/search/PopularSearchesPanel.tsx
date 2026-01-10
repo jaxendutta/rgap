@@ -9,16 +9,16 @@ import {
     RefreshCw,
     ChevronRight,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/common/ui/Card";
-import LoadingState from "@/components/common/ui/LoadingState";
-import Button from "@/components/common/ui/Button";
-import Tag from "@/components/common/ui/Tag";
-import Tabs from "@/components/common/ui/Tabs";
-import EmptyState from "@/components/common/ui/EmptyState";
+import { useRouter } from "next/navigation";
+import { Card } from "@/components/ui/Card";
+import LoadingState from "@/components/ui/LoadingState";
+import Button from "@/components/ui/Button";
+import Tag from "@/components/ui/Tag";
+import Tabs from "@/components/ui/Tabs";
+import EmptyState from "@/components/ui/EmptyState";
 import { usePopularSearches } from "@/hooks/api/usePopularSearches";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import { PopularSearch, SearchCategory } from "@/types/search";
+import { PopularSearch, SearchCategory } from "@/types/database";
 
 interface PopularSearchesPanelProps {
     onSelect: (category: SearchCategory, term: string) => void;
@@ -68,7 +68,7 @@ export const PopularSearchesPanel = ({
     onSelect,
     isVisible = true,
 }: PopularSearchesPanelProps) => {
-    const navigate = useNavigate();
+    const router = useRouter();
     const [activeCategory, setActiveCategory] =
         useState<SearchCategory>("recipient");
     const [initialLoad, setInitialLoad] = useState(false);
@@ -127,7 +127,7 @@ export const PopularSearchesPanel = ({
                         size="sm"
                         rightIcon={ChevronRight}
                         onClick={() => {
-                            navigate(
+                            router.push(
                                 `/search/popular?category=${activeCategory}`
                             );
                         }}

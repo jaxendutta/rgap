@@ -1,9 +1,7 @@
 // src/components/features/search/SearchInterface.tsx
-// ✅ SIMPLE VERSION: Works with your actual components!
-
 'use client';
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
     Search as SearchIcon,

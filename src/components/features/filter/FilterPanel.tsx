@@ -1,13 +1,13 @@
 // src/components/features/filter/FilterPanel.tsx
 import { DEFAULT_FILTER_STATE, FILTER_LIMITS } from "@/constants/filters";
-import { MultiSelect } from "@/components/common/ui/MultiSelect";
+import { MultiSelect } from "@/components/ui/MultiSelect";
 import type { RangeValue } from "@/components/features/filter/ValueRangeFilter";
 import { ValueRangeFilter } from "@/components/features/filter/ValueRangeFilter";
 import { DateRangeFilter } from "@/components/features/filter/DateRangeFilter";
 import { useFilterOptions } from "@/hooks/api/useFilterOptions";
-import { LoadingSpinner } from "@/components/common/ui/LoadingSpinner";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Earth, Landmark, LocateFixed, Radar } from "lucide-react";
-import { Card } from "@/components/common/ui/Card";
+import { Card } from "@/components/ui/Card";
 
 interface FilterPanelProps {
     filters: typeof DEFAULT_FILTER_STATE;
