@@ -86,7 +86,7 @@ export default function HomePage() {
                 size="lg"
                 leftIcon={LogIn}
                 className="pl-6 pr-8 md:text-lg"
-                onClick={() => router.push("/auth")}
+                onClick={() => router.push("/login")}
               >
                 Your Account
               </Button>

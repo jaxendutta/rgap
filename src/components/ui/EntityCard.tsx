@@ -22,7 +22,7 @@ import { formatCSV, formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
+import BookmarkButton from "@/components/features/bookmarks/BookmarkButton";
 import {
     InstituteWithStats,
     RecipientWithStats,
@@ -254,7 +254,7 @@ export const EntityCard = ({
                 <BookmarkButton
                     entityType={entityType}
                     entityId={id}
-                    isBookmarked={entity.is_bookmarked ?? false}
+                    initialIsBookmarked={entity.is_bookmarked ?? false}
                 />
             </div>
 

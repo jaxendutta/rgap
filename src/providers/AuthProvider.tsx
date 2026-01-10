@@ -1,35 +1,39 @@
-// src/providers/AuthProvider.tsx
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useTransition } from 'react';
 import { User } from '@/types/database';
 import { logoutAction } from '@/app/actions/auth';
 
 interface AuthContextType {
     user: Partial<User> | null;
-    isLoading: boolean;
     logout: () => Promise<void>;
+    isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({
     children,
-    initialUser
+    initialUser,
 }: {
     children: React.ReactNode;
     initialUser: Partial<User> | null;
 }) {
     const [user, setUser] = useState<Partial<User> | null>(initialUser);
+    const [isPending, startTransition] = useTransition();
 
-    // Optimistic logout
     const logout = async () => {
+        // 1. Immediate Client Update (Optimistic)
         setUser(null);
-        await logoutAction();
+
+        // 2. Call Server Action to destroy session & cookie
+        startTransition(async () => {
+            await logoutAction();
+        });
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading: false, logout }}>
+        <AuthContext.Provider value={{ user, logout, isLoading: isPending }}>
             {children}
         </AuthContext.Provider>
     );
@@ -37,6 +41,8 @@ export function AuthProvider({
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (!context) throw new Error('useAuth must be used within an AuthProvider');
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
     return context;
 };

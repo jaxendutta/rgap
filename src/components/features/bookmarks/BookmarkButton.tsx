@@ -1,155 +1,72 @@
-// src/components/features/bookmarks/BookmarkButton.tsx
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { BookmarkPlus, BookmarkCheck } from "lucide-react";
-import { cn } from "@/utils/cn";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNotification } from "@/components/features/notifications/NotificationProvider";
-import { useToggleBookmark } from "@/hooks/api/useBookmarks";
-import { Button } from "@/components/common/ui/Button";
-import { Entity } from "@/types/models";
+'use client';
+
+import { useState } from "react";
+import { Bookmark } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/providers/AuthProvider";
+import { useNotify } from "@/providers/NotificationProvider";
+import { cn } from "@/lib/utils";
 
 interface BookmarkButtonProps {
     entityId: number;
-    entityType: keyof Entity;
-    isBookmarked?: boolean;
-    size?: "sm" | "md" | "lg";
-    variant?: "primary" | "secondary" | "outline";
-    iconOnly?: boolean;
+    entityType: 'grant' | 'recipient' | 'institute';
+    initialIsBookmarked?: boolean;
     className?: string;
 }
 
-export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
+export default function BookmarkButton({
     entityId,
     entityType,
-    isBookmarked: initialIsBookmarked,
-    size = "md",
-    variant = "secondary",
-    iconOnly = false,
-    className,
-}) => {
+    initialIsBookmarked = false,
+    className
+}: BookmarkButtonProps) {
     const { user } = useAuth();
-    const { showNotification } = useNotification();
-    const navigate = useNavigate();
+    const { notify } = useNotify();
+    const router = useRouter();
+    const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
+    const [isLoading, setIsLoading] = useState(false);
 
-    // Keep track of the visual/UI state of the bookmark button
-    const [visualBookmarkState, setVisualBookmarkState] = useState<boolean>(
-        initialIsBookmarked ?? false
-    );
+    const handleClick = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
 
-    // Update the visual state when props change (e.g., due to new API data)
-    useEffect(() => {
-        if (initialIsBookmarked !== undefined) {
-            setVisualBookmarkState(initialIsBookmarked);
-        }
-    }, [initialIsBookmarked]);
-
-    // Get the mutation function from our hook
-    const toggleBookmarkMutation = useToggleBookmark(entityType);
-
-    const handleToggleBookmark = () => {
-        if (!user || !user.user_id) {
-            showNotification(
-                "You must be logged in to bookmark items",
-                "error",
-                () => navigate("/auth")
-            );
+        // 1. GUEST CHECK: If not logged in, prompt and redirect
+        if (!user) {
+            notify("Please log in to save bookmarks", "info");
+            router.push('/login');
             return;
         }
 
-        // Ensure entityId is defined and convert it to the proper type if needed
-        if (!entityId) {
-            showNotification("Cannot bookmark this item - missing ID", "error");
-            return;
+        // 2. LOGGED IN: Proceed with bookmark logic
+        setIsLoading(true);
+        try {
+            // Call your server action or API here
+            // await toggleBookmarkAction(entityId, entityType); 
+            setIsBookmarked(!isBookmarked);
+            notify(isBookmarked ? "Removed from bookmarks" : "Saved to bookmarks", "success");
+        } catch (error) {
+            notify("Failed to update bookmark", "error");
+        } finally {
+            setIsLoading(false);
         }
-
-        // Update visual state immediately for better UX
-        setVisualBookmarkState(!visualBookmarkState);
-
-        // Call the mutation with the CURRENT state (before toggling)
-        toggleBookmarkMutation.mutate(
-            {
-                user_id: user.user_id,
-                entity_id: entityId,
-                isBookmarked: visualBookmarkState, // The current state before toggling
-            },
-            {
-                onError: (error) => {
-                    // Revert visual state on error
-                    setVisualBookmarkState(visualBookmarkState);
-                    console.error("Bookmark toggle error: ", error);
-                    showNotification(
-                        `Failed to ${
-                            visualBookmarkState ? "remove" : "add"
-                        } bookmark. Please try again.`,
-                        "error"
-                    );
-                },
-            }
-        );
     };
 
-    // For icon-only mode, use a simpler button
-    if (iconOnly) {
-        return (
-            <button
-                onClick={handleToggleBookmark}
-                disabled={toggleBookmarkMutation.isPending}
-                className={cn(
-                    "p-1 rounded-full transition-colors focus:outline-none",
-                    visualBookmarkState
-                        ? "text-blue-600 hover:text-blue-700"
-                        : "text-gray-400 hover:text-gray-600",
-                    toggleBookmarkMutation.isPending && "opacity-50",
-                    className
-                )}
-                aria-label={
-                    visualBookmarkState ? "Remove bookmark" : "Add bookmark"
-                }
-            >
-                {visualBookmarkState ? (
-                    <BookmarkCheck
-                        className={cn(
-                            "h-5 w-5",
-                            toggleBookmarkMutation.isPending && "animate-pulse"
-                        )}
-                    />
-                ) : (
-                    <BookmarkPlus
-                        className={cn(
-                            "h-5 w-5",
-                            toggleBookmarkMutation.isPending && "animate-pulse"
-                        )}
-                    />
-                )}
-            </button>
-        );
-    }
-
-    // Customize button appearance based on bookmark state
-    const buttonVariant = visualBookmarkState ? "secondary" : variant;
-    const customClassName = visualBookmarkState
-        ? cn(
-              "bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200",
-              className
-          )
-        : className;
-
     return (
-        <Button
-            size={size}
-            variant={buttonVariant}
-            leftIcon={visualBookmarkState ? BookmarkCheck : BookmarkPlus}
-            onClick={handleToggleBookmark}
-            disabled={toggleBookmarkMutation.isPending}
-            isLoading={toggleBookmarkMutation.isPending}
-            className={customClassName}
+        <button
+            onClick={handleClick}
+            disabled={isLoading}
+            className={cn(
+                "p-2 rounded-full transition-all duration-200",
+                isBookmarked
+                    ? "text-yellow-500 hover:bg-yellow-50"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
+                className
+            )}
+            aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
         >
-            <span className="hidden md:inline">
-                {visualBookmarkState ? "Bookmarked" : "Bookmark"}
-            </span>
-        </Button>
+            <Bookmark
+                className={cn("w-5 h-5", isBookmarked && "fill-current")}
+            />
+        </button>
     );
-};
-
-export default BookmarkButton;
+}
