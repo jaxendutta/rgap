@@ -1,15 +1,21 @@
 // src/app/layout.tsx
+// Root layout - Authentication is OPTIONAL
+// Users can browse all grants, recipients, institutes without logging in
+// Auth only needed for: bookmarks, saved searches, account features
+
+import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import './globals.css';
 import { Providers } from './providers';
 import { getCurrentUser } from '@/lib/session';
-import './globals.css';
 import Header from '@/components/layout/Header';
 
 const inter = Inter({ subsets: ['latin'] });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'RGAP - Research Grant Analytics Platform',
-  description: 'Analytics platform for Canadian research grants',
+  description: 'Browse Canadian research grants from NSERC, CIHR, and SSHRC',
+  keywords: ['research grants', 'NSERC', 'CIHR', 'SSHRC', 'Canada'],
 };
 
 export default async function RootLayout({
@@ -17,13 +23,13 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Fetch user session on the SERVER (Fast, Secure, No Loading Spinner)
+  // Try to get user session - returns null if not logged in (which is fine)
   const user = await getCurrentUser();
 
   return (
     <html lang="en">
-      <body className={`${inter.className}`}>
-        <Providers initialUser={user || null}>
+      <body className={inter.className}>
+        <Providers initialUser={user}>
           <Header />
 
           {children}

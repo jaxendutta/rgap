@@ -1,105 +1,96 @@
 // src/components/features/bookmarks/BookmarkButton.tsx
+// Bookmark button that works for both logged in and logged out users
 'use client';
 
-import { useState, useTransition } from "react";
-import { Bookmark } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/providers/AuthProvider";
-import { useNotify } from "@/providers/NotificationProvider";
-import { cn } from "@/lib/utils";
-import {
-    toggleGrantBookmark,
-    toggleRecipientBookmark,
-    toggleInstituteBookmark,
-} from "@/app/actions/bookmarks";
+import { useAuth } from '@/providers/AuthProvider';
+import { useRouter } from 'next/navigation';
+import { Bookmark, BookmarkCheck } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/Button';
 
 interface BookmarkButtonProps {
-    entityId: number;
     entityType: 'grant' | 'recipient' | 'institute';
-    initialIsBookmarked?: boolean;
-    className?: string;
+    entityId: number;
+    isBookmarked?: boolean;
+    size?: 'sm' | 'md' | 'lg';
+    showLabel?: boolean;
 }
 
-export default function BookmarkButton({
-    entityId,
+export function BookmarkButton({
     entityType,
-    initialIsBookmarked = false,
-    className
+    entityId,
+    isBookmarked = false,
+    size = 'sm',
+    showLabel = true,
 }: BookmarkButtonProps) {
     const { user } = useAuth();
-    const { notify } = useNotify();
     const router = useRouter();
-    const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
-    const [isPending, startTransition] = useTransition();
+    const [bookmarked, setBookmarked] = useState(isBookmarked);
+    const [loading, setLoading] = useState(false);
 
-    const handleClick = async (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
+    // ============================================================================
+    // NOT LOGGED IN: Show "Sign in to bookmark" button
+    // ============================================================================
+    if (!user) {
+        return (
+            <Button
+                variant="outline"
+                size={size}
+                onClick={() => router.push(`/login?redirect=${window.location.pathname}`)}
+                title="Sign in to bookmark this item"
+            >
+                <Bookmark className="w-4 h-4" />
+                {showLabel && <span className="ml-2">Sign in to bookmark</span>}
+            </Button>
+        );
+    }
 
-        // 1. GUEST CHECK: If not logged in, prompt and redirect
-        if (!user) {
-            notify("Please log in to save bookmarks", "info");
-            router.push('/login');
-            return;
-        }
+    // ============================================================================
+    // LOGGED IN: Show actual bookmark toggle
+    // ============================================================================
+    const handleToggle = async () => {
+        setLoading(true);
 
-        // 2. OPTIMISTIC UPDATE (instant UI feedback)
-        const previousState = isBookmarked;
-        setIsBookmarked(!isBookmarked);
+        try {
+            const response = await fetch(`/api/bookmarks/${entityType}`, {
+                method: bookmarked ? 'DELETE' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ entityId }),
+            });
 
-        // 3. CALL SERVER ACTION (no API route needed!)
-        startTransition(async () => {
-            try {
-                let result;
-
-                switch (entityType) {
-                    case 'grant':
-                        result = await toggleGrantBookmark(entityId);
-                        break;
-                    case 'recipient':
-                        result = await toggleRecipientBookmark(entityId);
-                        break;
-                    case 'institute':
-                        result = await toggleInstituteBookmark(entityId);
-                        break;
-                }
-
-                if (!result.success) {
-                    // Revert on error
-                    setIsBookmarked(previousState);
-                    notify(result.error || "Failed to update bookmark", "error");
-                } else {
-                    // Success - server action already revalidated the page
-                    notify(
-                        result.isBookmarked ? "Saved to bookmarks" : "Removed from bookmarks",
-                        "success"
-                    );
-                }
-            } catch (error) {
-                // Revert on error
-                setIsBookmarked(previousState);
-                notify("Failed to update bookmark", "error");
+            if (response.ok) {
+                setBookmarked(!bookmarked);
+            } else {
+                console.error('Failed to toggle bookmark');
             }
-        });
+        } catch (error) {
+            console.error('Bookmark error:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <button
-            onClick={handleClick}
-            disabled={isPending}
-            className={cn(
-                "p-2 rounded-full transition-all duration-200",
-                isBookmarked
-                    ? "text-yellow-500 hover:bg-yellow-50"
-                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
-                isPending && "opacity-50 cursor-not-allowed",
-                className
-            )}
-            aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+        <Button
+            variant={bookmarked ? 'primary' : 'outline'}
+            size={size}
+            onClick={handleToggle}
+            disabled={loading}
+            title={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
         >
-            <Bookmark
-                className={cn("w-5 h-5", isBookmarked && "fill-current")}
-            />
-        </button>
+            {bookmarked ? (
+                <>
+                    <BookmarkCheck className="w-4 h-4" />
+                    {showLabel && <span className="ml-2">Bookmarked</span>}
+                </>
+            ) : (
+                <>
+                    <Bookmark className="w-4 h-4" />
+                    {showLabel && <span className="ml-2">Bookmark</span>}
+                </>
+            )}
+        </Button>
     );
 }
+
+export default BookmarkButton;
