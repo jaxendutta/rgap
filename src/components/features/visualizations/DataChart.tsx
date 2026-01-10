@@ -13,8 +13,8 @@ import {
     ResponsiveContainer,
     Cell,
 } from "recharts";
-import { ChartDataPoint, formatChartValue } from "@/utils/chartDataTransforms";
-import { getCategoryColor, AMENDMENT_COLORS } from "@/utils/chartColors";
+import { ChartDataPoint, formatChartValue } from "@/lib/chartDataTransforms";
+import { getCategoryColor, AMENDMENT_COLORS } from "@/lib/chartColors";
 import CustomTooltip from "./CustomTooltip";
 
 export interface DataChartProps {

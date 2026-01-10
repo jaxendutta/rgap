@@ -1,7 +1,7 @@
 // src/components/features/visualizations/CustomTooltip.tsx
 import React from "react";
-import { formatCurrency } from "@/utils/format";
-import { ChartMetric } from "@/types/search";
+import { formatCurrency } from "@/lib/format";
+import { ChartMetric } from "@/types/database";
 
 // Custom tooltip for charts
 interface CustomTooltipProps {

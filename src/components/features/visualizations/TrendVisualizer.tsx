@@ -13,16 +13,16 @@ import {
     BookOpen,
     LucideIcon,
 } from "lucide-react";
-import { cn } from "@/utils/cn";
-import { Grant, GrantAmendment } from "@/types/models";
-import { Card } from "@/components/common/ui/Card";
-import { Dropdown } from "@/components/common/ui/Dropdown";
+import { cn } from "@/lib/utils";
+import { ResearchGrant, GrantAmendment } from "@/types/database";
+import { Card } from "@/components/ui/Card";
+import { Dropdown } from "@/components/ui/Dropdown";
 import DataChart from "@/components/features/visualizations/DataChart";
-import { AMENDMENT_COLORS, getCategoryColor } from "@/utils/chartColors";
-import Button from "@/components/common/ui/Button";
-import ToggleButtons from "@/components/common/ui/ToggleButtons";
-import LoadingState from "@/components/common/ui/LoadingState";
-import { formatSentenceCase } from "@/utils/format";
+import { AMENDMENT_COLORS, getCategoryColor } from "@/lib/chartColors";
+import Button from "@/components/ui/Button";
+import ToggleButtons from "@/components/ui/ToggleButtons";
+import LoadingState from "@/components/ui/LoadingState";
+import { formatSentenceCase } from "@/lib/format";
 
 export type ChartType = "line" | "stacked" | "grouped";
 export type MetricType = "funding" | "count";
@@ -41,7 +41,7 @@ export type ViewContext = "search" | "recipient" | "institute" | "custom";
 
 interface TrendVisualizerProps {
     // The grants data to visualize
-    grants?: Grant[];
+    grants?: ResearchGrant[];
     entityId?: number;
     entityType?: "recipient" | "institute";
 

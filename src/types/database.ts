@@ -323,3 +323,5 @@ export interface SearchFilters {
     cities?: string[];
     recipientType?: string;
 }
+
+export type ChartMetric = "funding" | "grants" | "counts";

@@ -1,10 +1,12 @@
 // src/components/layout/PageHeader.tsx
 import React from "react";
 import { cn } from "@/lib/utils";
+import { IconType } from "react-icons";
 
 interface PageHeaderProps {
     title: string;
     subtitle?: React.ReactNode;
+    icon?: IconType;
     action?: React.ReactNode;
     breadcrumbs?: React.ReactNode;
     className?: string;
@@ -22,9 +24,9 @@ const PageHeader: React.FC<PageHeaderProps> = ({
             {breadcrumbs && <div className="mb-2">{breadcrumbs}</div>}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-xl lg:text-3xl font-semibold text-gray-900">
-                        {title}
-                    </h1>
+                    <span className="text-2xl lg:text-3xl font-semibold text-gray-900">
+                        [ {title} ]
+                    </span>
                     {subtitle && (
                         <p className="mt-1 text-gray-600">{subtitle}</p>
                     )}

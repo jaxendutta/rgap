@@ -2,6 +2,7 @@
 // EntityCard Component
 // Displays Institute or Recipient cards with proper type handling
 // ============================================================================
+"use client";
 
 import {
     MapPin,

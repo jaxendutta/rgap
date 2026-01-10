@@ -3,6 +3,29 @@ export function formatCSV(items: string[] | null | undefined): string {
   return items.join(', ');
 }
 
+export function formatSentenceCase(text: string | null | undefined): string {
+    if (!text) return 'N/A';
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+}
+
+export function formatDateDiff(startDate: Date, endDate: Date): string {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    let years = end.getFullYear() - start.getFullYear();
+    let months = end.getMonth() - start.getMonth();
+
+    if (months < 0) {
+        years--;
+        months += 12;
+    }
+
+    const yearPart = years > 0 ? `${years} year${years > 1 ? 's' : ''}` : '';
+    const monthPart = months > 0 ? `${months} month${months > 1 ? 's' : ''}` : '';
+
+    return [yearPart, monthPart].filter(part => part !== '').join(' ') || '0 months';
+}
+
 export function formatProvince(provinceCode: string | null): string {
     if (!provinceCode) return 'N/A';
 

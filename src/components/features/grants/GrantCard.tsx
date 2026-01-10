@@ -1,14 +1,16 @@
 // src/components/features/grants/GrantCard.tsx
+'use client';
+
 import { useState } from "react";
-import { Grant } from "@/types/models";
-import { Card } from "@/components/common/ui/Card";
+import { ResearchGrant } from "@/types/database";
+import { Card } from "@/components/ui/Card";
 import {
-    formatCommaSeparated,
+    formatCSV,
     formatCurrency,
     formatDate,
     formatDateDiff,
-} from "@/utils/format";
-import { Link } from "react-router-dom";
+} from "@/lib/format";
+import Link from "next/link";
 import {
     University,
     BookMarked,
@@ -32,14 +34,14 @@ import {
     Landmark,
     BookOpen,
 } from "lucide-react";
-import { cn } from "@/utils/cn";
-import Tag, { Tags } from "@/components/common/ui/Tag";
-import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
+import { cn } from "@/lib/utils";
+import Tag, { Tags } from "@/components/ui/Tag";
+import BookmarkButton from "@/components/features/bookmarks/BookmarkButton";
 import { TrendVisualizer } from "../visualizations/TrendVisualizer";
-import Tabs, { TabContent, TabItem } from "@/components/common/ui/Tabs";
+import Tabs, { TabContent, TabItem } from "@/components/ui/Tabs";
 
 interface GrantCardProps {
-    grant: Grant;
+    grant: ResearchGrant;
     isBookmarked?: boolean;
 }
 
@@ -53,7 +55,7 @@ export const GrantCard = ({
     >("details");
 
     // Check if a field has a value
-    const hasValue = (field: keyof Grant) =>
+    const hasValue = (field: keyof ResearchGrant) =>
         !!grant[field] && (grant[field] as unknown as string).trim() !== "";
 
     // Check for optional fields existence before use
@@ -136,7 +138,7 @@ export const GrantCard = ({
         { icon: Database, text: grant.ref_number },
         {
             icon: MapPin,
-            text: formatCommaSeparated([
+            text: formatCSV([
                 grant.city,
                 grant.province,
                 grant.country,

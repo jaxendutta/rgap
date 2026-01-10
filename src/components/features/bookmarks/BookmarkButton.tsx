@@ -1,11 +1,17 @@
+// src/components/features/bookmarks/BookmarkButton.tsx
 'use client';
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Bookmark } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/providers/AuthProvider";
 import { useNotify } from "@/providers/NotificationProvider";
 import { cn } from "@/lib/utils";
+import {
+    toggleGrantBookmark,
+    toggleRecipientBookmark,
+    toggleInstituteBookmark,
+} from "@/app/actions/bookmarks";
 
 interface BookmarkButtonProps {
     entityId: number;
@@ -24,7 +30,7 @@ export default function BookmarkButton({
     const { notify } = useNotify();
     const router = useRouter();
     const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isPending, startTransition] = useTransition();
 
     const handleClick = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -37,29 +43,56 @@ export default function BookmarkButton({
             return;
         }
 
-        // 2. LOGGED IN: Proceed with bookmark logic
-        setIsLoading(true);
-        try {
-            // Call your server action or API here
-            // await toggleBookmarkAction(entityId, entityType); 
-            setIsBookmarked(!isBookmarked);
-            notify(isBookmarked ? "Removed from bookmarks" : "Saved to bookmarks", "success");
-        } catch (error) {
-            notify("Failed to update bookmark", "error");
-        } finally {
-            setIsLoading(false);
-        }
+        // 2. OPTIMISTIC UPDATE (instant UI feedback)
+        const previousState = isBookmarked;
+        setIsBookmarked(!isBookmarked);
+
+        // 3. CALL SERVER ACTION (no API route needed!)
+        startTransition(async () => {
+            try {
+                let result;
+
+                switch (entityType) {
+                    case 'grant':
+                        result = await toggleGrantBookmark(entityId);
+                        break;
+                    case 'recipient':
+                        result = await toggleRecipientBookmark(entityId);
+                        break;
+                    case 'institute':
+                        result = await toggleInstituteBookmark(entityId);
+                        break;
+                }
+
+                if (!result.success) {
+                    // Revert on error
+                    setIsBookmarked(previousState);
+                    notify(result.error || "Failed to update bookmark", "error");
+                } else {
+                    // Success - server action already revalidated the page
+                    notify(
+                        result.isBookmarked ? "Saved to bookmarks" : "Removed from bookmarks",
+                        "success"
+                    );
+                }
+            } catch (error) {
+                // Revert on error
+                setIsBookmarked(previousState);
+                notify("Failed to update bookmark", "error");
+            }
+        });
     };
 
     return (
         <button
             onClick={handleClick}
-            disabled={isLoading}
+            disabled={isPending}
             className={cn(
                 "p-2 rounded-full transition-all duration-200",
                 isBookmarked
                     ? "text-yellow-500 hover:bg-yellow-50"
                     : "text-gray-400 hover:text-gray-600 hover:bg-gray-100",
+                isPending && "opacity-50 cursor-not-allowed",
                 className
             )}
             aria-label={isBookmarked ? "Remove bookmark" : "Add bookmark"}
