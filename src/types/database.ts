@@ -1,7 +1,12 @@
-// Database Model Types
+// ============================================================================
+// BASE DATABASE TYPES (Direct from PostgreSQL schema)
+// ============================================================================
 
 import { IconType } from "react-icons";
 
+/**
+ * User account information
+ */
 export interface User {
     user_id: number;
     username: string;
@@ -11,11 +16,17 @@ export interface User {
     last_login: Date | null;
 }
 
+/**
+ * Funding organization (NSERC, CIHR, SSHRC)
+ */
 export interface Organization {
     org: 'NSERC' | 'CIHR' | 'SSHRC';
     title: string;
 }
 
+/**
+ * Funding program
+ */
 export interface Program {
     prog_id: number;
     prog_name_en: string;
@@ -23,6 +34,11 @@ export interface Program {
     org: string | null;
 }
 
+/**
+ * Research institution
+ * CONTAINS: All location data (city, province, country)
+ * UNIQUE BY: name + city + country
+ */
 export interface Institute {
     institute_id: number;
     name: string;
@@ -34,6 +50,11 @@ export interface Institute {
     federal_riding_number: string | null;
 }
 
+/**
+ * Grant recipient (person or institution)
+ * LOCATION: Inherited from linked Institute
+ * UNIQUE BY: legal_name + institute_id
+ */
 export interface Recipient {
     recipient_id: number;
     type: 'I' | 'P'; // I = Institution, P = Person
@@ -43,6 +64,9 @@ export interface Recipient {
     institute_id: number | null;
 }
 
+/**
+ * Research grant
+ */
 export interface ResearchGrant {
     grant_id: number;
     ref_number: string | null;
@@ -61,9 +85,24 @@ export interface ResearchGrant {
     org: string | null;
     recipient_id: number | null;
     prog_id: number | null;
-    amendments_history: any | null; // JSONB
+    amendments_history: GrantAmendment[] | null;
 }
 
+/**
+ * Grant amendment information
+ */
+export interface GrantAmendment {
+    amendment_number: number;
+    amendment_date: string;
+    agreement_value: number;
+    agreement_start_date: string;
+    agreement_end_date: string;
+    additional_information_en?: string;
+}
+
+/**
+ * Bookmarked grant
+ */
 export interface BookmarkedGrant {
     bookmark_id: number;
     user_id: number;
@@ -72,6 +111,20 @@ export interface BookmarkedGrant {
     notes: string | null;
 }
 
+/**
+ * Bookmarked institute
+ */
+export interface BookmarkedInstitute {
+    bookmark_id: number;
+    user_id: number;
+    institute_id: number;
+    bookmarked_at: Date;
+    notes: string | null;
+}
+
+/**
+ * Bookmarked recipient
+ */
 export interface BookmarkedRecipient {
     bookmark_id: number;
     user_id: number;
@@ -80,28 +133,146 @@ export interface BookmarkedRecipient {
     notes: string | null;
 }
 
+/**
+ * Search history
+ */
 export interface SearchHistory {
     search_id: number;
     user_id: number;
     search_query: string;
-    filters: any | null; // JSONB
+    filters: Record<string, any> | null;
     result_count: number | null;
     searched_at: Date;
 }
 
-// Extended types with joins
-export interface GrantDetail extends ResearchGrant {
-    recipient_name: string | null;
-    recipient_type: 'I' | 'P' | null;
-    institute_name: string | null;
-    city: string | null;
-    province: string | null;
-    country: string | null;
-    program_name: string | null;
-    organization_name: string | null;
+// ============================================================================
+// EXTENDED TYPES (With Aggregated Data from API/Views)
+// ============================================================================
+
+/**
+ * Institute with aggregated statistics
+ * Used in list views and profile pages
+ */
+export interface InstituteWithStats extends Institute {
+    // Aggregated counts
+    recipients_count?: number;
+    grant_count?: number;
+    total_grants?: number;
+    total_recipients?: number;
+
+    // Funding statistics
+    total_funding?: number;
+    avg_funding?: number;
+
+    // Date ranges
+    first_grant_date?: string | Date;
+    latest_grant_date?: string | Date;
+
+    // Misc
+    funding_agencies_count?: number;
+
+    // UI state
+    is_bookmarked?: boolean;
 }
 
-// API Response Types
+/**
+ * Recipient with aggregated statistics AND institute location data
+ * Used in list views and profile pages
+ * IMPORTANT: Location fields are populated from the linked Institute
+ */
+export interface RecipientWithStats extends Recipient {
+    // Institute information (for display)
+    research_organization_name?: string; // Institute name
+
+    // Location (inherited from Institute via institute_id)
+    city?: string;
+    province?: string;
+    country?: string;
+    postal_code?: string;
+
+    // Aggregated counts
+    grant_count?: number;
+
+    // Funding statistics
+    total_funding?: number;
+    avg_funding?: number;
+
+    // Date ranges
+    first_grant_date?: string | Date;
+    latest_grant_date?: string | Date;
+
+    // Misc
+    funding_agencies_count?: number;
+
+    // UI state
+    is_bookmarked?: boolean;
+}
+
+/**
+ * Grant with full details (joins with recipient, institute, program, org)
+ */
+export interface GrantWithDetails extends ResearchGrant {
+    // Recipient info
+    recipient_name?: string;
+    recipient_type?: 'I' | 'P';
+
+    // Institute info
+    institute_name?: string;
+    city?: string;
+    province?: string;
+    country?: string;
+
+    // Program info
+    program_name?: string;
+
+    // Organization info
+    organization_name?: string;
+
+    // UI state
+    is_bookmarked?: boolean;
+}
+
+// ============================================================================
+// TYPE UTILITIES
+// ============================================================================
+
+/**
+ * Entity types for routing and components
+ */
+export type EntityType = 'grant' | 'recipient' | 'institute';
+
+/**
+ * Recipient type labels
+ */
+export const RECIPIENT_TYPE_LABELS = {
+    A: "Indigenous recipients",
+    F: "For-profit organizations",
+    G: "Government",
+    I: "International (non-government)",
+    N: "Not-for-profit organizations and charities",
+    O: "Other",
+    P: "Individual or sole proprietorships",
+    S: "Academia"
+} as const;
+
+/**
+ * Type guard to check if entity is an Institute
+ */
+export function isInstitute(entity: InstituteWithStats | RecipientWithStats): entity is InstituteWithStats {
+    return 'institute_id' in entity && !('recipient_id' in entity);
+}
+
+/**
+ * Type guard to check if entity is a Recipient
+ */
+export function isRecipient(entity: InstituteWithStats | RecipientWithStats): entity is RecipientWithStats {
+    return 'recipient_id' in entity;
+}
+
+// ============================================================================
+// API RESPONSE TYPES
+// ============================================================================
+
 export interface ApiResponse<T = any> {
     success: boolean;
     data?: T;
@@ -120,109 +291,35 @@ export interface PaginatedResponse<T = any> {
     };
 }
 
-// Search & Filter Types
+// ============================================================================
+// SORT & FILTER TYPES
+// ============================================================================
+
+export interface SortConfig<T> {
+    field: keyof T;
+    label: string;
+    direction: 'asc' | 'desc';
+}
+
+export type SortOption<T> = {
+    value: string;
+    label: string;
+    field: keyof T;
+    direction: 'asc' | 'desc';
+    icon: IconType;
+};
+
 export interface SearchFilters {
     query?: string;
-    org?: string[];
+    organizations?: string[];
     programs?: number[];
     institutes?: number[];
+    recipients?: number[];
     startDate?: string;
     endDate?: string;
     minValue?: number;
     maxValue?: number;
-    province?: string[];
-    city?: string[];
-}
-
-// Statistics Types
-export interface GrantStatistics {
-    totalGrants: number;
-    totalFunding: number;
-    avgGrantValue: number;
-    grantsPerYear: { year: number; count: number; funding: number }[];
-    topPrograms: { prog_id: number; prog_name_en: string; count: number; funding: number }[];
-    topInstitutes: { institute_id: number; name: string; count: number; funding: number }[];
-}
-
-export interface InstituteStatistics {
-    institute_id: number;
-    name: string;
-    totalGrants: number;
-    totalFunding: number;
-    avgGrantValue: number;
-    fundingByYear: { year: number; count: number; funding: number }[];
-    fundingByOrg: { org: string; count: number; funding: number }[];
-    topPrograms: { prog_id: number; prog_name_en: string; count: number }[];
-}
-
-export interface RecipientStatistics {
-    recipient_id: number;
-    legal_name: string;
-    totalGrants: number;
-    totalFunding: number;
-    avgGrantValue: number;
-    fundingByYear: { year: number; count: number; funding: number }[];
-    grantsByProgram: { prog_id: number; prog_name_en: string; count: number }[];
-}
-
-// Search & Filter Types (ADD THESE)
-export interface SearchFilters {
-  query?: string;
-  organizations?: string[];
-  programs?: number[];
-  institutes?: number[];
-  recipients?: number[];
-  startDate?: string;
-  endDate?: string;
-  minValue?: number;
-  maxValue?: number;
-  provinces?: string[];
-  cities?: string[];
-  recipientType?: string;
-}
-
-// ============================================================================
-// UI-Extended Types (types with extra fields for UI display)
-// ============================================================================
-export type EntityType = 'grant' | 'recipient' | 'institute';
-
-// Entity is a union type for components that can display either institutes or recipients
-export type Entity = (Institute | Recipient) & {
-  // Optional fields that may be added by API for display
-  is_bookmarked?: boolean;
-  grant_count?: number;
-  total_funding?: number;
-  recipients_count?: number; // For institutes
-  latest_grant_date?: string | Date;
-  research_organization_name?: string; // For recipients
-  city?: string; // Recipients might not have this directly
-  province?: string;
-  country?: string;
-};
-
-// Alias for consistency with component naming
-export type Grant = ResearchGrant & {
-  // UI may add these from joins
-  recipient_name?: string;
-  institute_name?: string;
-  program_name?: string;
-};
-
-// Generic SortConfig for type safety
-export interface SortConfig<TFields extends PropertyKey = string> {
-field: TFields;
-direction: 'asc' | 'desc';
-}
-
-// Helper function type
-export type GetSortOptionsFunc<T> = (entityType: string) => Array<{
-  field: T;
-  label: string;
-}>;
-
-// SortOption interface
-export interface SortOption<T = string> {
-    field: keyof T;
-    label: string;
-    icon?: IconType;
+    provinces?: string[];
+    cities?: string[];
+    recipientType?: string;
 }

@@ -1,10 +1,13 @@
-// src/components/ui/EntityCard.tsx
+// ============================================================================
+// RGAP v2 - EntityCard Component (FIXED & MODERNIZED)
+// Displays Institute or Recipient cards with proper type handling
+// ============================================================================
+
 import {
     MapPin,
     University,
     Users,
     BookMarked,
-    GraduationCap,
     ArrowUpRight,
     ChevronLeft,
     SquareUser,
@@ -19,34 +22,49 @@ import { formatCSV, formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import Tag, { Tags } from "@/components/ui/Tag";
-import { Institute, Recipient, Entity, EntityType } from "@/types/database";
-import { RECIPIENT_TYPE_LABELS } from "@/constants/data";
 import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
+import {
+    InstituteWithStats,
+    RecipientWithStats,
+    EntityType,
+    RECIPIENT_TYPE_LABELS,
+    isInstitute,
+    isRecipient
+} from "@/types/database";
+
+// ============================================================================
+// COMPONENT PROPS
+// ============================================================================
 
 interface EntityCardProps {
-    entity: (Institute | Recipient) & { is_bookmarked?: boolean };
+    entity: InstituteWithStats | RecipientWithStats;
     entityType: EntityType;
+
+    // Optional overrides for aggregated data (if not in entity)
     grantsCount?: number;
     totalFunding?: number;
     latestGrantDate?: string;
-    firstGrantDate?: string;
-    recipientsCount?: number;
-    isBookmarked?: boolean;
+    recipientsCount?: number; // For institutes only
+
+    // Error handling
     isError?: boolean;
     errorMessage?: string;
     onRetry?: () => void;
+
     className?: string;
 }
 
-const EntityCard = ({
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+export const EntityCard = ({
     entity,
     entityType,
     grantsCount,
     totalFunding,
     latestGrantDate,
     recipientsCount,
-    isBookmarked: propIsBookmarked,
     isError = false,
     errorMessage = "Unable to load data",
     onRetry,
@@ -54,57 +72,65 @@ const EntityCard = ({
 }: EntityCardProps) => {
     const router = useRouter();
 
-    // Get bookmark status from either the prop or the entity itself
-    // This allows us to use the bookmark status from API responses
-    const isBookmarked =
-        propIsBookmarked !== undefined
-            ? propIsBookmarked
-            : entity.is_bookmarked;
+    // ============================================================================
+    // DERIVE ENTITY PROPERTIES
+    // ============================================================================
 
-    // Type guards to distinguish between institute and recipient
-    const isInstitute = (): boolean => {
-        return entityType === "institute";
-    };
+    const isInstituteType = entityType === "institute" && isInstitute(entity);
+    const isRecipientType = entityType === "recipient" && isRecipient(entity);
 
-    // Get entity-specific properties
-    const id = isInstitute()
-        ? (entity as Institute).institute_id
-        : (entity as Recipient).recipient_id;
-    const name = isInstitute()
-        ? (entity as Institute).name
-        : (entity as Recipient).legal_name;
-    const type = isInstitute()
+    // Get basic entity info
+    const id = isInstituteType ? entity.institute_id : (isRecipientType ? entity.recipient_id : -1);
+    const name = isInstituteType ? entity.name : (isRecipientType ? entity.legal_name : "");
+
+    // Get entity type label
+    const typeLabel = isInstituteType
         ? "Academic Institution"
-        : RECIPIENT_TYPE_LABELS[
-              (entity as Recipient).type as keyof typeof RECIPIENT_TYPE_LABELS
-          ];
+        : isRecipientType && (entity as RecipientWithStats).type
+            ? RECIPIENT_TYPE_LABELS[(entity as RecipientWithStats).type as keyof typeof RECIPIENT_TYPE_LABELS] || "Unknown"
+            : "Unknown";
 
-    // For recipients, get their institute info
-    const institute =
-        !isInstitute() && (entity as Recipient).institute_id
-            ? {
-                  id: (entity as Recipient).institute_id,
-                  name: (entity as Recipient).research_organization_name,
-              }
-            : null;
+    // ============================================================================
+    // LOCATION DATA
+    // For Recipients: location comes from their linked Institute (pre-fetched by API)
+    // For Institutes: location is directly on the entity
+    // ============================================================================
 
-    // TODO: Location data. If Recipient, use their Institute's location
-    const location = formatCSV([entity.city, entity.province, entity.country]);
+    const location = formatCSV([
+        entity.city,
+        entity.province,
+        entity.country
+    ].filter(Boolean) as string[]);
 
-    // Get counts with fallbacks from props
-    const grants =
-        grantsCount ??
-        (entityType === "recipient"
-            ? (entity as Recipient).grant_count
-            : (entity as Institute).grant_count) ??
-        0;
-    const funding = totalFunding ?? entity.total_funding ?? 0;
-    const recipients = isInstitute()
-        ? recipientsCount ?? (entity as Institute).recipients_count ?? 0
+    // ============================================================================
+    // INSTITUTE INFO (for Recipients only)
+    // ============================================================================
+
+    const instituteInfo = isRecipientType && entity.institute_id
+        ? {
+            id: entity.institute_id,
+            name: entity.research_organization_name || "Unknown Institute",
+        }
         : null;
+
+    // ============================================================================
+    // AGGREGATED STATISTICS
+    // Use props if provided, otherwise use entity fields
+    // ============================================================================
+
+    const grants = grantsCount ?? entity.grant_count ?? 0;
+    const funding = totalFunding ?? entity.total_funding ?? 0;
     const latestDate = latestGrantDate ?? entity.latest_grant_date;
 
-    // Handle error state
+    // Recipients count (only for institutes)
+    const recipients = isInstituteType
+        ? (recipientsCount ?? entity.recipients_count ?? entity.total_recipients ?? 0)
+        : null;
+
+    // ============================================================================
+    // ERROR STATE
+    // ============================================================================
+
     if (isError) {
         return (
             <Card className={cn("p-4 border-red-200 bg-red-50", className)}>
@@ -115,19 +141,10 @@ const EntityCard = ({
                             variant="outline"
                             leftIcon={ChevronLeft}
                             onClick={() =>
-                                router.push(
-                                    `/${
-                                        entityType === "institute"
-                                            ? "institutes"
-                                            : "recipients"
-                                    }`
-                                )
+                                router.push(`/${entityType === "institute" ? "institutes" : "recipients"}`)
                             }
                         >
-                            Back to{" "}
-                            {entityType === "institute"
-                                ? "Institutes"
-                                : "Recipients"}
+                            Back to {entityType === "institute" ? "Institutes" : "Recipients"}
                         </Button>
                         {onRetry && (
                             <Button variant="primary" onClick={onRetry}>
@@ -140,17 +157,22 @@ const EntityCard = ({
         );
     }
 
-    // Create metadata items
+    // ============================================================================
+    // METADATA ITEMS (Institute link, location, type)
+    // ============================================================================
+
     const metadataItems = [];
 
-    if (institute?.name) {
+    // Show institute link for recipients
+    if (instituteInfo?.name) {
         metadataItems.push({
             icon: University,
-            text: `${institute.name}`,
-            link: `/institutes/${institute.id}`,
+            text: instituteInfo.name,
+            link: `/institutes/${instituteInfo.id}`,
         });
     }
 
+    // Show location if available
     if (location) {
         metadataItems.push({
             icon: MapPin,
@@ -158,51 +180,59 @@ const EntityCard = ({
         });
     }
 
-    if (type) {
+    // Show entity type
+    if (typeLabel) {
         metadataItems.push({
             icon: entityType === "institute" ? Landmark : SquareUser,
-            text: type,
+            text: typeLabel,
         });
     }
 
-    // Define stats for both entity types
-    const statItems = isInstitute()
+    // ============================================================================
+    // STATISTICS
+    // ============================================================================
+
+    const statItems = isInstituteType
         ? [
-              {
-                  label: "Recipients",
-                  value: recipients ? recipients.toLocaleString() : "N/A",
-                  icon: Users,
-              },
-              {
-                  label: "Grants",
-                  value: grants ? grants.toLocaleString() : "N/A",
-                  icon: BookMarked,
-              },
-              {
-                  label: "Total Funding",
-                  value: funding ? formatCurrency(funding) : "N/A",
-                  icon: CircleDollarSign,
-              },
-          ]
+            {
+                label: "Recipients",
+                value: recipients ? recipients.toLocaleString() : "N/A",
+                icon: Users,
+            },
+            {
+                label: "Grants",
+                value: grants ? grants.toLocaleString() : "N/A",
+                icon: BookMarked,
+            },
+            {
+                label: "Total Funding",
+                value: funding ? formatCurrency(funding) : "N/A",
+                icon: CircleDollarSign,
+            },
+        ]
         : [
-              {
-                  label: "Grants",
-                  value: grants ? grants.toLocaleString() : "N/A",
-                  icon: BookMarked,
-              },
-              {
-                  label: "Last Grant",
-                  value: latestDate
-                      ? new Date(latestDate).toLocaleDateString()
-                      : "N/A",
-                  icon: Calendar,
-              },
-              {
-                  label: "Total Funding",
-                  value: funding ? formatCurrency(funding) : "N/A",
-                  icon: HandCoins,
-              },
-          ];
+            {
+                label: "Grants",
+                value: grants ? grants.toLocaleString() : "N/A",
+                icon: BookMarked,
+            },
+            {
+                label: "Last Grant",
+                value: latestDate
+                    ? new Date(latestDate).toLocaleDateString()
+                    : "N/A",
+                icon: Calendar,
+            },
+            {
+                label: "Total Funding",
+                value: funding ? formatCurrency(funding) : "N/A",
+                icon: HandCoins,
+            },
+        ];
+
+    // ============================================================================
+    // RENDER
+    // ============================================================================
 
     return (
         <Card
@@ -211,80 +241,61 @@ const EntityCard = ({
                 className
             )}
         >
-            {/* Header with Entity Name and Bookmark Button on same line */}
+            {/* Header: Entity name + Bookmark button */}
             <div className="flex justify-between items-start mb-3">
                 <Link
-                    href={`/${
-                        entityType === "institute" ? "institutes" : "recipients"
-                    }/${id}`}
+                    href={`/${entityType === "institute" ? "institutes" : "recipients"}/${id}`}
                     className="text-lg font-medium hover:text-blue-600 transition-colors group flex items-start max-w-[90%]"
                 >
-                    {entityType === "institute" ? (
-                        <University className="h-5 w-5 flex-shrink-0 mr-2 mt-1" />
-                    ) : (
-                        <GraduationCap className="h-5 w-5 flex-shrink-0 mr-2 mt-1" />
-                    )}
-                    <span>
-                        {name}
-                        <ArrowUpRight className="inline-block h-4 w-4 ml-1 mb-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </span>
+                    <span className="line-clamp-2">{name}</span>
+                    <ArrowUpRight className="ml-1 h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
                 </Link>
 
                 <BookmarkButton
-                    entityId={id}
                     entityType={entityType}
-                    isBookmarked={isBookmarked}
-                    iconOnly={true}
+                    entityId={id}
+                    isBookmarked={entity.is_bookmarked ?? false}
                 />
             </div>
 
-            {/* Metadata Tags - Keep them single line with overflow handling */}
+            {/* Metadata (Institute, Location, Type) */}
             {metadataItems.length > 0 && (
-                <div className="mb-4 overflow-hidden">
-                    <Tags>
-                        {metadataItems.map((item, index) => (
-                            <Tag
-                                key={index}
-                                icon={item.icon}
-                                size="sm"                                
-                                variant={item.link ? "link" : "secondary"}
-                                onClick={
-                                    item.link
-                                        ? () => router.push(item.link)
-                                        : undefined
-                                }
-                                text={item.text}
-                                className="truncate max-w-full"
-                            />
-                        ))}
-                    </Tags>
+                <div className="space-y-1 mb-3">
+                    {metadataItems.map((item, index) => {
+                        const Icon = item.icon;
+                        return (
+                            <div key={index} className="flex items-center text-sm text-gray-600">
+                                <Icon className="h-4 w-4 mr-2 flex-shrink-0" />
+                                {item.link ? (
+                                    <Link
+                                        href={item.link}
+                                        className="hover:text-blue-600 transition-colors truncate"
+                                    >
+                                        {item.text}
+                                    </Link>
+                                ) : (
+                                    <span className="truncate">{item.text}</span>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             )}
 
-            {/* Stats Section - Adaptive grid layout */}
-            <div className="pt-3 border-t border-slate-400">
-                <div className="flex flex-wrap gap-2">
-                    {statItems.map((stat, index) => (
-                        <div
-                            key={index}
-                            className="bg-slate-50 border border-slate-100 rounded-lg p-2 flex-1"
-                        >
-                            <div className="flex items-center text-xs text-blue-700 mb-1">
-                                {stat.icon && (
-                                    <stat.icon
-                                        className={cn(
-                                            "h-3 w-3 mr-1.5 flex-shrink-0"
-                                        )}
-                                    />
-                                )}
-                                <span className="truncate">{stat.label}</span>
+            {/* Statistics */}
+            <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-100">
+                {statItems.map((stat, index) => {
+                    const Icon = stat.icon;
+                    return (
+                        <div key={index} className="text-center">
+                            <div className="flex justify-center mb-1">
+                                <Icon className="h-4 w-4 text-gray-500" />
                             </div>
-                            <div className="flex items-center font-medium">
-                                <span className="truncate">{stat.value}</span>
-                            </div>
+                            <div className="text-xs text-gray-500 mb-1">{stat.label}</div>
+                            <div className="text-sm font-medium text-gray-900">{stat.value}</div>
                         </div>
-                    ))}
-                </div>
+                    );
+                })}
             </div>
         </Card>
     );

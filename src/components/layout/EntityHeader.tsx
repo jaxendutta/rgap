@@ -6,7 +6,7 @@ import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
 import { cn } from "@/lib/utils";
 import LocationMap from "@/components/ui/LocationMap";
 import { formatCSV } from "@/lib/format";
-import { Entity } from "@/types/database";
+import { EntityType } from "@/types/database";
 import { Tag, Tags } from "@/components/ui/Tag";
 
 // Define types for metadata and action items
@@ -29,7 +29,7 @@ interface EntityHeaderProps {
     icon: LucideIcon;
     metadata: MetadataItem[];
     actions?: ActionButton[];
-    entityType?: keyof Entity;
+    entityType?: EntityType;
     entityId?: number;
     location?: string;
     isBookmarked?: boolean;

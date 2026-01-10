@@ -8,7 +8,7 @@ import { LucideIcon, Search } from "lucide-react";
 import EntityList, { EntityListProps } from "@/components/ui/EntityList";
 import { UseInfiniteQueryResult, UseQueryResult } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
-import { Grant, Entity } from "@/types/database";
+import { ResearchGrant } from "@/types/database";
 import { GrantCard } from "@/components/features/grants/GrantCard";
 import { SearchField } from "@/components/features/search/SearchField";
 
@@ -147,7 +147,7 @@ const EntitiesPage = <T,>({
                 <EntityList
                     entityType="grant"
                     entities={getEntitiesFromQuery(listConfig.query)}
-                    renderItem={(grant: Grant) => <GrantCard grant={grant} />}
+                    renderItem={(grant: ResearchGrant) => <GrantCard grant={grant} />}
                     emptyMessage={
                         "This recipient has no associated grants in our database."
                     }

@@ -12,7 +12,7 @@ import { UseQueryResult, UseInfiniteQueryResult } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn, getSortOptions } from "@/lib/utils";
 import TrendVisualizer from "@/components/features/visualizations/TrendVisualizer";
-import { Grant, Entity, SortConfig, SortOption, EntityType } from "@/types/database";
+import { ResearchGrant, SortOption, EntityType } from "@/types/database";
 import { Card } from "./Card";
 
 export type LayoutVariant = "list" | "grid";
@@ -61,7 +61,7 @@ export interface EntityListProps<T> {
 
     // Show visualization
     showVisualization?: boolean;
-    visualizationData?: Grant[];
+    visualizationData?: ResearchGrant[];
     showVisualizationInitially?: boolean;
 }
 
@@ -91,10 +91,10 @@ function EntityList<T>(props: EntityListProps<T>) {
     const [layoutVariant, setLayoutVariant] = useState<LayoutVariant>(variant);
     const sortOptions = getSortOptions(entityType as EntityType) as SortOption<T>[];
 
-    const [sortConfig, setSortConfig] = useState<SortConfig<keyof T>>(() => {
+    const [sortConfig, setSortConfig] = useState<{ field: keyof T; direction: "asc" | "desc" }>(() => {
         return (sortOptions && sortOptions.length > 0)
-            ? { field: sortOptions[0].field as keyof T, direction: "desc" }
-            : { field: "id" as keyof T, direction: "desc" };
+            ? { field: sortOptions[0].field as keyof T, direction: "desc" as const }
+            : { field: "id" as keyof T, direction: "desc" as const };
     });
 
     const isLoading =
@@ -125,12 +125,10 @@ function EntityList<T>(props: EntityListProps<T>) {
                 ? "asc"
                 : "desc";
 
-        const newSortConfig: SortConfig<keyof T> = {
-            field,
+        setSortConfig({
+            field: field as keyof T,
             direction: newDirection,
-        };
-
-        setSortConfig(newSortConfig);
+        });
 
         if (query) {
             if (isInfiniteQuery(query)) {
