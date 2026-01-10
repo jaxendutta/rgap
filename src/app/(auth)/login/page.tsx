@@ -23,7 +23,7 @@ export default function AuthPage() {
     ];
 
     return (
-        <div className="w-full max-w-md">
+        <div className="self-center w-full max-w-md">
             {/* Back Button */}
             <div className="mb-6">
                 <Link
@@ -46,7 +46,7 @@ export default function AuthPage() {
                 >
                     {/* Header with Sliding Text */}
                     <div className="text-center">
-                        <h1 className="text-2xl font-bold text-gray-900 flex justify-center items-center">
+                        <h1 className="text-2xl font-semibold text-gray-900 flex justify-center items-center">
                             {/* 2. layout prop on "Welcome" allows it to slide left/right 
                                   smoothly when "Back" appears/disappears next to it.
                             */}
