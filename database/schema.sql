@@ -54,7 +54,7 @@ CREATE INDEX idx_programs_title ON programs(prog_title_en);
 CREATE TABLE IF NOT EXISTS institutes (
     institute_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    country VARCHAR(2) DEFAULT 'CA',
+    country VARCHAR(10) DEFAULT 'CA',
     province VARCHAR(50),
     city VARCHAR(100),
     postal_code VARCHAR(10),

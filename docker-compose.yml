@@ -12,13 +12,14 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./database/seeds:/docker-entrypoint-initdb.d/seeds
-      - ./database/data:/docker-entrypoint-initdb.d/data
+      - ./database/seeds/01-load-data.sql:/docker-entrypoint-initdb.d/02-load-data.sql
+      - ./database/data:/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U rgap_user -d rgap" ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 30  # 30 retries = 5 minutes
+      start_period: 300s  # Wait 5 minutes before starting health checks
     networks:
       - rgap-network
 
@@ -35,7 +36,6 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      # Mount source code for hot reload
       - .:/app
       - /app/node_modules
       - /app/.next
@@ -46,7 +46,6 @@ services:
       - rgap-network
     command: npm run dev
 
-  # Optional: PgAdmin for database management
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: rgap-pgadmin

@@ -1,7 +1,7 @@
 // src/components/features/search/SearchInterface.tsx
 'use client';
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
     Search as SearchIcon,
@@ -12,6 +12,10 @@ import {
 import { Button } from "@/components/ui/Button";
 import { SearchField } from "@/components/features/search/SearchField";
 
+// ============================================================================
+// TYPES
+// ============================================================================
+
 interface SearchInterfaceProps {
     initialValues?: {
         recipient?: string;
@@ -20,10 +24,15 @@ interface SearchInterfaceProps {
     };
 }
 
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 export default function SearchInterface({ initialValues = {} }: SearchInterfaceProps) {
     const router = useRouter();
+    const [isPending, startTransition] = useTransition();
 
-    // Search field states
+    // Search field states - Initialize with URL params if provided
     const [recipient, setRecipient] = useState(initialValues.recipient || '');
     const [institute, setInstitute] = useState(initialValues.institute || '');
     const [grant, setGrant] = useState(initialValues.grant || '');
@@ -36,7 +45,10 @@ export default function SearchInterface({ initialValues = {} }: SearchInterfaceP
         if (institute.trim()) params.set('institute', institute.trim());
         if (grant.trim()) params.set('grant', grant.trim());
 
-        router.push(`/search?${params.toString()}`);
+        // Use startTransition for smooth navigation
+        startTransition(() => {
+            router.push(`/search?${params.toString()}`);
+        });
     };
 
     // Handle clear
@@ -44,8 +56,14 @@ export default function SearchInterface({ initialValues = {} }: SearchInterfaceP
         setRecipient('');
         setInstitute('');
         setGrant('');
-        router.push('/search');
+
+        startTransition(() => {
+            router.push('/search');
+        });
     };
+
+    // Check if any field has content
+    const hasContent = recipient || institute || grant;
 
     return (
         <div className="flex flex-col gap-3">
@@ -80,15 +98,17 @@ export default function SearchInterface({ initialValues = {} }: SearchInterfaceP
                     variant="primary"
                     leftIcon={SearchIcon}
                     onClick={handleSearch}
+                    disabled={isPending}
                     className="flex-1"
                 >
-                    Search Grants
+                    {isPending ? 'Searching...' : 'Search Grants'}
                 </Button>
 
-                {(recipient || institute || grant) && (
+                {hasContent && (
                     <Button
                         variant="outline"
                         onClick={handleClear}
+                        disabled={isPending}
                     >
                         Clear
                     </Button>
