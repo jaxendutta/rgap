@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import { Providers } from './providers';
 import { getCurrentUser } from '@/lib/session';
 import './globals.css';
+import Header from '@/components/layout/Header';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,8 +22,10 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} min-h-screen`}>
         <Providers initialUser={user || null}>
+          <Header />
+    
           {children}
         </Providers>
       </body>
