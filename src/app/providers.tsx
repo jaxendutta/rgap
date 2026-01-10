@@ -3,7 +3,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 import { AuthProvider } from '@/providers/AuthProvider';
-import { NotificationProvider } from '@/providers/NotificationProvider';
 import { User } from '@/types/database';
 
 export function Providers({
@@ -25,9 +24,7 @@ export function Providers({
     return (
         <QueryClientProvider client={queryClient}>
             <AuthProvider initialUser={initialUser}>
-                <NotificationProvider>
-                    {children}
-                </NotificationProvider>
+                {children}
             </AuthProvider>
         </QueryClientProvider>
     );

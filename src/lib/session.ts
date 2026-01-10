@@ -1,3 +1,4 @@
+// src/lib/session.ts
 import { getIronSession, IronSession, SessionOptions } from 'iron-session';
 import { cookies } from 'next/headers';
 
@@ -27,11 +28,11 @@ export const sessionOptions: SessionOptions = {
 
 export async function getSession(): Promise<IronSession<SessionData>> {
   const session = await getIronSession<SessionData>(await cookies(), sessionOptions);
-  
+
   if (!session.isLoggedIn) {
     session.isLoggedIn = defaultSession.isLoggedIn;
   }
-  
+
   return session;
 }
 

@@ -1,5 +1,5 @@
 // ============================================================================
-// RGAP v2 - EntityCard Component (FIXED & MODERNIZED)
+// EntityCard Component
 // Displays Institute or Recipient cards with proper type handling
 // ============================================================================
 
@@ -16,7 +16,7 @@ import {
     CircleDollarSign,
     HandCoins,
 } from "lucide-react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatCSV, formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
