@@ -58,7 +58,7 @@ CREATE INDEX idx_programs_name ON programs(prog_name_en);
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS institutes (
     institute_id SERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
     country CHAR(2) DEFAULT 'CA',
     province VARCHAR(50),
     city VARCHAR(100),
@@ -66,7 +66,8 @@ CREATE TABLE IF NOT EXISTS institutes (
     federal_riding_name_en VARCHAR(100),
     federal_riding_number VARCHAR(10),
     
-    CONSTRAINT country_code_check CHECK (length(country) = 2)
+    CONSTRAINT country_code_check CHECK (length(country) = 2),
+    CONSTRAINT uq_institute_location UNIQUE (name, city, country)
 );
 
 CREATE INDEX idx_institutes_name ON institutes(name);
@@ -82,10 +83,11 @@ CREATE TABLE IF NOT EXISTS recipients (
     business_number VARCHAR(50),
     legal_name VARCHAR(255) NOT NULL,
     operating_name VARCHAR(255),
-    institute_id INTEGER,
+    institute_id INTEGER NOT NULL,
     
     FOREIGN KEY (institute_id) REFERENCES institutes(institute_id) ON DELETE SET NULL,
-    CONSTRAINT type_check CHECK (type IN ('I', 'P'))
+    CONSTRAINT type_check CHECK (type IN ('I', 'P')),
+    CONSTRAINT uq_recipient_institute UNIQUE (legal_name, institute_id)
 );
 
 CREATE INDEX idx_recipients_legal_name ON recipients(legal_name);
