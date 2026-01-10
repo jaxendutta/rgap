@@ -100,36 +100,35 @@ CREATE INDEX idx_recipients_business_number ON recipients(business_number);
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS research_grants (
     grant_id SERIAL PRIMARY KEY,
-    ref_number VARCHAR(50),
-    latest_amendment_number INTEGER,
-    amendment_date DATE,
-    agreement_number VARCHAR(50),
-    agreement_value NUMERIC(15,2),
-    foreign_currency_type VARCHAR(3),
-    foreign_currency_value NUMERIC(15,2),
-    agreement_start_date DATE,
-    agreement_end_date DATE,
-    agreement_title_en TEXT,
-    description_en TEXT,
-    expected_results_en TEXT,
-    additional_information_en TEXT,
-    org VARCHAR(5),
-    recipient_id INTEGER,
-    prog_id INTEGER,
-    amendments_history JSONB,
+    ref_number VARCHAR(50) NOT NULL, -- The government ID (e.g., "RGPIN-2021-0456")
     
-    FOREIGN KEY (recipient_id) REFERENCES recipients(recipient_id) ON DELETE CASCADE,
-    FOREIGN KEY (org) REFERENCES organizations(org) ON DELETE SET NULL,
-    FOREIGN KEY (prog_id) REFERENCES programs(prog_id) ON DELETE SET NULL
+    -- Links
+    recipient_id INTEGER NOT NULL,
+    program_id VARCHAR(100), -- We can store the program name directly or normalize later
+    
+    -- Money & Time
+    amount DECIMAL(15, 2) NOT NULL DEFAULT 0,
+    fiscal_year INTEGER NOT NULL, -- e.g., 2023 for "2023-2024"
+    start_date DATE,
+    end_date DATE,
+    
+    -- Content
+    title_en TEXT,
+    title_fr TEXT,
+    keywords TEXT, -- Simple keyword search column
+    
+    -- Metadata
+    agency VARCHAR(20) NOT NULL, -- NSERC, SSHRC, CIHR
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (recipient_id) REFERENCES recipients(recipient_id) ON DELETE RESTRICT
 );
 
-CREATE INDEX idx_grants_dates ON research_grants(agreement_start_date, agreement_end_date);
-CREATE INDEX idx_grants_value ON research_grants(agreement_value);
-CREATE INDEX idx_grants_org ON research_grants(org);
 CREATE INDEX idx_grants_recipient ON research_grants(recipient_id);
-CREATE INDEX idx_grants_ref_number ON research_grants(ref_number);
-CREATE INDEX idx_grants_program ON research_grants(prog_id);
-CREATE INDEX idx_grants_title ON research_grants USING gin(to_tsvector('english', agreement_title_en));
+CREATE INDEX idx_grants_agency_year ON research_grants(agency, fiscal_year);
+CREATE INDEX idx_grants_amount ON research_grants(amount DESC);
+-- Full text search index (Essential for the search bar)
+CREATE INDEX idx_grants_search ON research_grants USING GIN (to_tsvector('english', title_en || ' ' || coalesce(keywords, '')));
 
 -- ============================================================================
 -- User Activity Tables
