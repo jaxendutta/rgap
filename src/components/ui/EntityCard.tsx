@@ -20,9 +20,17 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import Tag, { Tags } from "@/components/ui/Tag";
-import { Institute, Recipient, EntityType } from "@/types/database";
+import { Institute, Recipient, Entity, EntityType } from "@/types/database";
 import { RECIPIENT_TYPE_LABELS } from "@/constants/data";
 import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
+
+function isInstitute(entity: Entity): entity is Institute & Partial<Entity> {
+  return 'institute_id' in entity;
+}
+
+function isRecipient(entity: Entity): entity is Recipient & Partial<Entity> {
+  return 'recipient_id' in entity;
+}
 
 interface EntityCardProps {
     entity: (Institute | Recipient) & { is_bookmarked?: boolean };
@@ -88,11 +96,8 @@ const EntityCard = ({
               }
             : null;
 
-    // Location data
-    const city = entity.city;
-    const province = entity.province;
-    const country = entity.country;
-    const location = formatCSV([city, province, country]);
+    // TODO: Location data. If Recipient, use their Institute's location
+    const location = formatCSV([entity.city, entity.province, entity.country]);
 
     // Get counts with fallbacks from props
     const grants =
