@@ -1,56 +1,125 @@
-import Link from 'next/link';
+"use client";
+
+import { useRouter } from "next/navigation";
+import {
+  Search,
+  Database,
+  ChartSpline,
+  UserPlus,
+  LogIn,
+  LucideIcon,
+  GraduationCap,
+} from "lucide-react";
+import PageContainer from "@/components/layout/PageContainer";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 export default function HomePage() {
+  const features: [
+    title: string,
+    description: string,
+    icon: LucideIcon,
+    link: string
+  ][] = [
+      [
+        "Comprehensive Data",
+        "Access and analyze over 175,000 research grants from NSERC, CIHR, and SSHRC.",
+        Database,
+        "/search",
+      ],
+      [
+        "Advanced Analytics",
+        "Visualize funding trends, analyze success rates, and track research investments.",
+        ChartSpline,
+        "/trends",
+      ],
+      [
+        "Explore Recipients",
+        "Discover researchers and institutions behind the grants.",
+        GraduationCap,
+        "/recipients",
+      ],
+      [
+        "Create Account",
+        "Sign up to save searches, bookmark grants, and more.",
+        UserPlus,
+        "/auth",
+      ],
+    ];
+
+  const router = useRouter();
+
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-24">
-      <div className="max-w-4xl mx-auto text-center space-y-8">
-        <h1 className="text-5xl font-bold text-gray-900">
-          Research Grant Analytics Platform
-        </h1>
+    <PageContainer>
+      {/* Hero Section */}
+      <Card className="px-6 lg:px-8 py-14 hover:border-gray-300 transition-all duration-200">
+        <div className="text-center">
+          <p className="text-5xl font-bold text-gray-900 leading-tight flex justify-center items-center">
+            <span className="inline-block px-2">[</span>
+            <span className="inline-block">RGAP</span>
+            <span className="inline-block px-2">]</span>
+          </p>
+          
+          <span className="mt-2 text-xl text-gray-600 block">
+            [ Research Grants Analytics Platform ]
+          </span>
+          <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+            Explore and analyze research funding data from Canada's
+            three major research funding agencies: NSERC, CIHR, and
+            SSHRC.
+          </p>
 
-        <p className="text-xl text-gray-600">
-          Comprehensive analytics for Canadian research grants from NSERC, CIHR, and SSHRC
-        </p>
+          <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                variant="primary"
+                size="lg"
+                leftIcon={Search}
+                className="pl-6 pr-8 md:text-lg"
+                onClick={() => router.push("/search")}
+              >
+                Start Exploring
+              </Button>
 
-        <div className="flex gap-4 justify-center mt-8">
-          <Link
-            href="/dashboard"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Get Started
-          </Link>
-
-          <Link
-            href="/auth/login"
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Sign In
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-          <div className="p-6 border border-gray-200 rounded-lg">
-            <h3 className="text-lg font-semibold mb-2">Comprehensive Data</h3>
-            <p className="text-gray-600">
-              Access to 230,000+ grant records from Canada's three major funding agencies
-            </p>
-          </div>
-
-          <div className="p-6 border border-gray-200 rounded-lg">
-            <h3 className="text-lg font-semibold mb-2">Advanced Analytics</h3>
-            <p className="text-gray-600">
-              Powerful search, filtering, and visualization tools for funding insights
-            </p>
-          </div>
-
-          <div className="p-6 border border-gray-200 rounded-lg">
-            <h3 className="text-lg font-semibold mb-2">Track & Compare</h3>
-            <p className="text-gray-600">
-              Bookmark grants and compare funding across institutions and programs
-            </p>
+              <Button
+                variant="outline"
+                size="lg"
+                leftIcon={LogIn}
+                className="pl-6 pr-8 md:text-lg"
+                onClick={() => router.push("/auth")}
+              >
+                Your Account
+              </Button>
+            </div>
           </div>
         </div>
+      </Card>
+
+      {/* Features Grid */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mt-6">
+        {features.map(([title, description, Icon, link], index) => {
+          return (
+            <Card
+              key={index}
+              className="p-6 hover:border-gray-300 hover:shadow-md transition-all duration-200"
+              isInteractive
+              onClick={() => {
+                router.push(link);
+              }}
+            >
+              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-gray-900 text-white mb-4">
+                <Icon className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900">
+                {title}
+              </h3>
+              <p className="mt-2 text-base text-gray-500">
+                {description}
+              </p>
+            </Card>
+          );
+        })}
       </div>
-    </main>
+    </PageContainer>
   );
 }

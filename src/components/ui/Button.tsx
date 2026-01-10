@@ -4,11 +4,11 @@ import { useIsMobile } from "@/lib/responsive";
 import { IconType } from "react-icons";
 
 const variants = {
-    primary: "bg-gray-800 text-white hover:bg-gray-800",
+    primary: "bg-gray-900 text-white hover:bg-gray-800",
     secondary:
-        "bg-white text-gray-700 border border-gray-300 lg:hover:bg-gray-50",
+        "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50",
     outline:
-        "bg-transparent text-gray-700 border border-gray-300 lg:hover:bg-gray-50",
+        "bg-transparent text-gray-700 border border-gray-300 hover:bg-gray-100",
     destructive: "bg-red-600 text-white hover:bg-red-700",
     ghost: "bg-transparent text-gray-700 hover:bg-gray-50",
 };
@@ -38,7 +38,7 @@ export const Button = ({
     leftIcon: LeftIcon,
     rightIcon: RightIcon,
     isLoading,
-    pill=true,
+    pill = true,
     disabled,
     responsiveText = "always",
     responsiveIcon = "always",
@@ -56,7 +56,7 @@ export const Button = ({
         <button
             className={cn(
                 "flex items-center justify-center font-medium gap-2 cursor-pointer",
-                "transition-colors duration-800 ease-in-out",
+                "transition-colors duration-300 ease-in-out",
                 pill ? "rounded-full" : "rounded-md",
                 variants[variant],
                 sizes[size],
