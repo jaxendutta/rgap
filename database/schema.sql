@@ -66,27 +66,26 @@ CREATE TABLE IF NOT EXISTS institutes (
     federal_riding_name_en VARCHAR(100),
     federal_riding_number VARCHAR(10),
     
-    CONSTRAINT country_code_check CHECK (length(country) = 2),
+    -- Composite Unique: The "Original Intent" definition of a unique institute
     CONSTRAINT uq_institute_location UNIQUE (name, city, country)
 );
 
-CREATE INDEX idx_institutes_name ON institutes(name);
-CREATE INDEX idx_institutes_location ON institutes(country, province, city);
-CREATE INDEX idx_institutes_province ON institutes(province);
-
 -- ============================================================================
--- Recipients Table
+-- Recipients Table (Linked & Locked)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS recipients (
     recipient_id SERIAL PRIMARY KEY,
-    type CHAR(1) NOT NULL,
+    type CHAR(1) NOT NULL CHECK (type IN ('I', 'P')),
     business_number VARCHAR(50),
     legal_name VARCHAR(255) NOT NULL,
     operating_name VARCHAR(255),
-    institute_id INTEGER NOT NULL,
+    institute_id INTEGER NOT NULL, -- MUST have an institute
     
-    FOREIGN KEY (institute_id) REFERENCES institutes(institute_id) ON DELETE SET NULL,
-    CONSTRAINT type_check CHECK (type IN ('I', 'P')),
+    -- SAFETY LOCK: PREVENT DELETION
+    -- If you try to delete an Institute that has recipients, this will FAIL.
+    FOREIGN KEY (institute_id) REFERENCES institutes(institute_id) ON DELETE RESTRICT,
+    
+    -- Composite Unique: A recipient is unique per institute
     CONSTRAINT uq_recipient_institute UNIQUE (legal_name, institute_id)
 );
 
