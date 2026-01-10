@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CircleArrowUp, User } from "lucide-react";
 import { GiAbstract014 } from "react-icons/gi";
+import { FaRegSun } from "react-icons/fa";
 
 const Header = () => {
     const [showScrollTop, setShowScrollTop] = useState(false);
@@ -58,7 +59,7 @@ const Header = () => {
     };
 
     return (
-        <header className="bg-white border-b border-gray-200 shadow-sm">
+        <header className="shadow-sm">
             <div className="px-4 flex h-16 items-center justify-between">
                 {/* Logo */}
                 <div className="flex items-center space-x-2">
@@ -77,18 +78,27 @@ const Header = () => {
                 </div>
 
                 {/* Right Icons */}
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center gap-1">
                     <button
-                        className={`p-1 text-gray-600 hover:text-gray-800 transition-all duration-200 transform ${
-                            showScrollTop
+                        className={`p-1 text-gray-600 hover:text-gray-800 transition-all duration-200 transform ${showScrollTop
                                 ? "opacity-100 translate-y-0"
                                 : "opacity-0 translate-y-1 pointer-events-none"
-                        }`}
+                            }`}
                         onClick={scrollToTop}
                         aria-label="Scroll to top"
                     >
                         <CircleArrowUp className="h-6 w-6" />
                     </button>
+
+                    {/* Theme Toggle Placeholder */}
+                    <Link
+                        href="#"
+                        className="p-1 text-gray-600 hover:text-gray-800"
+                    >
+                        <FaRegSun className="h-5 w-5" />
+                    </Link>
+
+
                     <Link
                         href={isLoggedIn ? "/account" : "/login"}
                         className="p-1 text-gray-600 hover:text-gray-800"

@@ -22,10 +22,10 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${inter.className} min-h-screen`}>
+      <body className={`${inter.className}`}>
         <Providers initialUser={user || null}>
           <Header />
-    
+
           {children}
         </Providers>
       </body>
