@@ -17,12 +17,12 @@ import {
     Users
 } from "lucide-react";
 import { MdSortByAlpha } from "react-icons/md";
-import LoadingState from "./LoadingState";
-import EmptyState from "./EmptyState";
-import ErrorState from "./ErrorState";
-import { Button } from "./Button";
-import { Card } from "./Card";
-import { SortButton } from "./SortButton"; // Assuming you have this, or I can inline it
+import LoadingState from "@/components/ui/LoadingState";
+import EmptyState from "@/components/ui/EmptyState";
+import ErrorState from "@/components/ui/ErrorState";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { SortButton } from "@/components/ui/SortButton";
 import { AnimatePresence, motion } from "framer-motion";
 import TrendVisualizer from "@/components/visualizations/TrendVisualizer";
 import { IconType } from "react-icons";

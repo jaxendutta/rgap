@@ -1,4 +1,6 @@
-// src/components/features/visualizations/TrendVisualizer.tsx
+// src/components/visualizations/TrendVisualizer.tsx
+'use client';
+
 import React, { useState, useMemo } from "react";
 import {
     DollarSign,

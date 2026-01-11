@@ -1,4 +1,6 @@
 // src/components/ui/Dropdown.tsx
+'use client';
+
 import React, { useState, useEffect, useRef, ReactNode } from "react";
 import { ChevronDown, LucideIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";

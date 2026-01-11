@@ -5,7 +5,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import SearchInterface from "@/components/search/SearchInterface";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import { LucideIcon, Search } from "lucide-react";
-import EntityList, { EntityListProps } from "@/components/ui/EntityList";
+import EntityList, { EntityListProps } from "@/components/entity/EntityList";
 import { UseInfiniteQueryResult, UseQueryResult } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 import { Grant } from "@/types/database";

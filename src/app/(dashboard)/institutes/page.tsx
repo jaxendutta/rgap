@@ -2,8 +2,8 @@
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
 import PageHeader from '@/components/layout/PageHeader';
-import EntityList, { SortOption } from '@/components/ui/EntityList';
-import { EntityCard } from '@/components/ui/EntityCard';
+import EntityList, { SortOption } from '@/components/entity/EntityList';
+import { EntityCard } from '@/components/entity/EntityCard';
 import { Pagination } from '@/components/ui/Pagination';
 import { University } from 'lucide-react';
 import { InstituteWithStats } from '@/types/database';

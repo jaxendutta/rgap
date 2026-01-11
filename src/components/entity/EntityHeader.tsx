@@ -1,15 +1,25 @@
-// src/components/layout/EntityHeader.tsx
+'use client';
+
 import { useState } from "react";
 import { LucideIcon, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { BookmarkButton } from "@/components/bookmarks/BookmarkButton";
 import { cn } from "@/lib/utils";
-import LocationMap from "@/components/ui/LocationMap";
+import dynamic from "next/dynamic";
 import { formatCSV } from "@/lib/format";
 import { EntityType } from "@/types/database";
 import { Tag, Tags } from "@/components/ui/Tag";
+import Link from "next/link";
 
-// Define types for metadata and action items
+const LocationMap = dynamic(() => import('@/components/ui/LocationMap'), {
+  ssr: false, // This is crucial for Leaflet!
+  loading: () => (
+    <div className="h-[300px] w-full bg-slate-100 flex items-center justify-center rounded-lg">
+       <span className="text-slate-400 text-sm">Loading Map...</span>
+    </div>
+  ),
+});
+
 export interface MetadataItem {
     icon: LucideIcon;
     text: string;
@@ -47,28 +57,27 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
     isBookmarked,
 }) => {
     const [showMap, setShowMap] = useState(false);
-
-    // Check if we have a location string to display a map
     const hasLocationData = !!location && location.trim() !== "";
 
     return (
-        <div className="px-4 py-6 lg:px-6 lg:py-8 border-b border-gray-200">
+        <div className="px-4 py-6 lg:px-6 lg:py-8 border-b border-gray-100/50">
             <div className="flex-1 flex flex-col gap-1.5">
-                {/* Entity Title */}
                 <div className="flex items-start justify-between flex-wrap gap-4">
                     <div className="flex items-start gap-3">
-                        <Icon className="h-5 w-5 lg:h-6 lg:w-6 text-blue-600 mt-1 flex-shrink-0" />
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                            <Icon className="h-6 w-6 text-blue-600 flex-shrink-0" />
+                        </div>
                         <div>
-                            <h1 className="text-xl lg:text-2xl font-semibold text-gray-900">
+                            <h1 className="text-xl lg:text-3xl font-bold text-gray-900 tracking-tight">
                                 {title}
                             </h1>
                             {subtitle && (
-                                <p className="text-gray-500 mt-1">{subtitle}</p>
+                                <p className="text-gray-500 mt-1 font-medium">{subtitle}</p>
                             )}
                         </div>
                     </div>
+
                     <div className="flex flex-wrap gap-2 self-end lg:self-start">
-                        {/* Map toggle button - only show if we have location data */}
                         {hasLocationData && (
                             <Button
                                 variant="outline"
@@ -78,13 +87,10 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                                 onClick={() => setShowMap(!showMap)}
                                 className="text-blue-600 border-blue-200 hover:bg-blue-50"
                             >
-                                {formatCSV(
-                                    [location].filter(Boolean) as string[]
-                                )}
+                                {formatCSV([location].filter(Boolean) as string[])}
                             </Button>
                         )}
 
-                        {/* Other action buttons */}
                         {actions.map((action, index) => (
                             <Button
                                 key={index}
@@ -92,13 +98,11 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                                 leftIcon={action.icon}
                                 size="sm"
                                 onClick={action.onClick}
-                                responsiveText={"hideOnMobile"}
                             >
                                 {action.label}
                             </Button>
                         ))}
 
-                        {/* Add BookmarkButton if entityType and entityId are provided */}
                         {entityType && entityId && (
                             <BookmarkButton
                                 entityId={entityId}
@@ -110,48 +114,32 @@ const EntityHeader: React.FC<EntityHeaderProps> = ({
                     </div>
                 </div>
 
-                {/* Metadata */}
                 {metadata.length > 0 && (
-                    <Tags>
-                        {metadata.map((item, index) => (
-                            <Tag
-                                key={index}
-                                icon={item.icon}
-                                onClick={
-                                    item.href && item.href.trim() !== ""
-                                        ? () =>
-                                              (window.location.href =
-                                                  item.href || "")
-                                        : undefined
-                                }
-                                variant={
-                                    item.href && item.href.trim() !== ""
-                                        ? "link"
-                                        : "outline"
-                                }
-                                text={item.text}
-                            />
-                        ))}
-                    </Tags>
+                    <div className="mt-4">
+                        <Tags>
+                            {metadata.map((item, index) => (
+                                item.href ? (
+                                    <Link key={index} href={item.href} passHref>
+                                        <Tag icon={item.icon} variant="link" text={item.text} />
+                                    </Link>
+                                ) : (
+                                    <Tag key={index} icon={item.icon} variant="outline" text={item.text} />
+                                )
+                            ))}
+                        </Tags>
+                    </div>
                 )}
 
-                {/* Map section - collapsible */}
                 {hasLocationData && (
                     <div
                         className={cn(
                             "overflow-hidden transition-all duration-300 ease-in-out",
-                            showMap
-                                ? "max-h-96 opacity-100 mt-4"
-                                : "max-h-0 opacity-0"
+                            showMap ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"
                         )}
                     >
                         <div className="border border-slate-200 rounded-lg overflow-hidden bg-gray-50">
                             <div className="p-4">
-                                <LocationMap
-                                    title={title}
-                                    location={location}
-                                    height={300}
-                                />
+                                <LocationMap title={title} location={location} height={300} />
                             </div>
                         </div>
                     </div>
