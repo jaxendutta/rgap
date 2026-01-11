@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
                 r.legal_name,
                 r.operating_name,
                 r.recipient_id,
-                i.name as institute_name,
+                i.name,
                 i.institute_id,
                 i.city,
                 i.province,
