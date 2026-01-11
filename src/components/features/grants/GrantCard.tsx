@@ -28,12 +28,12 @@ import {
     BookOpen,
 } from "lucide-react";
 
-import { Grant, GrantWithDetails } from "@/types/database";
+import { Grant, GrantAmendment, GrantWithDetails } from "@/types/database";
 import { Card } from "@/components/ui/Card";
 import Tag, { Tags } from "@/components/ui/Tag";
 import BookmarkButton from "@/components/features/bookmarks/BookmarkButton";
 import Tabs, { TabContent, TabItem } from "@/components/ui/Tabs";
-import { TrendVisualizer } from "../visualizations/TrendVisualizer";
+import { TrendVisualizer } from "@/components/features/visualizations/TrendVisualizer";
 
 import {
     formatCSV,
@@ -317,7 +317,7 @@ const VersionsTab = ({ amendments, currentAmendmentNumber }: { amendments: any[]
     </div>
 );
 
-const FundingTab = ({ grant, amendments, hasAmendments }: { grant: Grant; amendments: any[]; hasAmendments: boolean }) => (
+const FundingTab = ({ grant, amendments, hasAmendments }: { grant: GrantWithDetails; amendments: GrantAmendment[]; hasAmendments: boolean }) => (
     <div>
         <div className="mb-6 bg-gray-50 p-3 lg:p-4 rounded-lg">
             <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-start">
@@ -358,7 +358,7 @@ const FundingTab = ({ grant, amendments, hasAmendments }: { grant: Grant; amendm
                 </div>
             ) : (
                 <div className="text-center text-sm text-gray-500 py-4">
-                    {`No amendment history available for this grant. Current value: ${formatCurrency(grant.agreement_value)}`}
+                    {`No amendment history available for this grant. Current value: ${formatCurrency(grant.agreement_value)} ${amendments}`}
                 </div>
             )}
         </div>
@@ -424,7 +424,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
     const hasForeignCurrency = !!grant.foreign_currency_type && !!grant.foreign_currency_value && grant.foreign_currency_value > 0;
 
     return (
-        <Card isHoverable className="p-4 transition-all duration-300">
+        <Card isHoverable className="p-4 md:py-5 md:px-6 lg:px-7 transition-all duration-300">
             <div>
                 <GrantHeader grant={grant} isBookmarked={isBookmarked} />
                 <MetadataTags grant={grant} />

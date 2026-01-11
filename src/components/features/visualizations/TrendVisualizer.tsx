@@ -14,7 +14,7 @@ import {
     LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Grant, GrantAmendment } from "@/types/database";
+import { Grant, GrantAmendment, GrantWithDetails } from "@/types/database";
 import { Card } from "@/components/ui/Card";
 import { Dropdown } from "@/components/ui/Dropdown";
 import DataChart from "@/components/features/visualizations/DataChart";
@@ -41,7 +41,7 @@ export type ViewContext = "search" | "recipient" | "institute" | "custom";
 
 interface TrendVisualizerProps {
     // The grants data to visualize
-    grants?: Grant[];
+    grants?: GrantWithDetails[];
     entityId?: number;
     entityType?: "recipient" | "institute";
 
@@ -122,7 +122,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
         (amendmentsHistory && amendmentsHistory.length > 0);
 
     // Determine if we're visualizing a single grant's amendments
-    const isAmendmentView = !!amendmentsHistory && amendmentsHistory.length > 0;
+    const isAmendmentView = amendmentsHistory && amendmentsHistory.length > 0;
 
     // Get appropriate available groupings
     const effectiveAvailableGroupings = useMemo(() => {
@@ -319,7 +319,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
         const uniqueCategories = new Set<string>();
 
         // Group data by year and the selected dimension
-        grants.forEach((grant) => {
+        grants.forEach((grant: GrantWithDetails) => {
             // Extract year from the grant
             const year = new Date(grant.agreement_start_date).getFullYear();
             const grantValue = grant.agreement_value;
@@ -344,10 +344,10 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                     break;
                 case "institute":
                     categoryValue =
-                        grant.research_organization_name || "Unknown";
+                        grant.name || "Unknown";
                     break;
                 case "program":
-                    categoryValue = grant.prog_title_en || "Unknown";
+                    categoryValue = grant.prog_name_en || "Unknown";
                     break;
                 case "year":
                     categoryValue = "Value";

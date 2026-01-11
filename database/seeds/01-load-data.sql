@@ -66,7 +66,7 @@ UPDATE temp_grants
 SET recipient_country = CASE 
     WHEN recipient_country ILIKE 'Canada' THEN 'CA'
     WHEN recipient_country ILIKE 'United States%' OR recipient_country ILIKE 'USA' THEN 'US'
-    WHEN recipient_country ILIKE 'United Kingdom' OR recipient_country ILIKE 'UK' THEN 'GB'
+    WHEN recipient_country ILIKE 'United Kingdom' OR recipient_country ILIKE 'GB' THEN 'UK'
     WHEN recipient_country ILIKE 'France' THEN 'FR'
     WHEN recipient_country ILIKE 'Germany' THEN 'DE'
     -- If it's already 2 chars, uppercase it. Otherwise, Title Case it.
@@ -79,20 +79,70 @@ WHERE recipient_country IS NOT NULL;
 UPDATE temp_grants
 SET recipient_province = CASE 
     -- Canada
-    WHEN recipient_province ILIKE 'British Columbia' OR recipient_province ILIKE 'Colombie-Britannique' THEN 'BC'
-    WHEN recipient_province ILIKE 'Ontario' THEN 'ON'
-    WHEN recipient_province ILIKE 'Quebec' OR recipient_province ILIKE 'Québec' THEN 'QC'
     WHEN recipient_province ILIKE 'Alberta' THEN 'AB'
+    WHEN recipient_province ILIKE 'British Columbia' OR recipient_province ILIKE 'Colombie-Britannique' THEN 'BC'
     WHEN recipient_province ILIKE 'Manitoba' THEN 'MB'
-    WHEN recipient_province ILIKE 'Nova Scotia' THEN 'NS'
-    WHEN recipient_province ILIKE 'New Brunswick' THEN 'NB'
+    WHEN recipient_province ILIKE 'New Brunswick' OR recipient_province ILIKE 'Nouveau-Brunswick' THEN 'NB'
+    WHEN recipient_province ILIKE 'Newfoundland and Labrador' OR recipient_province ILIKE 'Terre-Neuve-et-Labrador' THEN 'NL'
+    WHEN recipient_province ILIKE 'Nova Scotia' OR recipient_province ILIKE 'Nouvelle-Écosse' THEN 'NS'
+    WHEN recipient_province ILIKE 'Ontario' THEN 'ON'
+    WHEN recipient_province ILIKE 'Prince Edward Island' OR recipient_province ILIKE 'Île-du-Prince-Édouard' THEN 'PE'
+    WHEN recipient_province ILIKE 'Quebec' OR recipient_province ILIKE 'Québec' THEN 'QC'
     WHEN recipient_province ILIKE 'Saskatchewan' THEN 'SK'
-    WHEN recipient_province ILIKE 'Newfoundland%' THEN 'NL'
-    WHEN recipient_province ILIKE 'Prince Edward Island' THEN 'PE'
+    WHEN recipient_province ILIKE 'Northwest Territories' OR recipient_province ILIKE 'Territoires du Nord-Ouest' THEN 'NT'
+    WHEN recipient_province ILIKE 'Nunavut' THEN 'NU'
+    WHEN recipient_province ILIKE 'Yukon' THEN 'YT'
     -- US
+    WHEN recipient_province ILIKE 'Alabama' THEN 'AL'
+    WHEN recipient_province ILIKE 'Alaska' THEN 'AK'
+    WHEN recipient_province ILIKE 'Arizona' THEN 'AZ'
+    WHEN recipient_province ILIKE 'Arkansas' THEN 'AR'
     WHEN recipient_province ILIKE 'California' THEN 'CA'
-    WHEN recipient_province ILIKE 'New York' THEN 'NY'
+    WHEN recipient_province ILIKE 'Colorado' THEN 'CO'
+    WHEN recipient_province ILIKE 'Connecticut' THEN 'CT'
+    WHEN recipient_province ILIKE 'Delaware' THEN 'DE'
+    WHEN recipient_province ILIKE 'Florida' THEN 'FL'
+    WHEN recipient_province ILIKE 'Georgia' THEN 'GA'
+    WHEN recipient_province ILIKE 'Hawaii' THEN 'HI'
+    WHEN recipient_province ILIKE 'Idaho' THEN 'ID'
+    WHEN recipient_province ILIKE 'Illinois' THEN 'IL'
+    WHEN recipient_province ILIKE 'Indiana' THEN 'IN'
+    WHEN recipient_province ILIKE 'Iowa' THEN 'IA'
+    WHEN recipient_province ILIKE 'Kansas' THEN 'KS'
+    WHEN recipient_province ILIKE 'Kentucky' THEN 'KY'
+    WHEN recipient_province ILIKE 'Louisiana' THEN 'LA'
+    WHEN recipient_province ILIKE 'Maine' THEN 'ME'
+    WHEN recipient_province ILIKE 'Maryland' THEN 'MD'
     WHEN recipient_province ILIKE 'Massachusetts' THEN 'MA'
+    WHEN recipient_province ILIKE 'Michigan' THEN 'MI'
+    WHEN recipient_province ILIKE 'Minnesota' THEN 'MN'
+    WHEN recipient_province ILIKE 'Mississippi' THEN 'MS'
+    WHEN recipient_province ILIKE 'Missouri' THEN 'MO'
+    WHEN recipient_province ILIKE 'Montana' THEN 'MT'
+    WHEN recipient_province ILIKE 'Nebraska' THEN 'NE'
+    WHEN recipient_province ILIKE 'Nevada' THEN 'NV'
+    WHEN recipient_province ILIKE 'New Hampshire' THEN 'NH'
+    WHEN recipient_province ILIKE 'New Jersey' THEN 'NJ'
+    WHEN recipient_province ILIKE 'New Mexico' THEN 'NM'
+    WHEN recipient_province ILIKE 'New York' THEN 'NY'
+    WHEN recipient_province ILIKE 'North Carolina' THEN 'NC'
+    WHEN recipient_province ILIKE 'North Dakota' THEN 'ND'
+    WHEN recipient_province ILIKE 'Ohio' THEN 'OH'
+    WHEN recipient_province ILIKE 'Oklahoma' THEN 'OK'
+    WHEN recipient_province ILIKE 'Oregon' THEN 'OR'
+    WHEN recipient_province ILIKE 'Pennsylvania' THEN 'PA'
+    WHEN recipient_province ILIKE 'Rhode Island' THEN 'RI'
+    WHEN recipient_province ILIKE 'South Carolina' THEN 'SC'
+    WHEN recipient_province ILIKE 'South Dakota' THEN 'SD'
+    WHEN recipient_province ILIKE 'Tennessee' THEN 'TN'
+    WHEN recipient_province ILIKE 'Texas' THEN 'TX'
+    WHEN recipient_province ILIKE 'Virginia' THEN 'VA'
+    WHEN recipient_province ILIKE 'Vermont' THEN 'VT'
+    WHEN recipient_province ILIKE 'Washington' THEN 'WA'
+    WHEN recipient_province ILIKE 'Utah' THEN 'UT'
+    WHEN recipient_province ILIKE 'Wisconsin' THEN 'WI'
+    WHEN recipient_province ILIKE 'West Virginia' THEN 'WV'
+    WHEN recipient_province ILIKE 'Wyoming' THEN 'WY'
     -- Default
     WHEN LENGTH(recipient_province) = 2 THEN UPPER(recipient_province)
     ELSE INITCAP(TRIM(recipient_province))
@@ -102,7 +152,8 @@ WHERE recipient_province IS NOT NULL;
 -- ============================================================================
 -- STEP 4: Performance Indexes (Speed up the Inserts)
 -- ============================================================================
-DO $$ BEGIN RAISE NOTICE 'Indexing staging table...'; END $$;
+DO $$ BEGIN RAISE NOTICE 'Creating indexes...'; END $$;
+CREATE INDEX idx_temp_org ON temp_grants(org);
 CREATE INDEX idx_temp_prog ON temp_grants(prog_name_en);
 CREATE INDEX idx_temp_loc ON temp_grants(research_organization_name, recipient_city, recipient_country);
 CREATE INDEX idx_temp_recip ON temp_grants(recipient_legal_name);
@@ -142,14 +193,35 @@ INSERT INTO grants (
     agreement_value, foreign_currency_type, foreign_currency_value,
     agreement_start_date, agreement_end_date, agreement_title_en,
     description_en, expected_results_en, additional_information_en,
-    recipient_id, prog_id, org
+    recipient_id, prog_id, org, amendments_history
 )
 SELECT DISTINCT
-    tg.ref_number, tg.latest_amendment_number, NULLIF(tg.amendment_date, '')::DATE, tg.agreement_number,
-    NULLIF(tg.agreement_value, '')::DECIMAL(15,2), tg.foreign_currency_type, NULLIF(tg.foreign_currency_value, '')::DECIMAL(15,2),
-    NULLIF(tg.agreement_start_date, '')::DATE, NULLIF(tg.agreement_end_date, '')::DATE,
-    tg.agreement_title_en, tg.description_en, tg.expected_results_en, tg.additional_information_en,
-    r.recipient_id, p.prog_id, o.org
+    tg.ref_number, 
+    tg.latest_amendment_number, 
+    NULLIF(tg.amendment_date, '')::DATE, 
+    tg.agreement_number,
+    NULLIF(tg.agreement_value, '')::DECIMAL(15,2), 
+    tg.foreign_currency_type, 
+    NULLIF(tg.foreign_currency_value, '')::DECIMAL(15,2),
+    NULLIF(tg.agreement_start_date, '')::DATE, 
+    NULLIF(tg.agreement_end_date, '')::DATE,
+    tg.agreement_title_en, 
+    tg.description_en, 
+    tg.expected_results_en, 
+    tg.additional_information_en,
+    r.recipient_id, 
+    p.prog_id, 
+    o.org,
+    -- Parse amendments_history as JSONB
+    -- Only insert valid JSON, otherwise NULL
+    CASE 
+        WHEN tg.amendments_history IS NOT NULL 
+            AND tg.amendments_history != '' 
+            AND tg.amendments_history != 'null'
+            AND tg.amendments_history::TEXT ~ '^\s*\['  -- Starts with [
+        THEN tg.amendments_history::JSONB
+        ELSE NULL
+    END
 FROM temp_grants tg
 JOIN organizations o ON tg.org = o.org
 JOIN institutes i ON tg.research_organization_name = i.name AND tg.recipient_city = i.city AND COALESCE(tg.recipient_country, 'CA') = i.country

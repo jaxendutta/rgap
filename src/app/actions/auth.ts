@@ -1,7 +1,7 @@
 // src/app/actions/auth.ts
 'use server';
 
-import { getSession } from '@/lib/session';
+import { createSession, destroySession } from '@/lib/session';
 import { db } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
@@ -40,15 +40,12 @@ export async function authAction(
                 return { message: 'Invalid email or password' };
             }
 
-            // Create Session
-            const session = await getSession();
-            session.user = {
+            // Create Session using the createSession helper
+            await createSession({
                 id: user.user_id,
                 username: user.username,
-                email: user.email
-            };
-            session.isLoggedIn = true;
-            await session.save();
+                email: user.email,
+            });
         }
 
         // =================================================
@@ -79,15 +76,12 @@ export async function authAction(
             );
             const newUser = result.rows[0];
 
-            // Auto-login after register
-            const session = await getSession();
-            session.user = {
+            // Auto-login after register using the createSession helper
+            await createSession({
                 id: newUser.user_id,
                 username: newUser.username,
-                email: newUser.email
-            };
-            session.isLoggedIn = true;
-            await session.save();
+                email: newUser.email,
+            });
         }
 
     } catch (error) {
@@ -100,7 +94,6 @@ export async function authAction(
 }
 
 export async function logoutAction() {
-    const session = await getSession();
-    session.destroy();
+    await destroySession();
     redirect('/');
 }

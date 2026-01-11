@@ -1,25 +1,7 @@
 -- database/schema.sql
--- RGAP PostgreSQL Database Schema
--- Updated for Robustness (ELT Friendly)
 
 -- ============================================================================
--- Users Table
--- ============================================================================
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP,
-    CONSTRAINT email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
-);
-
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_username ON users(username);
-
--- ============================================================================
--- Organizations Table
+-- Organizations Table (Static Reference Data)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS organizations (
     org VARCHAR(5) PRIMARY KEY,
@@ -106,6 +88,9 @@ CREATE TABLE IF NOT EXISTS grants (
     prog_id INTEGER,
     org VARCHAR(5),
     
+    -- Amendments history as JSONB
+    amendments_history JSONB,
+    
     FOREIGN KEY (recipient_id) REFERENCES recipients(recipient_id) ON DELETE RESTRICT,
     FOREIGN KEY (prog_id) REFERENCES programs(prog_id) ON DELETE SET NULL,
     FOREIGN KEY (org) REFERENCES organizations(org) ON DELETE SET NULL
@@ -120,6 +105,21 @@ CREATE INDEX idx_grants_ref ON grants(ref_number);
 
 -- Full text search
 CREATE INDEX idx_grants_title_search ON grants USING GIN (to_tsvector('english', COALESCE(agreement_title_en, '')));
+CREATE INDEX idx_grants_amendments ON grants USING GIN (amendments_history);
+
+-- ============================================================================
+-- Users & Authentication
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_username ON users(username);
 
 -- ============================================================================
 -- Bookmarks & History (Standard)

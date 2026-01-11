@@ -1,8 +1,9 @@
 // src/lib/session.ts
-// Session management - Authentication is OPTIONAL
-// Users can browse everything without logging in
-// Auth is only needed for: bookmarks, saved searches, account features
+// Session management using iron-session
+// Authentication is OPTIONAL - users can browse without logging in
+// Auth only needed for: bookmarks, saved searches, account features
 
+import { getIronSession, IronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 
 export interface User {
@@ -11,16 +12,41 @@ export interface User {
   email: string;
 }
 
+export interface SessionData {
+  user?: User;
+  isLoggedIn: boolean;
+}
+
+// Session configuration
+const sessionOptions = {
+  password: process.env.SESSION_SECRET || 'complex_password_at_least_32_characters_long',
+  cookieName: 'rgap_session',
+  cookieOptions: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+  },
+};
+
 /**
- * Get current user session
+ * Get current session
+ * Returns session object that you can read/write to
+ */
+export async function getSession(): Promise<IronSession<SessionData>> {
+  const cookieStore = await cookies();
+  return getIronSession<SessionData>(cookieStore, sessionOptions);
+}
+
+/**
+ * Get current user from session
  * Returns null if no session exists - THIS IS TOTALLY FINE!
  * Users can browse grants without logging in
  */
-export async function getSession(): Promise<User | null> {
+export async function getCurrentUser(): Promise<User | null> {
   try {
-    // TODO: Implement proper session management with iron-session
-    // For now, return null (no user logged in)
-    return null;
+    const session = await getSession();
+    return session.user || null;
   } catch (error) {
     // Fail gracefully - users can still browse
     return null;
@@ -28,34 +54,32 @@ export async function getSession(): Promise<User | null> {
 }
 
 /**
- * Get current user - alias for getSession
- * Returns null if not logged in - browsing is allowed!
- */
-export async function getCurrentUser(): Promise<User | null> {
-  return getSession();
-}
-
-/**
  * Check if user is authenticated
  * Used to show/hide bookmark buttons, etc.
  */
 export async function isAuthenticated(): Promise<boolean> {
-  const user = await getSession();
-  return !!user;
+  try {
+    const session = await getSession();
+    return session.isLoggedIn || false;
+  } catch (error) {
+    return false;
+  }
 }
 
 /**
  * Create a new session (called after login)
  */
 export async function createSession(user: User): Promise<void> {
-  // TODO: Implement with iron-session
-  console.log('Session created for user:', user.username);
+  const session = await getSession();
+  session.user = user;
+  session.isLoggedIn = true;
+  await session.save();
 }
 
 /**
  * Destroy current session (called on logout)
  */
 export async function destroySession(): Promise<void> {
-  // TODO: Implement with iron-session
-  console.log('Session destroyed');
+  const session = await getSession();
+  session.destroy();
 }
