@@ -34,7 +34,7 @@ export function BookmarkButton({
     if (!user) {
         return (
             <Button
-                variant="outline"
+                variant="ghost"
                 size={size}
                 onClick={() => router.push(`/login?redirect=${window.location.pathname}`)}
                 title="Sign in to bookmark this item"

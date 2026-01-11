@@ -39,7 +39,7 @@ function EntityList<T>(props: EntityListProps<T>) {
         entityType,
         entities = [],
         children,
-        variant = "list",
+        variant = "grid",
         emptyState,
         emptyMessage = "No items found.",
         className,

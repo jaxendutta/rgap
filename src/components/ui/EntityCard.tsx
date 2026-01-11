@@ -255,7 +255,8 @@ export const EntityCard = ({
                 <BookmarkButton
                     entityType={entityType}
                     entityId={id}
-                    initialIsBookmarked={entity.is_bookmarked ?? false}
+                    isBookmarked={entity.is_bookmarked ?? false}
+                    showLabel={false}
                 />
             </div>
 
@@ -289,10 +290,11 @@ export const EntityCard = ({
                     const Icon = stat.icon;
                     return (
                         <div key={index} className="text-center">
-                            <div className="flex justify-center mb-1">
-                                <Icon className="h-4 w-4 text-gray-500" />
+                            <div className="flex justify-center items-center mb-1 gap-1">
+                                <Icon className="h-3 w-3 text-gray-500" />
+                                <div className="text-xs text-gray-500">{stat.label}</div>
                             </div>
-                            <div className="text-xs text-gray-500 mb-1">{stat.label}</div>
+                            
                             <div className="text-sm font-medium text-gray-900">{stat.value}</div>
                         </div>
                     );

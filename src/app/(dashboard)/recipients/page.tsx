@@ -41,7 +41,7 @@ export default async function RecipientsPage() {
     LEFT JOIN grants g ON r.recipient_id = g.recipient_id
     GROUP BY r.recipient_id, i.name, i.city, i.province, i.country
     ORDER BY total_funding DESC NULLS LAST
-    LIMIT 50
+    LIMIT 100
   `, userId ? [userId] : []);
 
     const recipients = result.rows;
