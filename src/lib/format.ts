@@ -1,6 +1,8 @@
+// src/lib/format.ts
+
 export function formatCSV(items: string[] | null | undefined): string {
-  if (!items || items.length === 0) return 'N/A';
-  return items.join(', ');
+    if (!items || items.length === 0) return 'N/A';
+    return items.join(', ');
 }
 
 export function formatSentenceCase(text: string | null | undefined): string {
@@ -8,12 +10,26 @@ export function formatSentenceCase(text: string | null | undefined): string {
     return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 
-export function formatDateDiff(startDate: Date, endDate: Date): string {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+// 🎯 FIXED: Timezone-safe date diff calculation
+export function formatDateDiff(startDate: Date | string, endDate: Date | string): string {
+    // Parse dates safely
+    const parseDate = (date: Date | string): Date => {
+        if (typeof date === 'string') {
+            const match = date.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (match) {
+                const [, year, month, day] = match;
+                return new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0));
+            }
+            return new Date(date);
+        }
+        return date;
+    };
 
-    let years = end.getFullYear() - start.getFullYear();
-    let months = end.getMonth() - start.getMonth();
+    const start = parseDate(startDate);
+    const end = parseDate(endDate);
+
+    let years = end.getUTCFullYear() - start.getUTCFullYear();
+    let months = end.getUTCMonth() - start.getUTCMonth();
 
     if (months < 0) {
         years--;

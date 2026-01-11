@@ -1,3 +1,5 @@
+// src/lib/utils.ts
+
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -27,13 +29,34 @@ export function formatNumber(value: number | null | undefined): string {
 export function formatDate(date: Date | string | null | undefined, format: 'short' | 'long' = 'short'): string {
   if (!date) return 'N/A';
 
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  let dateObj: Date;
 
+  // Handle string dates (from database: "YYYY-MM-DD")
+  if (typeof date === 'string') {
+    // For ISO date strings (YYYY-MM-DD), parse manually to avoid timezone issues
+    const match = date.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const [, year, month, day] = match;
+      // Create date at noon UTC to avoid any timezone edge cases
+      dateObj = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0));
+    } else {
+      // For other date string formats, try standard parsing
+      dateObj = new Date(date);
+    }
+  } else {
+    dateObj = date;
+  }
+
+  // Check for invalid date
+  if (isNaN(dateObj.getTime())) return 'Invalid Date';
+
+  // Format with UTC timezone to ensure consistency across server and client
   if (format === 'long') {
     return new Intl.DateTimeFormat('en-CA', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      timeZone: 'UTC',
     }).format(dateObj);
   }
 
@@ -41,6 +64,7 @@ export function formatDate(date: Date | string | null | undefined, format: 'shor
     year: 'numeric',
     month: 'short',
     day: 'numeric',
+    timeZone: 'UTC',
   }).format(dateObj);
 }
 
