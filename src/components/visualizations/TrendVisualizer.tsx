@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { Grant, GrantAmendment, GrantWithDetails } from "@/types/database";
 import { Card } from "@/components/ui/Card";
 import { Dropdown } from "@/components/ui/Dropdown";
-import DataChart from "@/components/features/visualizations/DataChart";
+import DataChart from "@/components/visualizations/DataChart";
 import { AMENDMENT_COLORS, getCategoryColor } from "@/lib/chartColors";
 import Button from "@/components/ui/Button";
 import ToggleButtons from "@/components/ui/ToggleButtons";

@@ -16,7 +16,6 @@ import Button from "@/components/ui/Button";
 import Tag from "@/components/ui/Tag";
 import Tabs from "@/components/ui/Tabs";
 import EmptyState from "@/components/ui/EmptyState";
-import { usePopularSearches } from "@/hooks/api/usePopularSearches";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import { PopularSearch, SearchCategory } from "@/types/database";
 

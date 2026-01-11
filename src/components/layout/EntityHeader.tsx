@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { LucideIcon, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { BookmarkButton } from "@/components/features/bookmarks/BookmarkButton";
+import { BookmarkButton } from "@/components/bookmarks/BookmarkButton";
 import { cn } from "@/lib/utils";
 import LocationMap from "@/components/ui/LocationMap";
 import { formatCSV } from "@/lib/format";

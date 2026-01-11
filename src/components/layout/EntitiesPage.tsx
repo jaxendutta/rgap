@@ -2,15 +2,15 @@
 import { useState } from "react";
 import PageContainer from "@/components/layout/PageContainer";
 import PageHeader from "@/components/layout/PageHeader";
-import SearchInterface from "@/components/features/search/SearchInterface";
+import SearchInterface from "@/components/search/SearchInterface";
 import { DEFAULT_FILTER_STATE } from "@/constants/filters";
 import { LucideIcon, Search } from "lucide-react";
 import EntityList, { EntityListProps } from "@/components/ui/EntityList";
 import { UseInfiniteQueryResult, UseQueryResult } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 import { Grant } from "@/types/database";
-import { GrantCard } from "@/components/features/grants/GrantCard";
-import { SearchField } from "@/components/features/search/SearchField";
+import { GrantCard } from "@/components/grants/GrantCard";
+import { SearchField } from "@/components/search/SearchField";
 
 interface HeaderConfig {
     title: string;

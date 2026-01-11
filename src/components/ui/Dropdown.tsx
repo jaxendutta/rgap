@@ -85,7 +85,7 @@ export const Dropdown = ({
     return (
         <div className="relative" ref={dropdownRef}>
             <Button
-                variant={"outline"}                
+                variant={"outline"}
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
                     "flex items-center justify-between w-full px-3 py-2 text-sm border hover:shadow-sm",
@@ -93,17 +93,19 @@ export const Dropdown = ({
                     className
                 )}
             >
-                <span className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
                     {icon && React.createElement(icon, { className: "h-4 w-4 text-gray-500" })}
                     {label && <span className="font-medium whitespace-nowrap">{label}</span>}
+                </div>
+                <div className="flex items-center gap-2">
                     <span className="text-gray-600 italic whitespace-nowrap">{getDisplayValue()}</span>
-                </span>
-                <ChevronDown
-                    className={cn(
-                        "w-4 h-4 text-gray-400 transition-transform",
-                        isOpen && "transform rotate-180"
-                    )}
-                />
+                    <ChevronDown
+                        className={cn(
+                            "w-4 h-4 text-gray-400 transition-transform",
+                            isOpen && "transform rotate-180"
+                        )}
+                    />
+                </div>
             </Button>
 
             {isOpen && (
@@ -112,7 +114,7 @@ export const Dropdown = ({
                         {normalizedOptions.map((option) => {
                             const isSelected = multiple
                                 ? Array.isArray(value) &&
-                                  value.includes(option.value)
+                                value.includes(option.value)
                                 : value === option.value;
 
                             if (renderOption) {
@@ -145,7 +147,7 @@ export const Dropdown = ({
                                             type="checkbox"
                                             className="w-4 h-4 rounded border-gray-300"
                                             checked={isSelected}
-                                            onChange={() => {}}
+                                            onChange={() => { }}
                                         />
                                     )}
                                     <span

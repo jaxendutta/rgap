@@ -31,9 +31,9 @@ import {
 import { Grant, GrantAmendment, GrantWithDetails } from "@/types/database";
 import { Card } from "@/components/ui/Card";
 import Tag, { Tags } from "@/components/ui/Tag";
-import BookmarkButton from "@/components/features/bookmarks/BookmarkButton";
+import BookmarkButton from "@/components/bookmarks/BookmarkButton";
 import Tabs, { TabContent, TabItem } from "@/components/ui/Tabs";
-import { TrendVisualizer } from "@/components/features/visualizations/TrendVisualizer";
+import { TrendVisualizer } from "@/components/visualizations/TrendVisualizer";
 
 import {
     formatCSV,

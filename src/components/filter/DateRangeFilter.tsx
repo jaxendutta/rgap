@@ -2,7 +2,7 @@
 import { Calendar } from "lucide-react";
 import { FILTER_LIMITS } from "@/constants/filters";
 import { formatDate } from "@/lib/format";
-import { RangeFilter, Range } from "@/components/features/filter/RangeFilter";
+import { RangeFilter, Range } from "@/components/filter/RangeFilter";
 
 export interface DateRange {
     from: Date;

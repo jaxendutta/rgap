@@ -23,7 +23,7 @@ import { formatCSV, formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import BookmarkButton from "@/components/features/bookmarks/BookmarkButton";
+import BookmarkButton from "@/components/bookmarks/BookmarkButton";
 import {
     InstituteWithStats,
     RecipientWithStats,

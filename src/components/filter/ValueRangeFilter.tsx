@@ -2,7 +2,7 @@
 import { CircleDollarSign, Calendar } from "lucide-react";
 import { FILTER_LIMITS } from "@/constants/filters";
 import { formatDate, formatCurrency } from "@/lib/format";
-import { RangeFilter } from "@/components/features/filter/RangeFilter";
+import { RangeFilter } from "@/components/filter/RangeFilter";
 
 export interface RangeValue {
     min: number | Date;

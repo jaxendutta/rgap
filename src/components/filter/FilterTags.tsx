@@ -107,7 +107,7 @@ export const FilterTags: React.FC<FilterTagsProps> = ({
                 </h3>
                 <button
                     onClick={onClearAll}
-                    className="text-sm text-blue-600 hover:text-blue-700"
+                    className="text-sm text-blue-600 hover:text-blue-700 cursor-pointer"
                 >
                     Clear all
                 </button>
@@ -190,7 +190,7 @@ const SimpleFilterTag = ({
         {filterValue}
         <button
             onClick={onRemove}
-            className="ml-1 p-0.5 hover:bg-gray-200 rounded"
+            className="ml-1 p-0.5 hover:bg-gray-200 rounded cursor-pointer"
         >
             <X className="w-3 h-3" />
         </button>

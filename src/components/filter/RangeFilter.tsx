@@ -7,7 +7,6 @@ import {
     LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatDateOnly } from "@/lib/format";
 import { Button } from "@/components/ui/Button";
 
 // Generic range type that can work with both dates and numbers
@@ -141,24 +140,26 @@ export function RangeFilter<T>({
                     isOpen && "border-gray-300 ring-1 ring-gray-300"
                 )}
             >
-                <span className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
                     <FinalIcon className="h-4 w-4 text-gray-500" />
                     <span className="font-medium whitespace-nowrap">
                         {label}
                     </span>
-                    <span className="text-gray-600 italic">{displayValue}</span>
-                </span>
-                <ChevronDown
-                    className={cn(
-                        "w-4 h-4 text-gray-400 transition-transform",
-                        isOpen && "transform rotate-180"
-                    )}
-                />
+                </div>
+                <div className="flex flex-row items-center gap-2">
+                    <span className="text-gray-600 italic font-normal">{displayValue}</span>
+                    <ChevronDown
+                        className={cn(
+                            "w-4 h-4 text-gray-400 transition-transform",
+                            isOpen && "transform rotate-180"
+                        )}
+                    />
+                </div>
             </Button>
 
             {isOpen && (
                 <div
-                    className="absolute z-10 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-300"
+                    className="absolute z-10 mt-1 w-full bg-white rounded-3xl shadow-lg border border-gray-300"
                     ref={(el) => {
                         if (el && dropdownRef.current) {
                             // Get viewport dimensions
@@ -198,9 +199,8 @@ export function RangeFilter<T>({
                                     el.style.marginBottom = "0.25rem";
                                 } else {
                                     // Otherwise, just constrain the height
-                                    el.style.maxHeight = `${
-                                        viewportHeight - rect.top - 20
-                                    }px`;
+                                    el.style.maxHeight = `${viewportHeight - rect.top - 20
+                                        }px`;
                                     el.style.overflowY = "auto";
                                 }
                             }
@@ -214,7 +214,7 @@ export function RangeFilter<T>({
                                     variant="ghost"
                                     pill={false}
                                     key={range.label}
-                                    className="w-full px-2 py-1.5 text-left font-normal text-sm border border-gray-300"
+                                    className="w-full rounded-3xl px-2 py-1.5 text-left font-normal text-sm border border-gray-300"
                                     onClick={() =>
                                         handleQuickRangeSelect(range)
                                     }
@@ -236,9 +236,7 @@ export function RangeFilter<T>({
                                             type="date"
                                             value={
                                                 localValue.min instanceof Date
-                                                    ? formatDateOnly(
-                                                          localValue.min as Date
-                                                      )
+                                                    ? (localValue.min as Date).toISOString().split('T')[0]
                                                     : String(localValue.min)
                                             }
                                             onChange={(e) =>
@@ -247,7 +245,7 @@ export function RangeFilter<T>({
                                                     e.target.value
                                                 )
                                             }
-                                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md"
+                                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-3xl"
                                         />
                                     ) : (
                                         <input
@@ -259,7 +257,7 @@ export function RangeFilter<T>({
                                                     e.target.value
                                                 )
                                             }
-                                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md"
+                                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-3xl"
                                         />
                                     )}
                                 </div>
@@ -273,9 +271,7 @@ export function RangeFilter<T>({
                                             type="date"
                                             value={
                                                 localValue.max instanceof Date
-                                                    ? formatDateOnly(
-                                                          localValue.max as Date
-                                                      )
+                                                    ? (localValue.max as Date).toISOString().split('T')[0]
                                                     : String(localValue.max)
                                             }
                                             onChange={(e) =>
@@ -284,7 +280,7 @@ export function RangeFilter<T>({
                                                     e.target.value
                                                 )
                                             }
-                                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md"
+                                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-3xl"
                                         />
                                     ) : (
                                         <input
@@ -296,7 +292,7 @@ export function RangeFilter<T>({
                                                     e.target.value
                                                 )
                                             }
-                                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md"
+                                            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-3xl"
                                         />
                                     )}
                                 </div>

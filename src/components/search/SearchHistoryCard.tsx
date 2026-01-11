@@ -14,7 +14,7 @@ import { formatCurrency } from "@/lib/format";
 import { DEFAULT_FILTER_STATE, FILTER_LIMITS } from "@/constants/filters";
 import Tag, { Tags } from "@/components/ui/Tag";
 import { SearchHistory } from "@/types/database";
-import BookmarkButton from "@/components/features/bookmarks/BookmarkButton";
+import BookmarkButton from "@/components/bookmarks/BookmarkButton";
 import { useRouter } from "next/navigation";
 import { useDeleteSearchHistory } from "@/hooks/api/useSearchHistory";
 import { useNotification } from "@/components/features/notifications/NotificationProvider";
