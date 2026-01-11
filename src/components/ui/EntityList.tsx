@@ -1,131 +1,202 @@
 // src/components/ui/EntityList.tsx
-// Accepts children (rendered components) instead of renderItem function!
-
 'use client';
 
 import React, { useState } from "react";
-import { LuGrid2X2, LuList } from "react-icons/lu";
+import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { EntityType } from "@/types/database";
+import {
+    Grid,
+    List,
+    LineChart,
+    X,
+    DollarSign,
+    Hash,
+    Calendar,
+    Building2,
+    Users
+} from "lucide-react";
+import { MdSortByAlpha } from "react-icons/md";
 import LoadingState from "./LoadingState";
 import EmptyState from "./EmptyState";
 import ErrorState from "./ErrorState";
+import { Button } from "./Button";
+import { Card } from "./Card";
+import { SortButton } from "./SortButton"; // Assuming you have this, or I can inline it
+import { AnimatePresence, motion } from "framer-motion";
+import TrendVisualizer from "@/components/visualizations/TrendVisualizer";
+import { IconType } from "react-icons";
+
+// Icon mapping to fix serialization error
+const ICON_MAP: Record<string, IconType> = {
+    funding: DollarSign,
+    count: Hash,
+    text: MdSortByAlpha,
+    date: Calendar,
+    org: Building2,
+    person: Users,
+    default: MdSortByAlpha
+};
+
+export type IconKey = keyof typeof ICON_MAP;
+
+export interface SortOption {
+    label: string;
+    field: string;
+    icon: IconKey; // Pass the KEY, not the component
+}
 
 export type LayoutVariant = "list" | "grid";
 
 export interface EntityListProps<T> {
-    // Content props
     entityType: EntityType;
     entities?: T[];
-    children: React.ReactNode;  // Accept pre-rendered children instead of renderItem!
-    variant?: LayoutVariant;
-    emptyMessage?: string;
-    emptyState?: React.ReactNode;
+    totalCount: number;
+    children: React.ReactNode;
 
-    // Optional loading/error state props
+    // Sorting
+    sortOptions?: SortOption[];
+
+    // Visualization
+    showVisualization?: boolean;
+    visualizationData?: any[];
+
+    // States
     isLoading?: boolean;
     isError?: boolean;
     error?: Error | unknown;
-
-    // Optional additional class
+    emptyMessage?: string;
     className?: string;
-
-    // Layout toggle
-    allowLayoutToggle?: boolean;
 }
 
 function EntityList<T>(props: EntityListProps<T>) {
     const {
         entityType,
         entities = [],
+        totalCount,
         children,
-        variant = "grid",
-        emptyState,
-        emptyMessage = "No items found.",
-        className,
-        allowLayoutToggle = true,
+        sortOptions = [],
+        showVisualization = false,
+        visualizationData = [],
         isLoading = false,
         isError = false,
         error,
+        emptyMessage = "No items found.",
+        className,
     } = props;
 
-    const [layoutVariant, setLayoutVariant] = useState<LayoutVariant>(variant);
+    const router = useRouter();
+    const searchParams = useSearchParams();
 
-    // Show loading state
-    if (isLoading) {
-        return (
-            <LoadingState
-                title="Loading..."
-                message={`Loading ${entityType}s...`}
-            />
-        );
-    }
+    // State
+    const [layoutVariant, setLayoutVariant] = useState<LayoutVariant>("grid");
+    const [isVisualizationVisible, setIsVisualizationVisible] = useState(false);
 
-    // Show error state
+    // URL State helpers
+    const currentSortField = searchParams.get('sort') || sortOptions[0]?.field;
+    const currentSortDir = (searchParams.get('dir') as 'asc' | 'desc') || 'desc';
+
+    const handleSort = (field: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (field === currentSortField) {
+            params.set('dir', currentSortDir === 'desc' ? 'asc' : 'desc');
+        } else {
+            params.set('sort', field);
+            params.set('dir', 'desc');
+        }
+        params.set('page', '1'); // Reset to page 1
+        router.push(`?${params.toString()}`);
+    };
+
+    // Render States
     if (isError) {
-        return (
-            <ErrorState
-                title="Error loading data"
-                message={
-                    error instanceof Error
-                        ? error.message
-                        : "An unknown error occurred"
-                }
-            />
-        );
+        return <ErrorState title="Error loading data" message={error instanceof Error ? error.message : "An unknown error occurred"} />;
     }
 
-    // Show empty state
+    if (isLoading) {
+        return <LoadingState title="Loading..." message={`Loading ${entityType}s...`} />;
+    }
+
     if (!entities || entities.length === 0) {
-        return emptyState ? (
-            <>{emptyState}</>
-        ) : (
-            <EmptyState
-                title="No results found"
-                message={emptyMessage}
-            />
-        );
+        return <EmptyState title="No results found" message={emptyMessage} />;
     }
 
     return (
-        <div className={cn("space-y-4", className)}>
-            {/* Header with count and layout toggle */}
-            <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">
-                    {entities.length} {entityType}{entities.length !== 1 ? "s" : ""}
+        <div className={cn("space-y-6", className)}>
+            {/* Header Area */}
+            <Card variant="default" className="flex flex-col sm:flex-row justify-between items-center rounded-2xl p-2 bg-white/50 backdrop-blur-sm border-gray-100 shadow-sm gap-4 sm:gap-0">
+                <span className="text-xs md:text-sm text-gray-500 px-2">
+                    Showing <span className="font-semibold text-gray-900">{entities.length}</span> of{' '}
+                    <span className="font-semibold text-gray-900">{totalCount.toLocaleString()}</span>{' '}
+                    {entityType}{totalCount !== 1 ? 's' : ''}
+                </span>
+
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                    {/* Sort Buttons */}
+                    {sortOptions.map((option) => {
+                        const IconComponent = ICON_MAP[option.icon] || ICON_MAP.default;
+                        return (
+                            <SortButton<{ [key: string]: any }>
+                                key={option.field}
+                                label={option.label}
+                                icon={IconComponent}
+                                field={option.field as keyof { [key: string]: any }}
+                                currentField={currentSortField as keyof { [key: string]: any }}
+                                direction={currentSortDir}
+                                onClick={() => handleSort(option.field)}
+                            />
+                        );
+                    })}
+
+                    <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
+
+                    {/* Visualization Toggle */}
+                    {showVisualization && visualizationData.length > 0 && (
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            leftIcon={isVisualizationVisible ? X : LineChart}
+                            onClick={() => setIsVisualizationVisible(!isVisualizationVisible)}
+                            className={cn(
+                                "transition-colors",
+                                isVisualizationVisible ? "bg-blue-50 text-blue-600" : ""
+                            )}
+                        >
+                            {isVisualizationVisible ? "Hide Trends" : "Trends"}
+                        </Button>
+                    )}
+
+                    {/* Layout Toggle */}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        leftIcon={layoutVariant === 'grid' ? List : Grid}
+                        onClick={() => setLayoutVariant(layoutVariant === 'list' ? 'grid' : 'list')}
+                        aria-label="Toggle layout"
+                    />
                 </div>
+            </Card>
 
-                {allowLayoutToggle && (
-                    <div className="flex border border-gray-300 rounded-lg overflow-hidden">
-                        <button
-                            onClick={() => setLayoutVariant("list")}
-                            className={cn(
-                                "px-3 py-2 text-sm transition-colors",
-                                layoutVariant === "list"
-                                    ? "bg-gray-900 text-white"
-                                    : "bg-white text-gray-700 hover:bg-gray-100"
-                            )}
-                            aria-label="List view"
-                        >
-                            <LuList className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => setLayoutVariant("grid")}
-                            className={cn(
-                                "px-3 py-2 text-sm transition-colors",
-                                layoutVariant === "grid"
-                                    ? "bg-gray-900 text-white"
-                                    : "bg-white text-gray-700 hover:bg-gray-100"
-                            )}
-                            aria-label="Grid view"
-                        >
-                            <LuGrid2X2 className="w-4 h-4" />
-                        </button>
-                    </div>
+            {/* Visualization Panel */}
+            <AnimatePresence>
+                {isVisualizationVisible && showVisualization && visualizationData.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                    >
+                        <TrendVisualizer
+                            grants={visualizationData}
+                            height={350}
+                            viewContext="search"
+                        />
+                    </motion.div>
                 )}
-            </div>
+            </AnimatePresence>
 
-            {/* Entity list - render children in appropriate layout */}
+            {/* Content List */}
             <div
                 className={cn(
                     layoutVariant === "grid"

@@ -1,20 +1,44 @@
 // src/app/(dashboard)/recipients/page.tsx
-// No function passing to Client Components!
-
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
 import PageHeader from '@/components/layout/PageHeader';
-import EntityList from '@/components/ui/EntityList';
+import EntityList, { SortOption } from '@/components/ui/EntityList';
 import { EntityCard } from '@/components/ui/EntityCard';
+import { Pagination } from '@/components/ui/Pagination';
 import { Users } from 'lucide-react';
 import { RecipientWithStats } from '@/types/database';
 import PageContainer from '@/components/layout/PageContainer';
 
-export default async function RecipientsPage() {
+const SORT_FIELDS = {
+    funding: 'total_funding',
+    count: 'grant_count',
+    name: 'legal_name'
+};
+
+interface PageProps {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function RecipientsPage({ searchParams }: PageProps) {
     const user = await getCurrentUser();
     const userId = user?.id;
+    const resolvedParams = await searchParams;
 
-    // Fetch recipients with stats
+    // 1. Pagination & Sort
+    const page = Number(resolvedParams.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    const sortParam = (resolvedParams.sort as string) || 'funding';
+    const sortDir = (resolvedParams.dir as string) === 'asc' ? 'ASC' : 'DESC';
+    const sortField = SORT_FIELDS[sortParam as keyof typeof SORT_FIELDS] || 'total_funding';
+
+    // 2. Count
+    const countResult = await db.query(`SELECT COUNT(*) as total FROM recipients`);
+    const totalItems = parseInt(countResult.rows[0].total);
+    const totalPages = Math.ceil(totalItems / limit);
+
+    // 3. Data Query
     const result = await db.query<RecipientWithStats>(`
     SELECT 
       r.recipient_id,
@@ -27,8 +51,6 @@ export default async function RecipientsPage() {
       i.country,
       COUNT(DISTINCT g.grant_id) as grant_count,
       SUM(g.agreement_value) as total_funding,
-      MAX(g.agreement_start_date) as latest_grant_date,
-      MIN(g.agreement_start_date) as first_grant_date,
       ${userId ? `
         EXISTS(
           SELECT 1 FROM bookmarked_recipients br 
@@ -40,11 +62,18 @@ export default async function RecipientsPage() {
     LEFT JOIN institutes i ON r.institute_id = i.institute_id
     LEFT JOIN grants g ON r.recipient_id = g.recipient_id
     GROUP BY r.recipient_id, i.name, i.city, i.province, i.country
-    ORDER BY total_funding DESC NULLS LAST
-    LIMIT 100
-  `, userId ? [userId] : []);
+    ORDER BY ${sortField} ${sortDir} NULLS LAST
+    LIMIT $${userId ? 2 : 1} OFFSET $${userId ? 3 : 2}
+  `, userId ? [userId, limit, offset] : [limit, offset]);
 
     const recipients = result.rows;
+
+    // 4. Sort Options
+    const sortOptions: SortOption[] = [
+        { label: 'Total Funding', field: 'funding', icon: 'funding' },
+        { label: 'Grant Count', field: 'count', icon: 'count' },
+        { label: 'Name', field: 'name', icon: 'text' },
+    ];
 
     return (
         <PageContainer className="space-y-6">
@@ -55,11 +84,12 @@ export default async function RecipientsPage() {
             />
 
             <EntityList
-                entities={recipients}
                 entityType="recipient"
+                entities={recipients}
+                totalCount={totalItems}
+                sortOptions={sortOptions}
                 emptyMessage="No recipients found"
             >
-                {/* Render items HERE (in Server Component) instead of passing function */}
                 {recipients.map((recipient) => (
                     <EntityCard
                         key={recipient.recipient_id}
@@ -68,6 +98,8 @@ export default async function RecipientsPage() {
                     />
                 ))}
             </EntityList>
+
+            <Pagination totalPages={totalPages} />
         </PageContainer>
     );
 }
