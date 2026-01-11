@@ -271,7 +271,6 @@ export default function SearchInterface({
                         >
                             <PopularSearchesPanel
                                 onSelect={handlePopularSearchSelect}
-                                isVisible={activePanelType === 'popular'}
                             />
                         </motion.div>
                     )}

@@ -159,7 +159,7 @@ CREATE TABLE IF NOT EXISTS bookmarked_institutes (
 
 CREATE TABLE IF NOT EXISTS search_history (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,
+    user_id INTEGER,
     search_query TEXT NOT NULL,
     filters JSONB,
     result_count INTEGER,

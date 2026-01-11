@@ -1,6 +1,4 @@
 // src/app/(dashboard)/search/SearchPageClient.tsx
-// Client Component - Handles interactive search UI
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,6 +11,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import { Search as SearchIcon, GraduationCap, University, BookMarked } from 'lucide-react';
 import type { GrantWithDetails } from '@/types/database';
 import { DEFAULT_FILTER_STATE } from '@/constants/filters';
+import { saveSearchHistory } from '@/app/actions/history';
 
 interface FilterOptions {
     agencies: string[];
@@ -97,6 +96,10 @@ export default function SearchPageClient({
         if (shouldUpdateUrl) {
             updateUrl(params.searchTerms, params.filters);
         }
+
+        // 1. FIRE AND FORGET: Save history without awaiting
+        // We do this concurrently so it doesn't slow down the actual search
+        saveSearchHistory(params.searchTerms); 
 
         try {
             const response = await fetch('/api/grants', {

@@ -1,212 +1,135 @@
-// src/components/features/search/PopularSearchesPanel.tsx
-import { useState, useEffect } from "react";
-import {
-    UserRoundSearch,
-    University,
-    FileSearch2,
-    BookMarked,
-    Info,
-    RefreshCw,
-    ChevronRight,
-} from "lucide-react";
+'use client';
+
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import {
+    User,
+    University,
+    FileText,
+    TrendingUp,
+    ChevronRight,
+    Loader2
+} from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import LoadingState from "@/components/ui/LoadingState";
-import Button from "@/components/ui/Button";
-import Tag from "@/components/ui/Tag";
+import { Button } from "@/components/ui/Button";
+import { Tag } from "@/components/ui/Tag";
 import Tabs from "@/components/ui/Tabs";
 import EmptyState from "@/components/ui/EmptyState";
-import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import { PopularSearch, SearchCategory } from "@/types/database";
+import { SearchCategory, PopularSearch } from "@/types/search"; // <--- NEW IMPORT
+import { getPopularSearches } from "@/app/actions/analytics";
 
 interface PopularSearchesPanelProps {
-    onSelect: (category: SearchCategory, term: string) => void;
-    isVisible?: boolean;
+    onSelect?: (category: SearchCategory, term: string) => void;
+    className?: string;
 }
-
-const PopularSearchesPanelCard = ({
-    term,
-    index,
-    activeCategory,
-    onSelect,
-}: {
-    term: PopularSearch;
-    index: number;
-    activeCategory: SearchCategory;
-    onSelect: (category: SearchCategory, term: string) => void;
-}) => {
-    return (
-        <Button
-            variant="ghost"
-            key={index}
-            onClick={() => onSelect(activeCategory, term.text)}
-            className="flex items-center justify-between w-full p-1 lg:p-2 hover:bg-gray-50 transition-colors text-left"
-        >
-            <span className="flex items-center gap-2">
-                <Tag
-                    variant="default"
-                    className="mr-1"
-                    text={`#${index + 1}`}
-                />
-                <Tag
-                    variant="link"
-                    className="truncate w-min-0"
-                    text={term.text}
-                />
-            </span>
-            <Tag
-                variant="secondary"
-                className="text-xs bg-gray-100 px-2 py-1 rounded-full ml-2 flex-shrink-0"
-                text={`${term.count} searches`}
-            />
-        </Button>
-    );
-};
 
 export const PopularSearchesPanel = ({
     onSelect,
-    isVisible = true,
+    className
 }: PopularSearchesPanelProps) => {
     const router = useRouter();
-    const [activeCategory, setActiveCategory] =
-        useState<SearchCategory>("recipient");
-    const [initialLoad, setInitialLoad] = useState(false);
+    const [activeCategory, setActiveCategory] = useState<SearchCategory>("recipient");
+    const [data, setData] = useState<PopularSearch[]>([]);
+    const [isPending, startTransition] = useTransition();
 
-    // Use our updated hook with the category filter
-    const popularSearchesQuery = usePopularSearches({
-        dateRange: DEFAULT_FILTER_STATE.dateRange,
-        category: activeCategory,
-        enabled: isVisible, // Only fetch when the panel is visible
-        limit: 5, // Limit to top 5 items per category
-    });
+    // Fetch data when category changes
+    useEffect(() => {
+        startTransition(async () => {
+            const results = await getPopularSearches(activeCategory, 5);
+            setData(results);
+        });
+    }, [activeCategory]);
 
-    // Extract data and loading state from the query
-    const isLoading = popularSearchesQuery.isLoading;
-    const isError = popularSearchesQuery.isError;
-    const error = popularSearchesQuery.error;
-    const popularSearches = popularSearchesQuery.data?.pages[0].data || [];
+    // ... rest of the component (render logic remains the same)
 
-    // Define the tabs configuration
+    const handleSelect = (term: string) => {
+        if (onSelect) {
+            onSelect(activeCategory, term);
+        } else {
+            const params = new URLSearchParams();
+            params.set(activeCategory, term);
+            router.push(`/search?${params.toString()}`);
+        }
+    };
+
     const tabs = [
-        {
-            id: "recipient",
-            label: "Recipients",
-            icon: UserRoundSearch,
-        },
-        {
-            id: "institute",
-            label: "Institutes",
-            icon: University,
-        },
-        {
-            id: "grant",
-            label: "Grants",
-            icon: FileSearch2,
-        },
+        { id: "recipient", label: "Recipients", icon: User },
+        { id: "institute", label: "Institutes", icon: University },
+        { id: "grant", label: "Grants", icon: FileText },
     ];
 
-    // Force data fetch when the panel becomes visible for the first time
-    useEffect(() => {
-        if (isVisible && !initialLoad) {
-            console.log("Panel became visible, triggering fetch");
-            popularSearchesQuery.refetch();
-            setInitialLoad(true);
-        }
-    }, [isVisible, initialLoad, popularSearchesQuery]);
-
     return (
-        <Card className="p-4">
-            <div className="flex flex-col space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-md font-medium">Popular Searches</h3>
-
-                    {/* Popular Searches Page */}
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        rightIcon={ChevronRight}
-                        onClick={() => {
-                            router.push(
-                                `/search/popular?category=${activeCategory}`
-                            );
-                        }}
-                    >
-                        View All
-                    </Button>
+        <Card className={className}>
+            <div className="p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-gray-900 font-medium">
+                        <TrendingUp className="w-5 h-5 text-blue-600" />
+                        <h3>Popular Searches</h3>
+                    </div>
                 </div>
 
-                {/* Category Tabs using Tabs component */}
                 <Tabs
                     tabs={tabs}
                     activeTab={activeCategory}
-                    onChange={(tabId) =>
-                        setActiveCategory(tabId as SearchCategory)
-                    }
-                    variant="pills"
+                    onChange={(id) => setActiveCategory(id as SearchCategory)}
+                    variant="underline"
                     size="sm"
-                    fullWidth={true}
+                    fullWidth
                 />
 
-                {/* Loading State */}
-                {isLoading && (
-                    <div className="py-6">
-                        <LoadingState
-                            title="Loading popular searches"
-                            message="Please wait..."
-                            size="sm"
-                        />
-                    </div>
-                )}
+                <div className="min-h-[200px]">
+                    {isPending ? (
+                        <div className="flex flex-col items-center justify-center h-48 text-gray-400 gap-2">
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                            <span className="text-xs">Updating trends...</span>
+                        </div>
+                    ) : data.length > 0 ? (
+                        <div className="space-y-1 mt-2">
+                            {data.map((item, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => handleSelect(item.text)}
+                                    className="w-full group flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                                >
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                        <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold">
+                                            {index + 1}
+                                        </span>
+                                        <span className="text-sm text-gray-700 font-medium truncate group-hover:text-blue-700 transition-colors">
+                                            {item.text}
+                                        </span>
+                                    </div>
 
-                {/* Error State */}
-                {isError && !isLoading && (
-                    <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm mb-2">
-                        <p className="flex items-center">
-                            <Info className="h-4 w-4 mr-2 text-red-500" />
-                            {error instanceof Error
-                                ? error.message
-                                : "Failed to load popular searches"}
-                        </p>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            leftIcon={RefreshCw}
-                            onClick={() => popularSearchesQuery.refetch()}
-                            className="mt-2"
-                        >
-                            Try Again
-                        </Button>
-                    </div>
-                )}
-
-                {/* Search Terms List */}
-                {!isLoading && !isError && (
-                    <div className="space-y-2">
-                        {popularSearches.length > 0 ? (
-                            popularSearches.map(
-                                (term: PopularSearch, index: number) => (
-                                    <PopularSearchesPanelCard
-                                        key={index}
-                                        term={term}
-                                        index={index}
-                                        activeCategory={activeCategory}
-                                        onSelect={onSelect}
+                                    <Tag
+                                        variant="secondary"
+                                        size="sm"
+                                        className="text-[10px] px-1.5 h-5 text-gray-400 font-normal bg-transparent border border-gray-100"
+                                        text={String(item.count)}
                                     />
-                                )
-                            )
-                        ) : (
+                                </button>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="h-48 flex items-center justify-center">
                             <EmptyState
-                                title="No popular searches"
-                                message="No popular searches found for this period. Try selecting a different date range."
-                                icon={BookMarked}
+                                title="No trends yet"
+                                message="Start searching to see what's popular!"
                                 size="sm"
                             />
-                        )}
-                    </div>
-                )}
+                        </div>
+                    )}
+                </div>
+
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-xs text-gray-500 hover:text-gray-900 mt-2"
+                    onClick={() => router.push(`/search`)}
+                >
+                    View All Categories
+                    <ChevronRight className="w-3 h-3 ml-1" />
+                </Button>
             </div>
         </Card>
     );
 };
-
-export default PopularSearchesPanel;
