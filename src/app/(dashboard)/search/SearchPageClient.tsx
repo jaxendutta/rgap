@@ -59,7 +59,7 @@ export default function SearchPageClient({ filterOptions }: SearchPageClientProp
     return (
         <PageContainer>
             <PageHeader
-                title="Advanced Grant Search"
+                title="Advanced Search"
                 subtitle="Search for grants across NSERC, CIHR, and SSHRC funding agencies"
             />
 

@@ -1,6 +1,4 @@
 // src/components/features/search/SearchInterface.tsx
-// Updated to accept filterOptions as prop (no hooks needed!)
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -11,7 +9,7 @@ import {
     AlertCircle,
     type LucideIcon,
 } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, Variants } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -20,6 +18,31 @@ import { FilterTags } from '@/components/filter/FilterTags';
 import { PopularSearchesPanel } from '@/components/search/PopularSearchesPanel';
 import { SearchField } from '@/components/search/SearchField';
 import { DEFAULT_FILTER_STATE, type FilterKey } from '@/constants/filters';
+
+// --- Explicitly typed as Variants ---
+const panelVariants: Variants = {
+    hidden: {
+        height: 0,
+        opacity: 0,
+        overflow: 'hidden',
+        transition: { duration: 0.3, ease: 'easeInOut' }
+    },
+    visible: {
+        height: 'auto',
+        opacity: 1,
+        overflow: 'hidden',
+        transition: { duration: 0.3, ease: 'easeInOut' },
+        transitionEnd: {
+            overflow: 'visible'
+        }
+    },
+    exit: {
+        height: 0,
+        opacity: 0,
+        overflow: 'hidden',
+        transition: { duration: 0.2, ease: 'easeInOut' }
+    }
+};
 
 interface SearchFieldConfig {
     key: string;
@@ -219,15 +242,15 @@ export default function SearchInterface({
                 </div>
             </div>
 
-            {/* Panels */}
+            {/* Panels with UPDATED Animation Logic */}
             <div className="transition-all duration-300 ease-in-out pb-2">
                 <AnimatePresence>
                     {activePanelType === 'filters' && (
                         <motion.div
-                            initial={{ height: 0 }}
-                            animate={{ height: 'auto' }}
-                            exit={{ height: 0 }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                            variants={panelVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
                         >
                             <FilterPanel
                                 filters={filters}
@@ -241,11 +264,10 @@ export default function SearchInterface({
                 <AnimatePresence>
                     {activePanelType === 'popular' && showPopularSearches && (
                         <motion.div
-                            initial={{ height: 0 }}
-                            animate={{ height: 'auto' }}
-                            exit={{ height: 0 }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                            style={{ overflow: 'hidden' }}
+                            variants={panelVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
                         >
                             <PopularSearchesPanel
                                 onSelect={handlePopularSearchSelect}
