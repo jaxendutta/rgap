@@ -43,7 +43,7 @@ export default function HomePage() {
         "Create Account",
         "Sign up to save searches, bookmark grants, and more.",
         UserPlus,
-        "/auth",
+        "/login",
       ],
     ];
 
