@@ -1,5 +1,5 @@
 // src/utils/chartDataTransforms.ts
-import { Grant } from "@/types/database";
+import { GrantWithDetails } from "@/types/database";
 
 export interface ChartDataPoint {
     [key: string]: any;
@@ -14,7 +14,7 @@ export interface ChartDataPoint {
  * @returns Array of data points with yearly aggregated values
  */
 export function transformGrantsToYearlyData(
-    grants: Grant[],
+    grants: GrantWithDetails[],
     metric: "funding" | "counts",
     groupBy: string = "org"
 ): ChartDataPoint[] {
@@ -53,13 +53,13 @@ export function transformGrantsToYearlyData(
         }
 
         // Get the value for grouping
-        const categoryRaw = grant[groupBy as keyof Grant];
+        const categoryRaw = grant[groupBy as keyof GrantWithDetails];
         const category = String(categoryRaw || "Unknown");
 
         // Handle special case for program names
         const processedCategory =
-            groupBy === "prog_id" && grant.prog_title_en
-                ? grant.prog_title_en
+            groupBy === "prog_id" && grant.prog_name_en
+                ? grant.prog_name_en
                 : category;
 
         // Initialize year data if not exists
