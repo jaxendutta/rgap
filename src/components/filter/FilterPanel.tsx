@@ -5,8 +5,7 @@ import { DEFAULT_FILTER_STATE, FILTER_LIMITS } from '@/constants/filters';
 import { MultiSelect } from '@/components/ui/MultiSelect';
 import { DateRangeFilter } from './DateRangeFilter';
 import { ValueRangeFilter, type RangeValue } from './ValueRangeFilter';
-import { Earth, Landmark, LocateFixed, Radar } from 'lucide-react';
-import { Card } from '@/components/ui/Card';
+import { LuEarth, LuLandmark, LuLocateFixed, LuRadar } from 'react-icons/lu';
 
 interface FilterOptions {
     agencies: string[];
@@ -67,7 +66,7 @@ export function FilterPanel({ filters, filterOptions, onChange }: FilterPanelPro
 
                 {/* Agencies */}
                 <MultiSelect
-                    icon={Landmark}
+                    icon={LuLandmark}
                     label="Agencies"
                     options={filterOptions.agencies}
                     values={filters.agencies}
@@ -76,7 +75,7 @@ export function FilterPanel({ filters, filterOptions, onChange }: FilterPanelPro
 
                 {/* Countries */}
                 <MultiSelect
-                    icon={Earth}
+                    icon={LuEarth}
                     label="Countries"
                     options={filterOptions.countries}
                     values={filters.countries}
@@ -85,7 +84,7 @@ export function FilterPanel({ filters, filterOptions, onChange }: FilterPanelPro
 
                 {/* Provinces */}
                 <MultiSelect
-                    icon={Radar}
+                    icon={LuRadar}
                     label="Provinces"
                     options={filterOptions.provinces}
                     values={filters.provinces}
@@ -94,7 +93,7 @@ export function FilterPanel({ filters, filterOptions, onChange }: FilterPanelPro
 
                 {/* Cities */}
                 <MultiSelect
-                    icon={LocateFixed}
+                    icon={LuLocateFixed}
                     label="Cities"
                     options={filterOptions.cities}
                     values={filters.cities}

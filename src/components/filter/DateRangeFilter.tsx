@@ -1,5 +1,5 @@
 // src/components/common/ui/DateRangeFilter.tsx
-import { Calendar } from "lucide-react";
+import { LuCalendar } from "react-icons/lu";
 import { FILTER_LIMITS } from "@/constants/filters";
 import { formatDate } from "@/lib/format";
 import { RangeFilter, Range } from "@/components/filter/RangeFilter";
@@ -83,7 +83,7 @@ export const DateRangeFilter = ({
     return (
         <RangeFilter<Date>
             label={label}
-            icon={Calendar}
+            icon={LuCalendar}
             value={mappedValue}
             onChange={handleRangeChange}
             formatValue={formatDate}

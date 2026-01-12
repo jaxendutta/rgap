@@ -5,18 +5,18 @@
 "use client";
 
 import {
-    MapPin,
-    University,
-    Users,
-    BookMarked,
-    ArrowUpRight,
-    ChevronLeft,
-    SquareUser,
-    Landmark,
-    Calendar,
-    CircleDollarSign,
-    HandCoins,
-} from "lucide-react";
+    LuMapPin,
+    LuUniversity,
+    LuUsers,
+    LuBookMarked,
+    LuArrowUpRight,
+    LuChevronLeft,
+    LuSquareUser,
+    LuLandmark,
+    LuCalendar,
+    LuCircleDollarSign,
+    LuHandCoins,
+} from "react-icons/lu";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatCSV, formatCurrency } from "@/lib/format";
@@ -140,7 +140,7 @@ export const EntityCard = ({
                     <div className="flex space-x-2">
                         <Button
                             variant="outline"
-                            leftIcon={ChevronLeft}
+                            leftIcon={LuChevronLeft}
                             onClick={() => router.back()}
                         >
                             Back
@@ -165,7 +165,7 @@ export const EntityCard = ({
     // Show institute link for recipients
     if (instituteInfo?.name) {
         metadataItems.push({
-            icon: University,
+            icon: LuUniversity,
             text: instituteInfo.name,
             link: `/institutes/${instituteInfo.id}`,
         });
@@ -174,7 +174,7 @@ export const EntityCard = ({
     // Show location if available
     if (location) {
         metadataItems.push({
-            icon: MapPin,
+            icon: LuMapPin,
             text: location,
         });
     }
@@ -182,7 +182,7 @@ export const EntityCard = ({
     // Show entity type
     if (typeLabel) {
         metadataItems.push({
-            icon: entityType === "institute" ? Landmark : SquareUser,
+            icon: entityType === "institute" ? LuLandmark : LuSquareUser,
             text: typeLabel,
         });
     }
@@ -196,34 +196,34 @@ export const EntityCard = ({
             {
                 label: "Recipients",
                 value: recipients ? recipients.toLocaleString() : "N/A",
-                icon: Users,
+                icon: LuUsers,
             },
             {
                 label: "Grants",
                 value: grants ? grants.toLocaleString() : "N/A",
-                icon: BookMarked,
+                icon: LuBookMarked,
             },
             {
                 label: "Total Funding",
                 value: funding ? formatCurrency(funding) : "N/A",
-                icon: CircleDollarSign,
+                icon: LuCircleDollarSign,
             },
         ]
         : [
             {
                 label: "Grants",
                 value: grants ? grants.toLocaleString() : "N/A",
-                icon: BookMarked,
+                icon: LuBookMarked,
             },
             {
                 label: "Latest Grant",
                 value: latestDate ? new Date(latestDate).toLocaleDateString() : "N/A",
-                icon: Calendar,
+                icon: LuCalendar,
             },
             {
                 label: "Total Funding",
                 value: funding ? formatCurrency(funding) : "N/A",
-                icon: HandCoins,
+                icon: LuHandCoins,
             },
         ];
 
@@ -245,7 +245,7 @@ export const EntityCard = ({
                     className="text-lg font-medium hover:text-blue-600 transition-colors group flex items-start max-w-[90%]"
                 >
                     <span className="line-clamp-2">{name}</span>
-                    <ArrowUpRight className="ml-1 h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
+                    <LuArrowUpRight className="ml-1 h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
                 </Link>
 
                 <BookmarkButton

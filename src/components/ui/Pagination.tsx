@@ -4,7 +4,7 @@
 import { usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from './Button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 
 interface PaginationProps {
     totalPages: number;
@@ -29,13 +29,13 @@ export function Pagination({ totalPages }: PaginationProps) {
             {currentPage > 1 ? (
                 <Link href={createPageURL(currentPage - 1)}>
                     <Button variant="outline">
-                        <ChevronLeft className="h-4 w-4" />
+                        <LuChevronLeft className="h-4 w-4" />
                         Previous
                     </Button>
                 </Link>
             ) : (
                 <Button variant="outline" disabled>
-                    <ChevronLeft className="h-4 w-4" />
+                    <LuChevronLeft className="h-4 w-4" />
                     Previous
                 </Button>
             )}
@@ -49,13 +49,13 @@ export function Pagination({ totalPages }: PaginationProps) {
                 <Link href={createPageURL(currentPage + 1)}>
                     <Button variant="outline">
                         Next
-                        <ChevronRight className="h-4 w-4" />
+                        <LuChevronRight className="h-4 w-4" />
                     </Button>
                 </Link>
             ) : (
                 <Button variant="outline" disabled>
                     Next
-                    <ChevronRight className="h-4 w-4" />
+                    <LuChevronRight className="h-4 w-4" />
                 </Button>
             )}
         </div>

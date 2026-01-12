@@ -4,7 +4,7 @@
 
 import { useAuth } from '@/providers/AuthProvider';
 import { useRouter } from 'next/navigation';
-import { Bookmark, BookmarkCheck } from 'lucide-react';
+import { LuBookmark, LuBookmarkCheck } from 'react-icons/lu';
 import { useState } from 'react';
 import { Button, variants } from '@/components/ui/Button';
 
@@ -41,7 +41,7 @@ export function BookmarkButton({
                 title="Sign in to bookmark this item"
                 variant={variant}
             >
-                <Bookmark className="w-4 h-4" />
+                <LuBookmark className="w-4 h-4" />
                 {showLabel && <span className="hidden md:inline-flex">Sign in to bookmark</span>}
             </Button>
         );
@@ -82,12 +82,12 @@ export function BookmarkButton({
         >
             {bookmarked ? (
                 <>
-                    <BookmarkCheck className="w-4 h-4 text-blue-600" />
+                    <LuBookmarkCheck className="w-4 h-4 text-blue-600" />
                     {showLabel && <span className="hidden md:inline-flex ml-2">Bookmarked</span>}
                 </>
             ) : (
                 <>
-                    <Bookmark className="w-4 h-4" />
+                    <LuBookmark className="w-4 h-4" />
                     {showLabel && <span className="hidden md:inline-flex ml-2">Bookmark</span>}
                 </>
             )}

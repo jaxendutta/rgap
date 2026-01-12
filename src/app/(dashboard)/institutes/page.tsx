@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
 import EntitiesPage from '@/components/entity/EntitiesPage';
 import { SortOption } from '@/components/entity/EntityList';
-import { University } from 'lucide-react';
+import { LuUniversity } from 'react-icons/lu';
 import { InstituteWithStats } from '@/types/database';
 import { Metadata } from 'next';
 
@@ -76,7 +76,7 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
         <EntitiesPage
             title="Institutes"
             subtitle="Browse research institutions and their funding statistics"
-            icon={University}
+            icon={LuUniversity}
             entities={institutes}
             totalItems={totalItems}
             totalPages={totalPages}

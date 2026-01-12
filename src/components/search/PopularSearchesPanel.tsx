@@ -3,13 +3,13 @@
 import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
-    User,
-    University,
-    FileText,
-    TrendingUp,
-    ChevronRight,
-    Loader2
-} from "lucide-react";
+    LuUser,
+    LuUniversity,
+    LuFileText,
+    LuTrendingUp,
+    LuChevronRight,
+    LuLoader
+} from "react-icons/lu";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Tag } from "@/components/ui/Tag";
@@ -53,9 +53,9 @@ export const PopularSearchesPanel = ({
     };
 
     const tabs = [
-        { id: "recipient", label: "Recipients", icon: User },
-        { id: "institute", label: "Institutes", icon: University },
-        { id: "grant", label: "Grants", icon: FileText },
+        { id: "recipient", label: "Recipients", icon: LuUser },
+        { id: "institute", label: "Institutes", icon: LuUniversity },
+        { id: "grant", label: "Grants", icon: LuFileText },
     ];
 
     return (
@@ -63,7 +63,7 @@ export const PopularSearchesPanel = ({
             <div className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-gray-900 font-medium">
-                        <TrendingUp className="w-5 h-5 text-blue-600" />
+                        <LuTrendingUp className="w-5 h-5 text-blue-600" />
                         <h3>Popular Searches</h3>
                     </div>
                 </div>
@@ -80,7 +80,7 @@ export const PopularSearchesPanel = ({
                 <div className="min-h-[200px]">
                     {isPending ? (
                         <div className="flex flex-col items-center justify-center h-48 text-gray-400 gap-2">
-                            <Loader2 className="w-6 h-6 animate-spin" />
+                            <LuLoader className="w-6 h-6 animate-spin" />
                             <span className="text-xs">Updating trends...</span>
                         </div>
                     ) : data.length > 0 ? (
@@ -127,7 +127,7 @@ export const PopularSearchesPanel = ({
                     onClick={() => router.push(`/search`)}
                 >
                     View All Categories
-                    <ChevronRight className="w-3 h-3 ml-1" />
+                    <LuChevronRight className="w-3 h-3 ml-1" />
                 </Button>
             </div>
         </Card>

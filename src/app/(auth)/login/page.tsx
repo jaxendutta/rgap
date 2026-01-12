@@ -1,16 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useActionState } from 'react';
+import { useState, useActionState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authAction } from '@/app/actions/auth';
 import Button from '@/components/ui/Button';
 import InputField from '@/components/ui/InputField';
 import { Card } from '@/components/ui/Card';
 import Tabs from '@/components/ui/Tabs';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
 import { LuChevronLeft } from 'react-icons/lu';
 
 const initialState = { message: '' };

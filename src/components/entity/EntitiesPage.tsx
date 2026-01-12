@@ -4,13 +4,13 @@ import PageHeader from "@/components/layout/PageHeader";
 import EntityList, { SortOption } from "@/components/entity/EntityList";
 import { EntityCard } from "@/components/entity/EntityCard";
 import { Pagination } from "@/components/ui/Pagination";
-import { LucideIcon } from "lucide-react";
+import { IconType } from "react-icons";
 import { EntityType, InstituteWithStats, RecipientWithStats } from "@/types/database";
 
 interface EntitiesPageProps {
     title: string;
     subtitle: string;
-    icon: LucideIcon;
+    icon: IconType;
     entities: (InstituteWithStats | RecipientWithStats)[];
     totalItems: number;
     totalPages: number;

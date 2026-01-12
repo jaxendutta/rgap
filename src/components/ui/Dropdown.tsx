@@ -2,7 +2,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef, ReactNode } from "react";
-import { ChevronDown, LucideIcon } from "lucide-react";
+import { LuChevronDown } from "react-icons/lu";
+import { IconType } from "react-icons";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Button from "./Button";
@@ -13,7 +14,7 @@ export interface Option {
 }
 
 export interface DropdownProps {
-    icon?: LucideIcon;
+    icon?: IconType;
     label?: string;
     value: string | string[];
     options: (Option | string)[];
@@ -102,7 +103,7 @@ export const Dropdown = ({
                 </div>
                 <div className="flex w-full justify-between items-center gap-2">
                     <span className="text-gray-600 italic whitespace-nowrap">{getDisplayValue()}</span>
-                    <ChevronDown
+                    <LuChevronDown
                         className={cn(
                             "w-4 h-4 text-gray-400 transition-transform",
                             isOpen && "transform rotate-180"

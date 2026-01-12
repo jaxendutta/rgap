@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
 import EntitiesPage from '@/components/entity/EntitiesPage';
 import { SortOption } from '@/components/entity/EntityList';
-import { Users } from 'lucide-react';
+import { LuUsers } from 'react-icons/lu';
 import { RecipientWithStats } from '@/types/database';
 import { Metadata } from 'next';
 
@@ -80,7 +80,7 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
         <EntitiesPage
             title="Recipients"
             subtitle="Browse grant recipients and their research funding"
-            icon={Users}
+            icon={LuUsers}
             entities={recipients}
             totalItems={totalItems}
             totalPages={totalPages}

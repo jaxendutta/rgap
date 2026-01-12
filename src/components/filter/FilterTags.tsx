@@ -1,6 +1,7 @@
 // src/components/features/filter/FilterTags.tsx
 import React from "react";
-import { X, LucideIcon } from "lucide-react";
+import { LuX } from "react-icons/lu";
+import { IconType } from "react-icons";
 import { formatDate, formatCurrency } from "@/lib/format";
 import { FILTER_LIMITS, DEFAULT_FILTER_STATE } from "@/constants/filters";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,7 @@ type FilterKey =
 
 // FilterTag Component
 export interface FilterTagProps {
-    icon?: LucideIcon;
+    icon?: IconType;
     label: string;
     value: string | string[];
     className?: string;
@@ -59,7 +60,7 @@ export const FilterTag: React.FC<FilterTagProps> = ({
                     onClick={onRemove}
                     className="ml-1 p-0.5 hover:bg-gray-200 rounded"
                 >
-                    <X className="w-3 h-3" />
+                    <LuX className="w-3 h-3" />
                 </button>
             )}
         </span>
@@ -192,7 +193,7 @@ const SimpleFilterTag = ({
             onClick={onRemove}
             className="ml-1 p-0.5 hover:bg-gray-200 rounded cursor-pointer"
         >
-            <X className="w-3 h-3" />
+            <LuX className="w-3 h-3" />
         </button>
     </span>
 );

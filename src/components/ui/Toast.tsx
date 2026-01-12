@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from "react";
-import { X, CheckCircle, AlertCircle, Info } from "lucide-react";
+import { LuX, LuCircleCheck, LuCircleAlert, LuInfo } from "react-icons/lu";
 import { cn } from "@/lib/utils"; // Assuming you have a standard cn utility, or use classNames
 
 export type ToastType = 'success' | 'error' | 'info';
@@ -14,9 +14,9 @@ interface ToastProps {
 }
 
 const icons = {
-    success: <CheckCircle className="w-5 h-5 text-green-600" />,
-    error: <AlertCircle className="w-5 h-5 text-red-600" />,
-    info: <Info className="w-5 h-5 text-blue-600" />,
+    success: <LuCircleCheck className="w-5 h-5 text-green-600" />,
+    error: <LuCircleAlert className="w-5 h-5 text-red-600" />,
+    info: <LuInfo className="w-5 h-5 text-blue-600" />,
 };
 
 const styles = {
@@ -39,7 +39,7 @@ export function Toast({ id, message, type, onClose }: ToastProps) {
             <div className="flex-shrink-0">{icons[type]}</div>
             <p className="text-sm font-medium flex-1">{message}</p>
             <button onClick={() => onClose(id)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-4 h-4" />
+                <LuX className="w-4 h-4" />
             </button>
         </div>
     );

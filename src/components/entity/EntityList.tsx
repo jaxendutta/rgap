@@ -6,16 +6,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { EntityType } from "@/types/database";
 import {
-    Grid,
-    List,
-    LineChart,
-    X,
-    DollarSign,
-    Hash,
-    Calendar,
-    Building2,
-    Users
-} from "lucide-react";
+    LuGrid2X2,
+    LuList,
+    LuChartLine,
+    LuX,
+    LuDollarSign,
+    LuHash,
+    LuCalendar,
+    LuBuilding2,
+    LuUsers
+} from "react-icons/lu";
 import { MdSortByAlpha } from "react-icons/md";
 import LoadingState from "@/components/ui/LoadingState";
 import EmptyState from "@/components/ui/EmptyState";
@@ -29,12 +29,12 @@ import { IconType } from "react-icons";
 
 // Icon mapping to fix serialization error
 const ICON_MAP: Record<string, IconType> = {
-    funding: DollarSign,
-    count: Hash,
+    funding: LuDollarSign,
+    count: LuHash,
     text: MdSortByAlpha,
-    date: Calendar,
-    org: Building2,
-    person: Users,
+    date: LuCalendar,
+    org: LuBuilding2,
+    person: LuUsers,
     default: MdSortByAlpha
 };
 
@@ -155,7 +155,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                         <Button
                             variant="secondary"
                             size="sm"
-                            leftIcon={isVisualizationVisible ? X : LineChart}
+                            leftIcon={isVisualizationVisible ? LuX : LuChartLine}
                             onClick={() => setIsVisualizationVisible(!isVisualizationVisible)}
                             className={cn(
                                 "transition-colors",
@@ -170,7 +170,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                     <Button
                         variant="ghost"
                         size="sm"
-                        leftIcon={layoutVariant === 'grid' ? List : Grid}
+                        leftIcon={layoutVariant === 'grid' ? LuList : LuGrid2X2}
                         onClick={() => setLayoutVariant(layoutVariant === 'list' ? 'grid' : 'list')}
                         aria-label="Toggle layout"
                     />

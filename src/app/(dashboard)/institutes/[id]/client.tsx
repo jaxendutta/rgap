@@ -2,16 +2,17 @@
 'use client';
 
 import {
-    University,
-    Users,
-    BookMarked,
-    BarChart3,
-    Calendar,
-    CircleDollarSign,
-    ExternalLink,
-    Activity,
-    TrendingUp,
-} from 'lucide-react';
+    LuUniversity,
+    LuUsers,
+    LuBookMarked,
+    LuCalendar,
+    LuCircleDollarSign,
+    LuExternalLink,
+    LuActivity,
+    LuTrendingUp,
+    LuScale,
+} from 'react-icons/lu';
+import { GrAnalytics } from 'react-icons/gr';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { TabItem } from '@/components/ui/Tabs';
@@ -49,26 +50,26 @@ export function InstituteDetailClient({
         {
             id: 'recipients',
             label: 'Recipients',
-            icon: Users,
+            icon: LuUsers,
             count: institute.recipient_count
         },
         {
             id: 'grants',
             label: 'Grants',
-            icon: BookMarked,
+            icon: LuBookMarked,
             count: institute.grant_count
         },
         {
             id: 'analytics',
             label: 'Analytics',
-            icon: BarChart3
+            icon: GrAnalytics
         }
     ];
 
     // Define actions
     const actions: ActionButton[] = [
         {
-            icon: ExternalLink,
+            icon: LuExternalLink,
             label: 'Search',
             onClick: () => window.open(
                 `https://www.google.com/search?q=${encodeURIComponent(institute.name)}`,
@@ -82,7 +83,7 @@ export function InstituteDetailClient({
     const renderHeader = () => (
         <EntityHeader
             title={institute.name}
-            icon={University}
+            icon={LuUniversity}
             entityType="institute"
             location={location}
         />
@@ -118,39 +119,39 @@ export function InstituteDetailClient({
 
         const stats: StatItem[] = [
             {
-                icon: Users,
+                icon: LuUsers,
                 label: 'Recipients',
                 value: institute.recipient_count || 0
             },
             {
-                icon: BookMarked,
+                icon: LuBookMarked,
                 label: 'Grants',
                 value: institute.grant_count || 0
             },
             {
-                icon: CircleDollarSign,
+                icon: LuCircleDollarSign,
                 label: 'Total Funding',
                 value: formatCurrency(institute.total_funding || 0)
             },
             {
-                icon: Calendar,
+                icon: LuCalendar,
                 label: 'Active Since',
                 value: institute.first_grant_date
                     ? new Date(institute.first_grant_date).getFullYear().toString()
                     : 'N/A'
             },
             {
-                icon: Activity,
+                icon: LuActivity,
                 label: 'Active Recipients',
                 value: `${activeCount.toLocaleString()} / ${activePercentage}%`
             },
             {
-                icon: TrendingUp,
+                icon: LuTrendingUp,
                 label: 'Funding / Recipient',
                 value: formatCurrency(fundingPerRecipient)
             },
             {
-                icon: BarChart3,
+                icon: LuScale,
                 label: 'Funding / Grant',
                 value: formatCurrency(fundingPerGrant)
             }
@@ -186,7 +187,7 @@ export function InstituteDetailClient({
                         {topRecipients.length === 0 ? (
                             <Card className="p-12">
                                 <div className="text-center text-gray-500">
-                                    <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                                    <LuUsers className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                                     <p className="text-lg font-medium">No recipients found</p>
                                     <p className="text-sm mt-1">This institute has no recorded recipients yet.</p>
                                 </div>
@@ -229,7 +230,7 @@ export function InstituteDetailClient({
                         {topGrants.length === 0 ? (
                             <Card className="p-12">
                                 <div className="text-center text-gray-500">
-                                    <BookMarked className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                                    <LuBookMarked className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                                     <p className="text-lg font-medium">No grants found</p>
                                     <p className="text-sm mt-1">This institute has no recorded grants yet.</p>
                                 </div>

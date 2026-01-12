@@ -8,7 +8,7 @@ import PageHeader from '@/components/layout/PageHeader';
 import SearchInterface from '@/components/search/SearchInterface';
 import { GrantCard } from '@/components/grants/GrantCard';
 import EmptyState from '@/components/ui/EmptyState';
-import { Search as SearchIcon, GraduationCap, University, BookMarked } from 'lucide-react';
+import { LuSearch, LuGraduationCap, LuUniversity, LuBookMarked } from 'react-icons/lu';
 import type { GrantWithDetails } from '@/types/database';
 import { DEFAULT_FILTER_STATE } from '@/constants/filters';
 import { saveSearchHistory } from '@/app/actions/history';
@@ -135,17 +135,17 @@ export default function SearchPageClient({
                 fields={[
                     {
                         key: 'recipient',
-                        icon: GraduationCap,
+                        icon: LuGraduationCap,
                         placeholder: 'Search by recipient name...'
                     },
                     {
                         key: 'institute',
-                        icon: University,
+                        icon: LuUniversity,
                         placeholder: 'Search by institute name...'
                     },
                     {
                         key: 'grant',
-                        icon: BookMarked,
+                        icon: LuBookMarked,
                         placeholder: 'Search by grant title...'
                     },
                 ]}
@@ -163,13 +163,13 @@ export default function SearchPageClient({
                     </div>
                 ) : !hasSearched ? (
                     <EmptyState
-                        icon={SearchIcon}
+                        icon={LuSearch}
                         title="Start Your Search"
                         message="Enter search terms or use filters to find grants"
                     />
                 ) : grants.length === 0 ? (
                     <EmptyState
-                        icon={SearchIcon}
+                        icon={LuSearch}
                         title="No Results Found"
                         message="Try adjusting your search terms or filters"
                     />

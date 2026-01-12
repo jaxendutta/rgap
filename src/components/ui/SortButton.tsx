@@ -1,5 +1,5 @@
 // src/components/ui/SortButton.tsx
-import { MoveDown, MoveUp } from "lucide-react";
+import { LuMoveDown, LuMoveUp } from "react-icons/lu";
 import { Button } from "./Button";
 import { cn } from "@/lib/utils";
 import { IconType } from "react-icons";
@@ -44,9 +44,9 @@ export const SortButton = <T,>({
             {isActive && (
                 <span className="text-gray-900">
                     {direction === "asc" ? (
-                        <MoveUp size={12} />
+                        <LuMoveUp size={12} />
                     ) : (
-                        <MoveDown size={12} />
+                        <LuMoveDown size={12} />
                     )}
                 </span>
             )}

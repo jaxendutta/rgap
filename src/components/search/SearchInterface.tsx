@@ -3,12 +3,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import {
-    Search as SearchIcon,
-    SlidersHorizontal,
-    Sparkles,
-    AlertCircle,
-    type LucideIcon,
-} from 'lucide-react';
+    LuSearch,
+    LuSlidersHorizontal,
+    LuSparkles,
+    LuCircleAlert,
+} from 'react-icons/lu';
+import { IconType } from 'react-icons';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
@@ -46,7 +46,7 @@ const panelVariants: Variants = {
 
 interface SearchFieldConfig {
     key: string;
-    icon: LucideIcon;
+    icon: IconType;
     placeholder: string;
 }
 
@@ -204,7 +204,7 @@ export default function SearchInterface({
                     {showPopularSearches && (
                         <Button
                             variant={activePanelType === 'popular' ? 'primary' : 'secondary'}
-                            leftIcon={Sparkles}
+                            leftIcon={LuSparkles}
                             onClick={() => togglePanel('popular')}
                             className={cn(
                                 "py-2 md:py-3",
@@ -218,7 +218,7 @@ export default function SearchInterface({
                     )}
                     <Button
                         variant={activePanelType === 'filters' ? 'primary' : 'secondary'}
-                        leftIcon={SlidersHorizontal}
+                        leftIcon={LuSlidersHorizontal}
                         onClick={() => togglePanel('filters')}
                         className={cn(
                             "py-2 md:py-3",
@@ -235,7 +235,7 @@ export default function SearchInterface({
                     <Button
                         id="search-button"
                         variant="primary"
-                        leftIcon={SearchIcon}
+                        leftIcon={LuSearch}
                         onClick={performSearch}
                         className="bg-gray-900 hover:bg-black py-2 md:py-3"
                     >
@@ -296,7 +296,7 @@ export default function SearchInterface({
                     >
                         <Card className="bg-amber-50 border-dashed border-amber-500 rounded-lg p-3.5 shadow-none">
                             <div className="flex gap-2">
-                                <AlertCircle className="h-4 w-4 mt-1 text-amber-500 flex-shrink-0" />
+                                <LuCircleAlert className="h-4 w-4 mt-1 text-amber-500 flex-shrink-0" />
                                 <span className="text-amber-700 text-sm">
                                     Search terms have changed. Press the search button to see updated results.
                                 </span>

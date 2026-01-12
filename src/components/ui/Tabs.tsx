@@ -1,6 +1,5 @@
 // src/components/ui/Tabs.tsx
 import React, { useRef, useEffect, useState } from "react";
-import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { IconType } from "react-icons";

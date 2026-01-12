@@ -1,6 +1,6 @@
 // src/components/common/ui/ErrorState.tsx
 import React from "react";
-import { FileWarning, RefreshCw, ChevronLeft } from "lucide-react";
+import { LuFileWarning, LuRefreshCw, LuChevronLeft } from "react-icons/lu";
 import { Button } from "./Button";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +40,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({
     titleClassName,
     messageClassName,
 }) => {
-    const Icon = CustomIcon || FileWarning;
+    const Icon = CustomIcon || LuFileWarning;
 
     // Variant-specific classes
     const variantClasses = {
@@ -126,7 +126,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({
                                 <Button
                                     variant="outline"
                                     size={size === "lg" ? "md" : "sm"}
-                                    leftIcon={ChevronLeft}
+                                    leftIcon={LuChevronLeft}
                                     onClick={onBack}
                                 >
                                     {backLabel}
@@ -137,7 +137,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({
                                 <Button
                                     variant="primary"
                                     size={size === "lg" ? "md" : "sm"}
-                                    leftIcon={RefreshCw}
+                                    leftIcon={LuRefreshCw}
                                     onClick={onRetry}
                                 >
                                     {retryLabel}

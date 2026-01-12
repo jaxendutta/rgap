@@ -2,47 +2,47 @@
 
 import { useRouter } from "next/navigation";
 import {
-  Search,
-  Database,
-  ChartSpline,
-  UserPlus,
-  LogIn,
-  LucideIcon,
-  GraduationCap,
-  Building,
-} from "lucide-react";
+  LuSearch,
+  LuGraduationCap,
+  LuBuilding,
+  LuDatabase,
+  LuChartSpline,
+  LuUserPlus,
+  LuLogIn,
+} from "react-icons/lu";
 import PageContainer from "@/components/layout/PageContainer";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { IconType } from "react-icons";
 
 export default function HomePage() {
   const features: [
     title: string,
     description: string,
-    icon: LucideIcon,
+    icon: IconType,
     link?: string
   ][] = [
       [
         "Comprehensive Data",
         "Access and analyze over 175,000 research grants from NSERC, CIHR, and SSHRC.",
-        Database,
+        LuDatabase,
         "/search",
       ],
       [
         "Advanced Analytics",
         "Visualize funding trends, analyze success rates, and track research investments.",
-        ChartSpline,
+        LuChartSpline,
       ],
       [
         "Recipients + Institutes",
         "Discover researchers and institutions behind the grants.",
-        GraduationCap,
+        LuGraduationCap,
         "/recipients",
       ],
       [
         "Create Account",
         "Sign up to save searches, bookmark grants, and more.",
-        UserPlus,
+        LuUserPlus,
         "/login",
       ],
     ];
@@ -74,7 +74,7 @@ export default function HomePage() {
               <Button
                 variant="primary"
                 size="lg"
-                leftIcon={Search}
+                leftIcon={LuSearch}
                 className="pl-4.5 pr-6 text-sm md:text-base"
                 onClick={() => router.push("/search")}
               >
@@ -84,7 +84,7 @@ export default function HomePage() {
               <Button
                 variant="outline"
                 size="lg"
-                leftIcon={LogIn}
+                leftIcon={LuLogIn}
                 className="pl-4.5 pr-5 text-sm md:text-base"
                 onClick={() => router.push("/login")}
               >

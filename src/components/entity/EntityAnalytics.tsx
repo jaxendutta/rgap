@@ -7,16 +7,15 @@ import { GrantWithDetails, InstituteWithStats, RecipientWithStats } from "@/type
 import { Card } from "@/components/ui/Card";
 import { TrendVisualizer } from "@/components/visualizations/TrendVisualizer";
 import {
-    Activity,
-    TrendingUp,
-    TrendingDown,
-    MoveRight,
-    GraduationCap,
-    University,
-    Calendar,
-    ActivityIcon,
-    Award,
-} from "lucide-react";
+    LuTrendingUp,
+    LuTrendingDown,
+    LuMoveRight,
+    LuGraduationCap,
+    LuUniversity,
+    LuCalendar,
+    LuActivity,
+    LuAward,
+} from "react-icons/lu";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { IconType } from "react-icons";
@@ -201,7 +200,7 @@ export const TopRecipientsAnalysis = ({
     return (
         <Card className="p-4 md:p-6">
             <div className="flex items-center mb-4">
-                <Award className="h-3.5 md:h-5 w-3.5 md:w-5 text-gray-700 mr-2" />
+                <LuAward className="h-3.5 md:h-5 w-3.5 md:w-5 text-gray-700 mr-2" />
                 <h3 className="text-base md:text-lg font-semibold text-gray-900">Top Recipients</h3>
             </div>
             <div className="space-y-3">
@@ -271,7 +270,7 @@ export const AgencyBreakdown = ({
     return (
         <Card className="p-4 md:p-6">
             <div className="flex items-center mb-4">
-                <University className="h-3.5 md:h-5 w-3.5 md:w-5 text-gray-700 mr-2" />
+                <LuUniversity className="h-3.5 md:h-5 w-3.5 md:w-5 text-gray-700 mr-2" />
                 <h3 className="text-base md:text-lg font-semibold text-gray-900">Agency Breakdown</h3>
             </div>
             <div className="space-y-3">
@@ -337,7 +336,7 @@ export const TimePeriodAnalytics = ({
     return (
         <Card className="p-4 md:p-6">
             <div className="flex items-center mb-4">
-                <Calendar className="h-3.5 md:h-5 w-3.5 md:w-5 text-gray-700 mr-2" />
+                <LuCalendar className="h-3.5 md:h-5 w-3.5 md:w-5 text-gray-700 mr-2" />
                 <h3 className="text-base md:text-lg font-semibold text-gray-900">{title}</h3>
             </div>
             <div className="space-y-3">
@@ -421,16 +420,16 @@ export default function EntityAnalytics({
                                 {fundingGrowth.percentChange.toFixed(1)}%
                                 {fundingGrowth.yearsSpan > 0 && ` over ${fundingGrowth.yearsSpan} years`}
                                 {Math.abs(fundingGrowth.percentChange) < 10 ? (
-                                    <MoveRight className="h-4 w-4 ml-1 inline" />
+                                    <LuMoveRight className="h-4 w-4 ml-1 inline" />
                                 ) : fundingGrowth.percentChange < 0 ? (
-                                    <TrendingDown className="h-4 w-4 ml-1 inline" />
+                                    <LuTrendingDown className="h-4 w-4 ml-1 inline" />
                                 ) : (
-                                    <TrendingUp className="h-4 w-4 ml-1 inline" />
+                                    <LuTrendingUp className="h-4 w-4 ml-1 inline" />
                                 )}
                             </span>
                         </div>
                     }
-                    icon={ActivityIcon}
+                    icon={LuActivity}
                 />
 
                 {/* Entity-specific metric */}
@@ -449,7 +448,7 @@ export default function EntityAnalytics({
                                 )}
                             </div>
                         }
-                        icon={GraduationCap}
+                        icon={LuGraduationCap}
                     />
                 ) : (
                     <KpiCard
@@ -462,7 +461,7 @@ export default function EntityAnalytics({
                                 </span>
                             </div>
                         }
-                        icon={Calendar}
+                        icon={LuCalendar}
                     />
                 )}
 
@@ -479,7 +478,7 @@ export default function EntityAnalytics({
                             )}
                         </div>
                     }
-                    icon={University}
+                    icon={LuUniversity}
                 />
             </div>
 

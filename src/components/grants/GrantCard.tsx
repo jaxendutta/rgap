@@ -5,29 +5,28 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-    University,
-    BookMarked,
-    Database,
-    ArrowUpRight,
-    MapPin,
-    Calendar,
-    ChevronDown,
-    DollarSign,
-    FileText,
-    AlertCircle,
-    History,
-    TrendingUp,
-    TrendingDown,
-    CornerDownRight,
-    Layers,
-    LineChart,
-    Hourglass,
-    Calendar1,
-    GraduationCap,
-    Landmark,
-    BookOpen,
-} from "lucide-react";
-
+    LuUniversity,
+    LuBookmark,
+    LuDatabase,
+    LuArrowUpRight,
+    LuMapPin,
+    LuCalendar,
+    LuChevronDown,
+    LuDollarSign,
+    LuFileText,
+    LuCircleAlert,
+    LuHistory,
+    LuTrendingUp,
+    LuTrendingDown,
+    LuCornerDownRight,
+    LuLayers,
+    LuChartLine,
+    LuHourglass,
+    LuCalendar1,
+    LuGraduationCap,
+    LuLandmark,
+    LuBookOpen,
+} from "react-icons/lu";
 import { GrantAmendment, GrantWithDetails } from "@/types/database";
 import { Card } from "@/components/ui/Card";
 import Tag, { Tags } from "@/components/ui/Tag";
@@ -63,7 +62,7 @@ const RenderChangeIndicator = ({ current, previous }: { current: number; previou
     if (diff === 0) return null;
 
     const isPositive = diff > 0;
-    const Icon = isPositive ? TrendingUp : TrendingDown;
+    const Icon = isPositive ? LuTrendingUp : LuTrendingDown;
     const colorClass = isPositive ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700";
 
     return (
@@ -89,10 +88,10 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
                         className="flex text-sm md:text-base lg:text-lg font-medium hover:text-blue-700 transition-colors gap-1.5 group"
                         aria-label={`View profile for recipient ${grant.legal_name}`}
                     >
-                        <GraduationCap className="h-4.5 w-4.5 md:mt-1 align-text-bottom flex-shrink-0" />
+                        <LuGraduationCap className="h-4.5 w-4.5 md:mt-1 align-text-bottom flex-shrink-0" />
                         <span className="inline-block">
                             {grant.legal_name}
-                            <ArrowUpRight className="hidden md:inline-block h-4 w-4 ml-1 mb-0.5 align-text-bottom opacity-20 group-hover:opacity-100 group-hover:-translate-y-0.5 transition-all" />
+                            <LuArrowUpRight className="hidden md:inline-block h-4 w-4 ml-1 mb-0.5 align-text-bottom opacity-20 group-hover:opacity-100 group-hover:-translate-y-0.5 transition-all" />
                         </span>
                     </Link>
 
@@ -113,7 +112,7 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
 
                 <Tags spacing="normal">
                     <Tag
-                        icon={University}
+                        icon={LuUniversity}
                         size="sm"
                         variant="link"
                         onClick={() => router.push(`/institutes/${grant.institute_id}`)}
@@ -121,7 +120,7 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
                         className="group w-full lg:w-auto"
                     />
                     <Tag
-                        icon={BookMarked}
+                        icon={LuBookmark}
                         size="sm"
                         variant="outline"
                         className={cn(
@@ -138,9 +137,9 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
 
 const MetadataTags = ({ grant }: { grant: GrantWithDetails }) => {
     const tags = useMemo(() => [
-        { icon: Database, text: grant.ref_number },
+        { icon: LuDatabase, text: grant.ref_number },
         {
-            icon: MapPin,
+            icon: LuMapPin,
             text: formatCSV([grant.city, grant.province, grant.country].filter((v): v is string => !!v)),
             hide: !(
                 (grant.city && grant.city.toUpperCase() !== "N/A") ||
@@ -149,17 +148,17 @@ const MetadataTags = ({ grant }: { grant: GrantWithDetails }) => {
             ),
         },
         {
-            icon: Calendar,
+            icon: LuCalendar1,
             text: `${formatDate(new Date(grant.agreement_start_date))} → ${grant.agreement_end_date ? formatDate(new Date(grant.agreement_end_date)) : "N/A"
                 }`,
         },
         {
-            icon: Hourglass,
+            icon: LuHourglass,
             text: grant.agreement_end_date
                 ? formatDateDiff(grant.agreement_start_date, grant.agreement_end_date)
                 : "One-time payment",
         },
-        { icon: Landmark, text: grant.org },
+        { icon: LuLandmark, text: grant.org },
     ].filter((tag) => !tag.hide), [grant]);
 
     return (
@@ -194,7 +193,7 @@ const VersionsTab = ({ amendments, currentAmendmentNumber }: { amendments: any[]
     <div>
         <div className="mb-6 bg-gray-50 p-3 lg:p-4 rounded-xl">
             <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                <Layers className="h-4 w-4 mr-1.5" />
+                <LuLayers className="h-4 w-4 mr-1.5" />
                 Version Timeline
             </h3>
             <div className="grid grid-cols-3 gap-2 lg:gap-4 text-center">
@@ -266,7 +265,7 @@ const VersionsTab = ({ amendments, currentAmendmentNumber }: { amendments: any[]
                                                 <div className="space-y-2 text-sm">
                                                     {hasValueChange && (
                                                         <div className="flex items-start">
-                                                            <CornerDownRight className="h-3 w-3 mr-2 mt-1 shrink-0 text-gray-400" />
+                                                            <LuCornerDownRight className="h-3 w-3 mr-2 mt-1 shrink-0 text-gray-400" />
                                                             <span className="text-gray-600">
                                                                 Funding changed from <span className="font-medium mx-1">{formatCurrency(prevAmendment.agreement_value)}</span>
                                                                 to <span className={cn("font-medium mx-1", amendment.agreement_value > prevAmendment.agreement_value ? "text-green-600" : "text-amber-600")}>
@@ -280,7 +279,7 @@ const VersionsTab = ({ amendments, currentAmendmentNumber }: { amendments: any[]
                                                     )}
                                                     {hasEndDateChange && (
                                                         <div className="flex items-start">
-                                                            <CornerDownRight className="h-3 w-3 mr-2 mt-1 shrink-0 text-gray-400" />
+                                                            <LuCornerDownRight className="h-3 w-3 mr-2 mt-1 shrink-0 text-gray-400" />
                                                             <span className="text-gray-600">
                                                                 End date {new Date(amendment.agreement_end_date) > new Date(prevAmendment.agreement_end_date) ? " extended from" : " changed from"}
                                                                 <span className="font-medium mx-1">{formatDate(prevAmendment.agreement_end_date)}</span>
@@ -315,7 +314,7 @@ const FundingTab = ({ grant, amendments, hasAmendments }: { grant: GrantWithDeta
     <div>
         <div className="mb-6 bg-gray-50 p-3 lg:p-4 rounded-lg">
             <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-start">
-                <LineChart className="h-4 w-4 mr-1.5 mt-0.5 shrink-0" />
+                <LuChartLine className="h-4 w-4 mr-1.5 mt-0.5 shrink-0" />
                 Funding Overview
             </h3>
 
@@ -406,11 +405,11 @@ export const GrantCard = (grant: GrantWithDetails) => {
 
     const tabs: TabItem[] = useMemo(() => {
         const items: TabItem[] = [
-            { id: "details", label: "Details", icon: FileText },
-            { id: "timeline", label: "Timeline", icon: LineChart },
+            { id: "details", label: "Details", icon: LuFileText },
+            { id: "timeline", label: "Timeline", icon: LuChartLine },
         ];
         if (hasAmendments) {
-            items.splice(1, 0, { id: "versions", label: "Version History", icon: History });
+            items.splice(1, 0, { id: "versions", label: "Version History", icon: LuHistory });
         }
         return items;
     }, [hasAmendments]);
@@ -433,7 +432,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
                             }}
                             className="inline-flex items-center bg-blue-50 hover:bg-blue-100 transition-colors text-blue-700 text-xs font-medium rounded-full px-2.5 py-1"
                         >
-                            <History className="h-3 w-3 mr-1" />
+                            <LuHistory className="h-3 w-3 mr-1" />
                             {`${amendmentNumber > 0 ? `Amendment ${amendmentNumber}` : "Original"} • Versions available: ${amendments.length}`}
                         </button>
 
@@ -458,7 +457,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
                     onClick={() => setIsExpanded(!isExpanded)}
                     className="mt-3 flex w-full items-center justify-center p-1 text-xs md:text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
                 >
-                    <ChevronDown className={cn("h-4 md:h-5 w-4 md:w-5 transition-transform duration-200", isExpanded && "transform rotate-180")} />
+                    <LuChevronDown className={cn("h-4 md:h-5 w-4 md:w-5 transition-transform duration-200", isExpanded && "transform rotate-180")} />
                     <span className="ml-1">{isExpanded ? "Show Less" : "Show More"}</span>
                 </button>
 
@@ -477,7 +476,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
                         {activeTab === "details" && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <Card>
-                                    <Card.Header title="Grant Information" icon={Database} size="sm" />
+                                    <Card.Header title="Grant Information" icon={LuDatabase} size="sm" />
                                     <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 space-y-1">
                                         <InfoRow label="Reference Number" value={grant.ref_number} />
                                         <InfoRow label="Program" value={grant.prog_title_en} placeholder="Not specified" />
@@ -487,7 +486,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
                                 </Card>
 
                                 <Card>
-                                    <Card.Header title="Funding Summary" icon={DollarSign} size="sm" />
+                                    <Card.Header title="Funding Summary" icon={LuDollarSign} size="sm" />
                                     <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 space-y-1">
                                         <div className="grid grid-cols-12 gap-2 items-center">
                                             <span className="col-span-5 text-gray-500 self-start">Current Value</span>
@@ -519,7 +518,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
                                 </Card>
 
                                 <Card>
-                                    <Card.Header title="Funding Timeline" icon={Calendar} size="sm" />
+                                    <Card.Header title="Funding Timeline" icon={LuCalendar} size="sm" />
                                     <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 space-y-1">
                                         <InfoRow label="Start Date" value={formatDate(grant.agreement_start_date)} />
                                         <InfoRow label="End Date" value={formatDate(grant.agreement_end_date)} />
@@ -530,7 +529,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
                                 </Card>
 
                                 <Card>
-                                    <Card.Header title="Location" icon={MapPin} size="sm" />
+                                    <Card.Header title="Location" icon={LuMapPin} size="sm" />
                                     <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 space-y-1">
                                         <InfoRow label="Country" value={grant.country} placeholder="Not specified" checkValue={v => !!v && v.toUpperCase() !== "N/A"} />
                                         <InfoRow label="Province/State" value={grant.province} placeholder="Not specified" checkValue={v => !!v && v.toUpperCase() !== "N/A"} />
@@ -539,14 +538,14 @@ export const GrantCard = (grant: GrantWithDetails) => {
                                 </Card>
 
                                 <Card>
-                                    <Card.Header title={grant.prog_title_en || "Program Information"} subtitle={grant.prog_title_en ? "Program Purpose" : "Unspecified Program"} icon={BookOpen} size="sm" />
+                                    <Card.Header title={grant.prog_title_en || "Program Information"} subtitle={grant.prog_title_en ? "Program Purpose" : "Unspecified Program"} icon={LuBookOpen} size="sm" />
                                     <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 p-4">
                                         {hasValue(grant.prog_purpose_en) ? grant.prog_purpose_en : "Program purpose not specified"}
                                     </Card.Content>
                                 </Card>
 
                                 <Card>
-                                    <Card.Header title={grant.agreement_title_en || "Agreement Description"} subtitle={grant.agreement_title_en ? "Agreement Description" : "Unspecified Agreement Description"} icon={FileText} size="sm" />
+                                    <Card.Header title={grant.agreement_title_en || "Agreement Description"} subtitle={grant.agreement_title_en ? "Agreement Description" : "Unspecified Agreement Description"} icon={LuFileText} size="sm" />
                                     <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 p-4">
                                         {grant.description_en || "Agreement description not specified"}
                                     </Card.Content>
@@ -554,7 +553,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
 
                                 {hasValue(grant.expected_results_en) && (
                                     <Card>
-                                        <Card.Header title="Expected Results" icon={AlertCircle} size="sm" />
+                                        <Card.Header title="Expected Results" icon={LuCircleAlert} size="sm" />
                                         <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 p-4">
                                             {grant.expected_results_en}
                                         </Card.Content>

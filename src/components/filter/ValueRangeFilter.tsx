@@ -1,5 +1,5 @@
 // src/components/common/ui/ValueRangeFilter.tsx
-import { CircleDollarSign, Calendar } from "lucide-react";
+import { LuCircleDollarSign, LuCalendar } from "react-icons/lu";
 import { FILTER_LIMITS } from "@/constants/filters";
 import { formatDate, formatCurrency } from "@/lib/format";
 import { RangeFilter } from "@/components/filter/RangeFilter";
@@ -79,7 +79,7 @@ export const ValueRangeFilter = ({
     };
 
     // Get appropriate icon based on type
-    const icon = type === "currency" ? CircleDollarSign : Calendar;
+    const icon = type === "currency" ? LuCircleDollarSign : LuCalendar;
 
     return (
         <RangeFilter<number | Date>

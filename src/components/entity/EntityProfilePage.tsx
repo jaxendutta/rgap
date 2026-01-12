@@ -5,7 +5,7 @@ import React, { useState, useMemo } from 'react';
 import { Card } from "@/components/ui/Card";
 import Tabs, { TabItem } from "@/components/ui/Tabs";
 import PageContainer from "@/components/layout/PageContainer";
-import { MapPin, ChevronLeft, ChevronDown } from 'lucide-react';
+import { LuMapPin, LuChevronLeft, LuChevronDown } from 'react-icons/lu';
 import { useRouter } from 'next/navigation';
 import Tag from '@/components/ui/Tag';
 import { Button } from '@/components/ui/Button';
@@ -60,7 +60,7 @@ export const EntityHeader: React.FC<EntityHeaderProps> = ({
     const locationTag = useMemo(() => {
         if (!location) return null;
         return {
-            icon: MapPin,
+            icon: LuMapPin,
             text: location,
             variant: 'default' as const,
         };
@@ -226,7 +226,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                 <Button
                     variant="outline"
                     size="sm"
-                    leftIcon={ChevronLeft}
+                    leftIcon={LuChevronLeft}
                     onClick={() => router.back()}
                     className="text-xs md:text-base"
                 >
@@ -315,7 +315,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                             {hasMore && (
                                 <div className="flex justify-center items-center">
                                     <Button variant="ghost" size="sm" onClick={() => setStatsExpanded(!statsExpanded)} className="rounded-full w-8 h-8 p-0 bg-white/50 hover:bg-gray-200 z-10">
-                                        <ChevronDown className={cn("h-5 w-5 text-gray-500 transition-transform duration-300", statsExpanded && "rotate-180")} />
+                                        <LuChevronDown className={cn("h-5 w-5 text-gray-500 transition-transform duration-300", statsExpanded && "rotate-180")} />
                                     </Button>
                                 </div>
                             )}

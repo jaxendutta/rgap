@@ -1,6 +1,7 @@
 // src/components/common/ui/EmptyState.tsx
 import React from "react";
-import { Plus, LucideIcon, PackageOpen } from "lucide-react";
+import { LuPlus, LuPackageOpen } from "react-icons/lu";
+import { IconType } from "react-icons";
 import { Button } from "./Button";
 import { cn } from "@/lib/utils";
 
@@ -13,12 +14,12 @@ interface EmptyStateProps {
     primaryAction?: {
         label: string;
         onClick: () => void;
-        icon?: LucideIcon;
+        icon?: IconType;
     };
     secondaryAction?: {
         label: string;
         onClick: () => void;
-        icon?: LucideIcon;
+        icon?: IconType;
     };
 
     // Appearance
@@ -44,7 +45,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
     titleClassName,
     messageClassName,
 }) => {
-    const Icon = CustomIcon || PackageOpen;
+    const Icon = CustomIcon || LuPackageOpen;
 
     // Size-specific classes
     const iconSizes = {
@@ -107,7 +108,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
                         <Button
                             variant="primary"
                             size={size === "sm" ? "sm" : "md"}
-                            rightIcon={primaryAction.icon || Plus}                            
+                            rightIcon={primaryAction.icon || LuPlus}                            
                             onClick={primaryAction.onClick}
                         >
                             {primaryAction.label}

@@ -3,18 +3,18 @@
 
 import React, { useState, useMemo } from "react";
 import {
-    DollarSign,
-    Hash,
-    ChartColumnStacked,
-    ChartColumn,
-    ChartSpline,
-    Activity,
-    Landmark,
-    GraduationCap,
-    Calendar,
-    BookOpen,
-    LucideIcon,
-} from "lucide-react";
+    LuDollarSign,
+    LuHash,
+    LuChartColumnStacked,
+    LuChartColumn,
+    LuChartSpline,
+    LuActivity,
+    LuLandmark,
+    LuGraduationCap,
+    LuCalendar,
+    LuBookOpen,
+} from "react-icons/lu";
+import { IconType } from "react-icons";
 import { cn } from "@/lib/utils";
 import { Grant, GrantAmendment, GrantWithDetails } from "@/types/database";
 import { Card } from "@/components/ui/Card";
@@ -62,25 +62,25 @@ interface TrendVisualizerProps {
     height?: number;
     className?: string;
     title?: string;
-    icon?: LucideIcon;
+    icon?: IconType;
     showControls?: boolean;
 }
 
 // Get the icon for each grouping dimension
 const getGroupingIcon = (dimension: GroupingDimension): React.ElementType => {
     const iconMap: Record<GroupingDimension, React.ElementType> = {
-        org: Landmark,
-        city: GraduationCap,
-        province: GraduationCap,
-        country: GraduationCap,
-        recipient: GraduationCap,
-        institute: Landmark,
-        program: BookOpen,
-        year: Calendar,
-        amendment: Activity,
+        org: LuLandmark,
+        city: LuGraduationCap,
+        province: LuGraduationCap,
+        country: LuGraduationCap,
+        recipient: LuGraduationCap,
+        institute: LuLandmark,
+        program: LuBookOpen,
+        year: LuCalendar,
+        amendment: LuActivity,
     };
 
-    return iconMap[dimension] || Activity;
+    return iconMap[dimension] || LuActivity;
 };
 
 // Default groupings based on context
@@ -115,7 +115,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
     height = 400,
     className,
     title = "Trend Visualizer",
-    icon = Activity,
+    icon = LuActivity,
     showControls = true,
 }) => {
     // Check if the data is empty
@@ -502,8 +502,8 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                         {availableMetrics.length > 1 && !isAmendmentView && (
                             <ToggleButtons>
                                 {[
-                                    ["funding", DollarSign],
-                                    ["count", Hash],
+                                    ["funding", LuDollarSign],
+                                    ["count", LuHash],
                                 ].map(([type, Icon], index) => (
                                     <Button
                                         key={index}
@@ -534,9 +534,9 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                         {/* Chart type toggle */}
                         <ToggleButtons>
                             {[
-                                ["line", ChartSpline],
-                                ["stacked", ChartColumnStacked],
-                                ["grouped", ChartColumn],
+                                ["line", LuChartSpline],
+                                ["stacked", LuChartColumnStacked],
+                                ["grouped", LuChartColumn],
                             ].map(([type, Icon], index) => (
                                 <Button
                                     key={index}

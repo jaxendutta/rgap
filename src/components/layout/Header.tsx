@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { CircleArrowUp, User } from "lucide-react";
+import { LuCircleArrowUp, LuUser } from "react-icons/lu";
 import { GiAbstract014 } from "react-icons/gi";
 import { FaRegSun } from "react-icons/fa";
 
@@ -87,7 +87,7 @@ const Header = () => {
                         onClick={scrollToTop}
                         aria-label="Scroll to top"
                     >
-                        <CircleArrowUp className="h-6 w-6" />
+                        <LuCircleArrowUp className="h-6 w-6" />
                     </button>
 
                     {/* Theme Toggle Placeholder */}
@@ -103,7 +103,7 @@ const Header = () => {
                         href={isLoggedIn ? "/account" : "/login"}
                         className="p-1 text-gray-600 hover:text-gray-800"
                     >
-                        <User className="h-6 w-6" />
+                        <LuUser className="h-6 w-6" />
                     </Link>
                 </div>
             </div>

@@ -1,10 +1,10 @@
 // src/components/ui/MultiSelect.tsx
 
-import { LucideIcon } from "lucide-react";
 import { Dropdown } from "./Dropdown";
+import { IconType } from "react-icons";
 
 export interface MultiSelectProps {
-    icon?: LucideIcon;
+    icon?: IconType;
     label: string;
     options: string[];
     values: string[];

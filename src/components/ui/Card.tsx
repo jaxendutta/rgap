@@ -1,7 +1,7 @@
 // src/components/common/ui/Card.tsx
 import React from "react";
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
+import { IconType } from "react-icons";
 
 // Card Container
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -46,7 +46,7 @@ const Card = ({
 interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
     title?: string;
     subtitle?: React.ReactNode;
-    icon?: LucideIcon;
+    icon?: IconType;
     action?: React.ReactNode;
     size?: "sm" | "md";
 }

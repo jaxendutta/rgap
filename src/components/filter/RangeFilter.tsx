@@ -1,11 +1,11 @@
 // src/components/common/ui/RangeFilter.tsx
 import { useState, useEffect, useRef } from "react";
 import {
-    ChevronDown,
-    Calendar,
-    CircleDollarSign,
-    LucideIcon,
-} from "lucide-react";
+    LuChevronDown,
+    LuCalendar,
+    LuCircleDollarSign
+} from "react-icons/lu";
+import { IconType } from "react-icons";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
@@ -19,7 +19,7 @@ export interface Range<T> {
 // Base props for all range filter components
 export interface RangeFilterProps<T> {
     label: string;
-    icon?: LucideIcon;
+    icon?: IconType;
     value: Range<T>;
     onChange: (value: Range<T>) => void;
     formatValue: (val: T) => string;
@@ -57,8 +57,8 @@ export function RangeFilter<T>({
     // Get default icon based on type
     const DefaultIcon =
         typeof value.min === "number" || typeof value.min === "string"
-            ? CircleDollarSign
-            : Calendar;
+            ? LuCircleDollarSign
+            : LuCalendar;
 
     const FinalIcon = Icon || DefaultIcon;
 
@@ -143,7 +143,7 @@ export function RangeFilter<T>({
                 </div>
                 <div className="flex w-full items-center gap-2">
                     <span className="text-gray-600 italic w-full">{displayValue}</span>
-                    <ChevronDown
+                    <LuChevronDown
                         className={cn(
                             "w-4 h-4 text-gray-400 transition-transform duration-200",
                             isOpen && "transform rotate-180"

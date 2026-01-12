@@ -2,16 +2,16 @@
 'use client';
 
 import {
-    GraduationCap,
-    BookMarked,
-    BarChart3,
-    Calendar,
-    CircleDollarSign,
-    TrendingUp,
-    University,
-    Building2,
-    Award,
-} from 'lucide-react';
+    LuGraduationCap,
+    LuBookMarked,
+    LuChartBar,
+    LuCalendar,
+    LuCircleDollarSign,
+    LuAward,
+    LuUniversity,
+    LuBuilding2,
+    LuScale
+} from 'react-icons/lu';
 import { TbWorldSearch } from 'react-icons/tb';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
@@ -21,8 +21,6 @@ import { formatCurrency, formatCSV } from '@/lib/format';
 import { RecipientWithStats, GrantWithDetails, RECIPIENT_TYPE_LABELS } from '@/types/database';
 import GrantCard from '@/components/grants/GrantCard';
 import EntityAnalytics from '@/components/entity/EntityAnalytics';
-import { FaWeightHanging } from 'react-icons/fa';
-import { LuScale } from 'react-icons/lu';
 
 interface RecipientDetailClientProps {
     recipient: RecipientWithStats;
@@ -54,13 +52,13 @@ export function RecipientDetailClient({
         {
             id: 'grants',
             label: 'Grants',
-            icon: BookMarked,
+            icon: LuBookMarked,
             count: recipient.grant_count
         },
         {
             id: 'analytics',
             label: 'Analytics',
-            icon: BarChart3
+            icon: LuChartBar,
         }
     ];
 
@@ -68,7 +66,7 @@ export function RecipientDetailClient({
     const metadata: MetadataItem[] = [];
     if (recipient.research_organization_name && recipient.institute_id) {
         metadata.push({
-            icon: University,
+            icon: LuUniversity,
             text: recipient.research_organization_name,
             href: `/institutes/${recipient.institute_id}`
         });
@@ -90,13 +88,13 @@ export function RecipientDetailClient({
     const renderHeader = () => (
         <EntityHeader
             title={recipient.legal_name}
-            icon={GraduationCap}
+            icon={LuGraduationCap}
             entityType="recipient"
             location={location}
             metadata={metadata}
             badge={{
                 text: recipientType,
-                icon: Building2
+                icon: LuBuilding2
             }}
         />
     );
@@ -105,12 +103,12 @@ export function RecipientDetailClient({
     const renderStats = () => {
         const stats: StatItem[] = [
             {
-                icon: BookMarked,
+                icon: LuBookMarked,
                 label: 'Total Grants',
                 value: recipient.grant_count || 0
             },
             {
-                icon: CircleDollarSign,
+                icon: LuCircleDollarSign,
                 label: 'Total Funding',
                 value: formatCurrency(recipient.total_funding || 0)
             },
@@ -120,7 +118,7 @@ export function RecipientDetailClient({
                 value: formatCurrency(recipient.avg_funding || 0)
             },
             {
-                icon: Calendar,
+                icon: LuCalendar,
                 label: 'Active Since',
                 value: recipient.first_grant_date
                     ? new Date(recipient.first_grant_date).getFullYear().toString()
@@ -147,7 +145,7 @@ export function RecipientDetailClient({
                         {allGrants.length === 0 ? (
                             <Card className="p-12">
                                 <div className="text-center text-gray-500">
-                                    <BookMarked className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                                    <LuBookMarked className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                                     <p className="text-lg font-medium">No grants found</p>
                                     <p className="text-sm mt-1">This recipient has no recorded grants yet.</p>
                                 </div>
@@ -169,7 +167,7 @@ export function RecipientDetailClient({
                         {topPrograms.length > 0 && (
                             <Card className="p-2 md:p-6">
                                 <h2 className="flex flex-row items-center gap-2 text-base md:text-lg font-semibold text-gray-900 mb-4 p-1 md:p-0">
-                                    <Award className="h-4 md:h-5 w-4 md:w-5 text-purple-600" />
+                                    <LuAward className="h-4 md:h-5 w-4 md:w-5 text-purple-600" />
                                     Top Programs
                                 </h2>
                                 <div className="space-y-3">

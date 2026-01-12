@@ -1,5 +1,5 @@
 // src/components/common/ui/LoadingSpinner.tsx
-import { Loader2 } from 'lucide-react'
+import { LuLoader } from 'react-icons/lu'
 import { cn } from '@/lib/utils'
 
 interface LoadingSpinnerProps {
@@ -15,7 +15,7 @@ export const LoadingSpinner = ({ size = 'md', className }: LoadingSpinnerProps) 
   }
 
   return (
-    <Loader2 className={cn(
+    <LuLoader className={cn(
       'animate-spin text-gray-500',
       sizes[size],
       className

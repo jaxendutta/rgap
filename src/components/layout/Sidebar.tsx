@@ -1,34 +1,34 @@
 // src/components/layout/Sidebar.tsx
 import { usePathname } from "next/navigation";
 import {
-    Home,
-    Search,
-    University,
-    GraduationCap,
-    Bookmark,
-    ChartSpline,
-} from "lucide-react";
+    LuHouse,
+    LuSearch,
+    LuUniversity,
+    LuGraduationCap,
+    LuBookmark,
+    LuChartSpline,
+} from "react-icons/lu";
 import { clsx } from "clsx";
 import { useState } from "react";
 import Link from "next/link";
 
 // Reordered for mobile
 const mobileNavigation = [
-    { name: "Trends", icon: ChartSpline, href: "/trends" },
-    { name: "Institutes", icon: University, href: "/institutes" },
-    { name: "Search", icon: Search, href: "/search" },
-    { name: "Recipients", icon: GraduationCap, href: "/recipients" },
-    { name: "Saves", icon: Bookmark, href: "/bookmarks" },
+    { name: "Trends", icon: LuChartSpline, href: "/trends" },
+    { name: "Institutes", icon: LuUniversity, href: "/institutes" },
+    { name: "Search", icon: LuSearch, href: "/search" },
+    { name: "Recipients", icon: LuGraduationCap, href: "/recipients" },
+    { name: "Saves", icon: LuBookmark, href: "/bookmarks" },
 ];
 
 // Original order for desktop
 const desktopNavigation = [
-    { name: "Home", icon: Home, href: "/" },
-    { name: "Search", icon: Search, href: "/search" },
-    { name: "Trends", icon: ChartSpline, href: "/trends" },
-    { name: "Institutes", icon: University, href: "/institutes" },
-    { name: "Recipients", icon: GraduationCap, href: "/recipients" },
-    { name: "Bookmarks", icon: Bookmark, href: "/bookmarks" },
+    { name: "Home", icon: LuHouse, href: "/" },
+    { name: "Search", icon: LuSearch, href: "/search" },
+    { name: "Trends", icon: LuChartSpline, href: "/trends" },
+    { name: "Institutes", icon: LuUniversity, href: "/institutes" },
+    { name: "Recipients", icon: LuGraduationCap, href: "/recipients" },
+    { name: "Bookmarks", icon: LuBookmark, href: "/bookmarks" },
 ];
 
 const Sidebar = () => {
