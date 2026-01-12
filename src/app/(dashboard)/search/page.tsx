@@ -2,7 +2,7 @@
 // Server Component - Fetches filter options server-side
 
 import { db } from '@/lib/db';
-import SearchPageClient from './SearchPageClient';
+import SearchPageClient from './client';
 import { DEFAULT_FILTER_STATE } from '@/constants/filters';
 import { Metadata } from 'next';
 

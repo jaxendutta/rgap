@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
             FROM grants g
             JOIN recipients r ON g.recipient_id = r.recipient_id
             JOIN institutes i ON r.institute_id = i.institute_id
+            JOIN programs p ON g.prog_id = p.prog_id
             ${whereClause}
         `;
 
@@ -130,10 +131,17 @@ export async function POST(request: NextRequest) {
                 i.institute_id,
                 i.city,
                 i.province,
-                i.country
+                i.country,
+                p.prog_id,
+                p.prog_title_en,
+                p.prog_purpose_en,
+                o.org_title_en,
+                o.org
             FROM grants g
             JOIN recipients r ON g.recipient_id = r.recipient_id
             JOIN institutes i ON r.institute_id = i.institute_id
+            JOIN programs p ON g.prog_id = p.prog_id
+            JOIN organizations o ON g.org = o.org
             ${whereClause}
             ORDER BY g.${sortField} ${sortDirection}
             LIMIT $${paramIndex} OFFSET $${paramIndex + 1}

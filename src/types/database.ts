@@ -31,7 +31,7 @@ export interface Organization {
  */
 export interface Program {
     prog_id: number;
-    prog_name_en: string;
+    prog_title_en: string;
     prog_purpose_en: string | null;
     org: string | null;
 }

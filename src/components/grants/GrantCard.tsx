@@ -484,9 +484,9 @@ export const GrantCard = (grant: GrantWithDetails) => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <Card>
                                     <Card.Header title="Grant Information" icon={Database} size="sm" />
-                                    <Card.Content size="sm" className="text-sm text-gray-700 space-y-1">
+                                    <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 space-y-1">
                                         <InfoRow label="Reference Number" value={grant.ref_number} />
-                                        <InfoRow label="Program" value={grant.prog_name_en} placeholder="Not specified" />
+                                        <InfoRow label="Program" value={grant.prog_title_en} placeholder="Not specified" />
                                         <InfoRow label="Agreement Title" value={grant.agreement_title_en || "No Agreement Title Record Found"} placeholder="Not specified" />
                                         {grant.amendment_date && <InfoRow label="Amendment Date" value={formatDate(grant.amendment_date)} />}
                                     </Card.Content>
@@ -494,7 +494,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
 
                                 <Card>
                                     <Card.Header title="Funding Summary" icon={DollarSign} size="sm" />
-                                    <Card.Content size="sm" className="text-sm text-gray-700 space-y-1">
+                                    <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 space-y-1">
                                         <div className="grid grid-cols-12 gap-2 items-center">
                                             <span className="col-span-5 text-gray-500 self-start">Current Value</span>
                                             <div className="col-span-7 flex items-center">
@@ -526,7 +526,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
 
                                 <Card>
                                     <Card.Header title="Funding Timeline" icon={Calendar} size="sm" />
-                                    <Card.Content size="sm" className="text-sm text-gray-700 space-y-1">
+                                    <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 space-y-1">
                                         <InfoRow label="Start Date" value={formatDate(grant.agreement_start_date)} />
                                         <InfoRow label="End Date" value={formatDate(grant.agreement_end_date)} />
                                         <InfoRow label="Duration" value={grant.agreement_end_date
@@ -537,7 +537,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
 
                                 <Card>
                                     <Card.Header title="Location" icon={MapPin} size="sm" />
-                                    <Card.Content size="sm" className="text-sm text-gray-700 space-y-1">
+                                    <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 space-y-1">
                                         <InfoRow label="Country" value={grant.country} placeholder="Not specified" checkValue={v => !!v && v.toUpperCase() !== "N/A"} />
                                         <InfoRow label="Province/State" value={grant.province} placeholder="Not specified" checkValue={v => !!v && v.toUpperCase() !== "N/A"} />
                                         <InfoRow label="City" value={grant.city} placeholder="Not specified" checkValue={v => !!v && v.toUpperCase() !== "N/A"} />
@@ -545,15 +545,15 @@ export const GrantCard = (grant: GrantWithDetails) => {
                                 </Card>
 
                                 <Card>
-                                    <Card.Header title={grant.prog_name_en || "Program Information"} subtitle={grant.prog_name_en ? "Program Information" : "Unspecified Program Name"} icon={BookOpen} size="sm" />
-                                    <Card.Content size="sm" className="text-sm text-gray-700 p-4">
+                                    <Card.Header title={grant.prog_title_en || "Program Information"} subtitle={grant.prog_title_en ? "Program Information" : "Unspecified Program Name"} icon={BookOpen} size="sm" />
+                                    <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 p-4">
                                         {hasValue(grant.prog_purpose_en) ? grant.prog_purpose_en : "Program purpose not specified"}
                                     </Card.Content>
                                 </Card>
 
                                 <Card>
                                     <Card.Header title={grant.agreement_title_en || "Agreement Description"} subtitle={grant.agreement_title_en ? "Agreement Description" : "Unspecified Agreement Description"} icon={FileText} size="sm" />
-                                    <Card.Content size="sm" className="text-sm text-gray-700 p-4">
+                                    <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 p-4">
                                         {grant.description_en || "Agreement description not specified"}
                                     </Card.Content>
                                 </Card>
@@ -561,7 +561,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
                                 {hasValue(grant.expected_results_en) && (
                                     <Card>
                                         <Card.Header title="Expected Results" icon={AlertCircle} size="sm" />
-                                        <Card.Content size="sm" className="text-sm text-gray-700 p-4">
+                                        <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 p-4">
                                             {grant.expected_results_en}
                                         </Card.Content>
                                     </Card>

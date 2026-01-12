@@ -349,7 +349,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                         grant.name || "Unknown";
                     break;
                 case "program":
-                    categoryValue = grant.prog_name_en || "Unknown";
+                    categoryValue = grant.prog_title_en || "Unknown";
                     break;
                 case "year":
                     categoryValue = "Value";

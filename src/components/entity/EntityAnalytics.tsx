@@ -177,9 +177,9 @@ function calculateAvgGrantDuration(grants: GrantWithDetails[]) {
 
     let text: string;
     if (years > 0) {
-        text = `${years}Y ${months}M`;
+        text = `${years} year${years !== 1 ? 's' : ''} ${months} month${months !== 1 ? 's' : ''}`;
     } else {
-        text = `${months} months`;
+        text = `${months} month${months !== 1 ? 's' : ''}`;
     }
 
     return { text, months: avgMonths };

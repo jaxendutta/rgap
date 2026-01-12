@@ -58,8 +58,8 @@ export function transformGrantsToYearlyData(
 
         // Handle special case for program names
         const processedCategory =
-            groupBy === "prog_id" && grant.prog_name_en
-                ? grant.prog_name_en
+            groupBy === "prog_id" && grant.prog_title_en
+                ? grant.prog_title_en
                 : category;
 
         // Initialize year data if not exists
