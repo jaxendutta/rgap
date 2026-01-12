@@ -1,16 +1,18 @@
 // src/components/entity/EntityProfilePage.tsx
 'use client';
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo } from 'react';
 import { Card } from "@/components/ui/Card";
 import Tabs, { TabItem } from "@/components/ui/Tabs";
 import PageContainer from "@/components/layout/PageContainer";
-import { MapPin, ChevronLeft } from 'lucide-react';
+import { MapPin, ChevronLeft, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Tag from '@/components/ui/Tag';
 import { Button } from '@/components/ui/Button';
 import BookmarkButton from '@/components/bookmarks/BookmarkButton';
 import { IconType } from 'react-icons';
+import { AnimatePresence, motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 // ============================================================================
 // EntityHeader Component
@@ -130,6 +132,26 @@ export interface StatItem {
     value: string | number;
 }
 
+const StatItemContent: React.FC<{ item: StatItem }> = ({ item }) => {
+    const Icon = item.icon;
+    return (
+        <div
+            className="flex flex-col items-center p-3 bg-blue-100/60 rounded-lg"
+        >
+            <span className="flex text-gray-700 rounded-lg text-xs items-center justify-center gap-1">
+                <Icon className="w-2.5 md:w-3 h-2.5 md:h-3" />
+                {item.label}
+            </span>
+            <div className="text-base md:text-lg font-semibold text-gray-900">
+                {typeof item.value === 'number'
+                    ? item.value.toLocaleString()
+                    : item.value
+                }
+            </div>
+        </div>
+    );
+};
+
 export interface StatDisplayProps {
     items: StatItem[];
     columns?: 2 | 3 | 4;
@@ -147,26 +169,9 @@ export const StatDisplay: React.FC<StatDisplayProps> = ({
 
     return (
         <div className={`grid ${gridCols[columns]} gap-2 md:gap-4 p-3 md:p-6 pt-0`}>
-            {items.map((item, index) => {
-                const Icon = item.icon;
-                return (
-                    <div
-                        key={index}
-                        className="flex flex-col items-center p-3 bg-blue-100/60 rounded-lg"
-                    >
-                        <span className="flex text-gray-700 rounded-lg text-xs items-center justify-center gap-1">
-                            <Icon className="w-2.5 md:w-3 h-2.5 md:h-3" />
-                            {item.label}
-                        </span>
-                        <div className="text-base md:text-lg font-semibold text-gray-900">
-                            {typeof item.value === 'number'
-                                ? item.value.toLocaleString()
-                                : item.value
-                            }
-                        </div>
-                    </div>
-                );
-            })}
+            {items.map((item, index) => (
+                <StatItemContent key={index} item={item} />
+            ))}
         </div>
     );
 };
@@ -212,6 +217,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
 }) => {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.id || '');
+    const [statsExpanded, setStatsExpanded] = useState(false);
 
     return (
         <PageContainer>
@@ -259,7 +265,63 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                 {renderHeader()}
 
                 {/* Stats section */}
-                {renderStats()}
+                {(() => {
+                    const statsNode = renderStats();
+                    if (!React.isValidElement(statsNode) || statsNode.type !== StatDisplay) {
+                        return statsNode;
+                    }
+
+                    const allItems = (statsNode.props as StatDisplayProps).items as StatItem[];
+                    const columns = (statsNode.props as StatDisplayProps).columns || 4;
+                    const initialCount = 4;
+                    const hasMore = allItems.length > initialCount;
+
+                    const visibleItems = allItems.slice(0, initialCount);
+                    const hiddenItems = hasMore ? allItems.slice(initialCount) : [];
+
+                    const gridCols = {
+                        2: 'grid-cols-2',
+                        3: 'grid-cols-2 md:grid-cols-3',
+                        4: 'grid-cols-2 md:grid-cols-4',
+                    };
+                    const gridClassName = `grid ${gridCols[columns]} gap-2 md:gap-4 px-3 md:px-6`;
+
+                    return (
+                        <div>
+                            <div className={cn(gridClassName, 'pb-0')}>
+                                {visibleItems.map((item, index) => (
+                                    <StatItemContent key={index} item={item} />
+                                ))}
+                            </div>
+
+                            <AnimatePresence>
+                                {statsExpanded && hasMore && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className={cn(gridClassName, 'pt-2')}>
+                                            {hiddenItems.map((item, index) => (
+                                                <StatItemContent key={index} item={item} />
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {hasMore && (
+                                <div className="flex justify-center items-center">
+                                    <Button variant="ghost" size="sm" onClick={() => setStatsExpanded(!statsExpanded)} className="rounded-full w-8 h-8 p-0 bg-white/50 hover:bg-gray-200 z-10">
+                                        <ChevronDown className={cn("h-5 w-5 text-gray-500 transition-transform duration-300", statsExpanded && "rotate-180")} />
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
             </Card>
 
             {/* Tabs and Content */}

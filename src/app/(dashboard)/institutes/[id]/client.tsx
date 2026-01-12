@@ -9,6 +9,8 @@ import {
     Calendar,
     CircleDollarSign,
     ExternalLink,
+    Activity,
+    TrendingUp,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
@@ -88,6 +90,32 @@ export function InstituteDetailClient({
 
     // Render stats
     const renderStats = () => {
+        // Calculate additional stats
+        const currentYear = new Date().getFullYear();
+        const recentYears = 3;
+        
+        const activeRecipientIds = new Set(
+            allGrants
+                .filter(g => {
+                    const grantYear = new Date(g.agreement_start_date).getFullYear();
+                    return grantYear >= currentYear - recentYears;
+                })
+                .map(g => g.recipient_id)
+        );
+        
+        const activeCount = activeRecipientIds.size;
+        const activePercentage = allRecipients.length > 0 
+            ? ((activeCount / allRecipients.length) * 100).toFixed(0) 
+            : '0';
+
+        const fundingPerRecipient = allRecipients.length > 0 
+            ? (institute.total_funding || 0) / allRecipients.length 
+            : 0;
+
+        const fundingPerGrant = allGrants.length > 0 
+            ? (institute.total_funding || 0) / allGrants.length 
+            : 0;
+
         const stats: StatItem[] = [
             {
                 icon: Users,
@@ -110,6 +138,21 @@ export function InstituteDetailClient({
                 value: institute.first_grant_date
                     ? new Date(institute.first_grant_date).getFullYear().toString()
                     : 'N/A'
+            },
+            {
+                icon: Activity,
+                label: 'Active Recipients',
+                value: `${activeCount.toLocaleString()} / ${activePercentage}%`
+            },
+            {
+                icon: TrendingUp,
+                label: 'Funding / Recipient',
+                value: formatCurrency(fundingPerRecipient)
+            },
+            {
+                icon: BarChart3,
+                label: 'Funding / Grant',
+                value: formatCurrency(fundingPerGrant)
             }
         ];
 

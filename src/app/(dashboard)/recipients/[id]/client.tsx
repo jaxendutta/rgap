@@ -21,6 +21,8 @@ import { formatCurrency, formatCSV } from '@/lib/format';
 import { RecipientWithStats, GrantWithDetails, RECIPIENT_TYPE_LABELS } from '@/types/database';
 import GrantCard from '@/components/grants/GrantCard';
 import EntityAnalytics from '@/components/entity/EntityAnalytics';
+import { FaWeightHanging } from 'react-icons/fa';
+import { LuScale } from 'react-icons/lu';
 
 interface RecipientDetailClientProps {
     recipient: RecipientWithStats;
@@ -113,8 +115,8 @@ export function RecipientDetailClient({
                 value: formatCurrency(recipient.total_funding || 0)
             },
             {
-                icon: TrendingUp,
-                label: 'Avg per Grant',
+                icon: LuScale,
+                label: 'Average Grant',
                 value: formatCurrency(recipient.avg_funding || 0)
             },
             {
@@ -162,7 +164,7 @@ export function RecipientDetailClient({
 
             case 'analytics':
                 return (
-                    <div className="space-y-2 md:space-y-6">
+                    <div className="space-y-4 md:space-y-6">
                         {/* Top Programs */}
                         {topPrograms.length > 0 && (
                             <Card className="p-2 md:p-6">

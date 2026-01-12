@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { GrantWithDetails, InstituteWithStats, RecipientWithStats } from "@/types/database";
 import { Card } from "@/components/ui/Card";
 import { TrendVisualizer } from "@/components/visualizations/TrendVisualizer";
@@ -12,14 +13,14 @@ import {
     MoveRight,
     GraduationCap,
     University,
-    BookMarked,
     Calendar,
-    Users,
     ActivityIcon,
+    Award,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { IconType } from "react-icons";
+import { getCategoryColor } from "@/lib/chartColors";
 
 // ============================================================================
 // ANALYTICS UTILITY FUNCTIONS
@@ -31,7 +32,7 @@ function calculateFundingGrowth(grants: GrantWithDetails[]) {
         return { percentChange: 0, yearsSpan: 0 };
     }
 
-    const sortedGrants = [...grants].sort((a, b) => 
+    const sortedGrants = [...grants].sort((a, b) =>
         new Date(a.agreement_start_date).getTime() - new Date(b.agreement_start_date).getTime()
     );
 
@@ -44,10 +45,10 @@ function calculateFundingGrowth(grants: GrantWithDetails[]) {
     }
 
     // Calculate average funding for first and last year
-    const firstYearGrants = grants.filter(g => 
+    const firstYearGrants = grants.filter(g =>
         new Date(g.agreement_start_date).getFullYear() === firstYear
     );
-    const lastYearGrants = grants.filter(g => 
+    const lastYearGrants = grants.filter(g =>
         new Date(g.agreement_start_date).getFullYear() === lastYear
     );
 
@@ -80,7 +81,7 @@ function calculateAgencySpecialization(grants: GrantWithDetails[]) {
     });
 
     const agencies = Object.entries(agencyFunding).sort((a, b) => b[1] - a[1]);
-    
+
     if (agencies.length === 0) {
         return { specialization: "Unknown", topAgency: null, topPercentage: 0 };
     }
@@ -108,7 +109,7 @@ function calculateRecipientConcentration(recipients: RecipientWithStats[], total
         return { rating: "No data", concentration: 0 };
     }
 
-    const sorted = [...recipients].sort((a, b) => 
+    const sorted = [...recipients].sort((a, b) =>
         (Number(b.total_funding) || 0) - (Number(a.total_funding) || 0)
     );
 
@@ -125,33 +126,6 @@ function calculateRecipientConcentration(recipients: RecipientWithStats[], total
     }
 
     return { rating, concentration };
-}
-
-// Calculate active recipients
-function calculateActiveRecipients(recipients: any[], grants: GrantWithDetails[]) {
-    if (!recipients || recipients.length === 0) {
-        return { text: "N/A", count: 0 };
-    }
-
-    const currentYear = new Date().getFullYear();
-    const recentYears = 3;
-
-    const activeRecipientIds = new Set(
-        grants
-            .filter(g => {
-                const grantYear = new Date(g.agreement_start_date).getFullYear();
-                return grantYear >= currentYear - recentYears;
-            })
-            .map(g => g.recipient_id)
-    );
-
-    const activeCount = activeRecipientIds.size;
-    const percentage = ((activeCount / recipients.length) * 100).toFixed(0);
-
-    return {
-        text: `${activeCount} (${percentage}%)`,
-        count: activeCount
-    };
 }
 
 // Calculate average grant duration
@@ -222,45 +196,55 @@ export const TopRecipientsAnalysis = ({
         .sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))
         .slice(0, 5);
 
-    return (
-        <Card>
-            <Card className="p-6">
-                <div className="flex items-center mb-4">
-                    <GraduationCap className="h-5 w-5 text-gray-700 mr-2" />
-                    <h3 className="font-semibold text-gray-900">Top Recipients</h3>
-                </div>
-                <div className="space-y-3">
-                    {topRecipients.length === 0 ? (
-                        <p className="text-gray-500 text-sm">No recipient data available</p>
-                    ) : (
-                        topRecipients.map((recipient) => {
-                            const percentage = totalFunding > 0
-                                ? ((recipient.total_funding || 0) / totalFunding) * 100
-                                : 0;
+    const maxFunding = Math.max(...topRecipients.map(r => r.total_funding || 0));
 
-                            return (
-                                <div key={recipient.recipient_id} className="flex items-center gap-2">
-                                    <div className="w-32 text-sm font-medium text-gray-900 truncate">
+    return (
+        <Card className="p-4 md:p-6">
+            <div className="flex items-center mb-4">
+                <Award className="h-3.5 md:h-5 w-3.5 md:w-5 text-gray-700 mr-2" />
+                <h3 className="text-base md:text-lg font-semibold text-gray-900">Top Recipients</h3>
+            </div>
+            <div className="space-y-3">
+                {topRecipients.length === 0 ? (
+                    <p className="text-gray-500 text-sm">No recipient data available</p>
+                ) : (
+                    topRecipients.map((recipient) => {
+                        const sharePercentage = totalFunding > 0
+                            ? ((recipient.total_funding || 0) / totalFunding) * 100
+                            : 0;
+
+                        const barPercentage = maxFunding > 0
+                            ? ((recipient.total_funding || 0) / maxFunding) * 100
+                            : 0;
+
+                        return (
+                            <div key={recipient.recipient_id}>
+                                <div className="flex justify-between items-end mb-1">
+                                    <Link
+                                        href={`/recipients/${recipient.recipient_id}`}
+                                        className="font-medium text-gray-900 text-xs md:text-sm truncate pr-2 hover:text-blue-600 transition-colors"
+                                        title={recipient.legal_name}
+                                    >
                                         {recipient.legal_name}
-                                    </div>
-                                    <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-blue-500 rounded-full transition-all"
-                                            style={{ width: `${percentage}%` }}
-                                        />
-                                    </div>
-                                    <div className="w-24 text-right text-sm font-medium text-gray-900">
+                                    </Link>
+                                    <div className="font-semibold text-gray-900 text-xs md:text-sm whitespace-nowrap">
                                         {formatCurrency(recipient.total_funding)}
                                     </div>
-                                    <div className="w-12 text-right text-sm text-gray-500">
-                                        {percentage.toFixed(1)}%
-                                    </div>
                                 </div>
-                            );
-                        })
-                    )}
-                </div>
-            </Card>
+                                <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+                                    <div
+                                        className="bg-blue-500 h-2 rounded-full transition-all"
+                                        style={{ width: `${barPercentage}%` }}
+                                    />
+                                </div>
+                                <div className="text-right text-xs text-gray-500">
+                                    {sharePercentage.toFixed(1)}% of total
+                                </div>
+                            </div>
+                        );
+                    })
+                )}
+            </div>
         </Card>
     );
 };
@@ -285,31 +269,36 @@ export const AgencyBreakdown = ({
         .slice(0, 5);
 
     return (
-        <Card className="p-6">
+        <Card className="p-4 md:p-6">
             <div className="flex items-center mb-4">
-                <University className="h-5 w-5 text-gray-700 mr-2" />
-                <h3 className="font-semibold text-gray-900">Agency Breakdown</h3>
+                <University className="h-3.5 md:h-5 w-3.5 md:w-5 text-gray-700 mr-2" />
+                <h3 className="text-base md:text-lg font-semibold text-gray-900">Agency Breakdown</h3>
             </div>
             <div className="space-y-3">
-                {agencies.map(([agency, funding]) => {
+                {agencies.map(([agency, funding], index) => {
                     const percentage = totalFunding > 0 ? (funding / totalFunding) * 100 : 0;
 
                     return (
-                        <div key={agency} className="flex items-center gap-2">
-                            <div className="w-20 text-sm font-medium text-gray-900">
+                        <div key={agency} className="flex items-center gap-4">
+                            <div className="w-12 md:w-20 font-medium text-gray-900 text-sm md:text-base">
                                 {agency}
                             </div>
-                            <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-green-500 rounded-full transition-all"
-                                    style={{ width: `${percentage}%` }}
-                                />
-                            </div>
-                            <div className="w-24 text-right text-sm font-medium text-gray-900">
-                                {formatCurrency(funding)}
-                            </div>
-                            <div className="w-12 text-right text-sm text-gray-500">
-                                {percentage.toFixed(1)}%
+                            <div className="flex-1 mb-2">
+                                <div className="flex justify-between text-sm text-gray-600 mb-1 text-xs md:text-sm">
+                                    <span>{percentage.toFixed(1)}%</span>
+                                    <span className="font-semibold text-gray-900 text-xs md:text-base">
+                                        {formatCurrency(funding)}
+                                    </span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div
+                                        className="h-2 rounded-full transition-all"
+                                        style={{
+                                            width: `${percentage}%`,
+                                            backgroundColor: getCategoryColor(agency, index)
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </div>
                     );
@@ -346,10 +335,10 @@ export const TimePeriodAnalytics = ({
     const maxFunding = Math.max(...years.map(([_, data]) => data.funding));
 
     return (
-        <Card className="p-6">
+        <Card className="p-4 md:p-6">
             <div className="flex items-center mb-4">
-                <Calendar className="h-5 w-5 text-gray-700 mr-2" />
-                <h3 className="font-semibold text-gray-900">{title}</h3>
+                <Calendar className="h-3.5 md:h-5 w-3.5 md:w-5 text-gray-700 mr-2" />
+                <h3 className="text-base md:text-lg font-semibold text-gray-900">{title}</h3>
             </div>
             <div className="space-y-3">
                 {years.map(([year, data]) => {
@@ -357,11 +346,11 @@ export const TimePeriodAnalytics = ({
 
                     return (
                         <div key={year} className="flex items-center gap-4">
-                            <div className="w-16 font-medium text-gray-900">{year}</div>
-                            <div className="flex-1">
-                                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                    <span>{data.count.toLocaleString()} grants</span>
-                                    <span className="font-semibold text-gray-900">
+                            <div className="w-10 md:w-16 font-medium text-gray-900 text-sm md:text-base">{year}</div>
+                            <div className="flex-1 mb-2">
+                                <div className="flex justify-between text-sm text-gray-600 mb-1 text-xs md:text-sm">
+                                    <span>{data.count.toLocaleString()} grant{data.count !== 1 ? 's' : ''}</span>
+                                    <span className="font-semibold text-gray-900 text-xs md:text-base">
                                         {formatCurrency(data.funding)}
                                     </span>
                                 </div>
@@ -410,15 +399,10 @@ export default function EntityAnalytics({
             ? calculateRecipientConcentration(recipients, entity.total_funding || 0)
             : null;
 
-    const activeRecipientsData =
-        entityType === "institute" && recipients.length > 0
-            ? calculateActiveRecipients(recipients, grants)
-            : null;
-
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4 md:gap-6">
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Funding Growth */}
                 <KpiCard
                     title="Funding Growth"
@@ -429,8 +413,8 @@ export default function EntityAnalytics({
                                     fundingGrowth.percentChange > 0
                                         ? "text-green-600"
                                         : fundingGrowth.percentChange < 0
-                                        ? "text-red-600"
-                                        : "text-gray-500"
+                                            ? "text-red-600"
+                                            : "text-gray-500"
                                 )}
                             >
                                 {fundingGrowth.percentChange > 0 ? "+" : ""}
@@ -472,8 +456,8 @@ export default function EntityAnalytics({
                         title="Grant Duration"
                         value={
                             <div>
-                                <span className="text-lg">{grantDuration.text}</span>
-                                <span className="block text-xs text-gray-600 mt-1 font-normal">
+                                <span className="text-base md:text-lg">{grantDuration.text}</span>
+                                <span className="block text-xs text-gray-600 md:mt-1 font-normal">
                                     Average across {grants.length} grants
                                 </span>
                             </div>
@@ -487,9 +471,9 @@ export default function EntityAnalytics({
                     title="Agency Distribution"
                     value={
                         <div>
-                            <span className="italic text-lg">{agencyAnalysis.specialization}</span>
+                            <span className="italic text-base md:text-lg">{agencyAnalysis.specialization}</span>
                             {agencyAnalysis.topAgency && (
-                                <span className="block text-xs text-gray-600 mt-1 font-normal">
+                                <span className="block text-xs text-gray-600 md:mt-1 font-normal">
                                     {agencyAnalysis.topAgency}: {agencyAnalysis.topPercentage.toFixed(1)}%
                                 </span>
                             )}
@@ -521,70 +505,11 @@ export default function EntityAnalytics({
             <TimePeriodAnalytics grants={grants} title="Funding by Year" />
 
             {/* Agency Breakdown */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid gap-6 grid-cols-1">
                 <AgencyBreakdown
                     grants={grants}
                     totalFunding={entity.total_funding || 0}
                 />
-
-                {/* Additional Stats */}
-                <Card className="p-6">
-                    <div className="flex items-center mb-4">
-                        {entityType === "institute" ? (
-                            <Users className="h-5 w-5 text-gray-700 mr-2" />
-                        ) : (
-                            <BookMarked className="h-5 w-5 text-gray-700 mr-2" />
-                        )}
-                        <h3 className="font-semibold text-gray-900">
-                            {entityType === "institute" ? "Recipient Statistics" : "Grant Statistics"}
-                        </h3>
-                    </div>
-                    <div className="space-y-3 text-sm">
-                        {entityType === "institute" ? (
-                            <>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Active Recipients</span>
-                                    <span className="font-medium">{activeRecipientsData?.text || "N/A"}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Funding per Recipient</span>
-                                    <span className="font-medium">
-                                        {recipients.length > 0
-                                            ? formatCurrency((entity.total_funding || 0) / recipients.length)
-                                            : "N/A"}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Funding per Grant</span>
-                                    <span className="font-medium">
-                                        {grants.length > 0
-                                            ? formatCurrency((entity.total_funding || 0) / grants.length)
-                                            : "N/A"}
-                                    </span>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Total Grants</span>
-                                    <span className="font-medium">{grants.length}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Average Funding</span>
-                                    <span className="font-medium">
-                                        {grants.length > 0
-                                            ? formatCurrency((entity.total_funding || 0) / grants.length)
-                                            : "N/A"}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Funding Agencies</span>
-                                    <span className="font-medium">{entity.funding_agencies_count || 0}</span>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </Card>
             </div>
         </div>
     );
