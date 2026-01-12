@@ -456,9 +456,9 @@ export const GrantCard = (grant: GrantWithDetails) => {
 
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className="mt-3 flex w-full items-center justify-center p-1 text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
+                    className="mt-3 flex w-full items-center justify-center p-1 text-xs md:text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
                 >
-                    <ChevronDown className={cn("h-5 w-5 transition-transform duration-200", isExpanded && "transform rotate-180")} />
+                    <ChevronDown className={cn("h-4 md:h-5 w-4 md:w-5 transition-transform duration-200", isExpanded && "transform rotate-180")} />
                     <span className="ml-1">{isExpanded ? "Show Less" : "Show More"}</span>
                 </button>
 
@@ -539,7 +539,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
                                 </Card>
 
                                 <Card>
-                                    <Card.Header title={grant.prog_title_en || "Program Information"} subtitle={grant.prog_title_en ? "Program Information" : "Unspecified Program Name"} icon={BookOpen} size="sm" />
+                                    <Card.Header title={grant.prog_title_en || "Program Information"} subtitle={grant.prog_title_en ? "Program Purpose" : "Unspecified Program"} icon={BookOpen} size="sm" />
                                     <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 p-4">
                                         {hasValue(grant.prog_purpose_en) ? grant.prog_purpose_en : "Program purpose not specified"}
                                     </Card.Content>

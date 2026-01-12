@@ -131,18 +131,18 @@ export function RangeFilter<T>({
                 variant="outline"
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "flex items-center justify-between w-full px-3 py-2 bg-white text-sm border hover:shadow-sm transition-all duration-200",
+                    "flex items-center justify-between w-full px-3 py-2 bg-white text-xs md:text-sm border hover:shadow-sm transition-all duration-200",
                     isOpen && "border-gray-300 ring-1 ring-gray-300"
                 )}
             >
                 <div className="flex items-center gap-2">
-                    <FinalIcon className="h-4 w-4 text-gray-500" />
+                    <FinalIcon className="h-3 md:h-4 w-3 md:w-4 text-gray-500" />
                     <span className="font-medium whitespace-nowrap">
                         {label}
                     </span>
                 </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-gray-600 italic">{displayValue}</span>
+                <div className="flex w-full items-center gap-2">
+                    <span className="text-gray-600 italic w-full">{displayValue}</span>
                     <ChevronDown
                         className={cn(
                             "w-4 h-4 text-gray-400 transition-transform duration-200",
@@ -159,7 +159,7 @@ export function RangeFilter<T>({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
                         transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="absolute z-10 mt-1 w-full bg-white rounded-3xl shadow-lg border border-gray-300 overflow-hidden"
+                        className="relative z-50 mt-1 w-full bg-white rounded-3xl shadow-lg border border-gray-300 overflow-hidden"
                         ref={(el) => {
                             if (el && dropdownRef.current) {
                                 // Get viewport dimensions
@@ -210,7 +210,7 @@ export function RangeFilter<T>({
                                         variant="ghost"
                                         pill={false}
                                         key={range.label}
-                                        className="w-full px-2 py-1.5 text-left font-normal text-sm border border-gray-300 hover:bg-gray-50 hover:text-blue-600 transition-colors rounded-2xl"
+                                        className="w-full px-2 py-1.5 text-left font-normal text-xs md:text-sm border border-gray-300 hover:bg-gray-50 hover:text-blue-600 transition-colors rounded-2xl"
                                         onClick={() =>
                                             handleQuickRangeSelect(range)
                                         }
@@ -223,7 +223,7 @@ export function RangeFilter<T>({
                             <div className="border-t border-slate-300 pt-2">
                                 <div className="flex items-center justify-between space-x-2">
                                     <div className="flex-1">
-                                        <label className="block text-sm text-gray-600 mb-1">
+                                        <label className="block text-xs md:text-sm text-gray-600 mb-1">
                                             {inputLabels.min}
                                         </label>
                                         {inputType === "date" ? (
@@ -237,7 +237,7 @@ export function RangeFilter<T>({
                                                 onChange={(e) =>
                                                     handleValueChange("min", e.target.value)
                                                 }
-                                                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                                                className="w-full px-3 py-1.5 text-xs md:text-sm border border-gray-300 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
                                             />
                                         ) : (
                                             <input
@@ -246,13 +246,13 @@ export function RangeFilter<T>({
                                                 onChange={(e) =>
                                                     handleValueChange("min", e.target.value)
                                                 }
-                                                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                                                className="w-full px-3 py-1.5 text-xs md:text-sm border border-gray-300 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
                                             />
                                         )}
                                     </div>
 
                                     <div className="flex-1">
-                                        <label className="block text-sm text-gray-600 mb-1">
+                                        <label className="block text-xs md:text-sm text-gray-600 mb-1">
                                             {inputLabels.max}
                                         </label>
                                         {inputType === "date" ? (
@@ -266,7 +266,7 @@ export function RangeFilter<T>({
                                                 onChange={(e) =>
                                                     handleValueChange("max", e.target.value)
                                                 }
-                                                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                                                className="w-full px-3 py-1.5 text-xs md:text-sm border border-gray-300 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
                                             />
                                         ) : (
                                             <input
@@ -275,7 +275,7 @@ export function RangeFilter<T>({
                                                 onChange={(e) =>
                                                     handleValueChange("max", e.target.value)
                                                 }
-                                                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                                                className="w-full px-3 py-1.5 text-xs md:text-sm border border-gray-300 rounded-3xl focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
                                             />
                                         )}
                                     </div>
@@ -283,7 +283,7 @@ export function RangeFilter<T>({
 
                                 <Button
                                     onClick={handleApply}
-                                    className="w-full mt-4 bg-gray-900 hover:bg-gray-800 text-white"
+                                    className="w-full mt-4 bg-gray-900 hover:bg-black text-white text-xs md:text-sm"
                                 >
                                     Apply Range
                                 </Button>

@@ -207,6 +207,7 @@ export default function SearchInterface({
                             leftIcon={Sparkles}
                             onClick={() => togglePanel('popular')}
                             className={cn(
+                                "py-2 md:py-3",
                                 activePanelType === 'popular'
                                     ? 'bg-blue-100 hover:bg-blue-200 text-blue-600 border border-blue-300'
                                     : 'bg-white shadow-sm hover:text-blue-600 hover:border-blue-300'
@@ -220,6 +221,7 @@ export default function SearchInterface({
                         leftIcon={SlidersHorizontal}
                         onClick={() => togglePanel('filters')}
                         className={cn(
+                            "py-2 md:py-3",
                             activePanelType === 'filters'
                                 ? 'bg-blue-100 hover:bg-blue-200 text-blue-600 border border-blue-300'
                                 : 'bg-white shadow-sm hover:text-blue-600 hover:border-blue-300'
@@ -235,14 +237,14 @@ export default function SearchInterface({
                         variant="primary"
                         leftIcon={SearchIcon}
                         onClick={performSearch}
-                        className="bg-gray-900 hover:bg-black"
+                        className="bg-gray-900 hover:bg-black py-2 md:py-3"
                     >
                         Search
                     </Button>
                 </div>
             </div>
 
-            {/* Panels with UPDATED Animation Logic */}
+            {/* Panels with Animation Logic */}
             <div className="transition-all duration-300 ease-in-out pb-2">
                 <AnimatePresence>
                     {activePanelType === 'filters' && (

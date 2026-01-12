@@ -100,14 +100,14 @@ export const FilterTags: React.FC<FilterTagsProps> = ({
     if (!hasFilters) return null;
 
     return (
-        <div className="py-3 border-b">
+        <div className="py-3 border-b border-gray-200">
             <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-700">
+                <h3 className="text-xs md:text-sm font-medium text-gray-700">
                     Active Filters
                 </h3>
                 <button
                     onClick={onClearAll}
-                    className="text-sm text-blue-600 hover:text-blue-700 cursor-pointer"
+                    className="text-xs md:text-sm text-blue-600 hover:text-blue-700 cursor-pointer"
                 >
                     Clear all
                 </button>
@@ -184,7 +184,7 @@ const SimpleFilterTag = ({
     filterValue,
     onRemove,
 }: SimpleFilterTagProps) => (
-    <span className="inline-flex items-center px-2 py-1 text-sm bg-gray-100 rounded-md">
+    <span className="inline-flex items-center px-2 py-1 text-xs md:text-sm bg-gray-100 rounded-md">
         <span className="font-medium">{filterKey}</span>
         <span className="text-gray-400 mx-1.5">|</span>
         {filterValue}

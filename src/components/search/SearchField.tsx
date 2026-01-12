@@ -18,7 +18,7 @@ export const SearchField: React.FC<SearchFieldProps> = ({
 }) => {
     return (
         <div className="relative flex items-center">
-            <Icon className="absolute left-4 text-gray-400 h-5 w-5" />
+            <Icon className="absolute left-4 text-gray-400 h-3 md:h-4 lg:h-5 w-3 md:w-4 lg:w-5" />
             <input
                 type="search"
                 placeholder={placeholder}
@@ -29,7 +29,7 @@ export const SearchField: React.FC<SearchFieldProps> = ({
                         onEnter();
                     }
                 }}
-                className="w-full pl-12 pr-4 py-2 bg-white shadow-xs rounded-full border border-gray-200 focus:outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-300"
+                className="w-full pl-8 md:pl-10 lg:pl-12 pr-4 py-2 bg-white text-xs md:text-sm lg:text-base shadow-xs rounded-full border border-gray-200 focus:outline-none focus:border-gray-300 focus:ring-1 focus:ring-gray-300"
             />
         </div>
     );

@@ -45,65 +45,62 @@ export function FilterPanel({ filters, filterOptions, onChange }: FilterPanelPro
     };
 
     return (
-        <Card>
-            <Card.Content>
-                <div className="text-xl font-medium mb-4">Filters</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {/* Date Range */}
-                    <DateRangeFilter
-                        label="Date Range"
-                        value={filters.dateRange || FILTER_LIMITS.DATE_VALUE}
-                        onChange={handleDateRangeChange}
-                    />
+        <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
+                {/* Date Range */}
+                <DateRangeFilter
+                    label="Date Range"
+                    value={filters.dateRange || FILTER_LIMITS.DATE_VALUE}
+                    onChange={handleDateRangeChange}
+                />
 
-                    {/* Value Range */}
-                    <ValueRangeFilter
-                        label="Value Range"
-                        type="currency"
-                        value={{
-                            min: filters.valueRange?.min ?? FILTER_LIMITS.GRANT_VALUE.MIN,
-                            max: filters.valueRange?.max ?? FILTER_LIMITS.GRANT_VALUE.MAX,
-                        }}
-                        onChange={handleValueRangeChange}
-                    />
+                {/* Value Range */}
+                <ValueRangeFilter
+                    label="Value Range"
+                    type="currency"
+                    value={{
+                        min: filters.valueRange?.min ?? FILTER_LIMITS.GRANT_VALUE.MIN,
+                        max: filters.valueRange?.max ?? FILTER_LIMITS.GRANT_VALUE.MAX,
+                    }}
+                    onChange={handleValueRangeChange}
+                />
 
-                    {/* Agencies */}
-                    <MultiSelect
-                        icon={Landmark}
-                        label="Agencies"
-                        options={filterOptions.agencies}
-                        values={filters.agencies}
-                        onChange={(values) => handleMultiSelectChange('agencies', values)}
-                    />
+                {/* Agencies */}
+                <MultiSelect
+                    icon={Landmark}
+                    label="Agencies"
+                    options={filterOptions.agencies}
+                    values={filters.agencies}
+                    onChange={(values) => handleMultiSelectChange('agencies', values)}
+                />
 
-                    {/* Countries */}
-                    <MultiSelect
-                        icon={Earth}
-                        label="Countries"
-                        options={filterOptions.countries}
-                        values={filters.countries}
-                        onChange={(values) => handleMultiSelectChange('countries', values)}
-                    />
+                {/* Countries */}
+                <MultiSelect
+                    icon={Earth}
+                    label="Countries"
+                    options={filterOptions.countries}
+                    values={filters.countries}
+                    onChange={(values) => handleMultiSelectChange('countries', values)}
+                />
 
-                    {/* Provinces */}
-                    <MultiSelect
-                        icon={Radar}
-                        label="Provinces"
-                        options={filterOptions.provinces}
-                        values={filters.provinces}
-                        onChange={(values) => handleMultiSelectChange('provinces', values)}
-                    />
+                {/* Provinces */}
+                <MultiSelect
+                    icon={Radar}
+                    label="Provinces"
+                    options={filterOptions.provinces}
+                    values={filters.provinces}
+                    onChange={(values) => handleMultiSelectChange('provinces', values)}
+                />
 
-                    {/* Cities */}
-                    <MultiSelect
-                        icon={LocateFixed}
-                        label="Cities"
-                        options={filterOptions.cities}
-                        values={filters.cities}
-                        onChange={(values) => handleMultiSelectChange('cities', values)}
-                    />
-                </div>
-            </Card.Content>
-        </Card>
+                {/* Cities */}
+                <MultiSelect
+                    icon={LocateFixed}
+                    label="Cities"
+                    options={filterOptions.cities}
+                    values={filters.cities}
+                    onChange={(values) => handleMultiSelectChange('cities', values)}
+                />
+            </div>
+        </>
     );
 }
