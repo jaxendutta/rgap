@@ -10,15 +10,13 @@ import {
     TrendingUp,
     University,
     Building2,
-    ExternalLink,
     Award,
 } from 'lucide-react';
+import { TbWorldSearch } from 'react-icons/tb';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { TabItem } from '@/components/ui/Tabs';
-import EntityProfilePage from '@/components/entity/EntityProfilePage';
-import EntityHeader, { ActionButton, MetadataItem } from '@/components/entity/EntityHeader';
-import StatDisplay, { StatItem } from '@/components/entity/StatDisplay';
+import EntityProfilePage, { EntityHeader, StatDisplay, ActionButton, MetadataItem, StatItem } from '@/components/entity/EntityProfilePage';
 import { formatCurrency, formatCSV } from '@/lib/format';
 import { RecipientWithStats, GrantWithDetails, RECIPIENT_TYPE_LABELS } from '@/types/database';
 import GrantCard from '@/components/grants/GrantCard';
@@ -77,8 +75,8 @@ export function RecipientDetailClient({
     // Define actions
     const actions: ActionButton[] = [
         {
-            icon: ExternalLink,
-            label: 'Search Online',
+            icon: TbWorldSearch,
+            label: 'Search',
             onClick: () => window.open(`https://www.google.com/search?q=${encodeURIComponent(recipient.legal_name + ' ' + (recipient.research_organization_name || ''))}`,
                 '_blank'
             ),
@@ -92,12 +90,8 @@ export function RecipientDetailClient({
             title={recipient.legal_name}
             icon={GraduationCap}
             entityType="recipient"
-            entityId={recipient.recipient_id}
             location={location}
             metadata={metadata}
-            isBookmarked={recipient.is_bookmarked}
-            userId={userId}
-            actions={actions}
             badge={{
                 text: recipientType,
                 icon: Building2
@@ -221,6 +215,10 @@ export function RecipientDetailClient({
             tabs={tabs}
             defaultTab="grants"
             renderTabContent={renderTabContent}
+            actions={actions}
+            entityType="recipient"
+            entityId={recipient.recipient_id}
+            isBookmarked={recipient.is_bookmarked}
         />
     );
 }

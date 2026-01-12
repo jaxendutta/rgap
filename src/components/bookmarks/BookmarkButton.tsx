@@ -42,7 +42,7 @@ export function BookmarkButton({
                 variant={variant}
             >
                 <Bookmark className="w-4 h-4" />
-                {showLabel && <span className="hidden md:inline-flex ml-2">Sign in to bookmark</span>}
+                {showLabel && <span className="hidden md:inline-flex">Sign in to bookmark</span>}
             </Button>
         );
     }

@@ -14,9 +14,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { TabItem } from '@/components/ui/Tabs';
 import { EntityCard } from '@/components/entity/EntityCard';
-import EntityProfilePage from '@/components/entity/EntityProfilePage';
-import EntityHeader, { ActionButton } from '@/components/entity/EntityHeader';
-import StatDisplay, { StatItem } from '@/components/entity/StatDisplay';
+import EntityProfilePage, { EntityHeader, StatDisplay, ActionButton, StatItem } from '@/components/entity/EntityProfilePage';
 import { formatCurrency, formatCSV } from '@/lib/format';
 import { InstituteWithStats, RecipientWithStats, GrantWithDetails } from '@/types/database';
 import { Card } from '@/components/ui/Card';
@@ -84,11 +82,7 @@ export function InstituteDetailClient({
             title={institute.name}
             icon={University}
             entityType="institute"
-            entityId={institute.institute_id}
             location={location}
-            isBookmarked={institute.is_bookmarked}
-            userId={userId}
-            actions={actions}
         />
     );
 
@@ -230,6 +224,10 @@ export function InstituteDetailClient({
             tabs={tabs}
             defaultTab="recipients"
             renderTabContent={renderTabContent}
+            actions={actions}
+            entityType="institute"
+            entityId={institute.institute_id}
+            isBookmarked={institute.is_bookmarked}
         />
     );
 }
