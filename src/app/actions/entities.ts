@@ -45,9 +45,9 @@ export async function getInstitute(id: number): Promise<InstituteWithStats | nul
       i.*,
       COUNT(DISTINCT r.recipient_id) as recipient_count,
       COUNT(DISTINCT g.grant_id) as grant_count,
-      SUM(g.agreement_value) as total_funding,
-      MAX(g.agreement_start_date) as latest_grant_date,
-      MIN(g.agreement_start_date) as first_grant_date,
+      SUM(g.agreement_value::numeric) as total_funding,
+      MAX(g.agreement_start_date::date) as latest_grant_date,
+      MIN(g.agreement_start_date::date) as first_grant_date,
       ${userId ? `
         EXISTS(
           SELECT 1 FROM bookmarked_institutes bi 

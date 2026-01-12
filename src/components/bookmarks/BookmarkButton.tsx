@@ -6,7 +6,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { Bookmark, BookmarkCheck } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '@/components/ui/Button';
+import { Button, variants } from '@/components/ui/Button';
 
 interface BookmarkButtonProps {
     entityType: 'grant' | 'recipient' | 'institute';
@@ -14,6 +14,7 @@ interface BookmarkButtonProps {
     isBookmarked?: boolean;
     size?: 'sm' | 'md' | 'lg';
     showLabel?: boolean;
+    variant?: keyof typeof variants;
 }
 
 export function BookmarkButton({
@@ -22,6 +23,7 @@ export function BookmarkButton({
     isBookmarked = false,
     size = 'sm',
     showLabel = true,
+    variant = 'outline',
 }: BookmarkButtonProps) {
     const { user } = useAuth();
     const router = useRouter();
@@ -34,13 +36,13 @@ export function BookmarkButton({
     if (!user) {
         return (
             <Button
-                variant="ghost"
                 size={size}
                 onClick={() => router.push(`/login?redirect=${window.location.pathname}`)}
                 title="Sign in to bookmark this item"
+                variant={variant}
             >
                 <Bookmark className="w-4 h-4" />
-                {showLabel && <span className="ml-2">Sign in to bookmark</span>}
+                {showLabel && <span className="hidden md:inline-flex ml-2">Sign in to bookmark</span>}
             </Button>
         );
     }
@@ -72,7 +74,7 @@ export function BookmarkButton({
 
     return (
         <Button
-            variant={bookmarked ? 'primary' : 'outline'}
+            variant={variant}
             size={size}
             onClick={handleToggle}
             disabled={loading}
@@ -80,13 +82,13 @@ export function BookmarkButton({
         >
             {bookmarked ? (
                 <>
-                    <BookmarkCheck className="w-4 h-4" />
-                    {showLabel && <span className="ml-2">Bookmarked</span>}
+                    <BookmarkCheck className="w-4 h-4 text-blue-600" />
+                    {showLabel && <span className="hidden md:inline-flex ml-2">Bookmarked</span>}
                 </>
             ) : (
                 <>
                     <Bookmark className="w-4 h-4" />
-                    {showLabel && <span className="ml-2">Bookmark</span>}
+                    {showLabel && <span className="hidden md:inline-flex ml-2">Bookmark</span>}
                 </>
             )}
         </Button>

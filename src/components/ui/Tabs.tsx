@@ -3,11 +3,12 @@ import React, { useRef, useEffect, useState } from "react";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { IconType } from "react-icons";
 
 export interface TabItem {
     id: string;
     label: string;
-    icon?: LucideIcon;
+    icon?: IconType;
     count?: number;
     disabled?: boolean;
 }

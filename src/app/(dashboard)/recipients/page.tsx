@@ -51,6 +51,9 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
       i.country,
       COUNT(DISTINCT g.grant_id) as grant_count,
       SUM(g.agreement_value) as total_funding,
+      AVG(g.agreement_value) as avg_funding,
+      MIN(g.agreement_start_date::date) as first_grant_date,
+      MAX(g.agreement_start_date::date) as latest_grant_date,
       ${userId ? `
         EXISTS(
           SELECT 1 FROM bookmarked_recipients br 

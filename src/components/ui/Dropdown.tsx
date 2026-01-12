@@ -91,16 +91,16 @@ export const Dropdown = ({
                 variant={"outline"}
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "flex items-center justify-between w-full px-3 py-2 text-sm border hover:shadow-sm transition-all duration-200",
+                    "flex items-center w-full px-3 py-2 text-sm border hover:shadow-sm transition-all duration-200",
                     isOpen && "border-gray-300 ring-1 ring-gray-300",
                     className
                 )}
             >
-                <div className="flex items-center gap-2">
+                <div className="flex w-full items-center gap-2">
                     {icon && React.createElement(icon, { className: "h-4 w-4 text-gray-500" })}
                     {label && <span className="font-medium whitespace-nowrap">{label}</span>}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex w-full justify-between items-center gap-2">
                     <span className="text-gray-600 italic whitespace-nowrap">{getDisplayValue()}</span>
                     <ChevronDown
                         className={cn(

@@ -1,34 +1,47 @@
-// src/components/layout/EntityProfilePage.tsx
+// src/components/entity/EntityProfilePage.tsx
 'use client';
 
 import React, { useState } from "react";
-import Tabs, { TabItem } from "@/components/ui/Tabs"; // Assuming you have this
-import PageContainer from "@/components/layout/PageContainer";
 import { Card } from "@/components/ui/Card";
+import Tabs, { TabItem } from "@/components/ui/Tabs";
+import PageContainer from "@/components/layout/PageContainer";
 
 export interface EntityProfilePageProps {
-    header: React.ReactNode;
-    stats: React.ReactNode;
+    // Header and stats content
+    renderHeader: () => React.ReactNode;
+    renderStats: () => React.ReactNode;
+
+    // Tabs and content
     tabs: TabItem[];
-    tabContent: Record<string, React.ReactNode>;
     defaultTab?: string;
+
+    // Tab content renderers
+    renderTabContent: (tabId: string) => React.ReactNode;
 }
 
+/**
+ * EntityProfilePage - Reusable layout for entity detail pages
+ * Works for both institutes and recipients
+ * Follows render props pattern for flexibility
+ */
 const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
-    header,
-    stats,
+    renderHeader,
+    renderStats,
     tabs,
-    tabContent,
-    defaultTab = 'overview'
+    defaultTab,
+    renderTabContent,
 }) => {
-    const [activeTab, setActiveTab] = useState(defaultTab);
+    const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.id || '');
 
     return (
         <PageContainer>
             {/* Header with profile and quick stats */}
             <Card className="mb-6 overflow-hidden">
-                {header}
-                {stats}
+                {/* Entity header (name, location, actions) */}
+                {renderHeader()}
+
+                {/* Stats section */}
+                {renderStats()}
             </Card>
 
             {/* Tabs and Content */}
@@ -38,10 +51,11 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                     activeTab={activeTab}
                     onChange={setActiveTab}
                     variant="underline"
+                    size="sm"
                 />
 
                 <div className="animate-in fade-in duration-300">
-                    {tabContent[activeTab]}
+                    {renderTabContent(activeTab)}
                 </div>
             </Card>
         </PageContainer>

@@ -1,149 +1,161 @@
+// src/components/entity/EntityHeader.tsx
 'use client';
 
-import { useState } from "react";
-import { LucideIcon, MapPin, ChevronDown, ChevronUp } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { BookmarkButton } from "@/components/bookmarks/BookmarkButton";
-import { cn } from "@/lib/utils";
-import dynamic from "next/dynamic";
-import { formatCSV } from "@/lib/format";
-import { EntityType } from "@/types/database";
-import { Tag, Tags } from "@/components/ui/Tag";
-import Link from "next/link";
-
-const LocationMap = dynamic(() => import('@/components/ui/LocationMap'), {
-  ssr: false, // This is crucial for Leaflet!
-  loading: () => (
-    <div className="h-[300px] w-full bg-slate-100 flex items-center justify-center rounded-lg">
-       <span className="text-slate-400 text-sm">Loading Map...</span>
-    </div>
-  ),
-});
+import React, { useMemo } from 'react';
+import { MapPin, ChevronLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import Tag from '@/components/ui/Tag';
+import { Button } from '@/components/ui/Button';
+import BookmarkButton from '@/components/bookmarks/BookmarkButton';
+import { IconType } from 'react-icons';
 
 export interface MetadataItem {
-    icon: LucideIcon;
+    icon: IconType;
     text: string;
     href?: string;
 }
 
 export interface ActionButton {
-    icon: LucideIcon;
+    icon: IconType;
     label: string;
     onClick: () => void;
-    variant?: "primary" | "secondary" | "outline";
+    variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
 }
 
-interface EntityHeaderProps {
+export interface EntityHeaderProps {
+    // Required props
     title: string;
-    subtitle?: string;
-    icon: LucideIcon;
-    metadata: MetadataItem[];
-    actions?: ActionButton[];
-    entityType?: EntityType;
-    entityId?: number;
+    icon: IconType;
+    entityType: 'institute' | 'recipient';
+    entityId: number;
+
+    // Optional props
     location?: string;
+    metadata?: MetadataItem[];
+    actions?: ActionButton[];
     isBookmarked?: boolean;
+    userId?: number;
+    subtitle?: string;
+    badge?: {
+        text: string;
+        icon?: IconType;
+    };
 }
 
 const EntityHeader: React.FC<EntityHeaderProps> = ({
     title,
-    subtitle,
     icon: Icon,
-    metadata,
-    actions = [],
     entityType,
     entityId,
     location,
-    isBookmarked,
+    metadata = [],
+    actions = [],
+    isBookmarked = false,
+    userId,
+    subtitle,
+    badge,
 }) => {
-    const [showMap, setShowMap] = useState(false);
-    const hasLocationData = !!location && location.trim() !== "";
+    const router = useRouter();
+
+    const locationTag = useMemo(() => {
+        if (!location) return null;
+        return {
+            icon: MapPin,
+            text: location,
+            variant: 'default' as const,
+        };
+    }, [location]);
+
+    // Color scheme based on entity type
+    const colorScheme = entityType === 'institute'
+        ? { bg: 'bg-blue-100', text: 'text-blue-600' }
+        : { bg: 'bg-purple-100', text: 'text-purple-600' };
 
     return (
-        <div className="px-4 py-6 lg:px-6 lg:py-8 border-b border-gray-100/50">
-            <div className="flex-1 flex flex-col gap-1.5">
-                <div className="flex items-start justify-between flex-wrap gap-4">
-                    <div className="flex items-start gap-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                            <Icon className="h-6 w-6 text-blue-600 flex-shrink-0" />
+        <div className="p-6">
+            {/* Back Button */}
+            <div className="mb-4 justify-between flex">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={ChevronLeft}
+                    onClick={() => router.back()}
+                >
+                    Back
+                </Button>
+
+                {/* Action Buttons */}
+                {actions.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                        {actions.map((action, index) => {
+                            const ActionIcon = action.icon;
+                            return (
+                                <Button
+                                    key={index}
+                                    variant={action.variant || 'outline'}
+                                    size="sm"
+                                    leftIcon={ActionIcon}
+                                    onClick={action.onClick}
+                                >
+                                    {action.label}
+                                </Button>
+                            );
+                        })}
+
+                        {/* Bookmark Button */}
+                        <BookmarkButton
+                            entityType={entityType}
+                            entityId={entityId}
+                            isBookmarked={isBookmarked}
+                        />
+                    </div>
+                )}
+            </div>
+
+            {/* Main Header Content */}
+            <div className="flex items-start justify-between">
+                <div className="flex-1">
+                    {/* Icon and Title */}
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className={`p-2 ${colorScheme.bg} rounded-lg`}>
+                            <Icon className={`h-6 w-6 ${colorScheme.text}`} />
                         </div>
                         <div>
-                            <h1 className="text-xl lg:text-3xl font-bold text-gray-900 tracking-tight">
+                            <h1 className="text-2xl font-bold text-gray-900">
                                 {title}
                             </h1>
                             {subtitle && (
-                                <p className="text-gray-500 mt-1 font-medium">{subtitle}</p>
+                                <p className="text-sm text-gray-600 mt-1">
+                                    {subtitle}
+                                </p>
                             )}
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 self-end lg:self-start">
-                        {hasLocationData && (
-                            <Button
-                                variant="outline"
-                                leftIcon={MapPin}
-                                rightIcon={showMap ? ChevronUp : ChevronDown}
-                                size="sm"
-                                onClick={() => setShowMap(!showMap)}
-                                className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                            >
-                                {formatCSV([location].filter(Boolean) as string[])}
-                            </Button>
-                        )}
+                    <div className="flex flex-wrap items-center gap-2 mt-3">
+                        {/* Location Tag */}
+                        {locationTag && (<Tag icon={locationTag.icon} text={locationTag.text} variant={locationTag.variant} />)}
 
-                        {actions.map((action, index) => (
-                            <Button
-                                key={index}
-                                variant={action.variant || "outline"}
-                                leftIcon={action.icon}
-                                size="sm"
-                                onClick={action.onClick}
-                            >
-                                {action.label}
-                            </Button>
-                        ))}
+                        {/* Badge (e.g., recipient type) */}
+                        {badge && (<Tag icon={badge.icon} text={badge.text} />)}
 
-                        {entityType && entityId && (
-                            <BookmarkButton
-                                entityId={entityId}
-                                entityType={entityType}
-                                size="sm"
-                                isBookmarked={isBookmarked}
-                            />
-                        )}
+                        {/* Metadata Items */}
+                        {metadata.length > 0 &&
+                            metadata.map((item, index) =>
+                                item.href
+                                    ? (<Tag
+                                        key={index}
+                                        onClick={() => router.push(item.href!)}
+                                        text={item.text}
+                                        icon={item.icon}
+                                        className="flex items-center gap-1 text-blue-600 hover:text-blue-700"
+                                    />)
+                                    : (<Tag key={index} text={item.text} icon={item.icon} />)
+                            )
+                        }
+
                     </div>
                 </div>
-
-                {metadata.length > 0 && (
-                    <div className="mt-4">
-                        <Tags>
-                            {metadata.map((item, index) => (
-                                item.href ? (
-                                    <Link key={index} href={item.href} passHref>
-                                        <Tag icon={item.icon} variant="link" text={item.text} />
-                                    </Link>
-                                ) : (
-                                    <Tag key={index} icon={item.icon} variant="outline" text={item.text} />
-                                )
-                            ))}
-                        </Tags>
-                    </div>
-                )}
-
-                {hasLocationData && (
-                    <div
-                        className={cn(
-                            "overflow-hidden transition-all duration-300 ease-in-out",
-                            showMap ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"
-                        )}
-                    >
-                        <div className="border border-slate-200 rounded-lg overflow-hidden bg-gray-50">
-                            <div className="p-4">
-                                <LocationMap title={title} location={location} height={300} />
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );

@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/lib/responsive";
 import { IconType } from "react-icons";
 
-const variants = {
+export const variants = {
     primary: "bg-gray-900 text-white hover:bg-black",
     secondary:
         "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50",
@@ -22,8 +22,8 @@ const sizes = {
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: keyof typeof variants;
     size?: keyof typeof sizes;
-    leftIcon?: IconType;
-    rightIcon?: IconType;
+    leftIcon?: IconType | React.ComponentType<{ className?: string | undefined; }>;
+    rightIcon?: IconType | React.ComponentType<{ className?: string | undefined; }>;
     isLoading?: boolean;
     pill?: boolean;
     responsiveText?: "hideOnMobile" | "hideOnDesktop" | "always" | "firstWord";
@@ -72,7 +72,7 @@ export const Button = ({
                 <>
                     {LeftIcon && (
                         <span className={cn(iconClasses[responsiveIcon])}>
-                            <LeftIcon className="w-4 h-4 flex-shrink-0" />
+                            <LeftIcon className={`w-4 h-4 flex-shrink-0`} />
                         </span>
                     )}
 
@@ -101,7 +101,7 @@ export const Button = ({
                     )}
 
                     {RightIcon && (
-                        <span className={cn("", iconClasses[responsiveIcon])}>
+                        <span className={cn(iconClasses[responsiveIcon])}>
                             <RightIcon className="w-4 h-4 flex-shrink-0" />
                         </span>
                     )}

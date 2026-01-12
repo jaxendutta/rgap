@@ -1,7 +1,8 @@
 // src/components/ui/Tag.tsx
 import React from "react";
-import { ArrowUpRight, LucideIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { IconType } from "react-icons";
+import { LuArrowRight, LuX } from "react-icons/lu";
 
 // Define variant styles
 const variants = {
@@ -45,7 +46,7 @@ export interface TagProps {
     text: string;
 
     /** Icon to show before the text */
-    icon?: LucideIcon;
+    icon?: IconType;
 
     /** Tag appearance variant */
     variant?: keyof typeof variants;
@@ -105,7 +106,7 @@ export const Tag: React.FC<TagProps> = ({
 
             <span className="truncate flex-1">{text}</span>
             {onClick && (
-                <ArrowUpRight
+                <LuArrowRight
                     className={cn(
                         iconSizes[size],
                         "text-blue-400 flex-shrink-0 transition-transform duration-300 ease-in-out",
@@ -127,7 +128,7 @@ export const Tag: React.FC<TagProps> = ({
                         "rounded-full hover:bg-gray-200/30"
                     )}
                 >
-                    <X
+                    <LuX
                         className={
                             iconSizes[
                                 size === "lg"

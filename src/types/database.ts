@@ -157,24 +157,24 @@ export interface SearchHistory {
  */
 export interface InstituteWithStats extends Institute {
     // Aggregated counts
-    recipients_count?: number;
-    grant_count?: number;
-    total_grants?: number;
-    total_recipients?: number;
+    recipient_count: number;
+    grant_count: number;
+    total_grants: number;
+    total_recipients: number;
 
     // Funding statistics
-    total_funding?: number;
-    avg_funding?: number;
+    total_funding: number;
+    avg_funding: number;
 
     // Date ranges
-    first_grant_date?: string | Date;
-    latest_grant_date?: string | Date;
+    first_grant_date: string | Date;
+    latest_grant_date: string | Date;
 
     // Misc
-    funding_agencies_count?: number;
+    funding_agencies_count: number;
 
     // UI state
-    is_bookmarked?: boolean;
+    is_bookmarked: boolean;
 }
 
 /**
@@ -193,18 +193,18 @@ export interface RecipientWithStats extends Recipient {
     postal_code?: string;
 
     // Aggregated counts
-    grant_count?: number;
+    grant_count: number;
 
     // Funding statistics
-    total_funding?: number;
-    avg_funding?: number;
+    total_funding: number;
+    avg_funding: number;
 
     // Date ranges
-    first_grant_date?: string | Date;
-    latest_grant_date?: string | Date;
+    first_grant_date: string | Date;
+    latest_grant_date: string | Date;
 
     // Misc
-    funding_agencies_count?: number;
+    funding_agencies_count: number;
 
     // UI state
     is_bookmarked?: boolean;

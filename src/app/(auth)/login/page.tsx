@@ -9,7 +9,9 @@ import InputField from '@/components/ui/InputField';
 import { Card } from '@/components/ui/Card';
 import Tabs from '@/components/ui/Tabs';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { LuChevronLeft } from 'react-icons/lu';
 
 const initialState = { message: '' };
 
@@ -22,17 +24,21 @@ export default function AuthPage() {
         { id: 'register', label: 'Create Account' },
     ];
 
+    const router = useRouter();
+
     return (
         <div className="self-center w-full max-w-md">
             {/* Back Button */}
             <div className="mb-6">
-                <Link
-                    href="/"
-                    className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors group"
+                <Button
+                    onClick={() => router.back()}
+                    variant="ghost"
+                    size="sm"
+                    className="inline-flex items-center gap-2 group"
                 >
-                    <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                    Back to Home
-                </Link>
+                    <LuChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                    Back
+                </Button>
             </div>
 
             <Card className="overflow-hidden border-0 shadow-2xl">

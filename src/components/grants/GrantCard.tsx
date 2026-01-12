@@ -28,7 +28,7 @@ import {
     BookOpen,
 } from "lucide-react";
 
-import { Grant, GrantAmendment, GrantWithDetails } from "@/types/database";
+import { GrantAmendment, GrantWithDetails } from "@/types/database";
 import { Card } from "@/components/ui/Card";
 import Tag, { Tags } from "@/components/ui/Tag";
 import BookmarkButton from "@/components/bookmarks/BookmarkButton";
@@ -86,25 +86,25 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
                 <div className="flex items-center justify-between gap-2 mb-2 lg:mb-1">
                     <Link
                         href={`/recipients/${grant.recipient_id}`}
-                        className="flex text-lg font-medium hover:text-blue-700 transition-colors gap-1.5 group"
+                        className="flex text-sm md:text-base lg:text-lg font-medium hover:text-blue-700 transition-colors gap-1.5 group"
                         aria-label={`View profile for recipient ${grant.legal_name}`}
                     >
-                        <GraduationCap className="h-5 w-5 mt-1 align-text-bottom flex-shrink-0" />
+                        <GraduationCap className="h-4.5 w-4.5 md:mt-1 align-text-bottom flex-shrink-0" />
                         <span className="inline-block">
                             {grant.legal_name}
-                            <ArrowUpRight className="inline-block h-4 w-4 ml-1 align-text-bottom opacity-0 group-hover:opacity-100 group-hover:-translate-y-0.5 transition-all" />
+                            <ArrowUpRight className="hidden md:inline-block h-4 w-4 ml-1 mb-0.5 align-text-bottom opacity-20 group-hover:opacity-100 group-hover:-translate-y-0.5 transition-all" />
                         </span>
                     </Link>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-0">
                         <Tag
                             icon={Calendar1}
                             size="md"
                             variant="outline"
-                            className="hidden lg:flex"
+                            className="hidden lg:flex mr-2"
                             text={formatDate(grant.agreement_start_date)}
                         />
-                        <span className="font-medium text-lg lg:text-xl">
+                        <span className="font-medium md:text-lg lg:text-xl">
                             {formatCurrency(grant.agreement_value)}
                         </span>
                         <BookmarkButton
@@ -113,6 +113,7 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
                             isBookmarked={isBookmarked}
                             size="md"
                             showLabel={false}
+                            variant="ghost"
                         />
                     </div>
                 </div>
@@ -581,3 +582,5 @@ export const GrantCard = (grant: GrantWithDetails) => {
         </Card>
     );
 };
+
+export default GrantCard;

@@ -481,7 +481,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
         <Card className={cn("", className)}>
             <Card.Header
                 icon={icon}
-                className="flex flex-col lg:flex-row items-center justify-between gap-3"
+                className="flex flex-wrap items-center justify-between gap-3"
                 title={effectiveTitle}
             >
                 {/* Header with controls - only show if showControls is true */}
@@ -497,7 +497,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                 )}
 
                 {showControls && (
-                    <div className="flex items-center justify-between w-full py-2 lg:py-0 lg:gap-3 lg:justify-end">
+                    <div className="flex items-center justify-between w-full py-2 lg:py-0 lg:gap-3">
                         {/* Metric type toggle (if multiple metrics available and not in amendment view) */}
                         {availableMetrics.length > 1 && !isAmendmentView && (
                             <ToggleButtons>

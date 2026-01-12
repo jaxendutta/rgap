@@ -125,7 +125,7 @@ export const EntityCard = ({
 
     // Recipients count (only for institutes)
     const recipients = isInstituteType
-        ? (recipientsCount ?? entity.recipients_count ?? entity.total_recipients ?? 0)
+        ? (recipientsCount ?? entity.recipient_count ?? entity.total_recipients ?? 0)
         : null;
 
     // ============================================================================
@@ -141,11 +141,9 @@ export const EntityCard = ({
                         <Button
                             variant="outline"
                             leftIcon={ChevronLeft}
-                            onClick={() =>
-                                router.push(`/${entityType === "institute" ? "institutes" : "recipients"}`)
-                            }
+                            onClick={() => router.back()}
                         >
-                            Back to {entityType === "institute" ? "Institutes" : "Recipients"}
+                            Back
                         </Button>
                         {onRetry && (
                             <Button variant="primary" onClick={onRetry}>
@@ -218,10 +216,8 @@ export const EntityCard = ({
                 icon: BookMarked,
             },
             {
-                label: "Last Grant",
-                value: latestDate
-                    ? new Date(latestDate).toLocaleDateString()
-                    : "N/A",
+                label: "Latest Grant",
+                value: latestDate ? new Date(latestDate).toLocaleDateString() : "N/A",
                 icon: Calendar,
             },
             {
@@ -256,6 +252,7 @@ export const EntityCard = ({
                     entityType={entityType}
                     entityId={id}
                     isBookmarked={entity.is_bookmarked ?? false}
+                    variant="ghost"
                     showLabel={false}
                 />
             </div>
