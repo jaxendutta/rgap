@@ -15,9 +15,11 @@ import {
     BookMarked,
     Calendar,
     Users,
+    ActivityIcon,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { IconType } from "react-icons";
 
 // ============================================================================
 // ANALYTICS UTILITY FUNCTIONS
@@ -193,18 +195,18 @@ function calculateAvgGrantDuration(grants: GrantWithDetails[]) {
 export const KpiCard = ({
     title,
     value,
-    icon,
+    icon: Icon,
 }: {
     title: string;
     value: React.ReactNode;
-    icon: React.ReactNode;
+    icon: IconType;
 }) => (
     <Card className="p-4">
         <div className="flex items-center mb-2">
-            {icon}
+            <Icon className="h-3.5 md:h-5 w-3.5 md:w-5 text-blue-600" />
             <h3 className="font-medium text-gray-800 ml-2 text-sm">{title}</h3>
         </div>
-        <div className="mt-1 text-2xl font-bold text-gray-900">{value}</div>
+        <div className="mt-1 text-lg md:text-xl font-bold text-gray-900">{value}</div>
     </Card>
 );
 
@@ -416,7 +418,7 @@ export default function EntityAnalytics({
     return (
         <div className="flex flex-col gap-6">
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
                 {/* Funding Growth */}
                 <KpiCard
                     title="Funding Growth"
@@ -444,7 +446,7 @@ export default function EntityAnalytics({
                             </span>
                         </div>
                     }
-                    icon={<Activity className="h-5 w-5 text-blue-600" />}
+                    icon={ActivityIcon}
                 />
 
                 {/* Entity-specific metric */}
@@ -463,7 +465,7 @@ export default function EntityAnalytics({
                                 )}
                             </div>
                         }
-                        icon={<GraduationCap className="h-5 w-5 text-blue-600" />}
+                        icon={GraduationCap}
                     />
                 ) : (
                     <KpiCard
@@ -476,7 +478,7 @@ export default function EntityAnalytics({
                                 </span>
                             </div>
                         }
-                        icon={<Calendar className="h-5 w-5 text-blue-600" />}
+                        icon={Calendar}
                     />
                 )}
 
@@ -493,7 +495,7 @@ export default function EntityAnalytics({
                             )}
                         </div>
                     }
-                    icon={<University className="h-5 w-5 text-blue-600" />}
+                    icon={University}
                 />
             </div>
 

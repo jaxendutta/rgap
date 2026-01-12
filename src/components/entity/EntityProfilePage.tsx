@@ -70,17 +70,17 @@ export const EntityHeader: React.FC<EntityHeaderProps> = ({
         : { bg: 'bg-purple-100', text: 'text-purple-600' };
 
     return (
-        <div className="p-6">
+        <div className="p-4 md:p-6">
             {/* Main Header Content */}
             <div className="flex items-start justify-between">
                 <div className="flex-1">
                     {/* Icon and Title */}
                     <div className="flex items-center gap-3 mb-2">
                         <div className={`p-2 ${colorScheme.bg} rounded-lg`}>
-                            <Icon className={`h-6 w-6 ${colorScheme.text}`} />
+                            <Icon className={`h-4 md:h-6 w-4 md:w-6 ${colorScheme.text}`} />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">
+                            <h1 className="text-lg md:text-2xl font-bold text-gray-900">
                                 {title}
                             </h1>
                             {subtitle && (
@@ -93,10 +93,10 @@ export const EntityHeader: React.FC<EntityHeaderProps> = ({
 
                     <div className="flex flex-wrap items-center gap-2 mt-3">
                         {/* Location Tag */}
-                        {locationTag && (<Tag icon={locationTag.icon} text={locationTag.text} variant={locationTag.variant} />)}
+                        {locationTag && (<Tag icon={locationTag.icon} text={locationTag.text} variant={locationTag.variant} className="text-xs md:text-sm" />)}
 
                         {/* Badge (e.g., recipient type) */}
-                        {badge && (<Tag icon={badge.icon} text={badge.text} />)}
+                        {badge && (<Tag icon={badge.icon} text={badge.text} className="text-xs md:text-sm" />)}
 
                         {/* Metadata Items */}
                         {metadata.length > 0 &&
@@ -107,7 +107,7 @@ export const EntityHeader: React.FC<EntityHeaderProps> = ({
                                         onClick={() => router.push(item.href!)}
                                         text={item.text}
                                         icon={item.icon}
-                                        className="flex items-center gap-1 text-blue-600 hover:text-blue-700"
+                                        className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs md:text-sm"
                                     />)
                                     : (<Tag key={index} text={item.text} icon={item.icon} />)
                             )
@@ -146,7 +146,7 @@ export const StatDisplay: React.FC<StatDisplayProps> = ({
     };
 
     return (
-        <div className={`grid ${gridCols[columns]} gap-4 p-6 pt-0`}>
+        <div className={`grid ${gridCols[columns]} gap-2 md:gap-4 p-3 md:p-6 pt-0`}>
             {items.map((item, index) => {
                 const Icon = item.icon;
                 return (
@@ -154,11 +154,11 @@ export const StatDisplay: React.FC<StatDisplayProps> = ({
                         key={index}
                         className="flex flex-col items-center p-3 bg-blue-100/60 rounded-lg"
                     >
-                        <span className=" flex text-gray-700 rounded-lg text-xs items-center justify-center gap-1">
-                            <Icon className="w-3 h-3" />
+                        <span className="flex text-gray-700 rounded-lg text-xs items-center justify-center gap-1">
+                            <Icon className="w-2.5 md:w-3 h-2.5 md:h-3" />
                             {item.label}
                         </span>
-                        <div className="text-lg font-semibold text-gray-900">
+                        <div className="text-base md:text-lg font-semibold text-gray-900">
                             {typeof item.value === 'number'
                                 ? item.value.toLocaleString()
                                 : item.value
@@ -222,6 +222,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                     size="sm"
                     leftIcon={ChevronLeft}
                     onClick={() => router.back()}
+                    className="text-xs md:text-base"
                 >
                     Back
                 </Button>
@@ -236,6 +237,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                                 size="sm"
                                 leftIcon={ActionIcon}
                                 onClick={action.onClick}
+                                className="text-xs md:text-base"
                             >
                                 {action.label}
                             </Button>
@@ -261,20 +263,19 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
             </Card>
 
             {/* Tabs and Content */}
-            <Card className="flex flex-col gap-6 bg-slate-50 p-4 lg:p-6 overflow-hidden min-h-[500px]">
-                <Tabs
-                    tabs={tabs}
-                    activeTab={activeTab}
-                    onChange={setActiveTab}
-                    variant="underline"
-                    size="sm"
-                />
+            <Tabs
+                tabs={tabs}
+                activeTab={activeTab}
+                onChange={setActiveTab}
+                variant="pills"
+                size="sm"
+                fullWidth
+            />
 
-                <div className="animate-in fade-in duration-300">
-                    {renderTabContent(activeTab)}
-                </div>
-            </Card>
-        </PageContainer>
+            <div className="animate-in fade-in duration-300 mt-4">
+                {renderTabContent(activeTab)}
+            </div>
+        </PageContainer >
     );
 };
 

@@ -162,24 +162,22 @@ export function RecipientDetailClient({
 
             case 'analytics':
                 return (
-                    <div className="space-y-6">
+                    <div className="space-y-2 md:space-y-6">
                         {/* Top Programs */}
                         {topPrograms.length > 0 && (
-                            <Card className="p-6">
-                                <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                            <Card className="p-2 md:p-6">
+                                <h2 className="flex flex-row items-center gap-2 text-base md:text-lg font-semibold text-gray-900 mb-4 p-1 md:p-0">
+                                    <Award className="h-4 md:h-5 w-4 md:w-5 text-purple-600" />
                                     Top Programs
                                 </h2>
                                 <div className="space-y-3">
                                     {topPrograms.map((program, index) => (
-                                        <div key={program.prog_id || index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                                            <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg">
-                                                <Award className="h-5 w-5 text-purple-600" />
-                                            </div>
+                                        <div key={program.prog_id || index} className="flex items-center gap-2 md:gap-4 p-2 md:p-4 bg-gray-100 rounded-2xl">
                                             <div className="flex-1">
-                                                <p className="font-medium text-gray-900">
+                                                <p className="font-medium text-gray-900 text-sm md:text-base">
                                                     {program.program_name}
                                                 </p>
-                                                <p className="text-sm text-gray-600">
+                                                <p className="text-xs md:text-sm text-gray-600">
                                                     {program.grant_count} {program.grant_count === 1 ? 'grant' : 'grants'}
                                                 </p>
                                             </div>
