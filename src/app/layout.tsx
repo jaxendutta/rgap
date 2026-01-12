@@ -16,6 +16,21 @@ export const metadata: Metadata = {
   title: 'RGAP - Research Grant Analytics Platform',
   description: 'Browse Canadian research grants from NSERC, CIHR, and SSHRC',
   keywords: ['research grants', 'NSERC', 'CIHR', 'SSHRC', 'Canada'],
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/favicon.png',
+    other: {
+      rel: 'icon',
+      url: '/favicon.png',
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_CA',
+    url: 'https://rgap.anirban.ca',
+    title: 'RGAP - Research Grant Analytics Platform',
+    description: 'Browse Canadian research grants from NSERC, CIHR, and SSHRC',
+  },
 };
 
 export default async function RootLayout({
