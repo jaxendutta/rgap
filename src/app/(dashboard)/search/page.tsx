@@ -4,6 +4,7 @@
 import { db } from '@/lib/db';
 import SearchPageClient from './SearchPageClient';
 import { DEFAULT_FILTER_STATE } from '@/constants/filters';
+import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 
@@ -108,7 +109,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     );
 }
 
-export const metadata = {
+export const metadata: Metadata = {
     title: 'Search Grants | RGAP',
     description: 'Search research grants across NSERC, CIHR, and SSHRC',
 };

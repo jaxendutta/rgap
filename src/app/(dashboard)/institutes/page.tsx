@@ -1,13 +1,11 @@
 // src/app/(dashboard)/institutes/page.tsx
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
-import PageHeader from '@/components/layout/PageHeader';
-import EntityList, { SortOption } from '@/components/entity/EntityList';
-import { EntityCard } from '@/components/entity/EntityCard';
-import { Pagination } from '@/components/ui/Pagination';
+import EntitiesPage from '@/components/entity/EntitiesPage';
+import { SortOption } from '@/components/entity/EntityList';
 import { University } from 'lucide-react';
 import { InstituteWithStats } from '@/types/database';
-import PageContainer from '@/components/layout/PageContainer';
+import { Metadata } from 'next';
 
 const SORT_FIELDS = {
     funding: 'total_funding',
@@ -67,7 +65,7 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
 
     const institutes = result.rows;
 
-    // 4. Sort Config (Passed as Plain Objects)
+    // 4. Sort Config
     const sortOptions: SortOption[] = [
         { label: 'Total Funding', field: 'funding', icon: 'funding' },
         { label: 'Grant Count', field: 'count', icon: 'count' },
@@ -75,35 +73,21 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
     ];
 
     return (
-        <PageContainer className="space-y-6">
-            <PageHeader
-                title="Institutes"
-                subtitle="Browse research institutions and their funding statistics"
-                icon={University}
-            />
-
-            <EntityList
-                entityType="institute"
-                entities={institutes}
-                totalCount={totalItems}
-                sortOptions={sortOptions}
-                emptyMessage="No institutes found"
-            >
-                {institutes.map((institute) => (
-                    <EntityCard
-                        key={institute.institute_id}
-                        entity={institute}
-                        entityType="institute"
-                    />
-                ))}
-            </EntityList>
-
-            <Pagination totalPages={totalPages} />
-        </PageContainer>
+        <EntitiesPage
+            title="Institutes"
+            subtitle="Browse research institutions and their funding statistics"
+            icon={University}
+            entities={institutes}
+            totalItems={totalItems}
+            totalPages={totalPages}
+            sortOptions={sortOptions}
+            entityType="institute"
+            emptyMessage="No institutes found"
+        />
     );
 }
 
-export const metadata = {
+export const metadata: Metadata = {
     title: 'Institutes | RGAP',
     description: 'Browse research institutions',
 };

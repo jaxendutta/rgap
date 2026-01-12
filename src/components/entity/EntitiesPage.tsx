@@ -1,184 +1,67 @@
-// src/components/pages/EntitiesPage.tsx
-import { useState } from "react";
+// src/components/entity/EntitiesPage.tsx
 import PageContainer from "@/components/layout/PageContainer";
 import PageHeader from "@/components/layout/PageHeader";
-import SearchInterface from "@/components/search/SearchInterface";
-import { DEFAULT_FILTER_STATE } from "@/constants/filters";
-import { LucideIcon, Search } from "lucide-react";
-import EntityList, { EntityListProps } from "@/components/entity/EntityList";
-import { UseInfiniteQueryResult, UseQueryResult } from "@tanstack/react-query";
-import { Button } from "@/components/ui/Button";
-import { Grant } from "@/types/database";
-import { GrantCard } from "@/components/grants/GrantCard";
-import { SearchField } from "@/components/search/SearchField";
+import EntityList, { SortOption } from "@/components/entity/EntityList";
+import { EntityCard } from "@/components/entity/EntityCard";
+import { Pagination } from "@/components/ui/Pagination";
+import { LucideIcon } from "lucide-react";
+import { EntityType, InstituteWithStats, RecipientWithStats } from "@/types/database";
 
-interface HeaderConfig {
+interface EntitiesPageProps {
     title: string;
-    subtitle?: string;
+    subtitle: string;
+    icon: LucideIcon;
+    entities: (InstituteWithStats | RecipientWithStats)[];
+    totalItems: number;
+    totalPages: number;
+    sortOptions: SortOption[];
+    entityType: EntityType;
+    emptyMessage?: string;
 }
 
-interface BaseSearchConfig {
-    initialValues: Record<string, string>;
-    filters: typeof DEFAULT_FILTER_STATE;
-    onSearch: (params: any) => void;
-    isInitialState: boolean;
-}
-
-interface FullSearchConfig extends BaseSearchConfig {
-    variant: "full";
-    fields: Array<{
-        key: string;
-        icon: LucideIcon;
-        placeholder: string;
-    }>;
-    onBookmark?: () => void;
-    isBookmarked?: boolean;
-    showPopularSearches?: boolean;
-}
-
-interface SimpleSearchConfig extends BaseSearchConfig {
-    variant: "simple";
-    placeholder: string;
-    icon?: LucideIcon;
-    searchFieldKey: string;
-}
-
-type SearchConfig = FullSearchConfig | SimpleSearchConfig;
-
-interface EntitiesPageProps<T> {
-    headerConfig: HeaderConfig;
-    searchConfig?: SearchConfig;
-    listConfig: EntityListProps<T>;
-}
-
-const EntitiesPage = <T,>({
-    headerConfig,
-    searchConfig,
-    listConfig,
-}: EntitiesPageProps<T>) => {
-    // Helper function to get entities from query result
-    const getEntitiesFromQuery = (
-        query: UseInfiniteQueryResult<any, Error> | UseQueryResult<any, Error>
-    ) => {
-        // First check if query.data exists
-        if (!query.data) {
-            return [];
-        }
-
-        // Check if this is an infinite query (has pages property)
-        if ("pages" in query.data && Array.isArray(query.data.pages)) {
-            return query.data.pages.flatMap((page: any) => page.data || []);
-        }
-
-        // Otherwise, it's a regular query
-        return query.data?.data || [];
-    };
-
-    // Render the appropriate search interface
-    const renderSearchInterface = () => {
-        if (!searchConfig) return null;
-
-        if (searchConfig.variant === "full") {
-            // Full-featured search interface with filters
-            return (
-                <SearchInterface
-                    fields={searchConfig.fields}
-                    initialValues={searchConfig.initialValues}
-                    filters={searchConfig.filters}
-                    onSearch={searchConfig.onSearch}
-                    onBookmark={searchConfig.onBookmark}
-                    isBookmarked={searchConfig.isBookmarked}
-                    isInitialState={searchConfig.isInitialState}
-                    showPopularSearches={searchConfig.showPopularSearches}
-                />
-            );
-        } else {
-            // Simple search interface using the SearchField component
-            const Icon = searchConfig.icon || Search;
-            const searchFieldKey = searchConfig.searchFieldKey;
-
-            // We need to manage the current value to properly handle searches
-            const [currentValue, setCurrentValue] = useState(
-                searchConfig.initialValues[searchFieldKey] || ""
-            );
-
-            const handleSearch = () => {
-                // Create an updated searchTerms object
-                const updatedSearchTerms = {
-                    ...searchConfig.initialValues,
-                    [searchFieldKey]: currentValue,
-                };
-
-                searchConfig.onSearch({
-                    searchTerms: updatedSearchTerms,
-                    filters: searchConfig.filters,
-                });
-            };
-
-            return (
-                <div className="flex gap-2">
-                    <div className="flex-1">
-                        <SearchField
-                            icon={Icon}
-                            placeholder={searchConfig.placeholder}
-                            value={currentValue}
-                            onChange={setCurrentValue}
-                            onEnter={handleSearch}
-                        />
-                    </div>
-                    <Button
-                        variant="primary"
-                        leftIcon={Search}
-                        onClick={handleSearch}
-                        className="bg-gray-900 hover:bg-gray-800"
-                        responsiveText={"hideOnMobile"}
-                    >
-                        Search
-                    </Button>
-                </div>
-            );
-        }
-    };
-
-    // Render the appropriate list component based on the type
-    const renderList = () => {
-        if (listConfig.entityType === "grant") {
-            return (
-                <EntityList
-                    entityType="grant"
-                    entities={getEntitiesFromQuery(listConfig.query)}
-                    renderItem={(grant: Grant) => <GrantCard grant={grant} />}
-                    emptyMessage={
-                        "This recipient has no associated grants in our database."
-                    }
-                    query={listConfig.query}
-                    viewContext={listConfig.viewContext}
-                    entityId={listConfig.entityId}
-                    showVisualization={true}
-                    visualizationData={listConfig.visualizationData}
-                />
-            );
-        } else {
-            const entities = getEntitiesFromQuery(listConfig.query);
-            return <EntityList {...listConfig} entities={entities} />;
-        }
-    };
-
+const EntitiesPage = ({
+    title,
+    subtitle,
+    icon,
+    entities,
+    totalItems,
+    totalPages,
+    sortOptions,
+    entityType,
+    emptyMessage = "No items found",
+}: EntitiesPageProps) => {
     return (
-        <PageContainer>
-            {/* Header section */}
+        <PageContainer className="space-y-6">
             <PageHeader
-                title={headerConfig.title}
-                subtitle={headerConfig.subtitle}
+                title={title}
+                subtitle={subtitle}
+                icon={icon}
             />
 
-            <div className="flex flex-col gap-4">
-                {/* Search interface */}
-                {searchConfig && renderSearchInterface()}
+            <EntityList
+                entityType={entityType}
+                entities={entities}
+                totalCount={totalItems}
+                sortOptions={sortOptions}
+                emptyMessage={emptyMessage}
+            >
+                {entities.map((entity) => {
+                    // Determine ID based on entity type for the key
+                    const id = 'recipient_id' in entity 
+                        ? entity.recipient_id 
+                        : (entity as InstituteWithStats).institute_id;
+                        
+                    return (
+                        <EntityCard
+                            key={id}
+                            entity={entity}
+                            entityType={entityType}
+                        />
+                    );
+                })}
+            </EntityList>
 
-                {/* Content */}
-                {renderList()}
-            </div>
+            <Pagination totalPages={totalPages} />
         </PageContainer>
     );
 };

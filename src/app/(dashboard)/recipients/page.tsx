@@ -1,13 +1,11 @@
 // src/app/(dashboard)/recipients/page.tsx
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
-import PageHeader from '@/components/layout/PageHeader';
-import EntityList, { SortOption } from '@/components/entity/EntityList';
-import { EntityCard } from '@/components/entity/EntityCard';
-import { Pagination } from '@/components/ui/Pagination';
+import EntitiesPage from '@/components/entity/EntitiesPage';
+import { SortOption } from '@/components/entity/EntityList';
 import { Users } from 'lucide-react';
 import { RecipientWithStats } from '@/types/database';
-import PageContainer from '@/components/layout/PageContainer';
+import { Metadata } from 'next';
 
 const SORT_FIELDS = {
     funding: 'total_funding',
@@ -79,35 +77,21 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
     ];
 
     return (
-        <PageContainer className="space-y-6">
-            <PageHeader
-                title="Recipients"
-                subtitle="Browse grant recipients and their research funding"
-                icon={Users}
-            />
-
-            <EntityList
-                entityType="recipient"
-                entities={recipients}
-                totalCount={totalItems}
-                sortOptions={sortOptions}
-                emptyMessage="No recipients found"
-            >
-                {recipients.map((recipient) => (
-                    <EntityCard
-                        key={recipient.recipient_id}
-                        entity={recipient}
-                        entityType="recipient"
-                    />
-                ))}
-            </EntityList>
-
-            <Pagination totalPages={totalPages} />
-        </PageContainer>
+        <EntitiesPage
+            title="Recipients"
+            subtitle="Browse grant recipients and their research funding"
+            icon={Users}
+            entities={recipients}
+            totalItems={totalItems}
+            totalPages={totalPages}
+            sortOptions={sortOptions}
+            entityType="recipient"
+            emptyMessage="No recipients found"
+        />
     );
 }
 
-export const metadata = {
+export const metadata: Metadata = {
     title: 'Recipients | RGAP',
     description: 'Browse research grant recipients',
 };
