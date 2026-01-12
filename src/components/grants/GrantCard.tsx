@@ -50,7 +50,7 @@ interface GrantCardProps {
     isBookmarked?: boolean;
 }
 
-type TabId = "details" | "versions" | "funding";
+type TabId = "details" | "versions" | "timeline";
 
 // --- Helper Functions ---
 
@@ -81,7 +81,7 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
     const router = useRouter();
 
     return (
-        <div className="flex flex-col lg:flex-row gap-2 lg:gap-6">
+        <div className="flex flex-col lg:flex-row gap-2 lg:gap-6 p-1">
             <div className="flex-1 max-w-full">
                 <div className="flex items-center justify-between gap-2 mb-2 lg:mb-1">
                     <Link
@@ -96,14 +96,7 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
                         </span>
                     </Link>
 
-                    <div className="flex items-center gap-0">
-                        <Tag
-                            icon={Calendar1}
-                            size="md"
-                            variant="outline"
-                            className="hidden lg:flex mr-2"
-                            text={formatDate(grant.agreement_start_date)}
-                        />
+                    <div className="flex items-center">
                         <span className="font-medium md:text-lg lg:text-xl">
                             {formatCurrency(grant.agreement_value)}
                         </span>
@@ -121,7 +114,7 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
                 <Tags spacing="normal">
                     <Tag
                         icon={University}
-                        size="md"
+                        size="sm"
                         variant="link"
                         onClick={() => router.push(`/institutes/${grant.institute_id}`)}
                         text={grant.name || "Unknown Institute"}
@@ -129,7 +122,7 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
                     />
                     <Tag
                         icon={BookMarked}
-                        size="md"
+                        size="sm"
                         variant="outline"
                         className={cn(
                             !hasValue(grant.agreement_title_en) && "text-gray-400 italic",
@@ -414,7 +407,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
     const tabs: TabItem[] = useMemo(() => {
         const items: TabItem[] = [
             { id: "details", label: "Details", icon: FileText },
-            { id: "funding", label: "Funding Timeline", icon: LineChart },
+            { id: "timeline", label: "Timeline", icon: LineChart },
         ];
         if (hasAmendments) {
             items.splice(1, 0, { id: "versions", label: "Version History", icon: History });
@@ -425,7 +418,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
     const hasForeignCurrency = !!grant.foreign_currency_type && !!grant.foreign_currency_value && grant.foreign_currency_value > 0;
 
     return (
-        <Card isHoverable className="p-4 md:py-5 md:px-6 lg:px-7 transition-all duration-300">
+        <Card isHoverable className="p-3 md:py-4 md:px-4 lg:px-5 transition-all duration-300">
             <div>
                 <GrantHeader grant={grant} isBookmarked={isBookmarked} />
                 <MetadataTags grant={grant} />
@@ -436,7 +429,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
                         <button
                             onClick={() => {
                                 setIsExpanded(true);
-                                setActiveTab("funding");
+                                setActiveTab("timeline");
                             }}
                             className="inline-flex items-center bg-blue-50 hover:bg-blue-100 transition-colors text-blue-700 text-xs font-medium rounded-full px-2.5 py-1"
                         >
@@ -476,6 +469,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
                         fullWidth={true}
                         activeTab={activeTab}
                         onChange={(id) => setActiveTab(id as TabId)}
+                        size="sm"
                         tabs={tabs}
                     />
 
@@ -573,7 +567,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
                             <VersionsTab amendments={amendments} currentAmendmentNumber={amendmentNumber} />
                         )}
 
-                        {activeTab === "funding" && (
+                        {activeTab === "timeline" && (
                             <FundingTab grant={grant} amendments={amendments} hasAmendments={hasAmendments} />
                         )}
                     </TabContent>

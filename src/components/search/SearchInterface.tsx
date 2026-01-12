@@ -235,7 +235,7 @@ export default function SearchInterface({
                         variant="primary"
                         leftIcon={SearchIcon}
                         onClick={performSearch}
-                        className="bg-gray-900 hover:bg-gray-800"
+                        className="bg-gray-900 hover:bg-black"
                     >
                         Search
                     </Button>
