@@ -346,7 +346,7 @@ export const TimePeriodAnalytics = ({
 
                     return (
                         <div key={year} className="flex items-center gap-4">
-                            <div className="w-10 md:w-16 font-medium text-gray-900 text-sm md:text-base">{year}</div>
+                            <div className="w-8 md:w-12 font-medium text-gray-900 text-sm md:text-base">{year}</div>
                             <div className="flex-1 mb-2">
                                 <div className="flex justify-between text-sm text-gray-600 mb-1 text-xs md:text-sm">
                                     <span>{data.count.toLocaleString()} grant{data.count !== 1 ? 's' : ''}</span>
@@ -439,11 +439,11 @@ export default function EntityAnalytics({
                         title="Recipient Diversity"
                         value={
                             <div>
-                                <span className="italic text-lg">
+                                <span className="italic text-base md:text-lg">
                                     {recipientDiversity?.rating || "No data"}
                                 </span>
                                 {recipientDiversity && (
-                                    <span className="block text-xs text-gray-600 mt-1 font-normal">
+                                    <span className="block text-xs text-gray-600 md:mt-1 font-normal">
                                         Top 3: {recipientDiversity.concentration.toFixed(1)}% of funding
                                     </span>
                                 )}

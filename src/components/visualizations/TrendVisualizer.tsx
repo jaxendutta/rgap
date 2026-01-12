@@ -566,7 +566,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                 )}
             </Card.Header>
 
-            <Card.Content>
+            <Card.Content className="px-0 md:px-2">
                 {/* Chart display - only show if we have data */}
                 {chartData.data.length > 0 &&
                 chartData.categories.length > 0 ? (
