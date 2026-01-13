@@ -94,7 +94,7 @@ export function InstituteDetailClient({
         // Calculate additional stats
         const currentYear = new Date().getFullYear();
         const recentYears = 3;
-        
+
         const activeRecipientIds = new Set(
             allGrants
                 .filter(g => {
@@ -103,18 +103,18 @@ export function InstituteDetailClient({
                 })
                 .map(g => g.recipient_id)
         );
-        
+
         const activeCount = activeRecipientIds.size;
-        const activePercentage = allRecipients.length > 0 
-            ? ((activeCount / allRecipients.length) * 100).toFixed(0) 
+        const activePercentage = allRecipients.length > 0
+            ? ((activeCount / allRecipients.length) * 100).toFixed(0)
             : '0';
 
-        const fundingPerRecipient = allRecipients.length > 0 
-            ? (institute.total_funding || 0) / allRecipients.length 
+        const fundingPerRecipient = allRecipients.length > 0
+            ? (institute.total_funding || 0) / allRecipients.length
             : 0;
 
-        const fundingPerGrant = allGrants.length > 0 
-            ? (institute.total_funding || 0) / allGrants.length 
+        const fundingPerGrant = allGrants.length > 0
+            ? (institute.total_funding || 0) / allGrants.length
             : 0;
 
         const stats: StatItem[] = [
@@ -170,14 +170,15 @@ export function InstituteDetailClient({
                 return (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-gray-900">
-                                Top Recipients ({topRecipients.length})
+                            <h2 className="text-xs md:text-sm">
+                                Top {topRecipients.length} Recipients
                             </h2>
                             {allRecipients.length > 10 && (
                                 <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => router.push(`/institutes/${institute.institute_id}/recipients`)}
+                                    className="text-xs md:text-sm"
                                 >
                                     View All {allRecipients.length.toLocaleString()} Recipients
                                 </Button>
@@ -213,13 +214,14 @@ export function InstituteDetailClient({
                 return (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-gray-900">
-                                Recent Grants ({topGrants.length})
+                            <h2 className="text-xs md:text-sm">
+                                {topGrants.length} Recent Grants
                             </h2>
                             {allGrants.length > 20 && (
                                 <Button
                                     variant="outline"
                                     size="sm"
+                                    className="text-xs md:text-sm"
                                     onClick={() => router.push(`/institutes/${institute.institute_id}/grants`)}
                                 >
                                     View All {allGrants.length.toLocaleString()} Grants

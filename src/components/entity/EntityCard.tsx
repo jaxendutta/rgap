@@ -23,6 +23,7 @@ import { formatCSV, formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import Tag from "@/components/ui/Tag";
 import BookmarkButton from "@/components/bookmarks/BookmarkButton";
 import {
     InstituteWithStats,
@@ -217,7 +218,7 @@ export const EntityCard = ({
             },
             {
                 label: "Latest Grant",
-                value: latestDate ? new Date(latestDate).toLocaleDateString() : "N/A",
+                value: latestDate ? new Date(latestDate).toLocaleDateString('en-CA', { timeZone: 'UTC' }) : "N/A",
                 icon: LuCalendar,
             },
             {
@@ -239,10 +240,10 @@ export const EntityCard = ({
             )}
         >
             {/* Header: Entity name + Bookmark button */}
-            <div className="flex justify-between items-start mb-3">
+            <div className="flex justify-between items-center gap-2">
                 <Link
                     href={`/${entityType === "institute" ? "institutes" : "recipients"}/${id}`}
-                    className="text-lg font-medium hover:text-blue-600 transition-colors group flex items-start max-w-[90%]"
+                    className="text-base md:text-lg font-medium hover:text-blue-600 transition-colors group flex items-start max-w-[90%]"
                 >
                     <span className="line-clamp-2">{name}</span>
                     <LuArrowUpRight className="ml-1 h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
@@ -259,34 +260,27 @@ export const EntityCard = ({
 
             {/* Metadata (Institute, Location, Type) */}
             {metadataItems.length > 0 && (
-                <div className="space-y-1 mb-3">
-                    {metadataItems.map((item, index) => {
-                        const Icon = item.icon;
-                        return (
-                            <div key={index} className="flex items-center text-sm text-gray-600">
-                                <Icon className="h-4 w-4 mr-2 flex-shrink-0" />
-                                {item.link ? (
-                                    <Link
-                                        href={item.link}
-                                        className="hover:text-blue-600 transition-colors truncate"
-                                    >
-                                        {item.text}
-                                    </Link>
-                                ) : (
-                                    <span className="truncate">{item.text}</span>
-                                )}
-                            </div>
-                        );
-                    })}
+                <div className="flex flex-wrap gap-2 mt-1.5">
+                    {metadataItems.map((item, index) => (
+                        <Tag
+                            key={index}
+                            icon={item.icon}
+                            text={item.text}
+                            size="sm"
+                            variant="outline"
+                            className={`w-fit ${item.link ? "text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer" : ""}`}
+                            onClick={item.link ? () => router.push(item.link!) : undefined}
+                        />
+                    ))}
                 </div>
             )}
 
             {/* Statistics */}
-            <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-100">
+            <div className="flex justify-between mt-3 pt-3 border-t border-gray-100">
                 {statItems.map((stat, index) => {
                     const Icon = stat.icon;
                     return (
-                        <div key={index} className="text-center">
+                        <div key={index} className="text-center px-2 md:px-4">
                             <div className="flex justify-center items-center mb-1 gap-1">
                                 <Icon className="h-3 w-3 text-gray-500" />
                                 <div className="text-xs text-gray-500">{stat.label}</div>

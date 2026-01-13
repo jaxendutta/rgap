@@ -284,11 +284,11 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                         3: 'grid-cols-2 md:grid-cols-3',
                         4: 'grid-cols-2 md:grid-cols-4',
                     };
-                    const gridClassName = `grid ${gridCols[columns]} gap-2 md:gap-4 px-3 md:px-6`;
+                    const gridClassName = `grid ${gridCols[columns]} gap-2 md:gap-4 px-3 md:px-6 pb-2 md:pb-4`;
 
                     return (
                         <div>
-                            <div className={cn(gridClassName, 'pb-0')}>
+                            <div className={cn(gridClassName)}>
                                 {visibleItems.map((item, index) => (
                                     <StatItemContent key={index} item={item} />
                                 ))}
@@ -303,7 +303,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                                         className="overflow-hidden"
                                     >
-                                        <div className={cn(gridClassName, 'pt-2')}>
+                                        <div className={cn(gridClassName, 'pt-2 md:pt-4')}>
                                             {hiddenItems.map((item, index) => (
                                                 <StatItemContent key={index} item={item} />
                                             ))}
@@ -314,7 +314,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
 
                             {hasMore && (
                                 <div className="flex justify-center items-center">
-                                    <Button variant="ghost" size="sm" onClick={() => setStatsExpanded(!statsExpanded)} className="rounded-full w-8 h-8 p-0 bg-white/50 hover:bg-gray-200 z-10">
+                                    <Button variant="ghost" size="sm" onClick={() => setStatsExpanded(!statsExpanded)} className="rounded-full w-8 h-8 p-0 bg-white/50 hover:bg-gray-200 z-10 -mt-2 md:-mt-4">
                                         <LuChevronDown className={cn("h-5 w-5 text-gray-500 transition-transform duration-300", statsExpanded && "rotate-180")} />
                                     </Button>
                                 </div>
