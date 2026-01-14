@@ -32,9 +32,8 @@ export default async function BookmarksPage() {
     // If NOT logged in: The "Modern Placeholder"
     return (
         <div className="relative h-full overflow-hidden bg-gray-50/50">
-
             {/* 1. BACKGROUND: Blurred 'Fake' Content to simulate restricted access */}
-            <div className="absolute inset-0 p-6 md:p-8 opacity-40 blur-[6px] select-none pointer-events-none overflow-hidden">
+            <div className="absolute inset-0 p-4 md:p-8 opacity-40 blur-[6px] select-none pointer-events-none overflow-hidden">
                 <div className="max-w-7xl mx-auto space-y-6">
                     <div className="h-10 w-48 bg-gray-300 rounded-lg mb-8" /> {/* Fake Title */}
 

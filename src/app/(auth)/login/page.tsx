@@ -8,7 +8,6 @@ import InputField from '@/components/ui/InputField';
 import { Card } from '@/components/ui/Card';
 import Tabs from '@/components/ui/Tabs';
 import { useRouter } from 'next/navigation';
-import { LuChevronLeft } from 'react-icons/lu';
 
 const initialState = { message: '' };
 
@@ -24,14 +23,14 @@ export default function AuthPage() {
     const router = useRouter();
 
     return (
-        <div className="self-center w-full max-w-md">
-            <Card className="overflow-hidden border-0 shadow-md">
+        <div className="w-full h-full flex items-center justify-center">
+            <Card className="w-full max-w-md overflow-hidden border-0 shadow-md md:py-4 rounded-3xl">
                 {/* 1. layout prop here ensures the CARD height animates smoothly 
                      as fields appear/disappear inside it.
                 */}
                 <motion.div
                     layout
-                    className="p-4 md:p-8 pt-10 flex flex-col gap-4"
+                    className="w-full p-4 md:p-8 pt-10 flex flex-col gap-4"
                     transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
                     {/* Header with Sliding Text */}
