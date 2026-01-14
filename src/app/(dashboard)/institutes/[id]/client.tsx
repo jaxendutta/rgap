@@ -215,7 +215,7 @@ export function InstituteDetailClient({
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="text-xs md:text-sm">
-                                {topGrants.length} Recent Grants
+                                {topGrants.length} Latest Grants
                             </h2>
                             {allGrants.length > 20 && (
                                 <Button

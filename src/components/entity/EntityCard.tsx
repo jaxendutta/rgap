@@ -235,7 +235,7 @@ export const EntityCard = ({
     return (
         <Card
             className={cn(
-                "p-4 hover:border-gray-300 transition-all duration-200 hover:shadow-sm",
+                "py-3 px-4 hover:border-gray-300 transition-all duration-200 hover:shadow-sm",
                 className
             )}
         >

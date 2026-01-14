@@ -85,10 +85,10 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
                 <div className="flex items-center justify-between gap-2 mb-2 lg:mb-1">
                     <Link
                         href={`/recipients/${grant.recipient_id}`}
-                        className="flex text-base lg:text-lg items-center font-medium hover:text-blue-700 transition-colors gap-1.5 group"
+                        className="flex md:text-lg items-start font-medium hover:text-blue-700 transition-colors gap-1 group"
                         aria-label={`View profile for recipient ${grant.legal_name}`}
                     >
-                        <LuGraduationCap className="h-4.5 w-4.5 align-text-bottom flex-shrink-0" />
+                        <LuGraduationCap className="h-4.5 w-4.5 mt-0.75 align-text-bottom flex-shrink-0" />
                         <span className="inline-block">
                             {grant.legal_name}
                             <LuArrowUpRight className="hidden md:inline-block h-4 w-4 ml-1 mb-0.5 align-text-bottom opacity-20 group-hover:opacity-100 group-hover:-translate-y-0.5 transition-all" />
@@ -417,7 +417,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
     const hasForeignCurrency = !!grant.foreign_currency_type && !!grant.foreign_currency_value && grant.foreign_currency_value > 0;
 
     return (
-        <Card isHoverable className="px-4 py-2 md:py-3 lg:px-5 transition-all duration-300">
+        <Card isHoverable className="px-3 md:px-5 py-2 md:py-3 lg:px-5 transition-all duration-300">
             <div>
                 <GrantHeader grant={grant} isBookmarked={isBookmarked} />
                 <MetadataTags grant={grant} />
