@@ -6,20 +6,11 @@
   --background-end-rgb: 255, 255, 255;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-  min-height: 100vh;
-}
+@layer base {
 
-@layer base {  
+  html,
   body {
-    @apply bg-white text-black;
+    @apply min-h-screen bg-slate-100 text-black;
   }
 }
 
