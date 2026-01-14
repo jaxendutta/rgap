@@ -44,6 +44,7 @@ const EntitiesPage = ({
                 totalCount={totalItems}
                 sortOptions={sortOptions}
                 emptyMessage={emptyMessage}
+                showVisualization={true}
             >
                 {entities.map((entity) => {
                     // Determine ID based on entity type for the key

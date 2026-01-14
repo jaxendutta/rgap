@@ -52,7 +52,7 @@ export default function HomePage() {
   return (
     <PageContainer className="flex lg:h-full flex-col justify-center">
       {/* Hero Section */}
-      <Card className="px-6 lg:px-8 py-14 lg:py-24 hover:border-gray-300 transition-all duration-200 rounded-3xl lg:rounded-full">
+      <Card className="px-6 lg:px-8 py-14 lg:py-24 hover:border-gray-300 transition-all duration-200 rounded-3xl">
         <div className="text-center">
           <p className="text-5xl font-bold text-gray-900 leading-tight flex justify-center items-center">
             <span className="inline-block px-2">[</span>

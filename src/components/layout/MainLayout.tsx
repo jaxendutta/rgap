@@ -15,7 +15,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                 <Sidebar />
                 <main
                     id="main-content"
-                    className="flex-1 overflow-auto p-3 lg:p-6 pb-20 mt-16 md:mt-12 lg:pb-6 bg-slate-100"
+                    className="flex-1 overflow-auto p-3 lg:p-6 pb-20 mt-16 md:mt-12 lg:mt-0 lg:pb-6 bg-slate-100"
                 >
                     {" "}
                     {/* Added pb-20 for mobile */}

@@ -243,7 +243,7 @@ export const EntityCard = ({
             <div className="flex justify-between items-center gap-2">
                 <Link
                     href={`/${entityType === "institute" ? "institutes" : "recipients"}/${id}`}
-                    className="text-base md:text-lg font-medium hover:text-blue-600 transition-colors group flex items-start max-w-[90%]"
+                    className="text-sm md:text-base font-medium hover:text-blue-600 transition-colors group flex items-start max-w-[90%]"
                 >
                     <span className="line-clamp-2">{name}</span>
                     <LuArrowUpRight className="ml-1 h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />

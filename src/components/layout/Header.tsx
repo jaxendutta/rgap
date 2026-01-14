@@ -59,7 +59,7 @@ const Header = () => {
     };
 
     return (
-        <header className="shadow-sm fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200">
+        <header className="lg:hidden shadow-sm fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200">
             <div className="px-4 flex h-16 items-center justify-between">
                 {/* Logo */}
                 <div className="flex items-center space-x-2">

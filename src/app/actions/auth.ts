@@ -1,7 +1,6 @@
-// src/app/actions/auth.ts
 'use server';
 
-import { createSession, destroySession } from '@/lib/session';
+import { createSession, destroySession, getCurrentUser } from '@/lib/session';
 import { db } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
@@ -18,6 +17,8 @@ export async function authAction(
     const mode = formData.get('mode') as string;
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
+    // Get redirect URL if it exists (hidden input)
+    const callbackUrl = (formData.get('callbackUrl') as string) || '/dashboard';
 
     try {
         // =================================================
@@ -40,7 +41,7 @@ export async function authAction(
                 return { message: 'Invalid email or password' };
             }
 
-            // Create Session using the createSession helper
+            // Create Session
             await createSession({
                 id: user.user_id,
                 username: user.username,
@@ -65,7 +66,7 @@ export async function authAction(
                 return { message: "User already exists" };
             }
 
-            // Hash password with bcrypt
+            // Hash password
             const saltRounds = 10;
             const password_hash = await bcrypt.hash(password, saltRounds);
 
@@ -76,7 +77,7 @@ export async function authAction(
             );
             const newUser = result.rows[0];
 
-            // Auto-login after register using the createSession helper
+            // Auto-login
             await createSession({
                 id: newUser.user_id,
                 username: newUser.username,
@@ -89,11 +90,16 @@ export async function authAction(
         return { message: 'An unexpected error occurred' };
     }
 
-    // Redirect to dashboard after successful auth
-    redirect('/dashboard');
+    // Redirect to dashboard or the original page they were on
+    redirect(callbackUrl);
 }
 
 export async function logoutAction() {
     await destroySession();
     redirect('/');
+}
+
+export async function checkAuth() {
+    const user = await getCurrentUser();
+    return { user };
 }

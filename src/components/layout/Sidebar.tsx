@@ -10,7 +10,9 @@ import {
     LuGraduationCap,
     LuBookmark,
     LuUser,
+    LuSun
 } from "react-icons/lu";
+import { GiAbstract014 } from "react-icons/gi";
 import Tabs from "@/components/ui/Tabs";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/AuthProvider";
@@ -45,7 +47,7 @@ const Sidebar = () => {
             {/* Desktop Sidebar */}
             <aside
                 className={cn(
-                    "hidden lg:block fixed left-0 top-[64px] h-[calc(100vh-64px)] z-30",
+                    "hidden lg:block fixed left-0 top-0 h-screen z-30",
                     "bg-white border-r border-gray-200 shadow-sm",
                     "transition-all duration-300 ease-in-out",
                     isExpanded ? "w-48" : "w-16"
@@ -53,7 +55,7 @@ const Sidebar = () => {
                 onMouseEnter={() => setIsExpanded(true)}
                 onMouseLeave={() => setIsExpanded(false)}
             >
-                <nav className="p-2 space-y-1">
+                <nav className="p-2 space-y-1 mt-2">
                     {desktopNavigation.map((item) => {
                         const isActive = pathname === item.href;
                         const Icon = item.icon;
@@ -85,12 +87,48 @@ const Sidebar = () => {
                         );
                     })}
                 </nav>
+
+                {/* ======================================================== */}
+                {/* BRANDING SECTION (Sideways Text + Logo)                  */}
+                {/* ======================================================== */}
+                <div
+                    className={cn(
+                        "absolute bottom-16 left-0 right-0 flex flex-col items-center gap-4 py-4 overflow-hidden transition-opacity duration-300",
+                        isExpanded ? "opacity-100" : "opacity-80"
+                    )}
+                >
+                    {/* Rotated Text Container - Added rotate-180 to flip direction */}
+                    <div className="flex flex-col items-center justify-center gap-4 rotate-180">
+                        {/* Short Text "[ RGAP ]" */}
+                        <span className="whitespace-nowrap text-lg font-bold tracking-widest text-gray-900 [writing-mode:vertical-rl] select-none mt-2">
+                            [ RGAP ]
+                        </span>
+
+                        {/* Full Text */}
+                        <span className="whitespace-nowrap text-[10px] tracking-[0.2em] text-gray-400 font-medium [writing-mode:vertical-rl] select-none uppercase">
+                            Research Grant Analytics Platform
+                        </span>
+                    </div>
+
+                    {/* Logo - Straight (Upright) */}
+                    <div className="flex items-center justify-center mt-2 p-2 bg-gray-50 rounded-full">
+                        <GiAbstract014 className="h-6 w-6 text-gray-900" />
+                    </div>
+                </div>
+
+                {/* Theme Toggle Button */}
+                <button
+                    className="absolute bottom-4 left-1/2 -translate-x-1/2 p-2 text-gray-400 hover:text-yellow-500 hover:bg-gray-100 rounded-full transition-colors"
+                    title="Toggle Theme"
+                >
+                    <LuSun className="w-5 h-5" />
+                </button>
             </aside>
 
             {/* Spacer for Desktop Content */}
             <div className="hidden lg:block w-16 flex-shrink-0" />
 
-            {/* Mobile Bottom Navigation - Apple "Liquid Glass" Style */}
+            {/* Mobile Bottom Navigation */}
             <div
                 className={cn(
                     "lg:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe mx-1 mb-1.75",
