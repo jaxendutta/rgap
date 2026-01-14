@@ -332,6 +332,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                 variant="pills"
                 size="sm"
                 fullWidth
+                className="bg-white"
             />
 
             <div className="animate-in fade-in duration-300 mt-4">

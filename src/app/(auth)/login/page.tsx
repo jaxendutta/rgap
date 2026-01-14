@@ -74,6 +74,7 @@ export default function AuthPage() {
                             onChange={(id) => setMode(id as 'login' | 'register')}
                             variant="pills"
                             fullWidth
+                            className="bg-gray-100"
                         />
                     </div>
 
@@ -106,14 +107,12 @@ export default function AuthPage() {
                                     exit={{ height: 0, opacity: 0 }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="pb-1">
-                                        <InputField
-                                            label="Full Name"
-                                            name="name"
-                                            placeholder="Jane Doe"
-                                            required={mode === 'register'}
-                                        />
-                                    </div>
+                                    <InputField
+                                        label="Full Name"
+                                        name="name"
+                                        placeholder="Jane Doe"
+                                        required={mode === 'register'}
+                                    />
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -149,15 +148,13 @@ export default function AuthPage() {
                                     exit={{ height: 0, opacity: 0 }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="pt-4">
-                                        <InputField
-                                            label="Confirm Password"
-                                            name="confirmPassword"
-                                            type="password"
-                                            placeholder="••••••••"
-                                            required={mode === 'register'}
-                                        />
-                                    </div>
+                                    <InputField
+                                        label="Confirm Password"
+                                        name="confirmPassword"
+                                        type="password"
+                                        placeholder="••••••••"
+                                        required={mode === 'register'}
+                                    />
                                 </motion.div>
                             )}
                         </AnimatePresence>

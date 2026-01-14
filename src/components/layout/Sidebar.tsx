@@ -142,6 +142,7 @@ const Sidebar = () => {
                     size="sm"
                     fullWidth
                     tabClassName="flex-col !py-1 !px-1"
+                    className="border-1 border-white"
                 />
             </div>
         </>
