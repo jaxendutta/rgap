@@ -463,7 +463,7 @@ export const GrantCard = (grant: GrantWithDetails) => {
 
                 <div className={cn("flex flex-col gap-2 overflow-hidden transition-all duration-300 ease-in-out", isExpanded ? "opacity-100 max-h-[2000px] pt-4" : "opacity-0 max-h-0")}>
                     <Tabs
-                        className="mb-2"
+                        className="mb-2 bg-gray-100"
                         variant="pills"
                         fullWidth={true}
                         activeTab={activeTab}

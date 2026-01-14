@@ -65,7 +65,7 @@ const Sidebar = () => {
                                 key={item.name}
                                 href={item.href}
                                 className={cn(
-                                    "flex items-center relative h-10 rounded-md transition-colors",
+                                    "flex items-center relative h-10 rounded-3xl py-6 transition-colors",
                                     isActive
                                         ? "bg-gray-900 text-white"
                                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"

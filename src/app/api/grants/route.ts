@@ -113,7 +113,6 @@ export async function POST(request: NextRequest) {
             FROM grants g
             JOIN recipients r ON g.recipient_id = r.recipient_id
             JOIN institutes i ON r.institute_id = i.institute_id
-            JOIN programs p ON g.prog_id = p.prog_id
             ${whereClause}
         `;
 
