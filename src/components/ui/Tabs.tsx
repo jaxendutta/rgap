@@ -127,7 +127,7 @@ const Tabs: React.FC<TabsProps> = ({
             ? "flex flex-col"
             : "flex flex-row items-center",
         variant !== "pills" && "border-b border-gray-200",
-        variant === "pills" && "bg-gray-200 p-1 rounded-full relative"
+        variant === "pills" && "bg-white/60 backdrop-blur-xs p-1 rounded-full relative"
     );
 
     // Number of tabs to determine if full width is needed
@@ -138,7 +138,7 @@ const Tabs: React.FC<TabsProps> = ({
             {/* Sliding background pill */}
             {variant === "pills" && (
                 <motion.div
-                    className="absolute bg-gray-900 rounded-full z-0"
+                    className="absolute bg-gray-900 rounded-3xl z-0"
                     initial={false}
                     animate={{
                         left: pillStyle.left,
@@ -171,13 +171,13 @@ const Tabs: React.FC<TabsProps> = ({
                         onClick={() => !tab.disabled && onChange(tab.id)}
                         disabled={tab.disabled}
                         className={cn(
-                            "flex items-center justify-center font-medium transition-colors relative gap-2",
+                            "flex items-center justify-center font-medium transition-colors relative gap-0.5 md:gap-2",
                             manyTabs && "flex-col md:flex-row",
                             sizeClasses[size],
                             getVariantClasses(isActive),
                             fullWidth && "w-full",
                             tab.disabled && "opacity-50 cursor-not-allowed",
-                            variant === "pills" && "rounded-full",
+                            variant === "pills" && "rounded-3xl",
                             tabClassName
                         )}
                     >
@@ -185,7 +185,7 @@ const Tabs: React.FC<TabsProps> = ({
                             <Icon
                                 className={cn(
                                     "h-4 w-4 flex-shrink-0",
-                                    manyTabs && "md:h-4 md:w-4 h-6 w-6"
+                                    manyTabs && "md:h-4 md:w-4 lg:h-6 lg:w-6"
                                 )}
                             />
                         )}

@@ -1,4 +1,6 @@
 // src/components/ui/Button.tsx
+"use client";
+
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/lib/responsive";
 import { IconType } from "react-icons";

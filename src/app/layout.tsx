@@ -8,7 +8,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { getCurrentUser } from '@/lib/session';
-import Header from '@/components/layout/Header';
+import MainLayout from '@/components/layout/MainLayout';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -45,9 +45,9 @@ export default async function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Providers initialUser={user}>
-          <Header />
-
-          {children}
+          <MainLayout>
+            {children}
+          </MainLayout>
         </Providers>
       </body>
     </html>

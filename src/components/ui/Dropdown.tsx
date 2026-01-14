@@ -92,7 +92,7 @@ export const Dropdown = ({
                 variant={"outline"}
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "flex items-center w-full px-3 py-2 text-xs md:text-sm border hover:shadow-sm transition-all duration-200",
+                    "flex items-center w-full px-3 py-2 text-xs md:text-sm border hover:shadow-sm transition-all duration-200 bg-white",
                     isOpen && "border-gray-300 ring-1 ring-gray-300",
                     className
                 )}

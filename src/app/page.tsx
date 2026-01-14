@@ -50,9 +50,9 @@ export default function HomePage() {
   const router = useRouter();
 
   return (
-    <PageContainer>
+    <PageContainer className="flex lg:h-full flex-col justify-center">
       {/* Hero Section */}
-      <Card className="px-6 lg:px-8 py-14 hover:border-gray-300 transition-all duration-200">
+      <Card className="px-6 lg:px-8 py-14 lg:py-24 hover:border-gray-300 transition-all duration-200 rounded-3xl lg:rounded-full">
         <div className="text-center">
           <p className="text-5xl font-bold text-gray-900 leading-tight flex justify-center items-center">
             <span className="inline-block px-2">[</span>
@@ -101,7 +101,7 @@ export default function HomePage() {
           return (
             <Card
               key={index}
-              className="p-4 md:p-6 flex flex-col gap-1 hover:border-gray-300 hover:shadow-md transition-all duration-200"
+              className="p-4 md:p-6 flex flex-col gap-1 hover:border-gray-300 hover:shadow-md transition-all duration-200 rounded-3xl"
               isInteractive
               onClick={link ? () => router.push(link) : undefined}
             >

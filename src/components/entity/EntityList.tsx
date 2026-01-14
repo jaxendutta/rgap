@@ -124,7 +124,7 @@ function EntityList<T>(props: EntityListProps<T>) {
     return (
         <div className={cn("space-y-6", className)}>
             {/* Header Area */}
-            <Card variant="default" className="flex flex-col sm:flex-row justify-between items-center rounded-2xl p-2 bg-white/50 backdrop-blur-sm border-gray-100 shadow-sm gap-4 sm:gap-0">
+            <Card variant="default" className="flex flex-col-reverse sm:flex-row justify-between items-center rounded-2xl p-2 bg-white backdrop-blur-xs border border-gray-100 gap-4 sm:gap-0">
                 <span className="text-xs md:text-sm text-gray-500 px-2">
                     Showing <span className="font-semibold text-gray-900">{entities.length}</span> of{' '}
                     <span className="font-semibold text-gray-900">{totalCount.toLocaleString()}</span>{' '}

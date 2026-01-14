@@ -18,7 +18,7 @@ export default function AuthPage() {
 
     const tabs = [
         { id: 'login', label: 'Sign In' },
-        { id: 'register', label: 'Create Account' },
+        { id: 'register', label: 'Register' },
     ];
 
     const router = useRouter();

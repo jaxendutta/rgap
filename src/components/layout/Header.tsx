@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { LuCircleArrowUp, LuUser } from "react-icons/lu";
+import { LuCircleArrowUp } from "react-icons/lu";
 import { GiAbstract014 } from "react-icons/gi";
 import { FaRegSun } from "react-icons/fa";
 
@@ -59,7 +59,7 @@ const Header = () => {
     };
 
     return (
-        <header className="shadow-sm">
+        <header className="shadow-sm fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200">
             <div className="px-4 flex h-16 items-center justify-between">
                 {/* Logo */}
                 <div className="flex items-center space-x-2">
@@ -96,14 +96,6 @@ const Header = () => {
                         className="p-1 text-gray-600 hover:text-gray-800"
                     >
                         <FaRegSun className="h-5 w-5" />
-                    </Link>
-
-
-                    <Link
-                        href={isLoggedIn ? "/account" : "/login"}
-                        className="p-1 text-gray-600 hover:text-gray-800"
-                    >
-                        <LuUser className="h-6 w-6" />
                     </Link>
                 </div>
             </div>

@@ -1,46 +1,53 @@
-// src/components/layout/Sidebar.tsx
-import { usePathname } from "next/navigation";
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import {
     LuHouse,
     LuSearch,
     LuUniversity,
     LuGraduationCap,
     LuBookmark,
-    LuChartSpline,
+    LuUser,
 } from "react-icons/lu";
-import { clsx } from "clsx";
-import { useState } from "react";
-import Link from "next/link";
-
-// Reordered for mobile
-const mobileNavigation = [
-    { name: "Trends", icon: LuChartSpline, href: "/trends" },
-    { name: "Institutes", icon: LuUniversity, href: "/institutes" },
-    { name: "Search", icon: LuSearch, href: "/search" },
-    { name: "Recipients", icon: LuGraduationCap, href: "/recipients" },
-    { name: "Saves", icon: LuBookmark, href: "/bookmarks" },
-];
-
-// Original order for desktop
-const desktopNavigation = [
-    { name: "Home", icon: LuHouse, href: "/" },
-    { name: "Search", icon: LuSearch, href: "/search" },
-    { name: "Trends", icon: LuChartSpline, href: "/trends" },
-    { name: "Institutes", icon: LuUniversity, href: "/institutes" },
-    { name: "Recipients", icon: LuGraduationCap, href: "/recipients" },
-    { name: "Bookmarks", icon: LuBookmark, href: "/bookmarks" },
-];
+import Tabs from "@/components/ui/Tabs";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/providers/AuthProvider";
 
 const Sidebar = () => {
     const pathname = usePathname();
+    const router = useRouter();
     const [isExpanded, setIsExpanded] = useState(false);
+
+    const { user } = useAuth();
+
+    // Navigation config
+    const mobileNavigation = [
+        { name: "Institutes", icon: LuUniversity, href: "/institutes" },
+        { name: "Recipients", icon: LuGraduationCap, href: "/recipients" },
+        { name: "Search", icon: LuSearch, href: "/search" },
+        { name: "Bookmarks", icon: LuBookmark, href: "/bookmarks" },
+        { name: "Account", icon: LuUser, href: user ? "/account" : "/login" },
+    ];
+
+    const desktopNavigation = [
+        { name: "Home", icon: LuHouse, href: "/" },
+        { name: "Search", icon: LuSearch, href: "/search" },
+        { name: "Institutes", icon: LuUniversity, href: "/institutes" },
+        { name: "Recipients", icon: LuGraduationCap, href: "/recipients" },
+        { name: "Bookmarks", icon: LuBookmark, href: "/bookmarks" },
+        { name: "Account", icon: LuUser, href: user ? "/account" : "/login" },
+    ];
 
     return (
         <>
             {/* Desktop Sidebar */}
-            <div
-                className={clsx(
-                    "hidden lg:block shadow-sm border-r border-gray-200 min-h-screen transition-all duration-300 ease-in-out",
+            <aside
+                className={cn(
+                    "hidden lg:block fixed left-0 top-[64px] h-[calc(100vh-64px)] z-30",
+                    "bg-white border-r border-gray-200 shadow-sm",
+                    "transition-all duration-300 ease-in-out",
                     isExpanded ? "w-48" : "w-16"
                 )}
                 onMouseEnter={() => setIsExpanded(true)}
@@ -55,79 +62,50 @@ const Sidebar = () => {
                             <Link
                                 key={item.name}
                                 href={item.href}
-                                className={clsx(
-                                    "flex items-center relative h-12 rounded-lg",
+                                className={cn(
+                                    "flex items-center relative h-10 rounded-md transition-colors",
                                     isActive
                                         ? "bg-gray-900 text-white"
-                                        : "text-gray-700 hover:bg-gray-200"
+                                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                                 )}
                             >
-                                <div className="w-12 flex items-center justify-center absolute left-0 top-0 h-full">
+                                <div className="min-w-12 h-full flex items-center justify-center">
                                     <Icon className="h-5 w-5" />
                                 </div>
 
                                 <div
-                                    className={clsx(
-                                        "transition-opacity duration-300 pl-12 py-3 whitespace-nowrap",
-                                        isExpanded
-                                            ? "opacity-100 visible"
-                                            : "opacity-0 invisible"
+                                    className={cn(
+                                        "whitespace-nowrap overflow-hidden transition-opacity duration-300",
+                                        isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
                                     )}
                                 >
-                                    {item.name}
+                                    <span className="text-sm font-medium">{item.name}</span>
                                 </div>
                             </Link>
                         );
                     })}
                 </nav>
-            </div>
-            {/* Mobile Bottom Navigation - Fixed to bottom with proper spacing */}
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-                <nav className="max-w-md mx-auto px-2">
-                    <div className="flex items-center justify-between h-16">
-                        {mobileNavigation.map((item) => {
-                            const isActive = pathname === item.href;
-                            const Icon = item.icon;
+            </aside>
 
-                            return (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className={clsx(
-                                        "flex flex-col items-center justify-center flex-1",
-                                        "active:scale-95 transition-transform",
-                                        isActive
-                                            ? "text-gray-900"
-                                            : "text-gray-500"
-                                    )}
-                                >
-                                    <Icon
-                                        className={clsx(
-                                            "h-6 w-6 mb-1",
-                                            isActive
-                                                ? "text-gray-900"
-                                                : "text-gray-500"
-                                        )}
-                                    />
-                                    <span
-                                        className={clsx(
-                                            "text-xs font-medium",
-                                            isActive
-                                                ? "text-gray-900"
-                                                : "text-gray-500"
-                                        )}
-                                    >
-                                        {item.name}
-                                    </span>
-                                </Link>
-                            );
-                        })}
-                    </div>
-                </nav>
+            {/* Spacer for Desktop Content */}
+            <div className="hidden lg:block w-16 flex-shrink-0" />
+
+            {/* Mobile Bottom Navigation - Apple "Liquid Glass" Style */}
+            <div
+                className={cn(
+                    "lg:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe mx-1 mb-1.75",
+                )}
+            >
+                <Tabs
+                    tabs={mobileNavigation.map(item => ({ id: item.href, label: item.name, icon: item.icon }))}
+                    activeTab={pathname}
+                    onChange={(tabId) => router.push(tabId)}
+                    variant="pills"
+                    size="sm"
+                    fullWidth
+                    tabClassName="flex-col !py-1 !px-1"
+                />
             </div>
-            {/* Padding element to prevent content from being hidden - added to the main layout */}
-            <div className="lg:hidden pb-20" />{" "}
-            {/* Increased padding to prevent content hiding */}
         </>
     );
 };
