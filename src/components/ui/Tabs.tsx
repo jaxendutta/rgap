@@ -46,6 +46,7 @@ const Tabs: React.FC<TabsProps> = ({
         width: 0,
         height: 0,
         top: 0,
+        opacity: 0,
     });
 
     // Track if the component has mounted to prevent initial animation
@@ -63,8 +64,8 @@ const Tabs: React.FC<TabsProps> = ({
         switch (variant) {
             case "pills":
                 return isActive
-                    ? "text-white relative z-10" // Text is white, but the background is handled by the sliding pill
-                    : "text-gray-600 hover:text-gray-900 relative z-10"; // Just the text color changes on hover
+                    ? "text-white relative z-10"
+                    : "text-gray-600 hover:text-gray-900 relative z-10";
             case "underline":
                 return isActive
                     ? "border-b-2 border-blue-500 text-blue-600"
@@ -82,35 +83,29 @@ const Tabs: React.FC<TabsProps> = ({
         if (variant !== "pills" || !tabRefs.current.length) return;
 
         const activeIndex = tabs.findIndex((tab) => tab.id === activeTab);
-        if (activeIndex === -1) return;
+
+        // If the active tab is NOT in the list (e.g. Home), fade out the pill
+        if (activeIndex === -1) {
+            setPillStyle((prev) => ({ ...prev, opacity: 0 }));
+            return;
+        }
 
         const activeTabElement = tabRefs.current[activeIndex];
         if (!activeTabElement) return;
 
         const rect = activeTabElement.getBoundingClientRect();
-        const parentRect =
-            activeTabElement.parentElement?.getBoundingClientRect();
+        const parentRect = activeTabElement.parentElement?.getBoundingClientRect();
 
         if (parentRect) {
             setPillStyle({
-                left:
-                    orientation === "horizontal"
-                        ? activeTabElement.offsetLeft
-                        : 0,
-                top:
-                    orientation === "vertical" ? activeTabElement.offsetTop : 0,
-                width:
-                    orientation === "horizontal"
-                        ? rect.width
-                        : parentRect.width,
-                height:
-                    orientation === "vertical"
-                        ? rect.height
-                        : parentRect.height,
+                left: orientation === "horizontal" ? activeTabElement.offsetLeft : 0,
+                top: orientation === "vertical" ? activeTabElement.offsetTop : 0,
+                width: orientation === "horizontal" ? rect.width : parentRect.width,
+                height: orientation === "vertical" ? rect.height : parentRect.height,
+                opacity: 1, // Make visible when a valid tab is found
             });
         }
 
-        // Mark as mounted after first position calculation
         if (!hasMounted) {
             setHasMounted(true);
         }
@@ -127,10 +122,9 @@ const Tabs: React.FC<TabsProps> = ({
             ? "flex flex-col"
             : "flex flex-row items-center",
         variant !== "pills" && "border-b border-gray-200",
-        variant === "pills" && "bg-white/60 backdrop-blur-xs p-1 rounded-full relative"
+        variant === "pills" && "bg-white/60 backdrop-blur-xs p-1 rounded-3xl relative"
     );
 
-    // Number of tabs to determine if full width is needed
     const manyTabs = tabs.length > 3;
 
     return (
@@ -145,6 +139,7 @@ const Tabs: React.FC<TabsProps> = ({
                         top: pillStyle.top,
                         width: pillStyle.width,
                         height: pillStyle.height,
+                        opacity: pillStyle.opacity,
                     }}
                     transition={{
                         type: "spring",

@@ -3,28 +3,27 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { LuCircleArrowUp } from "react-icons/lu";
+import { LuCircleArrowUp, LuSun } from "react-icons/lu";
 import { GiAbstract014 } from "react-icons/gi";
-import { FaRegSun } from "react-icons/fa";
+import { AnimatePresence, motion } from "framer-motion";
 
 const Header = () => {
     const [showScrollTop, setShowScrollTop] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false); // Kept state for future use if needed
 
     useEffect(() => {
         const handleScroll = () => {
+            // Note: Ensure your main scrolling element has the id 'main-content'
+            // If using standard window scroll, change this logic to window.scrollY
             const mainContent = document.getElementById("main-content");
             if (mainContent) {
-                // Show button if scrolled down more than 200px
                 setShowScrollTop(mainContent.scrollTop > 200);
             }
         };
 
         const mainContent = document.getElementById("main-content");
         mainContent?.addEventListener("scroll", handleScroll);
-
-        // Initial check
-        handleScroll();
+        handleScroll(); // Initial check
 
         return () => {
             mainContent?.removeEventListener("scroll", handleScroll);
@@ -59,48 +58,54 @@ const Header = () => {
     };
 
     return (
-        <header className="lg:hidden shadow-sm fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200">
-            <div className="px-4 flex h-16 items-center justify-between">
-                {/* Logo */}
-                <div className="flex items-center space-x-2">
-                    <Link href="/" className="flex items-center">
-                        {/*<img
-                            src="/rgap.svg"
-                            alt="RGAP Logo"
-                            className="h-5 w-5 mr-2"
-                        />*/}
-                        <GiAbstract014 className="h-6 w-6 text-gray-900 mr-2" />
-                        <span className="text-xl font-semibold">[ RGAP ]</span>
-                        <span className="hidden sm:inline ml-2 text-sm text-gray-600">
-                            Research Grant Analytics Platform
-                        </span>
-                    </Link>
-                </div>
+        <header className="lg:hidden fixed top-0 left-0 right-0 z-40 p-4 flex items-center justify-between pointer-events-none">
+            {/* Logo - Pointer events auto to allow clicking */}
+            <div className="pointer-events-auto flex items-center justify-center space-x-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-3xl shadow-md border border-white/20">
+                <Link href="/" className="flex items-center">
+                    <GiAbstract014 className="h-6 w-6 text-gray-900 mr-2" />
+                    <span className="text-xl font-semibold text-gray-900">[ RGAP ]</span>
+                </Link>
+            </div>
 
-                {/* Right Icons */}
-                <div className="flex items-center gap-1">
-                    <button
-                        className={`p-1 text-gray-600 hover:text-gray-800 transition-all duration-200 transform ${showScrollTop
-                                ? "opacity-100 translate-y-0"
-                                : "opacity-0 translate-y-1 pointer-events-none"
-                            }`}
-                        onClick={scrollToTop}
-                        aria-label="Scroll to top"
-                    >
-                        <LuCircleArrowUp className="h-6 w-6" />
-                    </button>
+            {/* Right Icons Container */}
+            <motion.div
+                layout // Animate the container's layout changes (width/background)
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className="pointer-events-auto flex items-center bg-white/60 backdrop-blur-sm rounded-3xl shadow-md border border-white/20 overflow-hidden"
+            >
+                <AnimatePresence mode="popLayout">
+                    {showScrollTop && (
+                        <motion.div
+                            initial={{ width: 0, opacity: 0 }}
+                            animate={{ width: "auto", opacity: 1 }}
+                            exit={{ width: 0, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                            className="flex items-center justify-center border-r border-gray-200/50"
+                        >
+                            <button
+                                onClick={scrollToTop}
+                                className="p-2 px-3 text-gray-600 hover:text-gray-900 transition-colors whitespace-nowrap"
+                                aria-label="Scroll to top"
+                            >
+                                <LuCircleArrowUp className="h-6 w-6" />
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
-                    {/* Theme Toggle Placeholder */}
+                {/* Theme Toggle Placeholder */}
+                {/* flex-shrink-0 prevents this from getting squished during animation */}
+                <div className="p-2 px-3 flex-shrink-0">
                     <Link
                         href="#"
-                        className="p-1 text-gray-600 hover:text-gray-800"
+                        className="text-gray-600 hover:text-gray-900 transition-colors block"
                     >
-                        <FaRegSun className="h-5 w-5" />
+                        <LuSun className="h-5 w-5" />
                     </Link>
                 </div>
-            </div>
+            </motion.div>
         </header>
     );
 };
 
-export default Header
+export default Header;
