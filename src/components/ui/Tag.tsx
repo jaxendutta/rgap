@@ -42,31 +42,14 @@ const iconSpacing = {
 };
 
 export interface TagProps {
-    /** The text content of the tag */
     text: string;
-
-    /** Icon to show before the text */
     icon?: IconType;
-
-    /** Tag appearance variant */
     variant?: keyof typeof variants;
-
-    /** Tag size */
     size?: keyof typeof sizes;
-
-    /** Function to call when the remove button is clicked */
     onRemove?: () => void;
-
-    /** Controls if the tag is rounded as pill (fully rounded) or slightly rounded */
     pill?: boolean;
-
-    /** Additional CSS classes */
     className?: string;
-
-    /** Props for icon customization */
     iconProps?: React.SVGProps<SVGSVGElement>;
-
-    /** Optional click handler */
     onClick?: () => void;
 }
 
