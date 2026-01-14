@@ -25,26 +25,13 @@ export default function AuthPage() {
 
     return (
         <div className="self-center w-full max-w-md">
-            {/* Back Button */}
-            <div className="mb-6">
-                <Button
-                    onClick={() => router.back()}
-                    variant="ghost"
-                    size="sm"
-                    className="inline-flex items-center gap-2 group"
-                >
-                    <LuChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                    Back
-                </Button>
-            </div>
-
-            <Card className="overflow-hidden border-0 shadow-2xl">
+            <Card className="overflow-hidden border-0 shadow-md">
                 {/* 1. layout prop here ensures the CARD height animates smoothly 
                      as fields appear/disappear inside it.
                 */}
                 <motion.div
                     layout
-                    className="p-8 pt-10 flex flex-col gap-4"
+                    className="p-4 md:p-8 pt-10 flex flex-col gap-4"
                     transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
                     {/* Header with Sliding Text */}
@@ -73,7 +60,7 @@ export default function AuthPage() {
                             </AnimatePresence>
                             <motion.span layout transition={{ duration: 0.2 }}>&nbsp;]</motion.span>
                         </h1>
-                        <motion.p layout className="text-sm text-gray-500 mt-1">
+                        <motion.p layout className="text-xs md:text-sm text-gray-500 mt-1">
                             {mode === 'login'
                                 ? 'Enter your credentials to access analytics'
                                 : 'Start analyzing research grants today'}

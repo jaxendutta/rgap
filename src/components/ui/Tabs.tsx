@@ -54,8 +54,8 @@ const Tabs: React.FC<TabsProps> = ({
     // Size-specific styles with vertical padding
     const sizeClasses = {
         sm: "text-xs md:text-sm py-1 md:py-1.5 px-2 md:px-3",
-        md: "text-md py-1.5 px-4",
-        lg: "text-base py-2 px-5",
+        md: "text-sm md:text-base py-1.5 px-4",
+        lg: "text-base md:text-lg py-2 px-5",
     };
 
     // Variant-specific styles
