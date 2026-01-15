@@ -1,11 +1,11 @@
 // src/components/entity/EntitiesPage.tsx
 import PageContainer from "@/components/layout/PageContainer";
 import PageHeader from "@/components/layout/PageHeader";
-import EntityList, { SortOption } from "@/components/entity/EntityList";
+import EntityList from "@/components/entity/EntityList";
 import { EntityCard } from "@/components/entity/EntityCard";
 import { Pagination } from "@/components/ui/Pagination";
 import { IconType } from "react-icons";
-import { EntityType, InstituteWithStats, RecipientWithStats } from "@/types/database";
+import { EntityType, GrantWithDetails, InstituteWithStats, RecipientWithStats } from "@/types/database";
 
 interface EntitiesPageProps {
     title: string;
@@ -14,9 +14,10 @@ interface EntitiesPageProps {
     entities: (InstituteWithStats | RecipientWithStats)[];
     totalItems: number;
     totalPages: number;
-    sortOptions: SortOption[];
     entityType: EntityType;
     emptyMessage?: string;
+    showVisualization?: boolean;
+    visualizationData?: GrantWithDetails[];
 }
 
 const EntitiesPage = ({
@@ -26,9 +27,10 @@ const EntitiesPage = ({
     entities,
     totalItems,
     totalPages,
-    sortOptions,
     entityType,
     emptyMessage = "No items found",
+    showVisualization = false,
+    visualizationData = [],
 }: EntitiesPageProps) => {
     return (
         <PageContainer className="space-y-6">
@@ -42,16 +44,16 @@ const EntitiesPage = ({
                 entityType={entityType}
                 entities={entities}
                 totalCount={totalItems}
-                sortOptions={sortOptions}
                 emptyMessage={emptyMessage}
-                showVisualization={true}
+                showVisualization={showVisualization}
+                visualizationData={visualizationData}
+            // No sortOptions passed; EntityList uses defaults
             >
                 {entities.map((entity) => {
-                    // Determine ID based on entity type for the key
-                    const id = 'recipient_id' in entity 
-                        ? entity.recipient_id 
+                    const id = 'recipient_id' in entity
+                        ? entity.recipient_id
                         : (entity as InstituteWithStats).institute_id;
-                        
+
                     return (
                         <EntityCard
                             key={id}

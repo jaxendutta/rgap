@@ -1,4 +1,4 @@
-// src/components/ui/EntityList.tsx
+// src/components/entity/EntityList.tsx
 'use client';
 
 import React, { useState } from "react";
@@ -8,13 +8,12 @@ import { EntityType } from "@/types/database";
 import {
     LuGrid2X2,
     LuList,
-    LuChartLine,
-    LuX,
     LuDollarSign,
     LuHash,
     LuCalendar,
-    LuBuilding2,
-    LuUsers
+    LuUsers,
+    LuChartLine,
+    LuX,
 } from "react-icons/lu";
 import { MdSortByAlpha } from "react-icons/md";
 import LoadingState from "@/components/ui/LoadingState";
@@ -24,26 +23,33 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { SortButton } from "@/components/ui/SortButton";
 import { AnimatePresence, motion } from "framer-motion";
-import TrendVisualizer from "@/components/visualizations/TrendVisualizer";
+import TrendVisualizer, { ViewContext } from "@/components/visualizations/TrendVisualizer";
 import { IconType } from "react-icons";
-
-// Icon mapping to fix serialization error
-const ICON_MAP: Record<string, IconType> = {
-    funding: LuDollarSign,
-    count: LuHash,
-    text: MdSortByAlpha,
-    date: LuCalendar,
-    org: LuBuilding2,
-    person: LuUsers,
-    default: MdSortByAlpha
-};
-
-export type IconKey = keyof typeof ICON_MAP;
+import { TbGraph, TbGraphOff } from "react-icons/tb";
 
 export interface SortOption {
     label: string;
     field: string;
-    icon: IconKey; // Pass the KEY, not the component
+    icon: IconType; // FIXED: Back to IconType
+}
+
+// Internal default definitions so Server Components don't need to pass them
+export const DEFAULT_SORT_OPTIONS: Record<EntityType, SortOption[]> = {
+    grant: [
+        { label: "Value", field: "agreement_value", icon: LuDollarSign },
+        { label: "Date", field: "agreement_start_date", icon: LuCalendar },
+        { label: "Recipient", field: "recipient", icon: MdSortByAlpha },
+    ],
+    institute: [
+        { label: "Funding", field: "total_funding", icon: LuDollarSign },
+        { label: "Grants", field: "grant_count", icon: LuHash },
+        { label: "Name", field: "name", icon: MdSortByAlpha },
+    ],
+    recipient: [
+        { label: "Funding", field: "total_funding", icon: LuDollarSign },
+        { label: "Grants", field: "grant_count", icon: LuHash },
+        { label: "Name", field: "legal_name", icon: MdSortByAlpha },
+    ],
 }
 
 export type LayoutVariant = "list" | "grid";
@@ -53,15 +59,11 @@ export interface EntityListProps<T> {
     entities?: T[];
     totalCount: number;
     children: React.ReactNode;
-
-    // Sorting
-    sortOptions?: SortOption[];
-
-    // Visualization
+    sortOptions?: SortOption[]; // Optional: can override if needed
     showVisualization?: boolean;
     visualizationData?: any[];
-
-    // States
+    viewContext?: ViewContext;
+    entityId?: number;
     isLoading?: boolean;
     isError?: boolean;
     error?: Error | unknown;
@@ -75,9 +77,12 @@ function EntityList<T>(props: EntityListProps<T>) {
         entities = [],
         totalCount,
         children,
-        sortOptions = [],
+        // Use prop if provided, otherwise fallback to internal default
+        sortOptions = DEFAULT_SORT_OPTIONS[entityType],
         showVisualization = false,
         visualizationData = [],
+        viewContext = "search",
+        entityId,
         isLoading = false,
         isError = false,
         error,
@@ -88,11 +93,9 @@ function EntityList<T>(props: EntityListProps<T>) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    // State
     const [layoutVariant, setLayoutVariant] = useState<LayoutVariant>("grid");
     const [isVisualizationVisible, setIsVisualizationVisible] = useState(false);
 
-    // URL State helpers
     const currentSortField = searchParams.get('sort') || sortOptions[0]?.field;
     const currentSortDir = (searchParams.get('dir') as 'asc' | 'desc') || 'desc';
 
@@ -104,26 +107,16 @@ function EntityList<T>(props: EntityListProps<T>) {
             params.set('sort', field);
             params.set('dir', 'desc');
         }
-        params.set('page', '1'); // Reset to page 1
-        router.push(`?${params.toString()}`);
+        params.set('page', '1');
+        router.push(`?${params.toString()}`, { scroll: false });
     };
 
-    // Render States
-    if (isError) {
-        return <ErrorState title="Error loading data" message={error instanceof Error ? error.message : "An unknown error occurred"} />;
-    }
-
-    if (isLoading) {
-        return <LoadingState title="Loading..." message={`Loading ${entityType}s...`} />;
-    }
-
-    if (!entities || entities.length === 0) {
-        return <EmptyState title="No results found" message={emptyMessage} />;
-    }
+    if (isError) return <ErrorState title="Error" message={error instanceof Error ? error.message : "Error"} />;
+    if (isLoading) return <LoadingState title="Loading..." message={`Loading ${entityType}s...`} />;
+    if (!entities || entities.length === 0) return <EmptyState title="No results" message={emptyMessage} />;
 
     return (
         <div className={cn("space-y-6", className)}>
-            {/* Header Area */}
             <Card variant="default" className="flex flex-col-reverse sm:flex-row justify-between items-center rounded-2xl p-2 bg-white backdrop-blur-xs border border-gray-100 gap-4 sm:gap-0">
                 <span className="text-xs md:text-sm text-gray-500 px-2">
                     Showing <span className="font-semibold text-gray-900">{entities.length}</span> of{' '}
@@ -132,41 +125,35 @@ function EntityList<T>(props: EntityListProps<T>) {
                 </span>
 
                 <div className="flex items-center gap-2 flex-wrap justify-center">
-                    {/* Sort Buttons */}
-                    {sortOptions.map((option) => {
-                        const IconComponent = ICON_MAP[option.icon] || ICON_MAP.default;
-                        return (
-                            <SortButton<{ [key: string]: any }>
-                                key={option.field}
-                                label={option.label}
-                                icon={IconComponent}
-                                field={option.field as keyof { [key: string]: any }}
-                                currentField={currentSortField as keyof { [key: string]: any }}
-                                direction={currentSortDir}
-                                onClick={() => handleSort(option.field)}
-                            />
-                        );
-                    })}
+                    {sortOptions.map((option) => (
+                        <SortButton
+                            key={option.field}
+                            label={option.label}
+                            icon={option.icon}
+                            field={option.field}
+                            currentField={currentSortField}
+                            direction={currentSortDir}
+                            onClick={() => handleSort(option.field)}
+                        />
+                    ))}
 
                     <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
 
-                    {/* Visualization Toggle */}
                     {showVisualization && visualizationData.length > 0 && (
                         <Button
                             variant="secondary"
                             size="sm"
-                            leftIcon={isVisualizationVisible ? LuX : LuChartLine}
                             onClick={() => setIsVisualizationVisible(!isVisualizationVisible)}
                             className={cn(
-                                "transition-colors",
-                                isVisualizationVisible ? "bg-blue-50 text-blue-600" : ""
+                                "transition-colors gap-1.5",
+                                isVisualizationVisible ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-100"
                             )}
                         >
-                            {isVisualizationVisible ? "Hide Trends" : "Trends"}
+                            {isVisualizationVisible ? <TbGraphOff className="w-5 h-5" /> : <TbGraph className="w-5 h-5" />}
+                            <span className="hidden md:inline">{isVisualizationVisible ? "Hide Trends" : "Show Trends"}</span>
                         </Button>
                     )}
 
-                    {/* Layout Toggle */}
                     <Button
                         variant="ghost"
                         size="sm"
@@ -177,7 +164,6 @@ function EntityList<T>(props: EntityListProps<T>) {
                 </div>
             </Card>
 
-            {/* Visualization Panel */}
             <AnimatePresence>
                 {isVisualizationVisible && showVisualization && visualizationData.length > 0 && (
                     <motion.div
@@ -185,18 +171,18 @@ function EntityList<T>(props: EntityListProps<T>) {
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="overflow-hidden"
+                        className="overflow-hidden w-full"
                     >
                         <TrendVisualizer
                             grants={visualizationData}
                             height={350}
-                            viewContext="search"
+                            viewContext={viewContext}
+                            entityId={entityId}
                         />
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Content List */}
             <div
                 className={cn(
                     layoutVariant === "grid"

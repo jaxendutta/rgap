@@ -1,4 +1,4 @@
-// src/components/features/visualizations/DataChart.tsx
+// src/components/visualizations/DataChart.tsx
 import React from "react";
 import {
     LineChart,
@@ -47,7 +47,6 @@ export const DataChart: React.FC<DataChartProps> = ({
     // Special formatting for amendment dates
     const formatXAxis = (value: string) => {
         if (isAmendmentView && value.includes("-")) {
-            // For amendment dates, format as MM/YY
             const parts = value.split("-");
             if (parts.length >= 2) {
                 const year = parts[0];
@@ -59,9 +58,10 @@ export const DataChart: React.FC<DataChartProps> = ({
     };
 
     return (
-        <div className={className}>
+        <div className={`${className} w-full min-w-0 min-h-0`}>
             {title && <h3 className="text-md font-medium mb-3">{title}</h3>}
-            <div style={{ height: `${height}px`, width: "100%" }}>
+            {/* minWidth: 0 to prevent Recharts calculation errors */}
+            <div style={{ height: `${height}px`, width: "100%", minWidth: 0 }}>
                 <ResponsiveContainer width="100%" height="100%">
                     {chartType === "line" ? (
                         <LineChart
@@ -107,52 +107,28 @@ export const DataChart: React.FC<DataChartProps> = ({
                                     strokeWidth={2}
                                     dot={
                                         isAmendmentView
-                                            ? // For amendment view, customize each dot based on version
-                                              ({ cx, cy, payload }) => {
-                                                  // Determine color based on amendment number, isInitial flag, and isFinal flag
-                                                  let color =
-                                                      AMENDMENT_COLORS.Original;
-
-                                                  if (
-                                                      payload?.amendmentNumber ===
-                                                      0
-                                                  ) {
-                                                      color =
-                                                          AMENDMENT_COLORS.Original;
-                                                  } else if (payload?.isFinal) {
-                                                      color =
-                                                          AMENDMENT_COLORS.Final;
-                                                  } else {
-                                                      color =
-                                                          AMENDMENT_COLORS.Amendment;
-                                                  }
-
-                                                  return (
-                                                      <circle
-                                                          cx={cx}
-                                                          cy={cy}
-                                                          r={5}
-                                                          fill={color}
-                                                          stroke="none"
-                                                      />
-                                                  );
-                                              }
-                                            : // Standard dots for regular charts
-                                              {
-                                                  r: 4,
-                                                  fill: getCategoryColor(
-                                                      category,
-                                                      index
-                                                  ),
-                                                  strokeWidth: 0,
-                                              }
+                                            ? ({ cx, cy, payload }) => {
+                                                let color = AMENDMENT_COLORS.Original;
+                                                if (payload?.amendmentNumber === 0) {
+                                                    color = AMENDMENT_COLORS.Original;
+                                                } else if (payload?.isFinal) {
+                                                    color = AMENDMENT_COLORS.Final;
+                                                } else {
+                                                    color = AMENDMENT_COLORS.Amendment;
+                                                }
+                                                return (
+                                                    <circle cx={cx} cy={cy} r={5} fill={color} stroke="none" />
+                                                );
+                                            }
+                                            : {
+                                                r: 4,
+                                                fill: getCategoryColor(category, index),
+                                                strokeWidth: 0,
+                                            }
                                     }
                                     activeDot={{
                                         r: 6,
-                                        stroke: getCategoryColor(
-                                            category,
-                                            index
-                                        ),
+                                        stroke: getCategoryColor(category, index),
                                         strokeWidth: 1,
                                         fill: "#fff",
                                     }}
@@ -163,7 +139,6 @@ export const DataChart: React.FC<DataChartProps> = ({
                         <BarChart
                             data={data}
                             margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
-                            // Only use multi-bar layout for grouped bars
                             barCategoryGap={stacked ? "10%" : "20%"}
                             barGap={stacked ? 0 : 4}
                         >
@@ -196,58 +171,30 @@ export const DataChart: React.FC<DataChartProps> = ({
                             />
                             {showLegend && <Legend />}
 
-                            {categories.map((category, index) => {
-                                // For amendment view, we'll use special colors based on the version
-                                const isAmendmentBar = isAmendmentView;
-
-                                // Regular bar element
-                                return (
-                                    <Bar
-                                        key={category}
-                                        dataKey={category}
-                                        name={category}
-                                        stackId={stacked ? "a" : undefined}
-                                        fill={getCategoryColor(category, index)}
-                                        // Add rounded corners for bars
-                                        radius={
-                                            stacked
-                                                ? [0, 0, 0, 0]
-                                                : [4, 4, 0, 0]
-                                        }
-                                        // Make bars slightly transparent in grouped mode for better visual distinction
-                                        fillOpacity={stacked ? 1 : 0.9}
-                                    >
-                                        {/* For amendment view, color code bars based on version */}
-                                        {isAmendmentBar &&
-                                            data.map((_, i) => {
-                                                let color =
-                                                    AMENDMENT_COLORS.Original;
-
-                                                // Original is blue, amendments are amber, current is green
-                                                if (
-                                                    data[i]?.amendmentNumber ===
-                                                    0
-                                                ) {
-                                                    color =
-                                                        AMENDMENT_COLORS.Original;
-                                                } else if (data[i]?.isFinal) {
-                                                    color =
-                                                        AMENDMENT_COLORS.Final;
-                                                } else {
-                                                    color =
-                                                        AMENDMENT_COLORS.Amendment;
-                                                }
-
-                                                return (
-                                                    <Cell
-                                                        key={`cell-${i}`}
-                                                        fill={color}
-                                                    />
-                                                );
-                                            })}
-                                    </Bar>
-                                );
-                            })}
+                            {categories.map((category, index) => (
+                                <Bar
+                                    key={category}
+                                    dataKey={category}
+                                    name={category}
+                                    stackId={stacked ? "a" : undefined}
+                                    fill={getCategoryColor(category, index)}
+                                    radius={stacked ? [0, 0, 0, 0] : [4, 4, 0, 0]}
+                                    fillOpacity={stacked ? 1 : 0.9}
+                                >
+                                    {isAmendmentView &&
+                                        data.map((_, i) => {
+                                            let color = AMENDMENT_COLORS.Original;
+                                            if (data[i]?.amendmentNumber === 0) {
+                                                color = AMENDMENT_COLORS.Original;
+                                            } else if (data[i]?.isFinal) {
+                                                color = AMENDMENT_COLORS.Final;
+                                            } else {
+                                                color = AMENDMENT_COLORS.Amendment;
+                                            }
+                                            return <Cell key={`cell-${i}`} fill={color} />;
+                                        })}
+                                </Bar>
+                            ))}
                         </BarChart>
                     )}
                 </ResponsiveContainer>

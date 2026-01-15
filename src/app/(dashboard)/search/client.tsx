@@ -1,14 +1,17 @@
-// src/app/(dashboard)/search/SearchPageClient.tsx
+// src/app/(dashboard)/search/client.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeader from '@/components/layout/PageHeader';
 import SearchInterface from '@/components/search/SearchInterface';
+import EntityList, { SortOption } from '@/components/entity/EntityList';
 import { GrantCard } from '@/components/grants/GrantCard';
 import EmptyState from '@/components/ui/EmptyState';
-import { LuSearch, LuGraduationCap, LuUniversity, LuBookMarked } from 'react-icons/lu';
+import { Pagination } from '@/components/ui/Pagination';
+import { LuSearch, LuGraduationCap, LuUniversity, LuBookMarked, LuDollarSign, LuCalendar } from 'react-icons/lu';
+import { MdSortByAlpha } from "react-icons/md";
 import type { GrantWithDetails } from '@/types/database';
 import { DEFAULT_FILTER_STATE } from '@/constants/filters';
 import { saveSearchHistory } from '@/app/actions/history';
@@ -26,6 +29,13 @@ interface SearchPageClientProps {
     initialFilters?: typeof DEFAULT_FILTER_STATE;
 }
 
+// Client Components CAN pass functions (icons) to other Client Components
+const SEARCH_SORT_OPTIONS: SortOption[] = [
+    { label: 'Value', field: 'agreement_value', icon: LuDollarSign },
+    { label: 'Date', field: 'agreement_start_date', icon: LuCalendar },
+    { label: 'Recipient', field: 'recipient', icon: MdSortByAlpha },
+];
+
 export default function SearchPageClient({
     filterOptions,
     initialSearchTerms = {},
@@ -33,95 +43,145 @@ export default function SearchPageClient({
 }: SearchPageClientProps) {
     const router = useRouter();
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+
     const [grants, setGrants] = useState<GrantWithDetails[]>([]);
+    const [visualizationData, setVisualizationData] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
     const [totalResults, setTotalResults] = useState(0);
 
-    // Trigger initial search if params are present
+    const currentPage = Number(searchParams.get('page')) || 1;
+    const itemsPerPage = 20;
+    const totalPages = Math.ceil(totalResults / itemsPerPage);
+
+    // Effect triggers when URL string changes
     useEffect(() => {
-        const hasInitTerms = Object.values(initialSearchTerms).some(t => t);
+        const currentParams = {
+            searchTerms: {
+                recipient: searchParams.get('recipient') || initialSearchTerms.recipient || '',
+                institute: searchParams.get('institute') || initialSearchTerms.institute || '',
+                grant: searchParams.get('grant') || initialSearchTerms.grant || '',
+            },
+            filters: {
+                ...DEFAULT_FILTER_STATE,
+                agencies: searchParams.getAll('agencies').length > 0 ? searchParams.getAll('agencies') : initialFilters.agencies,
+                countries: searchParams.getAll('countries').length > 0 ? searchParams.getAll('countries') : initialFilters.countries,
+                provinces: searchParams.getAll('provinces').length > 0 ? searchParams.getAll('provinces') : initialFilters.provinces,
+                cities: searchParams.getAll('cities').length > 0 ? searchParams.getAll('cities') : initialFilters.cities,
+                dateRange: {
+                    from: searchParams.get('from') ? new Date(searchParams.get('from')!) : initialFilters.dateRange.from,
+                    to: searchParams.get('to') ? new Date(searchParams.get('to')!) : initialFilters.dateRange.to,
+                },
+                valueRange: {
+                    min: searchParams.get('min') ? Number(searchParams.get('min')) : initialFilters.valueRange.min,
+                    max: searchParams.get('max') ? Number(searchParams.get('max')) : initialFilters.valueRange.max,
+                }
+            },
+            sortConfig: {
+                field: searchParams.get('sort') || 'agreement_start_date',
+                direction: searchParams.get('dir') || 'desc'
+            },
+            pagination: {
+                page: currentPage,
+                limit: itemsPerPage
+            }
+        };
 
-        // Check if initial filters differ from defaults
-        const hasInitFilters =
-            initialFilters.agencies.length > 0 ||
-            initialFilters.countries.length > 0 ||
-            initialFilters.provinces.length > 0 ||
-            initialFilters.cities.length > 0 ||
-            initialFilters.valueRange.min !== DEFAULT_FILTER_STATE.valueRange.min ||
-            initialFilters.valueRange.max !== DEFAULT_FILTER_STATE.valueRange.max ||
-            initialFilters.dateRange.from.getTime() !== DEFAULT_FILTER_STATE.dateRange.from.getTime() ||
-            initialFilters.dateRange.to.getTime() !== DEFAULT_FILTER_STATE.dateRange.to.getTime();
+        const hasTerms = Object.values(currentParams.searchTerms).some(t => t);
+        const hasFilters = currentParams.filters.agencies.length > 0 || currentParams.filters.countries.length > 0;
 
-        if ((hasInitTerms || hasInitFilters) && !hasSearched) {
-            handleSearch({ searchTerms: initialSearchTerms, filters: initialFilters }, false);
+        if (hasTerms || hasFilters || hasSearched) {
+            fetchData(currentParams);
         }
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams.toString()]);
 
-    const updateUrl = (searchTerms: Record<string, string>, filters: typeof DEFAULT_FILTER_STATE) => {
-        const params = new URLSearchParams();
-
-        // Add search terms
-        Object.entries(searchTerms).forEach(([key, value]) => {
-            if (value) params.set(key, value);
-        });
-
-        // Add array filters
-        if (filters.agencies?.length) filters.agencies.forEach(v => params.append('agencies', v));
-        if (filters.countries?.length) filters.countries.forEach(v => params.append('countries', v));
-        if (filters.provinces?.length) filters.provinces.forEach(v => params.append('provinces', v));
-        if (filters.cities?.length) filters.cities.forEach(v => params.append('cities', v));
-        // Add range filters ONLY if they differ from defaults
-        // Compare dates by their YYYY-MM-DD string representation to avoid timezone issues
-        if (filters.dateRange?.from && filters.dateRange.from.toISOString().split('T')[0] !== DEFAULT_FILTER_STATE.dateRange.from.toISOString().split('T')[0]) {
-            params.set('from', filters.dateRange.from.toISOString().split('T')[0]); // Format as YYYY-MM-DD
-        }
-        if (filters.dateRange?.to && filters.dateRange.to.toISOString().split('T')[0] !== DEFAULT_FILTER_STATE.dateRange.to.toISOString().split('T')[0]) {
-            params.set('to', filters.dateRange.to.toISOString().split('T')[0]); // Format as YYYY-MM-DD
-        }
-        if (filters.valueRange?.min !== undefined && filters.valueRange.min !== DEFAULT_FILTER_STATE.valueRange.min) {
-            params.set('min', filters.valueRange.min.toString());
-        }
-        if (filters.valueRange?.max !== undefined && filters.valueRange.max !== DEFAULT_FILTER_STATE.valueRange.max) {
-            params.set('max', filters.valueRange.max.toString());
-        }
-
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    };
-
-    const handleSearch = async (params: any, shouldUpdateUrl = true) => {
+    const fetchData = async (params: any) => {
         setIsLoading(true);
         setHasSearched(true);
 
-        if (shouldUpdateUrl) {
-            updateUrl(params.searchTerms, params.filters);
+        if (params.pagination.page === 1) {
+            saveSearchHistory(params.searchTerms);
         }
 
-        // 1. FIRE AND FORGET: Save history without awaiting
-        // We do this concurrently so it doesn't slow down the actual search
-        saveSearchHistory(params.searchTerms); 
-
         try {
-            const response = await fetch('/api/grants', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(params),
-            });
+            const [listResponse, visResponse] = await Promise.all([
+                fetch('/api/grants', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...params, format: 'full' }),
+                }),
+                fetch('/api/grants', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...params, format: 'visualization' }),
+                })
+            ]);
 
-            if (!response.ok) {
-                throw new Error('Search failed');
-            }
+            if (!listResponse.ok || !visResponse.ok) throw new Error('Search failed');
 
-            const data = await response.json();
-            setGrants(data.data || []);
-            setTotalResults(data.pagination?.total || 0);
+            const listData = await listResponse.json();
+            const visData = await visResponse.json();
+
+            setGrants(listData.data || []);
+            setTotalResults(listData.pagination?.total || 0);
+            setVisualizationData(visData.data || []);
         } catch (error) {
             console.error('Search error:', error);
             setGrants([]);
             setTotalResults(0);
+            setVisualizationData([]);
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleSearchUpdate = (params: any) => {
+        const urlParams = new URLSearchParams(searchParams.toString());
+
+        Object.entries(params.searchTerms).forEach(([key, value]) => {
+            if (value) urlParams.set(key, value as string);
+            else urlParams.delete(key);
+        });
+
+        ['agencies', 'countries', 'provinces', 'cities'].forEach(key => {
+            urlParams.delete(key);
+            // @ts-ignore
+            params.filters[key]?.forEach(v => urlParams.append(key, v));
+        });
+
+        const { dateRange, valueRange } = params.filters;
+        if (dateRange?.from && dateRange.from.toISOString() !== DEFAULT_FILTER_STATE.dateRange.from.toISOString()) {
+            urlParams.set('from', dateRange.from.toISOString().split('T')[0]);
+        } else urlParams.delete('from');
+
+        if (dateRange?.to && dateRange.to.toISOString() !== DEFAULT_FILTER_STATE.dateRange.to.toISOString()) {
+            urlParams.set('to', dateRange.to.toISOString().split('T')[0]);
+        } else urlParams.delete('to');
+
+        if (valueRange?.min !== undefined && valueRange.min !== DEFAULT_FILTER_STATE.valueRange.min) {
+            urlParams.set('min', valueRange.min.toString());
+        } else urlParams.delete('min');
+
+        if (valueRange?.max !== undefined && valueRange.max !== DEFAULT_FILTER_STATE.valueRange.max) {
+            urlParams.set('max', valueRange.max.toString());
+        } else urlParams.delete('max');
+
+        urlParams.set('page', '1');
+
+        urlParams.sort();
+        const currentSorted = new URLSearchParams(searchParams.toString());
+        currentSorted.sort();
+        if (urlParams.toString() === currentSorted.toString()) return;
+
+        router.replace(`${pathname}?${urlParams.toString()}`, { scroll: false });
+    };
+
+    const handlePageChange = (newPage: number) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('page', newPage.toString());
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
     };
 
     return (
@@ -133,30 +193,18 @@ export default function SearchPageClient({
 
             <SearchInterface
                 fields={[
-                    {
-                        key: 'recipient',
-                        icon: LuGraduationCap,
-                        placeholder: 'Search by recipient name...'
-                    },
-                    {
-                        key: 'institute',
-                        icon: LuUniversity,
-                        placeholder: 'Search by institute name...'
-                    },
-                    {
-                        key: 'grant',
-                        icon: LuBookMarked,
-                        placeholder: 'Search by grant title...'
-                    },
+                    { key: 'recipient', icon: LuGraduationCap, placeholder: 'Search by recipient name...' },
+                    { key: 'institute', icon: LuUniversity, placeholder: 'Search by institute name...' },
+                    { key: 'grant', icon: LuBookMarked, placeholder: 'Search by grant title...' },
                 ]}
                 filterOptions={filterOptions}
                 initialValues={initialSearchTerms}
                 initialFilters={initialFilters}
-                onSearch={handleSearch}
+                onSearch={handleSearchUpdate}
                 showPopularSearches={true}
             />
 
-            <div className="mt-8">
+            <div className="mt-8 space-y-6">
                 {isLoading ? (
                     <div className="flex justify-center py-12">
                         <div className="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full" />
@@ -167,23 +215,30 @@ export default function SearchPageClient({
                         title="Start Your Search"
                         message="Enter search terms or use filters to find grants"
                     />
-                ) : grants.length === 0 ? (
-                    <EmptyState
-                        icon={LuSearch}
-                        title="No Results Found"
-                        message="Try adjusting your search terms or filters"
-                    />
                 ) : (
                     <>
-                        <div className="mb-4 text-gray-600">
-                            Found {totalResults.toLocaleString()} grant{totalResults !== 1 ? 's' : ''}
-                            {grants.length < totalResults && ` (showing ${grants.length})`}
-                        </div>
-                        <div className="space-y-4">
+                        <EntityList
+                            entityType="grant"
+                            entities={grants}
+                            totalCount={totalResults}
+                            sortOptions={SEARCH_SORT_OPTIONS} // Passing custom client options
+                            showVisualization={true}
+                            visualizationData={visualizationData}
+                            emptyMessage="Try adjusting your search terms or filters"
+                            viewContext="search"
+                        >
                             {grants.map((grant) => (
                                 <GrantCard key={grant.grant_id} {...grant} />
                             ))}
-                        </div>
+                        </EntityList>
+
+                        {totalPages > 1 && (
+                            <Pagination
+                                totalPages={totalPages}
+                                currentPage={currentPage}
+                                onPageChange={handlePageChange}
+                            />
+                        )}
                     </>
                 )}
             </div>

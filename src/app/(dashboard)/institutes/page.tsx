@@ -23,7 +23,7 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
     const resolvedParams = await searchParams;
 
     // 1. Pagination & Sort Params
-    const page = Number(resolvedParams.page) || 1;
+    const page = Math.max(1, Number(resolvedParams.page) || 1);
     const limit = 20;
     const offset = (page - 1) * limit;
 
@@ -36,7 +36,33 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
     const totalItems = parseInt(countResult.rows[0].total);
     const totalPages = Math.ceil(totalItems / limit);
 
-    // 3. Data Query
+    // 3. Build Dynamic Query
+    const queryParams: any[] = [];
+    let paramIndex = 1;
+
+    // Handle Bookmark Join Logic
+    let bookmarkSelection = 'false as is_bookmarked';
+
+    if (userId) {
+        // FIXED: Added ::integer cast to $1 to prevent "could not determine data type" error
+        bookmarkSelection = `
+            EXISTS(
+                SELECT 1 FROM bookmarked_institutes bi 
+                WHERE bi.institute_id = i.institute_id 
+                AND bi.user_id = $${paramIndex}::integer
+            ) as is_bookmarked
+        `;
+        queryParams.push(userId);
+        paramIndex++;
+    }
+
+    // Add Limit/Offset params
+    queryParams.push(limit);
+    const limitIndex = paramIndex++;
+
+    queryParams.push(offset);
+    const offsetIndex = paramIndex++;
+
     const result = await db.query<InstituteWithStats>(`
     SELECT 
       i.institute_id,
@@ -48,29 +74,16 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
       COUNT(DISTINCT r.recipient_id) as recipient_count,
       COUNT(DISTINCT g.grant_id) as grant_count,
       SUM(g.agreement_value) as total_funding,
-      ${userId ? `
-        EXISTS(
-          SELECT 1 FROM bookmarked_institutes bi 
-          WHERE bi.institute_id = i.institute_id 
-          AND bi.user_id = $1
-        ) as is_bookmarked
-      ` : 'false as is_bookmarked'}
+      ${bookmarkSelection}
     FROM institutes i
     LEFT JOIN recipients r ON i.institute_id = r.institute_id
     LEFT JOIN grants g ON r.recipient_id = g.recipient_id
     GROUP BY i.institute_id
     ORDER BY ${sortField} ${sortDir} NULLS LAST
-    LIMIT $${userId ? 2 : 1} OFFSET $${userId ? 3 : 2}
-  `, userId ? [userId, limit, offset] : [limit, offset]);
+    LIMIT $${limitIndex} OFFSET $${offsetIndex}
+  `, queryParams);
 
     const institutes = result.rows;
-
-    // 4. Sort Config
-    const sortOptions: SortOption[] = [
-        { label: 'Total Funding', field: 'funding', icon: 'funding' },
-        { label: 'Grant Count', field: 'count', icon: 'count' },
-        { label: 'Name', field: 'name', icon: 'text' },
-    ];
 
     return (
         <EntitiesPage
@@ -80,9 +93,9 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
             entities={institutes}
             totalItems={totalItems}
             totalPages={totalPages}
-            sortOptions={sortOptions}
             entityType="institute"
             emptyMessage="No institutes found"
+            showVisualization={false}
         />
     );
 }

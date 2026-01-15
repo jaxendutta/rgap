@@ -140,7 +140,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
     const [groupingDimension, setGroupingDimension] =
         useState<GroupingDimension>(
             initialGrouping ||
-                (effectiveAvailableGroupings[0] as GroupingDimension)
+            (effectiveAvailableGroupings[0] as GroupingDimension)
         );
 
     // Add loading and error states
@@ -245,8 +245,8 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                 const versionLabel = isOriginalAgreement
                     ? "Original"
                     : isInitialAmendment && !isOriginalAgreement
-                    ? "Initial Amendment"
-                    : `Amendment ${amendment.amendment_number}`;
+                        ? "Initial Amendment"
+                        : `Amendment ${amendment.amendment_number}`;
 
                 // Calculate percentage change from previous version
                 let percentChange = 0;
@@ -405,7 +405,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                         categoryTotals.set(
                             category,
                             (categoryTotals.get(category) || 0) +
-                                yearData[category]
+                            yearData[category]
                         );
                     }
                 });
@@ -475,7 +475,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
     const effectiveTitle = isAmendmentView
         ? "Grant Amendment History"
         : title ||
-          `${metricType === "funding" ? "Funding" : "Grant"} Trends by `;
+        `${metricType === "funding" ? "Funding" : "Grant"} Trends by `;
 
     return (
         <Card className={cn("", className)}>
@@ -518,8 +518,8 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                                             index === 0
                                                 ? "rounded-l-md"
                                                 : index === 1
-                                                ? "rounded-r-md"
-                                                : ""
+                                                    ? "rounded-r-md"
+                                                    : ""
                                         )}
                                     >
                                         <Icon className="h-3.5 w-3.5" />
@@ -551,8 +551,8 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                                         index === 0
                                             ? "rounded-l-md"
                                             : index === 2
-                                            ? "rounded-r-md"
-                                            : ""
+                                                ? "rounded-r-md"
+                                                : ""
                                     )}
                                 >
                                     <Icon className="h-3.5 w-3.5" />
@@ -569,8 +569,9 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
             <Card.Content className="px-0 md:px-2">
                 {/* Chart display - only show if we have data */}
                 {chartData.data.length > 0 &&
-                chartData.categories.length > 0 ? (
-                    <div style={{ height: `${height}px` }}>
+                    chartData.categories.length > 0 ? (
+                    // width: 100% and minWidth: 0 to this wrapper to avoid Recharts calculation issues
+                    <div className={cn(`h-[${height}px] w-full min-w-0 min-h-0`)}>
                         <DataChart
                             data={chartData.data}
                             chartType={chartType === "line" ? "line" : "bar"}
@@ -595,42 +596,37 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                     <div className="flex flex-wrap justify-center mt-4 gap-3">
                         {isAmendmentView
                             ? Object.entries(AMENDMENT_COLORS).map(
-                                  ([key, color], index) => (
-                                      <div
-                                          className="flex items-center text-xs"
-                                          key={index}
-                                      >
-                                          <span
-                                              className="w-3 h-3 rounded-full mr-1.5"
-                                              style={{
-                                                  backgroundColor: color,
-                                              }}
-                                          />
-                                          <span className="text-gray-600">
-                                              {key}
-                                          </span>
-                                      </div>
-                                  )
-                              )
+                                ([key, color], index) => (
+                                    <div
+                                        className="flex items-center text-xs"
+                                        key={index}
+                                    >
+                                        <span className={`w-3 h-3 rounded-full mr-1.5 bg-[${color}]`} />
+                                        <span className="text-gray-600">
+                                            {key}
+                                        </span>
+                                    </div>
+                                )
+                            )
                             : chartData.categories.map((category, index) => (
-                                  <div
-                                      key={category}
-                                      className="flex items-center text-xs"
-                                  >
-                                      <span
-                                          className="w-3 h-3 rounded-full mr-1.5"
-                                          style={{
-                                              backgroundColor: getCategoryColor(
-                                                  category,
-                                                  index
-                                              ),
-                                          }}
-                                      />
-                                      <span className="text-gray-600 max-w-[150px] truncate">
-                                          {category}
-                                      </span>
-                                  </div>
-                              ))}
+                                <div
+                                    key={category}
+                                    className="flex items-center text-xs"
+                                >
+                                    <span
+                                        className="w-3 h-3 rounded-full mr-1.5"
+                                        style={{
+                                            backgroundColor: getCategoryColor(
+                                                category,
+                                                index
+                                            ),
+                                        }}
+                                    />
+                                    <span className="text-gray-600 max-w-[150px] truncate">
+                                        {category}
+                                    </span>
+                                </div>
+                            ))}
                     </div>
                 )}
             </Card.Content>

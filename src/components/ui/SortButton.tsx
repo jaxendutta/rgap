@@ -6,17 +6,17 @@ import { IconType } from "react-icons";
 
 export type SortDirection = "asc" | "desc";
 
-interface SortButtonProps<T> {
+interface SortButtonProps {
     label: string;
     icon: IconType;
-    field: keyof T;
-    currentField: keyof T;
+    field: string;        // Changed from keyof T to string
+    currentField: string; // Changed from keyof T to string
     direction: SortDirection;
     onClick: () => void;
     className?: string;
 }
 
-export const SortButton = <T,>({
+export const SortButton = ({
     label,
     icon: Icon,
     field,
@@ -24,7 +24,7 @@ export const SortButton = <T,>({
     direction,
     onClick,
     className,
-}: SortButtonProps<T>) => {
+}: SortButtonProps) => {
     const isActive = currentField === field;
 
     return (
@@ -35,14 +35,14 @@ export const SortButton = <T,>({
             onClick={onClick}
             className={cn(
                 isActive
-                    ? "text-gray-900"
-                    : "text-gray-600 hover:text-gray-900",
+                    ? "bg-gray-100 text-gray-900 font-medium"
+                    : "text-gray-600 hover:text-gray-900 bg-transparent shadow-none",
                 className
             )}
         >
             <span className="hidden lg:flex">{label}</span>
             {isActive && (
-                <span className="text-gray-900">
+                <span className="ml-1 text-gray-900">
                     {direction === "asc" ? (
                         <LuMoveUp size={12} />
                     ) : (

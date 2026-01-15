@@ -23,7 +23,7 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
     const resolvedParams = await searchParams;
 
     // 1. Pagination & Sort
-    const page = Number(resolvedParams.page) || 1;
+    const page = Math.max(1, Number(resolvedParams.page) || 1);
     const limit = 20;
     const offset = (page - 1) * limit;
 
@@ -36,7 +36,31 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
     const totalItems = parseInt(countResult.rows[0].total);
     const totalPages = Math.ceil(totalItems / limit);
 
-    // 3. Data Query
+    // 3. Build Dynamic Query
+    const queryParams: any[] = [];
+    let paramIndex = 1;
+
+    let bookmarkSelection = 'false as is_bookmarked';
+
+    if (userId) {
+        // FIXED: Added ::integer cast
+        bookmarkSelection = `
+            EXISTS(
+                SELECT 1 FROM bookmarked_recipients br 
+                WHERE br.recipient_id = r.recipient_id 
+                AND br.user_id = $${paramIndex}::integer
+            ) as is_bookmarked
+        `;
+        queryParams.push(userId);
+        paramIndex++;
+    }
+
+    queryParams.push(limit);
+    const limitIndex = paramIndex++;
+
+    queryParams.push(offset);
+    const offsetIndex = paramIndex++;
+
     const result = await db.query<RecipientWithStats>(`
     SELECT 
       r.recipient_id,
@@ -52,29 +76,16 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
       AVG(g.agreement_value) as avg_funding,
       MIN(g.agreement_start_date::date) as first_grant_date,
       MAX(g.agreement_start_date::date) as latest_grant_date,
-      ${userId ? `
-        EXISTS(
-          SELECT 1 FROM bookmarked_recipients br 
-          WHERE br.recipient_id = r.recipient_id 
-          AND br.user_id = $1
-        ) as is_bookmarked
-      ` : 'false as is_bookmarked'}
+      ${bookmarkSelection}
     FROM recipients r
     LEFT JOIN institutes i ON r.institute_id = i.institute_id
     LEFT JOIN grants g ON r.recipient_id = g.recipient_id
     GROUP BY r.recipient_id, i.name, i.city, i.province, i.country
     ORDER BY ${sortField} ${sortDir} NULLS LAST
-    LIMIT $${userId ? 2 : 1} OFFSET $${userId ? 3 : 2}
-  `, userId ? [userId, limit, offset] : [limit, offset]);
+    LIMIT $${limitIndex} OFFSET $${offsetIndex}
+  `, queryParams);
 
     const recipients = result.rows;
-
-    // 4. Sort Options
-    const sortOptions: SortOption[] = [
-        { label: 'Total Funding', field: 'funding', icon: 'funding' },
-        { label: 'Grant Count', field: 'count', icon: 'count' },
-        { label: 'Name', field: 'name', icon: 'text' },
-    ];
 
     return (
         <EntitiesPage
@@ -84,9 +95,9 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
             entities={recipients}
             totalItems={totalItems}
             totalPages={totalPages}
-            sortOptions={sortOptions}
             entityType="recipient"
             emptyMessage="No recipients found"
+            showVisualization={false}
         />
     );
 }
