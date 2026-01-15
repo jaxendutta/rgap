@@ -68,8 +68,11 @@ export const DateRangeFilter = ({
     };
 
     // Function to parse date input values
-    const parseDateValue = (dateStr: string): Date | null => {
-        return dateStr ? new Date(dateStr) : null;
+    const parseDateValue = (dateStr: string): Date | null => { 
+        if (!dateStr) return null;
+        const date = new Date(dateStr);
+        date.setHours(0, 0, 0, 0); // Get just the day, no time
+        return date;
     };
 
     // Handler for the BaseRangeFilter onChange

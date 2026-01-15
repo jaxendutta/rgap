@@ -1,4 +1,4 @@
-// src/components/common/ui/RangeFilter.tsx
+// src/components/filter/RangeFilter.tsx
 import { useState, useEffect, useRef } from "react";
 import {
     LuChevronDown,
@@ -31,8 +31,8 @@ export interface RangeFilterProps<T> {
     }>;
     limitMin: T;
     limitMax: T;
-    inputType?: "text" | "date" | "number"; // Type of input field to render
-    inputLabels?: { min: string; max: string }; // Custom labels for min/max fields
+    inputType?: "text" | "date" | "number";
+    inputLabels?: { min: string; max: string };
     className?: string;
 }
 
@@ -62,9 +62,18 @@ export function RangeFilter<T>({
 
     const FinalIcon = Icon || DefaultIcon;
 
+    // Helper to correctly check equality for both Dates and Primitives
+    const isEqual = (a: T, b: T) => {
+        if (a instanceof Date && b instanceof Date) {
+            return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+        }
+        return a === b;
+    };
+
     // Format display value
+    // FIXED: Use isEqual() instead of === to handle Date objects correctly
     const displayValue =
-        value.min === limitMin && value.max === limitMax
+        isEqual(value.min, limitMin) && isEqual(value.max, limitMax)
             ? "Any"
             : `${formatValue(value.min)} ${"\u2013"} ${formatValue(value.max)}`;
 

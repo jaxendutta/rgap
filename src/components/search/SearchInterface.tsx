@@ -207,7 +207,7 @@ export default function SearchInterface({
                             leftIcon={LuSparkles}
                             onClick={() => togglePanel('popular')}
                             className={cn(
-                                "py-2 md:py-3",
+                                "py-1.75 md:py-2.5",
                                 activePanelType === 'popular'
                                     ? 'bg-blue-100 hover:bg-blue-200 text-blue-600 border border-blue-300'
                                     : 'bg-white shadow-sm hover:text-blue-600 hover:border-blue-300'
@@ -221,7 +221,7 @@ export default function SearchInterface({
                         leftIcon={LuSlidersHorizontal}
                         onClick={() => togglePanel('filters')}
                         className={cn(
-                            "py-2 md:py-3",
+                            "py-1.75 md:py-2.5",
                             activePanelType === 'filters'
                                 ? 'bg-blue-100 hover:bg-blue-200 text-blue-600 border border-blue-300'
                                 : 'bg-white shadow-sm hover:text-blue-600 hover:border-blue-300'
@@ -237,7 +237,7 @@ export default function SearchInterface({
                         variant="primary"
                         leftIcon={LuSearch}
                         onClick={performSearch}
-                        className="bg-gray-900 hover:bg-black py-2 md:py-3"
+                        className="bg-gray-900 hover:bg-black py-1.75 md:py-2.5"
                     >
                         Search
                     </Button>

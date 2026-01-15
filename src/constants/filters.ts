@@ -3,8 +3,8 @@
 
 export const FILTER_LIMITS = {
     DATE_VALUE: {
-        MIN: new Date(2010, 0, 1),
-        MAX: new Date(new Date().setHours(23, 59, 59, 999)),
+        MIN: new Date('2010-01-01'),
+        MAX: new Date('2030-12-31'),
     },
 
     GRANT_VALUE: {

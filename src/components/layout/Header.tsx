@@ -60,10 +60,10 @@ const Header = () => {
     return (
         <header className="lg:hidden fixed top-0 left-0 right-0 z-40 p-4 flex items-center justify-between pointer-events-none">
             {/* Logo - Pointer events auto to allow clicking */}
-            <div className="pointer-events-auto flex items-center justify-center space-x-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-3xl shadow-md border border-white/20">
+            <div className="pointer-events-auto flex items-center justify-center space-x-2 bg-white/50 backdrop-blur-sm px-4 py-1 rounded-3xl shadow-md border border-white/20">
                 <Link href="/" className="flex items-center">
-                    <GiAbstract014 className="h-6 w-6 text-gray-900 mr-2" />
-                    <span className="text-xl font-semibold text-gray-900">[ RGAP ]</span>
+                    <GiAbstract014 className="h-4.5 w-4.5 text-gray-900 mr-2" />
+                    <span className="text-lg font-semibold text-gray-900">[ RGAP ]</span>
                 </Link>
             </div>
 
@@ -71,7 +71,7 @@ const Header = () => {
             <motion.div
                 layout // Animate the container's layout changes (width/background)
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className="pointer-events-auto flex items-center bg-white/60 backdrop-blur-sm rounded-3xl shadow-md border border-white/20 overflow-hidden"
+                className="pointer-events-auto flex items-center bg-white/50 backdrop-blur-sm rounded-3xl shadow-md border border-white/20 overflow-hidden"
             >
                 <AnimatePresence mode="popLayout">
                     {showScrollTop && (
