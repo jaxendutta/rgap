@@ -58,7 +58,7 @@ const Header = () => {
     };
 
     return (
-        <header className="lg:hidden fixed top-0 left-0 right-0 z-40 p-4 flex items-center justify-between pointer-events-none">
+        <header className="lg:hidden fixed top-0 left-0 right-0 z-40 p-3 flex items-center justify-between pointer-events-none">
             {/* Logo - Pointer events auto to allow clicking */}
             <div className="pointer-events-auto flex items-center justify-center space-x-2 bg-white/50 backdrop-blur-sm px-4 py-1 rounded-3xl shadow-md border border-white/20">
                 <Link href="/" className="flex items-center">

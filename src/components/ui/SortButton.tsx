@@ -35,10 +35,11 @@ export const SortButton = ({
             onClick={onClick}
             className={cn(
                 isActive
-                    ? "bg-gray-100 text-gray-900 font-medium"
-                    : "text-gray-600 hover:text-gray-900 bg-transparent shadow-none",
+                    ? "bg-gray-200 text-gray-900 font-medium"
+                    : "text-gray-600 hover:text-gray-900 shadow-none",
                 className
             )}
+            aria-label={isActive ? `Sorted by ${label} in ${direction === "asc" ? "ascending" : "descending"} order` : `Sort by ${label}`}  
         >
             <span className="hidden lg:flex">{label}</span>
             {isActive && (

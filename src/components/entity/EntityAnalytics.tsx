@@ -269,8 +269,8 @@ export const AgencyBreakdown = ({
 
     return (
         <Card className="p-4 md:p-6">
-            <div className="flex items-center mb-4">
-                <LuUniversity className="h-3.5 md:h-5 w-3.5 md:w-5 text-gray-700 mr-2" />
+            <div className="flex items-start mb-4 gap-2">
+                <LuUniversity className="h-4 md:h-5 w-4 md:w-5 text-blue-600 mt-0.5" />
                 <h3 className="text-base md:text-lg font-semibold text-gray-900">Agency Breakdown</h3>
             </div>
             <div className="space-y-3">

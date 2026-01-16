@@ -117,14 +117,14 @@ function EntityList<T>(props: EntityListProps<T>) {
 
     return (
         <div className={cn("space-y-6", className)}>
-            <Card variant="default" className="flex flex-col-reverse sm:flex-row justify-between items-center rounded-2xl p-2 bg-white backdrop-blur-xs border border-gray-100 gap-4 sm:gap-0">
-                <span className="text-xs md:text-sm text-gray-500 px-2">
+            <Card variant="default" className="flex flex-wrap justify-between items-center rounded-3xl p-2 bg-white backdrop-blur-xs border border-gray-100 gap-4 sm:gap-0">
+                <span className="text-xs md:text-sm text-gray-500 px-2 flex-grow text-center sm:text-left">
                     Showing <span className="font-semibold text-gray-900">{entities.length}</span> of{' '}
                     <span className="font-semibold text-gray-900">{totalCount.toLocaleString()}</span>{' '}
                     {entityType}{totalCount !== 1 ? 's' : ''}
                 </span>
 
-                <div className="flex items-center gap-2 flex-wrap justify-center">
+                <div className="flex gap-2 flex-wrap flex-grow justify-center sm:justify-end">
                     {sortOptions.map((option) => (
                         <SortButton
                             key={option.field}
@@ -145,8 +145,8 @@ function EntityList<T>(props: EntityListProps<T>) {
                             size="sm"
                             onClick={() => setIsVisualizationVisible(!isVisualizationVisible)}
                             className={cn(
-                                "transition-colors gap-1.5",
-                                isVisualizationVisible ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-100"
+                                "transition-colors gap-1.5 py-1.5",
+                                isVisualizationVisible ? "bg-blue-50 text-blue-600" : "text-gray-600"
                             )}
                         >
                             {isVisualizationVisible ? <TbGraphOff className="w-5 h-5" /> : <TbGraph className="w-5 h-5" />}
@@ -155,11 +155,12 @@ function EntityList<T>(props: EntityListProps<T>) {
                     )}
 
                     <Button
-                        variant="ghost"
+                        variant="secondary"
                         size="sm"
                         leftIcon={layoutVariant === 'grid' ? LuList : LuGrid2X2}
                         onClick={() => setLayoutVariant(layoutVariant === 'list' ? 'grid' : 'list')}
                         aria-label="Toggle layout"
+                        className="hidden sm:flex"
                     />
                 </div>
             </Card>

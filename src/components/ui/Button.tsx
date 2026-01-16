@@ -8,7 +8,7 @@ import { IconType } from "react-icons";
 export const variants = {
     primary: "bg-gray-900 text-white hover:bg-black",
     secondary:
-        "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50",
+        "bg-gray-100 text-gray-700 hover:bg-gray-200",
     outline:
         "bg-transparent text-gray-700 border border-gray-300 hover:bg-gray-100",
     destructive: "bg-red-600 text-white hover:bg-red-700",

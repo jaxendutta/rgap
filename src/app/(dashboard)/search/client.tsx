@@ -204,7 +204,7 @@ export default function SearchPageClient({
                 showPopularSearches={true}
             />
 
-            <div className="mt-8 space-y-6">
+            <div className="md:mt-8 space-y-6">
                 {isLoading ? (
                     <div className="flex justify-center py-12">
                         <div className="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full" />

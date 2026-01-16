@@ -163,6 +163,13 @@ export function RecipientDetailClient({
             case 'analytics':
                 return (
                     <div className="space-y-4 md:space-y-6">
+                        {/* Entity Analytics - pass ALL grants! */}
+                        <EntityAnalytics
+                            entity={recipient}
+                            entityType="recipient"
+                            grants={allGrants}
+                        />
+
                         {/* Top Programs */}
                         {topPrograms.length > 0 && (
                             <Card className="p-2 md:p-6">
@@ -191,13 +198,6 @@ export function RecipientDetailClient({
                                 </div>
                             </Card>
                         )}
-
-                        {/* Entity Analytics - pass ALL grants! */}
-                        <EntityAnalytics
-                            entity={recipient}
-                            entityType="recipient"
-                            grants={allGrants}
-                        />
                     </div>
                 );
 
