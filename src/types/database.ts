@@ -8,12 +8,31 @@ import { IconType } from "react-icons";
  * User account information
  */
 export interface User {
-    user_id: number;
-    username: string;
+    id: number;
+    name: string;
     email: string;
-    password_hash: string;
+    email_verified_at: Date | null;
+    pending_email: string | null;
     created_at: Date;
-    last_login: Date | null;
+}
+
+export interface Session {
+    session_id: string;
+    user_id: number;
+    user_agent: string | null;
+    ip_address: string | null;
+    location: string | null;
+    created_at: Date;
+    last_active_at: Date;
+}
+
+export interface AuditLog {
+    id: number;
+    user_id: number;
+    event_type: 'NAME_CHANGE' | 'EMAIL_CHANGE' | 'PASSWORD_CHANGE' | 'LOGIN';
+    old_value: string | null;
+    new_value: string | null;
+    created_at: Date;
 }
 
 /**

@@ -18,11 +18,19 @@ const variants = {
 };
 
 // Define size styles
-const sizes = {
-    xs: "px-2 py-0.5 text-xs",
-    sm: "px-3 py-1 text-xs",
-    md: "px-3.5 py-1 text-sm",
-    lg: "px-4 py-1.5 text-base",
+const padding = {
+    xs: "px-2 py-0.5",
+    sm: "px-3 py-1",
+    md: "px-3.5 py-1",
+    lg: "px-4 py-1.5",
+};
+
+// Define font size styles
+const fontSizes = {
+    xs: "text-xs",
+    sm: "text-xs",
+    md: "text-sm",
+    lg: "text-base",
 };
 
 // Define icon sizes
@@ -43,9 +51,10 @@ const iconSpacing = {
 
 export interface TagProps {
     text: string;
+    innerText?: string;
     icon?: IconType;
     variant?: keyof typeof variants;
-    size?: keyof typeof sizes;
+    size?: keyof typeof padding;
     onRemove?: () => void;
     pill?: boolean;
     className?: string;
@@ -55,6 +64,7 @@ export interface TagProps {
 
 export const Tag: React.FC<TagProps> = ({
     text,
+    innerText,
     icon: Icon,
     variant = "default",
     size = "md",
@@ -69,7 +79,7 @@ export const Tag: React.FC<TagProps> = ({
             className={cn(
                 "flex items-center font-medium gap-1 max-w-full group",
                 variants[variant],
-                sizes[size],
+                fontSizes[size],
                 pill ? "rounded-full" : "rounded-md",
                 onClick && "cursor-pointer hover:opacity-90 active:opacity-80",
                 className
@@ -87,7 +97,13 @@ export const Tag: React.FC<TagProps> = ({
                 />
             )}
 
-            <span className="truncate flex-1">{text}</span>
+            <span className={`${padding[size]} ${!innerText ? "flex-1" : ""} ${innerText ? "pr-0" : ""}`}>
+                {text}
+            </span>
+            {innerText && <span className={`flex-1 bg-white w-full m-1 px-1.75 py-1 rounded-3xl 
+                ${variant === 'outline' ? 'border border-gray-300' : ''}`}>
+                {innerText}
+            </span>}
             {onClick && (
                 <LuArrowRight
                     className={cn(
@@ -114,9 +130,9 @@ export const Tag: React.FC<TagProps> = ({
                     <LuX
                         className={
                             iconSizes[
-                                size === "lg"
-                                    ? "sm"
-                                    : size === "md"
+                            size === "lg"
+                                ? "sm"
+                                : size === "md"
                                     ? "xs"
                                     : "xs"
                             ]

@@ -14,7 +14,7 @@ const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
         const inputId = id || generatedId;
 
         return (
-            <div className="space-y-1">
+            <div className="w-full space-y-1">
                 {label && (
                     <label
                         htmlFor={inputId}
@@ -28,7 +28,7 @@ const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
                         id={inputId}
                         ref={ref}
                         className={cn(
-                            "w-full px-4 text-sm md:text-base rounded-2xl border py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200",
+                            "w-full px-4 text-sm md:text-base rounded-3xl border py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200",
                             error ? "border-red-300 focus:border-red-500 focus:ring-red-500/20" : "border-gray-200",
                             className
                         )}

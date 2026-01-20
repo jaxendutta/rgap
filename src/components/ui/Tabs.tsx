@@ -55,7 +55,7 @@ const Tabs: React.FC<TabsProps> = ({
     // Size-specific styles with vertical padding
     const sizeClasses = {
         sm: "text-xs md:text-sm py-1 md:py-1.5 px-2 md:px-3",
-        md: "text-sm md:text-base py-1.5 px-4",
+        md: "text-sm md:text-base py-1.5 px-4 gap-1.75",
         lg: "text-base md:text-lg py-2 px-5",
     };
 
@@ -120,9 +120,9 @@ const Tabs: React.FC<TabsProps> = ({
     const containerClasses = cn(
         orientation === "vertical"
             ? "flex flex-col"
-            : "flex flex-row items-center",
+            : "flex flex-row items-center justify-center",
         variant !== "pills" && "border-b border-gray-200",
-        variant === "pills" && "bg-white/60 backdrop-blur-xs p-1 rounded-3xl relative"
+        variant === "pills" && "bg-white/60 backdrop-blur-xs p-1 rounded-3xl relative border border-gray-200",
     );
 
     const manyTabs = tabs.length > 3;
@@ -138,7 +138,7 @@ const Tabs: React.FC<TabsProps> = ({
                         left: pillStyle.left,
                         top: pillStyle.top,
                         width: pillStyle.width,
-                        height: pillStyle.height,
+                        height: pillStyle.height - 2,
                         opacity: pillStyle.opacity,
                     }}
                     transition={{
@@ -166,7 +166,7 @@ const Tabs: React.FC<TabsProps> = ({
                         onClick={() => !tab.disabled && onChange(tab.id)}
                         disabled={tab.disabled}
                         className={cn(
-                            "flex items-center justify-center font-medium transition-colors relative gap-0.5 md:gap-2",
+                            "flex items-center justify-center font-medium transition-colors relative gap-1 md:gap-2",
                             manyTabs && "flex-col md:flex-row",
                             sizeClasses[size],
                             getVariantClasses(isActive),
@@ -179,8 +179,8 @@ const Tabs: React.FC<TabsProps> = ({
                         {Icon && (
                             <Icon
                                 className={cn(
-                                    "h-4 w-4 flex-shrink-0",
-                                    manyTabs && "md:h-4 md:w-4 lg:h-6 lg:w-6"
+                                    "size-3 md:size-4 flex-shrink-0",
+                                    manyTabs && "md:size-4 lg:size-6"
                                 )}
                             />
                         )}

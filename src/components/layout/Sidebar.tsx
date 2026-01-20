@@ -10,7 +10,8 @@ import {
     LuGraduationCap,
     LuBookmark,
     LuUser,
-    LuSun
+    LuSun,
+    LuLogIn // Added for explicit Sign In icon if desired (optional, utilizing LuUser below for consistency)
 } from "react-icons/lu";
 import { GiAbstract014 } from "react-icons/gi";
 import Tabs from "@/components/ui/Tabs";
@@ -24,13 +25,20 @@ const Sidebar = () => {
 
     const { user } = useAuth();
 
+    // Logic: If user exists, show "Account" -> /account. If not, "Sign In" -> /login
+    const accountItem = {
+        name: user ? "Account" : "Sign In",
+        icon: user ? LuUser : LuLogIn, // Visually distinguishes login state
+        href: user ? "/account" : "/login"
+    };
+
     // Navigation config
     const mobileNavigation = [
         { name: "Institutes", icon: LuUniversity, href: "/institutes" },
         { name: "Recipients", icon: LuGraduationCap, href: "/recipients" },
         { name: "Search", icon: LuSearch, href: "/search" },
         { name: "Bookmarks", icon: LuBookmark, href: "/bookmarks" },
-        { name: "Account", icon: LuUser, href: user ? "/account" : "/login" },
+        accountItem,
     ];
 
     const desktopNavigation = [
@@ -39,7 +47,7 @@ const Sidebar = () => {
         { name: "Institutes", icon: LuUniversity, href: "/institutes" },
         { name: "Recipients", icon: LuGraduationCap, href: "/recipients" },
         { name: "Bookmarks", icon: LuBookmark, href: "/bookmarks" },
-        { name: "Account", icon: LuUser, href: user ? "/account" : "/login" },
+        accountItem,
     ];
 
     return (
@@ -57,7 +65,8 @@ const Sidebar = () => {
             >
                 <nav className="p-2 space-y-1 mt-2">
                     {desktopNavigation.map((item) => {
-                        const isActive = pathname === item.href;
+                        // Check strict equality OR if we are inside the account section
+                        const isActive = pathname === item.href || (item.href === '/account' && pathname.startsWith('/account'));
                         const Icon = item.icon;
 
                         return (

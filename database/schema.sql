@@ -112,14 +112,45 @@ CREATE INDEX idx_grants_amendments ON grants USING GIN (amendments_history);
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(255),
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    email_verified_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    pending_email VARCHAR(100),
 );
 
 CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_username ON users(username);
+
+-- ============================================================================
+-- Session & Security
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS sessions (
+    session_id VARCHAR(255) PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_agent TEXT,
+    ip_address VARCHAR(45),
+    location VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_active_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_revoked BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE IF NOT EXISTS user_audit_logs (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    event_type VARCHAR(50) NOT NULL, -- 'NAME_CHANGE', 'EMAIL_CHANGE', 'PASSWORD_CHANGE', 'LOGIN'
+    old_value TEXT,
+    new_value TEXT,
+    ip_address VARCHAR(45),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS verification_tokens (
+    token VARCHAR(255) PRIMARY KEY,
+    identifier VARCHAR(255) NOT NULL,
+    expires TIMESTAMP NOT NULL
+);
 
 -- ============================================================================
 -- Bookmarks & History (Standard)

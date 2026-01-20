@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useActionState } from 'react';
+import { useEffect, useState, useActionState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authAction } from '@/app/actions/auth';
 import Button from '@/components/ui/Button';
@@ -8,19 +8,37 @@ import InputField from '@/components/ui/InputField';
 import { Card } from '@/components/ui/Card';
 import Tabs from '@/components/ui/Tabs';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/providers/AuthProvider';
 
-const initialState = { message: '' };
+const initialState = { message: '', success: false };
 
 export default function AuthPage() {
     const [mode, setMode] = useState<'login' | 'register'>('login');
     const [state, action, isPending] = useActionState(authAction, initialState);
+    const { user } = useAuth();
+    const router = useRouter();
+    const [displayMessage, setDisplayMessage] = useState('');
+
+    useEffect(() => {
+        setDisplayMessage(state?.message || '');
+    }, [state]);
+
+    useEffect(() => {
+        setDisplayMessage('');
+    }, [mode]);
+
+    // Redirect if already logged in
+    useEffect(() => {
+        if (user) {
+            router.replace('/account');
+        }
+    }, [user, router]);
+
 
     const tabs = [
         { id: 'login', label: 'Sign In' },
         { id: 'register', label: 'Register' },
     ];
-
-    const router = useRouter();
 
     return (
         <div className="w-full h-full flex items-center justify-center">
@@ -81,7 +99,7 @@ export default function AuthPage() {
                         <input type="hidden" name="mode" value={mode} />
 
                         <AnimatePresence>
-                            {state?.message && (
+                            {displayMessage && (
                                 <motion.div
                                     layout
                                     initial={{ height: 0, opacity: 0 }}
@@ -90,7 +108,7 @@ export default function AuthPage() {
                                     className="overflow-hidden"
                                 >
                                     <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg mb-2">
-                                        {state.message}
+                                        {displayMessage}
                                     </div>
                                 </motion.div>
                             )}
@@ -157,6 +175,17 @@ export default function AuthPage() {
                                 </motion.div>
                             )}
                         </AnimatePresence>
+
+                        <div className="flex items-center justify-end">
+                            <label className="flex items-center gap-2 text-sm text-gray-600">
+                                <input
+                                    type="checkbox"
+                                    name="rememberMe"
+                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                Remember me
+                            </label>
+                        </div>
 
                         <motion.div layout className="pt-4">
                             <Button type="submit" className="w-full" isLoading={isPending}>
