@@ -34,7 +34,7 @@ export default async function AccountPage({ searchParams }: { searchParams: { ve
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="text-center md:text-left">
-                    <h1 className="text-3xl font-bold text-gray-900">Hi, {fullUser.name.split(' ')[0]}</h1>
+                    <h1 className="text-3xl font-bold text-gray-900">Hi, {fullUser.name ? fullUser.name.split(' ')[0] : 'User'}</h1>
                     <p className="text-xs md:text-sm text-gray-500 mt-1">Manage your profile and security settings</p>
                 </div>
                 <form action={logoutAction}>

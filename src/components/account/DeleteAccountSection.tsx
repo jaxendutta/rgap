@@ -13,7 +13,7 @@ export default function DeleteAccountSection({ userEmail }: { userEmail: string 
     const [state, formAction] = useActionState(deleteAccountAction, { success: false, message: '' });
 
     return (
-        <Card className="p-4 md:p-6 border-red-200">
+        <Card className="p-4 md:p-6 border-red-200 rounded-3xl">
             <div className="flex flex-col gap-1">
                 <h3 className="md:text-lg font-semibold text-red-700">Delete Account</h3>
                 <div className="flex flex-wrap gap-3 items-center justify-between">

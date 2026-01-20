@@ -58,31 +58,38 @@ export default function ActivityHistory({ logs }: { logs: AuditLog[] }) {
         <Card className="rounded-3xl">
             <div className="w-full divide-y divide-gray-100">
                 {logs.map((log, i) => (
-                    <div key={i} className="p-2 md:p-4 flex flex-wrap md:grid md:grid-cols-3 items-center justify-center gap-4 hover:bg-gray-50/50 transition-colors">
-                        <div className={`mt-1 p-2 flex w-full rounded-full items-center justify-center ${getStyle(log.event_type)}`}>
-                            {React.createElement(getIcon(log.event_type), { className: "flex-shrink-0 size-3.5" })}
-                            <span className="text-sm ml-2">{formatText(log)}</span>
+                    <div key={i} className="p-2 md:p-4 flex flex-wrap md:grid md:grid-cols-4 items-center justify-center gap-4 hover:bg-gray-50/50 transition-colors">
+                        <div className="w-full flex justify-between">
+                            <div className={`mt-1 px-2 py-1.5 md:py-2 md:px-3 flex rounded-full items-center justify-center md:col-span-1 ${getStyle(log.event_type)}`}>
+                                {React.createElement(getIcon(log.event_type), { className: "flex-shrink-0 size-3.5" })}
+                                <span className="text-xs md:text-sm ml-2">{formatText(log)}</span>
+                            </div>
+                            <Tag
+                                text={new Date(log.created_at).toLocaleString()}
+                                variant="ghost"
+                                className="w-fit text-xs md:text-sm md:hidden"
+                            />
                         </div>
-                        <div className="flex flex-row gap-1 text-gray-700 items-center justify-center">
+                        <div className="flex flex-row gap-1 text-gray-700 items-center justify-center md:col-span-2">
                             {log.old_value && log.new_value && (
-                                <>
-                                    <Tag text={log.old_value} variant="outline" className="w-fit" />
+                                <div className="flex flex-wrap gap-1 items-center justify-center">
+                                    <Tag text={log.old_value} variant="outline" className="w-fit text-xs md:text-sm" />
                                     <span className=" text-gray-400">→</span>
-                                    <Tag text={log.new_value} variant="outline" className="w-fit" />
-                                </>
+                                    <Tag text={log.new_value} variant="outline" className="w-fit text-xs md:text-sm" />
+                                </div>
                             )}
                         </div>
-                        <div className="w-full flex flex-col md:flex-row md:justify-end items-center gap-2">
+                        <div className="w-full hidden md:flex md:flex-col md:flex-row md:justify-end items-center gap-2 md:col-span-1">
                             <Tag
                                 text={new Date(log.created_at).toLocaleString()}
                                 variant="outline"
-                                className="w-fit"
+                                className="w-fit text-xs md:text-sm"
                             />
                             {log.ip_address && (
                                 <Tag
                                     text={log.ip_address}
                                     variant="outline"
-                                    className="w-fit"
+                                    className="w-fit text-xs md:text-sm"
                                 />
                             )}
                         </div>

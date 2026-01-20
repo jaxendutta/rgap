@@ -345,8 +345,8 @@ export async function updateProfileAction(prevState: any, formData: FormData) {
                     "We've received a request to change your email address.",
                     "If you didn't request this change, please secure your account immediately. Make sure to go through your account settings to review any recent activity.",
                     `<p>You requested to change your email to this address.</p>
-                    <a href="${verifyUrl}">Confirm Email Change</a>
-                    <p>This link expires in 24 hours.</p>`
+                    <a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">Verify New Email Address</a>
+                    <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">Link expires in 24 hours.</p>`
                 )
             });
 

@@ -43,10 +43,10 @@ export default function AccountManager({ user, sessions, auditLogs, currentSessi
                 {activeTab === 'details' && (
                     <div className="flex flex-col gap-6">
                         <div className="grid md:grid-cols-2 gap-6">
-                            <Card className="p-4 md:p-6">
+                            <Card className="p-4 md:p-6 rounded-3xl">
                                 <ProfileEditor user={user} />
                             </Card>
-                            <Card className="p-4 md:p-6">
+                            <Card className="p-4 md:p-6 rounded-3xl">
                                 <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Security</h3>
                                 <PasswordManager />
                             </Card>
