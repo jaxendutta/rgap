@@ -81,12 +81,12 @@ export default function ProfileEditor({ user }: ProfileEditorProps) {
 
             {isEditing ? (
                 <form action={handleSubmit} className="flex flex-col gap-3 animate-in fade-in">
-                    <div className="text-sm md:text-base w-full bg-gray-200 rounded-3xl pl-3 pr-1 py-0.75 inline-flex items-center gap-4 text-gray-600">
+                    <div className="text-sm md:text-base w-full bg-gray-100 rounded-3xl pl-3 pr-1 py-0.75 inline-flex items-center gap-4 text-gray-600">
                         Name
                         <InputField name="name" defaultValue={user.name || ''} className="pl-3 pr-2 py-1" />
                     </div>
 
-                    <div className="text-sm md:text-base w-full bg-gray-200 rounded-3xl pl-3 pr-1 py-0.75 inline-flex items-center gap-4 text-gray-600">
+                    <div className="text-sm md:text-base w-full bg-gray-100 rounded-3xl pl-3 pr-1 py-0.75 inline-flex items-center gap-4 text-gray-600">
                         Email
                         <InputField name="email" type="email" defaultValue={user.email || ''} className="pl-3 pr-2 py-1" />
                     </div>
@@ -99,23 +99,23 @@ export default function ProfileEditor({ user }: ProfileEditorProps) {
                 </form>
             ) : (
                 <div className="flex flex-col gap-3">
-                    <div className="text-sm md:text-base w-full bg-gray-200 rounded-3xl pl-3 pr-1 py-1 inline-flex items-center gap-1 text-gray-600">
+                    <div className="text-xs md:text-base w-full bg-gray-100 rounded-3xl pl-3 pr-1 py-1 inline-flex items-center gap-1 text-gray-600">
                         Name
-                        <Tag text={user.name} className="w-full ml-3 text-sm md:text-base" />
+                        <Tag text={user.name} className="w-full ml-3 text-xs md:text-base bg-white" />
                     </div>
 
-                    <div className="text-sm md:text-base w-full bg-gray-200 rounded-3xl pl-3 pr-1 py-1 inline-flex items-center gap-1 text-gray-600">
+                    <div className="text-xs md:text-base w-full bg-gray-100 rounded-3xl pl-3 pr-1 py-1 inline-flex items-center gap-1 text-gray-600">
                         Email
-                        <Tag text={user.email} className="w-full ml-3 text-sm md:text-base" />
+                        <Tag text={user.email} className="w-full ml-2 md:ml-3 text-xs md:text-base bg-white" />
                         <span className="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">
                             Verified
                         </span>
                     </div>
 
                     {user.pending_email && (
-                        <div className="text-sm md:text-base w-full bg-gray-200 rounded-3xl pl-3 pr-1 py-1 inline-flex items-center gap-1 text-gray-600">
+                        <div className="text-xs md:text-base w-full bg-gray-200 rounded-3xl pl-3 pr-1 py-1 inline-flex items-center gap-1 text-gray-600">
                             Email
-                            <Tag text={user.pending_email} className="w-full ml-3 text-sm md:text-base" />
+                            <Tag text={user.pending_email} className="w-full ml-3 text-xs md:text-base" />
                             <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">
                                 Unverified
                             </span>

@@ -28,7 +28,7 @@ export default function AccountManager({ user, sessions, auditLogs, currentSessi
     ];
 
     return (
-        <div className="flex flex-col gap-6 md:gap-8 w-full">
+        <div className="flex flex-col gap-6 md:gap-8">
             <Tabs
                 tabs={tabs}
                 activeTab={activeTab}
@@ -42,7 +42,7 @@ export default function AccountManager({ user, sessions, auditLogs, currentSessi
                 {/* TAB 1: DETAILS */}
                 {activeTab === 'details' && (
                     <div className="flex flex-col gap-6">
-                        <div className="grid md:grid-cols-2 gap-6">
+                        <div className="flex flex-col md:grid md:grid-cols-2 gap-6">
                             <Card className="p-4 md:p-6 rounded-3xl">
                                 <ProfileEditor user={user} />
                             </Card>
