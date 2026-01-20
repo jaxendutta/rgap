@@ -38,13 +38,12 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Try to get user session - returns null if not logged in (which is fine)
   const user = await getCurrentUser();
 
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Providers initialUser={user}>
+        <Providers initialUser={user} key={user?.id || 'anonymous'}>
           <MainLayout>
             {children}
           </MainLayout>

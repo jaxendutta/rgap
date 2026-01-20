@@ -19,7 +19,6 @@ export function AuthProvider({
     children: ReactNode;
     initialUser: Partial<User> | null
 }) {
-    // Initialize with the user passed from the server (layout.tsx)
     const [user, setUser] = useState<Partial<User> | null>(initialUser);
     const [isLoading, setIsLoading] = useState(false);
 

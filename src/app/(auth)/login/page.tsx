@@ -15,9 +15,15 @@ const initialState = { message: '', success: false };
 export default function AuthPage() {
     const [mode, setMode] = useState<'login' | 'register'>('login');
     const [state, action, isPending] = useActionState(authAction, initialState);
-    const { user } = useAuth();
+
+    // Get refreshUser to verify session status
+    const { user, refreshUser } = useAuth();
     const router = useRouter();
     const [displayMessage, setDisplayMessage] = useState('');
+
+    // FIX: Add a local verification state. 
+    // If 'user' exists initially, we assume it might be stale until verified.
+    const [isVerifying, setIsVerifying] = useState(!!user);
 
     useEffect(() => {
         setDisplayMessage(state?.message || '');
@@ -27,12 +33,30 @@ export default function AuthPage() {
         setDisplayMessage('');
     }, [mode]);
 
-    // Redirect if already logged in
+    // FIX: Redirect Logic
+    // Instead of redirecting immediately if 'user' is present, we verify it first.
     useEffect(() => {
-        if (user) {
+        const verifySession = async () => {
+            if (user) {
+                // We have a user object, but we are on the login page.
+                // This could be a stale session from another tab.
+                // Force a check against the server.
+                await refreshUser();
+            }
+            // Once verification is done (or if no user existed), we stop verifying.
+            setIsVerifying(false);
+        };
+
+        verifySession();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Run ONCE on mount
+
+    // Only redirect if we have a user AND we are finished verifying
+    useEffect(() => {
+        if (user && !isVerifying) {
             router.replace('/account');
         }
-    }, [user, router]);
+    }, [user, isVerifying, router]);
 
 
     const tabs = [
@@ -40,12 +64,10 @@ export default function AuthPage() {
         { id: 'register', label: 'Register' },
     ];
 
+    // ... (Rest of the component remains exactly the same)
     return (
         <div className="w-full h-full flex items-center justify-center">
             <Card className="w-full max-w-md overflow-hidden border-0 shadow-md md:py-4 rounded-3xl">
-                {/* 1. layout prop here ensures the CARD height animates smoothly 
-                     as fields appear/disappear inside it.
-                */}
                 <motion.div
                     layout
                     className="w-full p-4 md:p-8 pt-10 flex flex-col gap-4"
@@ -54,9 +76,6 @@ export default function AuthPage() {
                     {/* Header with Sliding Text */}
                     <div className="text-center">
                         <h1 className="text-2xl font-semibold text-gray-900 flex justify-center items-center">
-                            {/* 2. layout prop on "Welcome" allows it to slide left/right 
-                                  smoothly when "Back" appears/disappears next to it.
-                            */}
                             <motion.span layout transition={{ duration: 0.2 }}>
                                 [ Welcome
                             </motion.span>
@@ -95,104 +114,110 @@ export default function AuthPage() {
                         />
                     </div>
 
-                    <form action={action} className="space-y-4">
-                        <input type="hidden" name="mode" value={mode} />
-
-                        <AnimatePresence>
-                            {displayMessage && (
-                                <motion.div
-                                    layout
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg mb-2">
-                                        {displayMessage}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        {/* Name Field (Register Only) */}
-                        <AnimatePresence initial={false}>
-                            {mode === 'register' && (
-                                <motion.div
-                                    layout
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden"
-                                >
-                                    <InputField
-                                        label="Full Name"
-                                        name="name"
-                                        placeholder="Jane Doe"
-                                        required={mode === 'register'}
-                                    />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        {/* Standard Fields (Wrapped in layout motion to be safe) */}
-                        <motion.div layout>
-                            <InputField
-                                label="Email"
-                                name="email"
-                                type="email"
-                                placeholder="name@example.com"
-                                required
-                            />
-                        </motion.div>
-
-                        <motion.div layout>
-                            <InputField
-                                label="Password"
-                                name="password"
-                                type="password"
-                                placeholder="••••••••"
-                                required
-                            />
-                        </motion.div>
-
-                        {/* Confirm Password (Register Only) */}
-                        <AnimatePresence initial={false}>
-                            {mode === 'register' && (
-                                <motion.div
-                                    layout
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden"
-                                >
-                                    <InputField
-                                        label="Confirm Password"
-                                        name="confirmPassword"
-                                        type="password"
-                                        placeholder="••••••••"
-                                        required={mode === 'register'}
-                                    />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        <div className="flex items-center justify-end">
-                            <label className="flex items-center gap-2 text-sm text-gray-600">
-                                <input
-                                    type="checkbox"
-                                    name="rememberMe"
-                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                />
-                                Remember me
-                            </label>
+                    {/* Hides form while verifying to prevent flickering/input jumps */}
+                    {isVerifying ? (
+                        <div className="py-12 flex justify-center text-gray-400 text-sm">
+                            Checking session...
                         </div>
+                    ) : (
+                        <form action={action} className="space-y-4">
+                            <input type="hidden" name="mode" value={mode} />
 
-                        <motion.div layout className="pt-4">
-                            <Button type="submit" className="w-full" isLoading={isPending}>
-                                {mode === 'login' ? 'Sign In' : 'Create Account'}
-                            </Button>
-                        </motion.div>
-                    </form>
+                            <AnimatePresence>
+                                {displayMessage && (
+                                    <motion.div
+                                        layout
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg mb-2">
+                                            {displayMessage}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Name Field (Register Only) */}
+                            <AnimatePresence initial={false}>
+                                {mode === 'register' && (
+                                    <motion.div
+                                        layout
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <InputField
+                                            label="Full Name"
+                                            name="name"
+                                            placeholder="Jane Doe"
+                                            required={mode === 'register'}
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <motion.div layout>
+                                <InputField
+                                    label="Email"
+                                    name="email"
+                                    type="email"
+                                    placeholder="name@example.com"
+                                    required
+                                />
+                            </motion.div>
+
+                            <motion.div layout>
+                                <InputField
+                                    label="Password"
+                                    name="password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    required
+                                />
+                            </motion.div>
+
+                            {/* Confirm Password (Register Only) */}
+                            <AnimatePresence initial={false}>
+                                {mode === 'register' && (
+                                    <motion.div
+                                        layout
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <InputField
+                                            label="Confirm Password"
+                                            name="confirmPassword"
+                                            type="password"
+                                            placeholder="••••••••"
+                                            required={mode === 'register'}
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <div className="flex items-center justify-end">
+                                <label className="flex items-center gap-2 text-sm text-gray-600">
+                                    <input
+                                        type="checkbox"
+                                        name="rememberMe"
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    Remember me
+                                </label>
+                            </div>
+
+                            <motion.div layout className="pt-4">
+                                <Button type="submit" className="w-full" isLoading={isPending}>
+                                    {mode === 'login' ? 'Sign In' : 'Create Account'}
+                                </Button>
+                            </motion.div>
+                        </form>
+                    )}
                 </motion.div>
             </Card>
         </div>
