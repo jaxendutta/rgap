@@ -86,7 +86,8 @@ export const Tag: React.FC<TagProps> = ({
             )}
             onClick={onClick}
         >
-            {Icon && (
+            <div className={`flex flex-row gap-1 items-center justify-center ${padding[size]} ${!innerText ? "flex-1" : ""} ${innerText || onClick ? "pr-0" : ""}`}>
+                {Icon && (
                 <Icon
                     className={cn(
                         iconSizes[size],
@@ -96,10 +97,8 @@ export const Tag: React.FC<TagProps> = ({
                     {...iconProps}
                 />
             )}
-
-            <span className={`${padding[size]} ${!innerText ? "flex-1" : ""} ${innerText ? "pr-0" : ""}`}>
                 {text}
-            </span>
+            </div>
             {innerText && <span className={`flex-1 bg-white w-full m-1 px-1.75 py-1 rounded-3xl 
                 ${variant === 'outline' ? 'border border-gray-300' : ''}`}>
                 {innerText}
@@ -108,8 +107,8 @@ export const Tag: React.FC<TagProps> = ({
                 <LuArrowRight
                     className={cn(
                         iconSizes[size],
-                        "text-blue-400 flex-shrink-0 transition-transform duration-300 ease-in-out",
-                        "group-hover:text-blue-600"
+                        "flex text-blue-400 flex-shrink-0 transition-transform duration-300 ease-in-out",
+                        "group-hover:text-blue-600 mr-1"
                     )}
                 />
             )}

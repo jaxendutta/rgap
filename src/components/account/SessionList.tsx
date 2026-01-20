@@ -50,7 +50,7 @@ export default function SessionList({ sessions, currentSessionId }: { sessions: 
 
     return (
         <Card className="p-0 overflow-hidden border border-gray-200 shadow-sm overflow-x-auto">
-            <table className="min-w-full text-sm text-left">
+            <table className="min-w-full text-sm text-left whitespace-nowrap">
                 <thead className="text-gray-500 border-b border-gray-200">
                     <tr>
                         <th className="py-3 px-4 font-medium">Device</th>
@@ -74,7 +74,7 @@ export default function SessionList({ sessions, currentSessionId }: { sessions: 
                                         </div>
                                         <div>
                                             <p className="font-medium text-gray-900">{device.name}</p>
-                                            <p className="text-xs text-gray-500 max-w-[300px]" title={sess.user_agent || ''}>
+                                            <p className="text-xs text-gray-500 max-w-[300px] whitespace-normal" title={sess.user_agent || ''}>
                                                 {sess.user_agent || 'Unknown'}
                                             </p>
                                         </div>

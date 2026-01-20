@@ -26,6 +26,7 @@ import {
     LuGraduationCap,
     LuLandmark,
     LuBookOpen,
+    LuBook,
 } from "react-icons/lu";
 import { GrantAmendment, GrantWithDetails } from "@/types/database";
 import { Card } from "@/components/ui/Card";
@@ -120,12 +121,12 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
                         className="group w-full lg:w-auto"
                     />
                     <Tag
-                        icon={LuBookmark}
+                        icon={LuBookOpen}
                         size="sm"
                         variant="outline"
                         className={cn(
                             !hasValue(grant.agreement_title_en) && "text-gray-400 italic",
-                            "w-full lg:w-min"
+                            "min-w-0 max-w-full"
                         )}
                         text={grant.agreement_title_en || "No Agreement Title Record Found"}
                     />
