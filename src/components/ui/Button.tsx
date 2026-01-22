@@ -57,10 +57,11 @@ export const Button = ({
     return (
         <button
             className={cn(
-                "flex items-center justify-center font-medium gap-2 cursor-pointer shadow-xs",
+                "flex items-center justify-center font-medium gap-2 cursor-pointer",
                 "transition-colors duration-300 ease-in-out",
                 pill ? "rounded-full" : "rounded-md",
                 variants[variant],
+                variant != "ghost" && "shadow-xs hover:shadow-md",
                 sizes[size],
                 (disabled || isLoading) && "opacity-50 cursor-not-allowed",
                 className

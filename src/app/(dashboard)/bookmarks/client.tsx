@@ -3,12 +3,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { LuSearch, LuFileText, LuGraduationCap, LuUniversity } from "react-icons/lu";
+import { LuSearch, LuFileText, LuGraduationCap, LuUniversity, LuBookmarkPlus } from "react-icons/lu";
 import Tabs, { TabContent, TabItem } from "@/components/ui/Tabs";
 import GrantCard from "@/components/grants/GrantCard";
-import EntityCard from "@/components/entity/EntityCard";
+import BookmarkedEntityCard from "@/components/bookmarks/BookmarkedEntityCard";
 import BookmarkButton from "@/components/bookmarks/BookmarkButton";
+import NoteEditor from "@/components/bookmarks/NoteEditor";
 import { Button } from "@/components/ui/Button";
+import { updateGrantNote, updateSearchNote } from "@/app/actions/bookmarks";
 
 interface BookmarksClientProps {
     grants: any[];
@@ -33,91 +35,153 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                 tabs={tabItems}
                 activeTab={activeTab}
                 onChange={setActiveTab}
-                variant="underline"
+                variant="pills"
                 className="mb-6"
                 showCounts={true}
+                fullWidth
             />
 
-            <TabContent activeTab={activeTab}>
-                {/* Grants Tab */}
-                {activeTab === "grants" && (
-                    <div className="space-y-4">
-                        {grants.length > 0 ? (
-                            grants.map((grant) => (
-                                <GrantCard
-                                    key={grant.grant_id}
-                                    {...grant}
-                                    isBookmarked={true}
-                                />
-                            ))
-                        ) : <EmptyTabState type="Grants" />}
-                    </div>
-                )}
-
-                {/* Recipients Tab */}
-                {activeTab === "recipients" && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {recipients.length > 0 ? (
-                            recipients.map((recipient) => (
-                                <EntityCard
-                                    key={recipient.recipient_id}
-                                    entityType="recipient"
-                                    entity={{ ...recipient, is_bookmarked: true }}
-                                />
-                            ))
-                        ) : <EmptyTabState type="Recipients" />}
-                    </div>
-                )}
-
-                {/* Institutes Tab */}
-                {activeTab === "institutes" && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {institutes.length > 0 ? (
-                            institutes.map((institute) => (
-                                <EntityCard
-                                    key={institute.institute_id}
-                                    entityType="institute"
-                                    entity={{ ...institute, is_bookmarked: true }}
-                                />
-                            ))
-                        ) : <EmptyTabState type="Institutes" />}
-                    </div>
-                )}
-
-                {/* Searches Tab */}
-                {activeTab === "searches" && (
-                    <div className="space-y-4">
-                        {searches.length > 0 ? (
-                            searches.map((search) => (
-                                <div key={search.id} className="bg-white p-4 rounded-lg border border-gray-200 flex justify-between items-center shadow-sm">
-                                    <div>
-                                        <div className="font-medium text-gray-900">
-                                            "{search.search_query}"
+            <div className="min-h-[400px]">
+                <TabContent activeTab={activeTab}>
+                    {/* Grants Tab */}
+                    {activeTab === "grants" && (
+                        <div className="space-y-6">
+                            {grants.length > 0 ? (
+                                grants.map((grant) => (
+                                    <div key={grant.grant_id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                        <div className="border-b border-gray-100">
+                                            {/* Render standard grant card, but remove border/shadow to nest it cleanly */}
+                                            <div className="[&>div]:border-0 [&>div]:shadow-none">
+                                                <GrantCard {...grant} isBookmarked={true} />
+                                            </div>
                                         </div>
-                                        <div className="text-sm text-gray-500 mt-1">
-                                            {search.result_count ? `${search.result_count} results` : 'Search query'} • {new Date(search.searched_at).toLocaleDateString()}
+                                        <div className="p-4 bg-gray-50/50">
+                                            <NoteEditor
+                                                initialNote={grant.notes}
+                                                onSave={(note) => updateGrantNote(grant.grant_id, note)}
+                                                placeholder="Add notes about this grant..."
+                                            />
                                         </div>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <Link href={`/search?q=${encodeURIComponent(search.search_query)}`}>
-                                            <Button size="sm" variant="outline"><LuSearch className="w-4 h-4 mr-2" /> Run</Button>
-                                        </Link>
-                                        <BookmarkButton entityType="search" entityId={search.id} isBookmarked={true} showLabel={false} />
+                                ))
+                            ) : (
+                                <EmptyTabState
+                                    type="Grants"
+                                    message="You haven't bookmarked any grants yet."
+                                    actionLabel="Explore Grants"
+                                    actionLink="/search"
+                                />
+                            )}
+                        </div>
+                    )}
+
+                    {/* Recipients Tab */}
+                    {activeTab === "recipients" && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {recipients.length > 0 ? (
+                                recipients.map((recipient) => (
+                                    <BookmarkedEntityCard
+                                        key={recipient.recipient_id}
+                                        data={recipient}
+                                        type="recipient"
+                                    />
+                                ))
+                            ) : (
+                                <EmptyTabState
+                                    type="Recipients"
+                                    message="No recipients saved."
+                                    actionLabel="Find Recipients"
+                                    actionLink="/recipients"
+                                    className="col-span-full"
+                                />
+                            )}
+                        </div>
+                    )}
+
+                    {/* Institutes Tab */}
+                    {activeTab === "institutes" && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {institutes.length > 0 ? (
+                                institutes.map((institute) => (
+                                    <BookmarkedEntityCard
+                                        key={institute.institute_id}
+                                        data={institute}
+                                        type="institute"
+                                    />
+                                ))
+                            ) : (
+                                <EmptyTabState
+                                    type="Institutes"
+                                    message="No institutes saved."
+                                    actionLabel="Browse Institutes"
+                                    actionLink="/institutes"
+                                    className="col-span-full"
+                                />
+                            )}
+                        </div>
+                    )}
+
+                    {/* Searches Tab */}
+                    {activeTab === "searches" && (
+                        <div className="space-y-4">
+                            {searches.length > 0 ? (
+                                searches.map((search) => (
+                                    <div key={search.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                <div className="font-medium text-lg text-gray-900">
+                                                    "{search.search_query}"
+                                                </div>
+                                                <div className="text-sm text-gray-500 mt-1">
+                                                    {search.result_count ? `${search.result_count.toLocaleString()} results` : 'Search query'} • {new Date(search.searched_at).toLocaleDateString()}
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Link href={`/search?q=${encodeURIComponent(search.search_query)}`}>
+                                                    <Button size="sm" variant="outline"><LuSearch className="w-4 h-4 mr-2" /> Run</Button>
+                                                </Link>
+                                                <BookmarkButton entityType="search" entityId={search.id} isBookmarked={true} showLabel={false} />
+                                            </div>
+                                        </div>
+                                        <div className="pt-3 border-t border-gray-100">
+                                            <NoteEditor
+                                                initialNote={search.notes}
+                                                onSave={(note) => updateSearchNote(search.id, note)}
+                                                placeholder="Notes about this search query..."
+                                                className="bg-transparent"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            ))
-                        ) : <EmptyTabState type="Searches" />}
-                    </div>
-                )}
-            </TabContent>
+                                ))
+                            ) : (
+                                <EmptyTabState
+                                    type="Searches"
+                                    message="No saved searches."
+                                    actionLabel="View Search History"
+                                    actionLink="/account?tab=history"
+                                />
+                            )}
+                        </div>
+                    )}
+                </TabContent>
+            </div>
         </div>
     );
 }
 
-function EmptyTabState({ type }: { type: string }) {
+function EmptyTabState({ type, message, actionLabel, actionLink, className }: { type: string, message: string, actionLabel: string, actionLink: string, className?: string }) {
     return (
-        <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50">
-            <p className="text-gray-500">No saved {type.toLowerCase()} found.</p>
+        <div className={`flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50 ${className}`}>
+            <div className="bg-white p-4 rounded-full mb-4 shadow-sm">
+                <LuBookmarkPlus className="h-8 w-8 text-gray-300" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900">{type} Collection Empty</h3>
+            <p className="text-gray-500 max-w-sm mt-2 mb-6">
+                {message}
+            </p>
+            <Link href={actionLink}>
+                <Button>{actionLabel}</Button>
+            </Link>
         </div>
     );
 }

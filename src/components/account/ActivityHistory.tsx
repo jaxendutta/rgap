@@ -55,11 +55,11 @@ export default function ActivityHistory({ logs }: { logs: AuditLog[] }) {
             case 'EMAIL_CHANGE': return "Changed email";
             case 'NAME_CHANGE': return "Renamed account";
             case 'BOOKMARK_GRANT': return "Bookmarked Grant";
-            case 'REMOVE_BOOKMARK_GRANT': return "Removed Grant Bookmark";
+            case 'REMOVE_BOOKMARK_GRANT': return "Unbookmarked Grant";
             case 'BOOKMARK_RECIPIENT': return "Bookmarked Recipient";
-            case 'REMOVE_BOOKMARK_RECIPIENT': return "Removed Recipient Bookmark";
+            case 'REMOVE_BOOKMARK_RECIPIENT': return "Unbookmarked Recipient";
             case 'BOOKMARK_INSTITUTE': return "Bookmarked Institute";
-            case 'REMOVE_BOOKMARK_INSTITUTE': return "Removed Institute Bookmark";
+            case 'REMOVE_BOOKMARK_INSTITUTE': return "Unbookmarked Institute";
             default: return log.event_type.replace(/_/g, ' ').toLowerCase();
         }
     };

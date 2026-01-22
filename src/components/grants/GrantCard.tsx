@@ -107,6 +107,10 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
                             size="md"
                             showLabel={false}
                             variant="ghost"
+                            className={cn(
+                                "p-2 transition-all duration-300",
+                                isBookmarked ? "ml-2" : "ml-0"
+                            )}
                         />
                     </div>
                 </div>

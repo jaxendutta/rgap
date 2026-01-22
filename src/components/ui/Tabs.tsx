@@ -54,15 +54,21 @@ const Tabs: React.FC<TabsProps> = ({
 
     // Size-specific styles with vertical padding
     const sizeClasses = {
-        sm: "text-xs md:text-sm py-1 md:py-1.5 px-2 md:px-3",
-        md: "text-sm py-1.5 px-4 gap-1.75",
-        lg: "text-base md:text-lg py-2 px-5",
+        sm: "text-xs md:text-sm",
+        md: "text-sm",
+        lg: "text-base md:text-lg",
+    };
+
+    const paddingClasses = {
+        sm: " py-1 md:py-1.5 px-2 md:px-3",
+        md: "py-1.5 px-4 gap-1.75",
+        lg: "py-2 px-5",
     };
 
     const iconSizeClasses = {
-        sm: "size-2 md:size-4",
-        md: "size-2 md:size-4",
-        lg: "size-5 md:size-5",
+        sm: "size-2.5 md:size-4",
+        md: "size-3 md:size-4",
+        lg: "size-4 md:size-5",
     };
 
     // Variant-specific styles
@@ -175,6 +181,7 @@ const Tabs: React.FC<TabsProps> = ({
                             "flex items-center justify-center font-medium transition-colors relative gap-1 md:gap-2",
                             manyTabs && "flex-col md:flex-row",
                             sizeClasses[size],
+                            paddingClasses[size],
                             getVariantClasses(isActive),
                             fullWidth && "w-full",
                             tab.disabled && "opacity-50 cursor-not-allowed",
@@ -186,20 +193,20 @@ const Tabs: React.FC<TabsProps> = ({
                             <Icon
                                 className={cn(
                                     iconSizeClasses[size],
-                                    manyTabs && "md:size-4 lg:size-5"
+                                    manyTabs && "size-4 md:size-4 lg:size-5"
                                 )}
                             />
                         )}
-                        <span>{tab.label}</span>
+                        <span className={manyTabs ? "text-[10px] md:text-sm" : sizeClasses[size]}>{tab.label}</span>
                         {showCounts && tab.count !== undefined && (
                             <span
                                 className={cn(
-                                    "ml-2 rounded-full px-2 py-0.5 text-xs",
+                                    "rounded-full px-2 py-0.5 text-xs",
                                     isActive
                                         ? variant === "pills"
-                                            ? "bg-white bg-opacity-20 text-white"
+                                            ? "bg-white/80 text-gray-900"
                                             : "bg-blue-100 text-blue-700"
-                                        : "bg-gray-100 text-gray-600"
+                                        : "bg-gray-200 text-gray-600"
                                 )}
                             >
                                 {tab.count}

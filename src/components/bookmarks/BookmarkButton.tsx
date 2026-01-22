@@ -8,6 +8,7 @@ import { LuBookmark, LuBookmarkCheck } from "react-icons/lu";
 import { useState } from "react";
 import { Button, variants } from "@/components/ui/Button";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import {
     toggleGrantBookmark,
     toggleRecipientBookmark,
@@ -22,6 +23,7 @@ interface BookmarkButtonProps {
     size?: "sm" | "md" | "lg";
     showLabel?: boolean;
     variant?: keyof typeof variants;
+    className?: string;
 }
 
 export function BookmarkButton({
@@ -31,6 +33,7 @@ export function BookmarkButton({
     size = "sm",
     showLabel = true,
     variant = "outline",
+    className,
 }: BookmarkButtonProps) {
     const { user } = useAuth();
     const { notify } = useNotify();
@@ -93,12 +96,16 @@ export function BookmarkButton({
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggle(); }}
             disabled={loading}
             title={bookmarked ? "Remove bookmark" : "Add bookmark"}
-            className={variant === "outline" ? "bg-white" : ""}
+            className={cn(
+                bookmarked ? "bg-blue-600 hover:bg-blue-500" :
+                    variant === "outline" ? "bg-white" : "",
+                className
+            )}
         >
             {bookmarked ? (
                 <>
-                    <LuBookmarkCheck className="w-4 h-4 text-blue-600" />
-                    {showLabel && <span className="hidden md:inline-flex">Bookmarked</span>}
+                    <LuBookmarkCheck className="w-4 h-4 text-blue-50" />
+                    {showLabel && <span className="hidden md:inline-flex text-blue-50">Bookmarked</span>}
                 </>
             ) : (
                 <>

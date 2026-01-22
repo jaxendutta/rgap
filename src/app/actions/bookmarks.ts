@@ -144,6 +144,75 @@ export async function toggleSearchBookmark(searchHistoryId: number) {
     }
 }
 
+// --- Update Note Actions ---
+export async function updateGrantNote(grantId: number, note: string) {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: 'Must be logged in' };
+
+    try {
+        await db.query(
+            'UPDATE bookmarked_grants SET notes = $1 WHERE grant_id = $2 AND user_id = $3',
+            [note, grantId, user.id]
+        );
+        revalidatePath('/bookmarks');
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating grant note:', error);
+        return { success: false, error: 'Failed to update note' };
+    }
+}
+
+export async function updateRecipientNote(recipientId: number, note: string) {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: 'Must be logged in' };
+
+    try {
+        await db.query(
+            'UPDATE bookmarked_recipients SET notes = $1 WHERE recipient_id = $2 AND user_id = $3',
+            [note, recipientId, user.id]
+        );
+        revalidatePath('/bookmarks');
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating recipient note:', error);
+        return { success: false, error: 'Failed to update note' };
+    }
+}
+
+export async function updateInstituteNote(instituteId: number, note: string) {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: 'Must be logged in' };
+
+    try {
+        await db.query(
+            'UPDATE bookmarked_institutes SET notes = $1 WHERE institute_id = $2 AND user_id = $3',
+            [note, instituteId, user.id]
+        );
+        revalidatePath('/bookmarks');
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating institute note:', error);
+        return { success: false, error: 'Failed to update note' };
+    }
+}
+
+export async function updateSearchNote(searchHistoryId: number, note: string) {
+    const user = await getCurrentUser();
+    if (!user) return { success: false, error: 'Must be logged in' };
+
+    try {
+        await db.query(
+            'UPDATE bookmarked_searches SET notes = $1 WHERE search_history_id = $2 AND user_id = $3',
+            [note, searchHistoryId, user.id]
+        );
+        revalidatePath('/bookmarks');
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating search note:', error);
+        return { success: false, error: 'Failed to update note' };
+    }
+}
+
 // --- Fetch Actions (For Bookmarks Page) ---
 
 export async function getUserBookmarks() {
