@@ -2,23 +2,22 @@
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
-import { InstituteDetailClient } from './client';
+import { InstituteDetailClient } from '@/app/(dashboard)/institutes/[id]/client';
 import { InstituteWithStats, RecipientWithStats, GrantWithDetails } from '@/types/database';
+import { getSortOptions } from '@/lib/utils';
+
+const sortOptions = getSortOptions('recipient', 'institute');
 
 interface PageProps {
     params: Promise<{ id: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-async function getInstituteData(id: number, userId?: number) {
-    // 1. GET INSTITUTE WITH STATS (use recipient_count not recipients_count!)
-    const instituteResult = await db.query<InstituteWithStats>(`
+async function getInstituteDetails(id: number, userId?: number) {
+    const query = `
         SELECT 
             i.institute_id,
-            i.name,
-            i.city,
-            i.province,
-            i.country,
-            i.postal_code,
+            i.name, i.city, i.province, i.country, i.postal_code,
             COUNT(DISTINCT r.recipient_id)::int as recipient_count,
             COUNT(DISTINCT g.grant_id)::int as grant_count,
             COALESCE(SUM(g.agreement_value::numeric), 0) as total_funding,
@@ -30,7 +29,7 @@ async function getInstituteData(id: number, userId?: number) {
                 EXISTS(
                     SELECT 1 FROM bookmarked_institutes bi 
                     WHERE bi.institute_id = i.institute_id 
-                    AND bi.user_id = $2
+                    AND bi.user_id = $2::int
                 ) as is_bookmarked
             ` : 'false as is_bookmarked'}
         FROM institutes i
@@ -38,27 +37,30 @@ async function getInstituteData(id: number, userId?: number) {
         LEFT JOIN grants g ON r.recipient_id = g.recipient_id
         WHERE i.institute_id = $1
         GROUP BY i.institute_id
-    `, userId ? [id, userId] : [id]);
+    `;
+    const params = userId ? [id, userId] : [id];
+    const result = await db.query<InstituteWithStats>(query, params);
+    return result.rows[0] || null;
+}
 
-    if (instituteResult.rows.length === 0) {
-        return null;
-    }
+async function getInstituteRecipients(
+    id: number,
+    userId: number | undefined,
+    page: number,
+    pageSize: number,
+    sortField: string = sortOptions[0].field,
+    sortDir: 'asc' | 'desc' = 'desc'
+) {
+    const offset = (page - 1) * pageSize;
 
-    const institute = instituteResult.rows[0];
+    const safeSortField = sortOptions.find(option => option.field === sortField) ? sortField : sortOptions[0].field;
+    const safeSortDir = sortDir === 'asc' ? 'ASC' : 'DESC';
 
-    // 2. GET ALL RECIPIENTS
-    const allRecipientsResult = await db.query<RecipientWithStats>(`
+    const query = `
         SELECT 
-            r.recipient_id,
-            r.legal_name,
-            r.type,
-            r.business_number,
-            r.operating_name,
+            r.recipient_id, r.legal_name, r.type, r.business_number, r.operating_name,
             r.institute_id,
-            i.name as research_organization_name,
-            i.city,
-            i.province,
-            i.country,
+            i.name as research_organization_name, i.city, i.province, i.country,
             COUNT(DISTINCT g.grant_id)::int as grant_count,
             COALESCE(SUM(g.agreement_value::numeric), 0) as total_funding,
             COALESCE(AVG(g.agreement_value::numeric), 0) as avg_funding,
@@ -68,7 +70,7 @@ async function getInstituteData(id: number, userId?: number) {
                 EXISTS(
                     SELECT 1 FROM bookmarked_recipients br 
                     WHERE br.recipient_id = r.recipient_id 
-                    AND br.user_id = $3
+                    AND br.user_id = $4::int
                 ) as is_bookmarked
             ` : 'false as is_bookmarked'}
         FROM recipients r
@@ -76,60 +78,42 @@ async function getInstituteData(id: number, userId?: number) {
         LEFT JOIN grants g ON r.recipient_id = g.recipient_id
         WHERE r.institute_id = $1
         GROUP BY r.recipient_id, i.name, i.city, i.province, i.country
-        ORDER BY total_funding DESC NULLS LAST
-    `, userId ? [id, 1000, userId] : [id]);
+        ORDER BY ${safeSortField} ${safeSortDir} NULLS LAST
+        LIMIT $2 OFFSET $3
+    `;
+    const params = userId ? [id, pageSize, offset, userId] : [id, pageSize, offset];
+    const result = await db.query<RecipientWithStats>(query, params);
+    return result.rows;
+}
 
-    // 3. GET ALL GRANTS - Return EVERYTHING for GrantWithDetails intersection type!
-    const allGrantsResult = await db.query<GrantWithDetails>(`
+const ALLOWED_GRANT_SORTS = ['agreement_value', 'agreement_start_date'];
+
+async function getInstituteGrants(
+    id: number,
+    userId: number | undefined,
+    page: number,
+    pageSize: number,
+    sortField: string = 'agreement_start_date',
+    sortDir: 'asc' | 'desc' = 'desc'
+) {
+    const offset = (page - 1) * pageSize;
+
+    const safeSortField = ALLOWED_GRANT_SORTS.includes(sortField) ? sortField : 'agreement_start_date';
+    const orderBy = "g." + safeSortField;
+    const safeSortDir = sortDir === 'asc' ? 'ASC' : 'DESC';
+
+    const query = `
         SELECT 
-            -- ALL Grant fields
-            g.grant_id,
-            g.ref_number,
-            g.latest_amendment_number,
-            g.amendment_date,
-            g.agreement_number,
-            g.agreement_value,
-            g.foreign_currency_type,
-            g.foreign_currency_value,
-            g.agreement_start_date,
-            g.agreement_end_date,
-            g.agreement_title_en,
-            g.description_en,
-            g.expected_results_en,
-            g.additional_information_en,
-            g.org,
-            g.recipient_id,
-            g.prog_id,
-            g.amendments_history,
-            
-            -- ALL Recipient fields
-            r.type,
-            r.business_number,
-            r.legal_name,
-            r.operating_name,
-            
-            -- ALL Institute fields (from i)
-            i.institute_id,
-            i.name,
-            i.city,
-            i.province,
-            i.country,
-            i.postal_code,
-            
-            -- ALL Program fields
-            p.prog_title_en,
-            p.prog_purpose_en,
-            
-            -- ALL Organization fields
-            o.org_fr,
-            o.org_title_en,
-            o.org_title_fr,
-            
+            g.*,
+            r.type, r.business_number, r.legal_name, r.operating_name,
+            i.institute_id, i.name, i.city, i.province, i.country, i.postal_code,
+            p.prog_title_en, p.prog_purpose_en,
+            o.org_fr, o.org_title_en, o.org_title_fr,
             ${userId ? `
                 EXISTS(
                     SELECT 1 FROM bookmarked_grants bg 
                     WHERE bg.grant_id = g.grant_id 
-                    AND bg.user_id = $3
+                    AND bg.user_id = $4::int
                 ) as is_bookmarked
             ` : 'false as is_bookmarked'}
         FROM grants g
@@ -138,37 +122,73 @@ async function getInstituteData(id: number, userId?: number) {
         LEFT JOIN programs p ON g.prog_id = p.prog_id
         JOIN organizations o ON g.org = o.org
         WHERE i.institute_id = $1
-        ORDER BY g.agreement_start_date DESC NULLS LAST
-    `, userId ? [id, 1000, userId] : [id]);
-
-    return {
-        institute,
-        allRecipients: allRecipientsResult.rows,
-        allGrants: allGrantsResult.rows,
-    };
+        ORDER BY ${orderBy} ${safeSortDir} NULLS LAST
+        LIMIT $2 OFFSET $3
+    `;
+    const params = userId ? [id, pageSize, offset, userId] : [id, pageSize, offset];
+    const result = await db.query<GrantWithDetails>(query, params);
+    return result.rows;
 }
 
-export default async function InstitutePage({ params }: PageProps) {
-    const resolvedParams = await params;
-    const id = parseInt(resolvedParams.id);
+async function getInstituteAnalyticsData(id: number) {
+    // FIXED: Added g.agreement_end_date here as well
+    const query = `
+        SELECT 
+            g.grant_id,
+            g.agreement_value,
+            g.agreement_start_date,
+            g.agreement_end_date,
+            g.recipient_id,
+            p.prog_title_en,
+            o.org_title_en
+        FROM grants g
+        JOIN recipients r ON g.recipient_id = r.recipient_id
+        LEFT JOIN programs p ON g.prog_id = p.prog_id
+        JOIN organizations o ON g.org = o.org
+        WHERE r.institute_id = $1
+        ORDER BY g.agreement_start_date ASC
+    `;
+    const result = await db.query<GrantWithDetails>(query, [id]);
+    return result.rows;
+}
 
-    if (isNaN(id)) {
-        notFound();
-    }
+export default async function InstitutePage({ params, searchParams }: PageProps) {
+    const resolvedParams = await params;
+    const resolvedSearchParams = await searchParams;
+    const id = parseInt(resolvedParams.id);
+    const page = parseInt((resolvedSearchParams.page as string) || '1');
+    const tab = (resolvedSearchParams.tab as string) || 'recipients';
+    const sort = (resolvedSearchParams.sort as string) || '';
+    const dir = (resolvedSearchParams.dir as 'asc' | 'desc') || 'desc';
+    const limit = 15;
+
+    if (isNaN(id)) notFound();
 
     const user = await getCurrentUser();
-    const data = await getInstituteData(id, user?.id);
+    const institute = await getInstituteDetails(id, user?.id);
 
-    if (!data) {
-        notFound();
+    if (!institute) notFound();
+
+    let recipients: RecipientWithStats[] = [];
+    let grants: GrantWithDetails[] = [];
+
+    if (tab === 'recipients') {
+        recipients = await getInstituteRecipients(id, user?.id, page, limit, sort || 'total_funding', dir);
+    } else if (tab === 'grants') {
+        grants = await getInstituteGrants(id, user?.id, page, limit, sort || 'agreement_start_date', dir);
+    } else if (tab === 'analytics') {
+        grants = await getInstituteAnalyticsData(id);
     }
 
     return (
         <InstituteDetailClient
-            institute={data.institute}
-            allRecipients={data.allRecipients}
-            allGrants={data.allGrants}
+            institute={institute}
+            recipients={recipients}
+            grants={grants}
             userId={user?.id}
+            page={page}
+            pageSize={limit}
+            activeTab={tab}
         />
     );
 }
@@ -176,22 +196,11 @@ export default async function InstitutePage({ params }: PageProps) {
 export async function generateMetadata({ params }: PageProps) {
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
-
-    if (isNaN(id)) {
-        return { title: 'Institute Not Found | RGAP' };
-    }
-
-    const result = await db.query<InstituteWithStats>(
-        'SELECT name FROM institutes WHERE institute_id = $1',
-        [id]
-    );
-
-    if (result.rows.length === 0) {
-        return { title: 'Institute Not Found | RGAP' };
-    }
-
+    if (isNaN(id)) return { title: 'Institute Not Found | RGAP' };
+    const result = await db.query('SELECT name FROM institutes WHERE institute_id = $1', [id]);
+    if (result.rows.length === 0) return { title: 'Institute Not Found | RGAP' };
     return {
         title: `${result.rows[0].name} | RGAP`,
-        description: `View detailed information about ${result.rows[0].name} including funding statistics, recipients, and grants.`
+        description: `View information about ${result.rows[0].name}.`
     };
 }

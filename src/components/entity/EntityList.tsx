@@ -57,7 +57,6 @@ export interface EntityListProps<T> {
     totalCount: number;
     children: React.ReactNode;
     sortOptions?: SortOption[];
-    // RESTORED: Visualization Props
     showVisualization?: boolean;
     visualizationData?: any[];
     viewContext?: ViewContext;

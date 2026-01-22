@@ -2,7 +2,6 @@
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
 import EntitiesPage from '@/components/entity/EntitiesPage';
-import { SortOption } from '@/components/entity/EntityList';
 import { LuUsers } from 'react-icons/lu';
 import { RecipientWithStats } from '@/types/database';
 import { Metadata } from 'next';
@@ -94,7 +93,6 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
             icon={LuUsers}
             entities={recipients}
             totalItems={totalItems}
-            totalPages={totalPages}
             entityType="recipient"
             emptyMessage="No recipients found"
             showVisualization={false}

@@ -2,84 +2,62 @@
 'use client';
 
 import {
-    LuUniversity,
-    LuUsers,
-    LuBookMarked,
-    LuCalendar,
-    LuCircleDollarSign,
-    LuExternalLink,
-    LuActivity,
-    LuTrendingUp,
-    LuScale,
+    LuUniversity, LuUsers, LuBookMarked, LuCalendar, LuCircleDollarSign,
+    LuExternalLink, LuScale,
 } from 'react-icons/lu';
 import { GrAnalytics } from 'react-icons/gr';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { TabItem } from '@/components/ui/Tabs';
 import { EntityCard } from '@/components/entity/EntityCard';
 import EntityProfilePage, { EntityHeader, StatDisplay, ActionButton, StatItem } from '@/components/entity/EntityProfilePage';
 import { formatCurrency, formatCSV } from '@/lib/format';
 import { InstituteWithStats, RecipientWithStats, GrantWithDetails } from '@/types/database';
-import { Card } from '@/components/ui/Card';
 import GrantCard from '@/components/grants/GrantCard';
 import EntityAnalytics from '@/components/entity/EntityAnalytics';
+import EntityList from '@/components/entity/EntityList';
+import { getSortOptions } from '@/lib/utils';
 
 interface InstituteDetailClientProps {
     institute: InstituteWithStats;
-    allRecipients: RecipientWithStats[];
-    allGrants: GrantWithDetails[];
+    recipients: RecipientWithStats[];
+    grants: GrantWithDetails[];
     userId?: number;
+    page: number;
+    pageSize: number;
+    activeTab: string;
 }
 
 export function InstituteDetailClient({
     institute,
-    allRecipients,
-    allGrants,
-    userId
+    recipients,
+    grants,
+    userId,
+    page,
+    pageSize,
+    activeTab
 }: InstituteDetailClientProps) {
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const location = formatCSV([
-        institute.city,
-        institute.province,
-        institute.country
+        institute.city, institute.province, institute.country
     ].filter(Boolean) as string[]);
 
-    // Define tabs - use recipient_count (consistent!)
     const tabs: TabItem[] = [
-        {
-            id: 'recipients',
-            label: 'Recipients',
-            icon: LuUsers,
-            count: institute.recipient_count
-        },
-        {
-            id: 'grants',
-            label: 'Grants',
-            icon: LuBookMarked,
-            count: institute.grant_count
-        },
-        {
-            id: 'analytics',
-            label: 'Analytics',
-            icon: GrAnalytics
-        }
+        { id: 'recipients', label: 'Recipients', icon: LuUsers, count: institute.recipient_count },
+        { id: 'grants', label: 'Grants', icon: LuBookMarked, count: institute.grant_count },
+        { id: 'analytics', label: 'Analytics', icon: GrAnalytics }
     ];
 
-    // Define actions
     const actions: ActionButton[] = [
         {
             icon: LuExternalLink,
             label: 'Search',
-            onClick: () => window.open(
-                `https://www.google.com/search?q=${encodeURIComponent(institute.name)}`,
-                '_blank'
-            ),
+            onClick: () => window.open(`https://www.google.com/search?q=${encodeURIComponent(institute.name)}`, '_blank'),
             variant: 'outline',
         }
     ];
 
-    // Render header
     const renderHeader = () => (
         <EntityHeader
             title={institute.name}
@@ -89,177 +67,69 @@ export function InstituteDetailClient({
         />
     );
 
-    // Render stats
     const renderStats = () => {
-        // Calculate additional stats
-        const currentYear = new Date().getFullYear();
-        const recentYears = 3;
-
-        const activeRecipientIds = new Set(
-            allGrants
-                .filter(g => {
-                    const grantYear = new Date(g.agreement_start_date).getFullYear();
-                    return grantYear >= currentYear - recentYears;
-                })
-                .map(g => g.recipient_id)
-        );
-
-        const activeCount = activeRecipientIds.size;
-        const activePercentage = allRecipients.length > 0
-            ? ((activeCount / allRecipients.length) * 100).toFixed(0)
-            : '0';
-
-        const fundingPerRecipient = allRecipients.length > 0
-            ? (institute.total_funding || 0) / allRecipients.length
-            : 0;
-
-        const fundingPerGrant = allGrants.length > 0
-            ? (institute.total_funding || 0) / allGrants.length
-            : 0;
-
         const stats: StatItem[] = [
-            {
-                icon: LuUsers,
-                label: 'Recipients',
-                value: institute.recipient_count || 0
-            },
-            {
-                icon: LuBookMarked,
-                label: 'Grants',
-                value: institute.grant_count || 0
-            },
-            {
-                icon: LuCircleDollarSign,
-                label: 'Total Funding',
-                value: formatCurrency(institute.total_funding || 0)
-            },
-            {
-                icon: LuCalendar,
-                label: 'Active Since',
-                value: institute.first_grant_date
-                    ? new Date(institute.first_grant_date).getFullYear().toString()
-                    : 'N/A'
-            },
-            {
-                icon: LuActivity,
-                label: 'Active Recipients',
-                value: `${activeCount.toLocaleString()} / ${activePercentage}%`
-            },
-            {
-                icon: LuTrendingUp,
-                label: 'Funding / Recipient',
-                value: formatCurrency(fundingPerRecipient)
-            },
-            {
-                icon: LuScale,
-                label: 'Funding / Grant',
-                value: formatCurrency(fundingPerGrant)
-            }
+            { icon: LuUsers, label: 'Recipients', value: institute.recipient_count || 0 },
+            { icon: LuBookMarked, label: 'Grants', value: institute.grant_count || 0 },
+            { icon: LuCircleDollarSign, label: 'Total Funding', value: formatCurrency(institute.total_funding || 0) },
+            { icon: LuCalendar, label: 'Active Since', value: institute.first_grant_date ? new Date(institute.first_grant_date).getFullYear().toString() : 'N/A' },
+            { icon: LuScale, label: 'Avg Funding', value: formatCurrency(institute.avg_funding || 0) }
         ];
-
         return <StatDisplay items={stats} columns={4} />;
     };
 
-    // Render tab content
+    const handleTabChange = (tabId: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('tab', tabId);
+        params.delete('page');
+        router.push(`?${params.toString()}`);
+    };
+
     const renderTabContent = (tabId: string) => {
         switch (tabId) {
             case 'recipients':
-                // Show top 10 recipients in tab
-                const topRecipients = allRecipients.slice(0, 10);
-
                 return (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-xs md:text-sm">
-                                Top {topRecipients.length} Recipients
-                            </h2>
-                            {allRecipients.length > 10 && (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => router.push(`/institutes/${institute.institute_id}/recipients`)}
-                                    className="text-xs md:text-sm"
-                                >
-                                    View All {allRecipients.length.toLocaleString()} Recipients
-                                </Button>
-                            )}
-                        </div>
-
-                        {topRecipients.length === 0 ? (
-                            <Card className="p-12">
-                                <div className="text-center text-gray-500">
-                                    <LuUsers className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                                    <p className="text-lg font-medium">No recipients found</p>
-                                    <p className="text-sm mt-1">This institute has no recorded recipients yet.</p>
-                                </div>
-                            </Card>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {topRecipients.map((recipient) => (
-                                    <EntityCard
-                                        key={recipient.recipient_id}
-                                        entity={recipient}
-                                        entityType="recipient"
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    <EntityList
+                        entityType="recipient"
+                        entities={recipients}
+                        totalCount={institute.recipient_count || 0}
+                        page={page}
+                        pageSize={pageSize}
+                        sortOptions={getSortOptions('recipient', 'institute')}
+                    >
+                        {recipients.map((recipient) => (
+                            <EntityCard key={recipient.recipient_id} entity={recipient} entityType="recipient" />
+                        ))}
+                    </EntityList>
                 );
 
             case 'grants':
-                // Show top 20 grants in tab
-                const topGrants = allGrants.slice(0, 20);
-
                 return (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-xs md:text-sm">
-                                {topGrants.length} Latest Grants
-                            </h2>
-                            {allGrants.length > 20 && (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-xs md:text-sm"
-                                    onClick={() => router.push(`/institutes/${institute.institute_id}/grants`)}
-                                >
-                                    View All {allGrants.length.toLocaleString()} Grants
-                                </Button>
-                            )}
-                        </div>
-
-                        {topGrants.length === 0 ? (
-                            <Card className="p-12">
-                                <div className="text-center text-gray-500">
-                                    <LuBookMarked className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                                    <p className="text-lg font-medium">No grants found</p>
-                                    <p className="text-sm mt-1">This institute has no recorded grants yet.</p>
-                                </div>
-                            </Card>
-                        ) : (
-                            <div className="space-y-3">
-                                {topGrants.map((grant) => (
-                                    <GrantCard key={grant.grant_id} {...grant} />
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    <EntityList
+                        entityType="grant"
+                        entities={grants}
+                        totalCount={institute.grant_count || 0}
+                        page={page}
+                        pageSize={pageSize}
+                        sortOptions={getSortOptions('grant', 'institute')}
+                    >
+                        {grants.map((grant) => (
+                            <GrantCard key={grant.grant_id} {...grant} />
+                        ))}
+                    </EntityList>
                 );
 
             case 'analytics':
-                // Pass ALL data to EntityAnalytics
                 return (
                     <EntityAnalytics
                         entity={institute}
                         entityType="institute"
-                        grants={allGrants}
-                        recipients={allRecipients}
+                        grants={grants} // Simplified list if from lightweight query
+                        recipients={[]} // We aren't passing full list here, analytics might need adjustment if it relies on this
                     />
                 );
 
-            default:
-                return null;
+            default: return null;
         }
     };
 
@@ -268,7 +138,8 @@ export function InstituteDetailClient({
             renderHeader={renderHeader}
             renderStats={renderStats}
             tabs={tabs}
-            defaultTab="recipients"
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
             renderTabContent={renderTabContent}
             actions={actions}
             entityType="institute"

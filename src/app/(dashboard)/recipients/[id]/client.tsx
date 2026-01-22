@@ -4,9 +4,10 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     LuGraduationCap, LuBookMarked, LuCalendar,
-    LuCircleDollarSign, LuAward, LuUniversity, LuBuilding2, LuScale
+    LuCircleDollarSign, LuAward, LuUniversity, LuBuilding2, LuScale,
 } from 'react-icons/lu';
-import { TbChartArcs, TbWorldSearch } from 'react-icons/tb';
+import { TbWorldSearch } from 'react-icons/tb';
+import { GrAnalytics } from 'react-icons/gr';
 import { Card } from '@/components/ui/Card';
 import { TabItem } from '@/components/ui/Tabs';
 import EntityProfilePage, { EntityHeader, StatDisplay, ActionButton, MetadataItem, StatItem } from '@/components/entity/EntityProfilePage';
@@ -15,6 +16,7 @@ import { RecipientWithStats, GrantWithDetails, RECIPIENT_TYPE_LABELS } from '@/t
 import GrantCard from '@/components/grants/GrantCard';
 import EntityAnalytics from '@/components/entity/EntityAnalytics';
 import EntityList from '@/components/entity/EntityList';
+import { getSortOptions } from '@/lib/utils';
 
 interface RecipientDetailClientProps {
     recipient: RecipientWithStats;
@@ -46,8 +48,8 @@ export function RecipientDetailClient({
         : 'Unknown';
 
     const tabs: TabItem[] = [
+        { id: 'analytics', label: 'Analytics', icon: GrAnalytics },
         { id: 'grants', label: 'Grants', icon: LuBookMarked, count: recipient.grant_count },
-        { id: 'analytics', label: 'Analytics', icon: TbChartArcs }
     ];
 
     const metadata: MetadataItem[] = [];
@@ -98,28 +100,13 @@ export function RecipientDetailClient({
 
     const renderTabContent = (tabId: string) => {
         switch (tabId) {
-            case 'grants':
-                return (
-                    <EntityList
-                        entityType="grant"
-                        entities={grants}
-                        totalCount={recipient.grant_count || 0}
-                        page={page}
-                        pageSize={pageSize}
-                    >
-                        {grants.map((grant) => (
-                            <GrantCard key={grant.grant_id} {...grant} />
-                        ))}
-                    </EntityList>
-                );
-
             case 'analytics':
                 return (
                     <div className="space-y-4 md:space-y-6">
                         <EntityAnalytics
                             entity={recipient}
                             entityType="recipient"
-                            grants={grants} // These might be simplified grants if optimized
+                            grants={grants}
                         />
                         {topPrograms.length > 0 && (
                             <Card className="p-2 md:p-6">
@@ -144,6 +131,23 @@ export function RecipientDetailClient({
                         )}
                     </div>
                 );
+
+            case 'grants':
+                return (
+                    <EntityList
+                        entityType="grant"
+                        entities={grants}
+                        totalCount={recipient.grant_count || 0}
+                        page={page}
+                        pageSize={pageSize}
+                        sortOptions={getSortOptions('grant', 'recipient')}
+                    >
+                        {grants.map((grant) => (
+                            <GrantCard key={grant.grant_id} {...grant} />
+                        ))}
+                    </EntityList>
+                );
+
             default: return null;
         }
     };

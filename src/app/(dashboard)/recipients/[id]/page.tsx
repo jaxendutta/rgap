@@ -2,8 +2,11 @@
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
-import { RecipientDetailClient } from './client';
+import { RecipientDetailClient } from '@/app/(dashboard)/recipients/[id]/client';
+import { getSortOptions } from '@/lib/utils';
 import { RecipientWithStats, GrantWithDetails } from '@/types/database';
+
+const sortOptions = getSortOptions('grant', 'recipient');
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -50,20 +53,18 @@ async function getRecipientDetails(id: number, userId?: number) {
     return result.rows[0] || null;
 }
 
-const ALLOWED_SORT_FIELDS = ['agreement_value', 'agreement_start_date', 'recipient'];
-
 async function getRecipientGrants(
     id: number,
     userId: number | undefined,
     page: number,
     pageSize: number,
-    sortField: string = 'agreement_start_date',
+    sortField: string = sortOptions[0].field,
     sortDir: 'asc' | 'desc' = 'desc'
 ) {
     const offset = (page - 1) * pageSize;
 
-    const safeSortField = ALLOWED_SORT_FIELDS.includes(sortField) ? sortField : 'agreement_start_date';
-    const orderBy = safeSortField === 'agreement_value' ? 'g.agreement_value' : 'g.agreement_start_date';
+    const safeSortField = sortOptions.find(option => option.field === sortField) || sortOptions[0];
+    const orderBy = safeSortField.value;
     const safeSortDir = sortDir === 'asc' ? 'ASC' : 'DESC';
 
     const query = `
@@ -99,7 +100,6 @@ async function getRecipientGrants(
 }
 
 async function getAnalyticsGrants(id: number) {
-    // FIXED: Added g.agreement_end_date here!
     const query = `
         SELECT 
             g.grant_id,
@@ -142,7 +142,7 @@ export default async function RecipientPage({ params, searchParams }: PageProps)
     const resolvedSearchParams = await searchParams;
     const id = parseInt(resolvedParams.id);
     const page = parseInt((resolvedSearchParams.page as string) || '1');
-    const tab = (resolvedSearchParams.tab as string) || 'grants';
+    const tab = (resolvedSearchParams.tab as string) || 'analytics';
     const sort = (resolvedSearchParams.sort as string) || 'agreement_start_date';
     const dir = (resolvedSearchParams.dir as 'asc' | 'desc') || 'desc';
     const limit = 15;

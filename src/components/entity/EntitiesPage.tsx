@@ -3,7 +3,6 @@ import PageContainer from "@/components/layout/PageContainer";
 import PageHeader from "@/components/layout/PageHeader";
 import EntityList from "@/components/entity/EntityList";
 import { EntityCard } from "@/components/entity/EntityCard";
-import { Pagination } from "@/components/ui/Pagination";
 import { IconType } from "react-icons";
 import { EntityType, GrantWithDetails, InstituteWithStats, RecipientWithStats } from "@/types/database";
 
@@ -13,7 +12,6 @@ interface EntitiesPageProps {
     icon: IconType;
     entities: (InstituteWithStats | RecipientWithStats)[];
     totalItems: number;
-    totalPages: number;
     entityType: EntityType;
     emptyMessage?: string;
     showVisualization?: boolean;
@@ -26,7 +24,6 @@ const EntitiesPage = ({
     icon,
     entities,
     totalItems,
-    totalPages,
     entityType,
     emptyMessage = "No items found",
     showVisualization = false,
@@ -47,7 +44,6 @@ const EntitiesPage = ({
                 emptyMessage={emptyMessage}
                 showVisualization={showVisualization}
                 visualizationData={visualizationData}
-            // No sortOptions passed; EntityList uses defaults
             >
                 {entities.map((entity) => {
                     const id = 'recipient_id' in entity
@@ -63,8 +59,6 @@ const EntitiesPage = ({
                     );
                 })}
             </EntityList>
-
-            <Pagination totalPages={totalPages} />
         </PageContainer>
     );
 };
