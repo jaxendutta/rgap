@@ -11,9 +11,6 @@ import {
     LuDollarSign,
     LuHash,
     LuCalendar,
-    LuUsers,
-    LuChartLine,
-    LuX,
 } from "react-icons/lu";
 import { MdSortByAlpha } from "react-icons/md";
 import LoadingState from "@/components/ui/LoadingState";
@@ -26,14 +23,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import TrendVisualizer, { ViewContext } from "@/components/visualizations/TrendVisualizer";
 import { IconType } from "react-icons";
 import { TbGraph, TbGraphOff } from "react-icons/tb";
+import Pagination from "@/components/ui/Pagination";
 
 export interface SortOption {
     label: string;
     field: string;
-    icon: IconType; // FIXED: Back to IconType
+    icon: IconType;
 }
 
-// Internal default definitions so Server Components don't need to pass them
 export const DEFAULT_SORT_OPTIONS: Record<EntityType, SortOption[]> = {
     grant: [
         { label: "Value", field: "agreement_value", icon: LuDollarSign },
@@ -59,16 +56,21 @@ export interface EntityListProps<T> {
     entities?: T[];
     totalCount: number;
     children: React.ReactNode;
-    sortOptions?: SortOption[]; // Optional: can override if needed
+    sortOptions?: SortOption[];
+    // RESTORED: Visualization Props
     showVisualization?: boolean;
     visualizationData?: any[];
     viewContext?: ViewContext;
+
     entityId?: number;
     isLoading?: boolean;
     isError?: boolean;
     error?: Error | unknown;
     emptyMessage?: string;
     className?: string;
+    // Pagination Props
+    page?: number;
+    pageSize?: number;
 }
 
 function EntityList<T>(props: EntityListProps<T>) {
@@ -77,23 +79,27 @@ function EntityList<T>(props: EntityListProps<T>) {
         entities = [],
         totalCount,
         children,
-        // Use prop if provided, otherwise fallback to internal default
         sortOptions = DEFAULT_SORT_OPTIONS[entityType],
+        // RESTORED: Defaults
         showVisualization = false,
         visualizationData = [],
         viewContext = "search",
+
         entityId,
         isLoading = false,
         isError = false,
         error,
         emptyMessage = "No items found.",
         className,
+        page = 1,
+        pageSize = 15,
     } = props;
 
     const router = useRouter();
     const searchParams = useSearchParams();
 
     const [layoutVariant, setLayoutVariant] = useState<LayoutVariant>("grid");
+    // RESTORED: State for visibility
     const [isVisualizationVisible, setIsVisualizationVisible] = useState(false);
 
     const currentSortField = searchParams.get('sort') || sortOptions[0]?.field;
@@ -109,6 +115,12 @@ function EntityList<T>(props: EntityListProps<T>) {
         }
         params.set('page', '1');
         router.push(`?${params.toString()}`, { scroll: false });
+    };
+
+    const handlePageChange = (newPage: number) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('page', newPage.toString());
+        router.push(`?${params.toString()}`, { scroll: true });
     };
 
     if (isError) return <ErrorState title="Error" message={error instanceof Error ? error.message : "Error"} />;
@@ -139,6 +151,7 @@ function EntityList<T>(props: EntityListProps<T>) {
 
                     <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
 
+                    {/* RESTORED: Visualization Toggle Button */}
                     {showVisualization && visualizationData.length > 0 && (
                         <Button
                             variant="secondary"
@@ -165,6 +178,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                 </div>
             </Card>
 
+            {/* RESTORED: Trend Visualizer Component */}
             <AnimatePresence>
                 {isVisualizationVisible && showVisualization && visualizationData.length > 0 && (
                     <motion.div
@@ -193,6 +207,12 @@ function EntityList<T>(props: EntityListProps<T>) {
             >
                 {children}
             </div>
+
+            <Pagination
+                currentPage={page}
+                totalPages={Math.ceil(totalCount / pageSize)}
+                onPageChange={handlePageChange}
+            />
         </div>
     );
 }

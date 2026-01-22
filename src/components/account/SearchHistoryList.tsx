@@ -155,15 +155,15 @@ export default function SearchHistoryList({
                         return (
                             <div key={item.id} className="group p-3 md:p-5 hover:bg-gray-50/80 transition-all duration-200 flex flex-col md:flex-row gap-0 md:gap-5 md:items-center justify-between">
                                 <div className="flex flex-col gap-3 flex-1 min-w-0">
-                                    <Tags spacing="tight" className="items-center flex-wrap">
-                                        {item.search_query && item.search_query !== 'null' && (
-                                            <Tag text="Grant Title" innerText={item.search_query} variant="warning" icon={LuScrollText} size="sm" />
-                                        )}
+                                    <Tags spacing="tight" className="items-center flex-wrap">                                        
                                         {filters.recipient && (
                                             <Tag text="Recipient" innerText={filters.recipient} variant="primary" icon={FiUser} size="sm" />
                                         )}
                                         {filters.institute && (
                                             <Tag text="Institute" innerText={filters.institute} variant="danger" icon={MdOutlineAccountBalance} size="sm" />
+                                        )}
+                                        {item.search_query && item.search_query !== 'null' && (
+                                            <Tag text="Grant Title" innerText={item.search_query} variant="warning" icon={LuScrollText} size="sm" />
                                         )}
                                         {filters.agencies?.length > 0 && (
                                             <Tag text="Agencies" innerText={filters.agencies.join(' | ')} variant="secondary" icon={FiFilter} size="sm" />

@@ -81,9 +81,9 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
     const router = useRouter();
 
     return (
-        <div className="flex flex-col lg:flex-row gap-2 lg:gap-6 p-1">
+        <div className="flex flex-col lg:flex-row gap-2 lg:gap-6 p-1 pr-0">
             <div className="flex-1 max-w-full">
-                <div className="flex items-center justify-between gap-2 mb-2 lg:mb-1">
+                <div className="flex items-start justify-between gap-2 mb-2 lg:mb-1">
                     <Link
                         href={`/recipients/${grant.recipient_id}`}
                         className="flex md:text-lg items-start font-medium hover:text-blue-700 transition-colors gap-1 group"
