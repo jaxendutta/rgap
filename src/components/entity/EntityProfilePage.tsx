@@ -113,22 +113,26 @@ export const EntityHeader: React.FC<EntityHeaderProps> = ({
 export interface StatItem {
     icon: IconType;
     label: string;
-    value: string | number;
+    values: (string | number)[];
 }
 
 const StatItemContent: React.FC<{ item: StatItem }> = ({ item }) => {
     const Icon = item.icon;
     return (
-        <div className="flex flex-col items-center p-3 bg-blue-100/60 rounded-2xl">
-            <span className="flex text-gray-700 rounded-lg text-xs items-center justify-center gap-1">
-                <Icon className="w-2.5 md:w-3 h-2.5 md:h-3" />
+        <div className="flex flex-col items-center p-3 bg-blue-100/60 rounded-2xl gap-1">
+            <span className="flex text-gray-700 rounded-lg text-[10px] md:text-xs items-start text-center gap-1">
+                <Icon className="size-2.5 md:size-3 mt-0.5" />
                 {item.label}
             </span>
-            <div className="text-base md:text-lg font-semibold text-gray-900">
-                {typeof item.value === 'number'
-                    ? item.value.toLocaleString()
-                    : item.value
-                }
+            <div className="text-sm md:text-lg font-semibold text-gray-900 text-center flex flex-wrap justify-center gap-2">
+                {item.values.length === 0
+                    ? 'N/A'
+                    : item.values.length === 1
+                        ? typeof item.values[0] === 'number' ? item.values[0].toLocaleString() : item.values[0]
+                        : item.values.map((val, idx) => (
+                            <div key={idx} className="bg-white/60 rounded-3xl px-2 py-1">
+                                {typeof val === 'number' ? val.toLocaleString() : val}</div>
+                        ))}
             </div>
         </div>
     );
@@ -208,7 +212,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                     size="sm"
                     leftIcon={LuChevronLeft}
                     onClick={() => router.back()}
-                    className="text-xs md:text-base bg-white"
+                    className="text-xs md:text-sm bg-white"
                 >
                     Back
                 </Button>
@@ -223,7 +227,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                                 size="sm"
                                 leftIcon={ActionIcon}
                                 onClick={action.onClick}
-                                className="text-xs md:text-base bg-white"
+                                className="text-xs md:text-sm bg-white"
                             >
                                 {action.label}
                             </Button>
@@ -275,7 +279,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                                         className="overflow-hidden"
                                     >
-                                        <div className={cn(gridClassName, 'pt-2 md:pt-4')}>
+                                        <div className={cn(gridClassName)}>
                                             {hiddenItems.map((item, index) => (
                                                 <StatItemContent key={index} item={item} />
                                             ))}

@@ -20,11 +20,20 @@ async function getInstituteDetails(id: number, userId?: number) {
             i.name, i.city, i.province, i.country, i.postal_code,
             COUNT(DISTINCT r.recipient_id)::int as recipient_count,
             COUNT(DISTINCT g.grant_id)::int as grant_count,
+            
+            -- Active Counts (where grant end date is in the future)
+            COUNT(DISTINCT CASE WHEN g.agreement_end_date >= CURRENT_DATE THEN r.recipient_id END)::int as active_recipient_count,
+            COUNT(CASE WHEN g.agreement_end_date >= CURRENT_DATE THEN g.grant_id END)::int as active_grant_count,
+            
             COALESCE(SUM(g.agreement_value::numeric), 0) as total_funding,
             COALESCE(AVG(g.agreement_value::numeric), 0) as avg_funding,
+            
             MIN(g.agreement_start_date) as first_grant_date,
             MAX(g.agreement_start_date) as latest_grant_date,
+            MAX(g.agreement_end_date) as latest_end_date,
+            
             COUNT(DISTINCT g.org)::int as funding_agencies_count,
+            
             ${userId ? `
                 EXISTS(
                     SELECT 1 FROM bookmarked_institutes bi 
@@ -131,7 +140,6 @@ async function getInstituteGrants(
 }
 
 async function getInstituteAnalyticsData(id: number) {
-    // FIXED: Added g.agreement_end_date here as well
     const query = `
         SELECT 
             g.grant_id,
@@ -180,6 +188,7 @@ export default async function InstitutePage({ params, searchParams }: PageProps)
         grants = await getInstituteGrants(id, user?.id, page, limit, sort || 'agreement_start_date', dir);
     } else if (tab === 'analytics') {
         grants = await getInstituteAnalyticsData(id);
+        recipients = await getInstituteRecipients(id, user?.id, 1, 50, 'total_funding', 'desc');
     }
 
     return (

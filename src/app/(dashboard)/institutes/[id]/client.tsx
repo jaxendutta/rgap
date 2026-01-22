@@ -2,8 +2,8 @@
 'use client';
 
 import {
-    LuUniversity, LuUsers, LuBookMarked, LuCalendar, LuCircleDollarSign,
-    LuExternalLink, LuScale,
+    LuUniversity, LuUsers, LuBookMarked, LuCalendar, LuDollarSign,
+    LuExternalLink, LuUserCheck, LuFileCheck,
 } from 'react-icons/lu';
 import { GrAnalytics } from 'react-icons/gr';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -16,6 +16,8 @@ import GrantCard from '@/components/grants/GrantCard';
 import EntityAnalytics from '@/components/entity/EntityAnalytics';
 import EntityList from '@/components/entity/EntityList';
 import { getSortOptions } from '@/lib/utils';
+import { TbFileDollar, TbUserDollar } from 'react-icons/tb';
+import { formatDateDiff } from '@/lib/format';
 
 interface InstituteDetailClientProps {
     institute: InstituteWithStats;
@@ -68,12 +70,44 @@ export function InstituteDetailClient({
     );
 
     const renderStats = () => {
+        // Calculations
+        const activeRecipients = institute.active_recipient_count || 0;
+        const totalRecipients = institute.recipient_count || 1; // Avoid div by zero
+        const activeRecipientPercent = ((activeRecipients / totalRecipients) * 100).toFixed(1);
+
+        const activeGrants = institute.active_grant_count || 0;
+        const totalGrants = institute.grant_count || 1; // Avoid div by zero
+        const activeGrantPercent = ((activeGrants / totalGrants) * 100).toFixed(1);
+
+        const avgFundingPerRecipient = institute.recipient_count > 0
+            ? institute.total_funding / institute.recipient_count
+            : 0;
+
+        // Years Active calculation
+        const startYear = institute.first_grant_date ? new Date(institute.first_grant_date).getFullYear() : null;
+        const endYear = institute.latest_end_date ? new Date(institute.latest_end_date).getFullYear() : (new Date().getFullYear());
+        const duration = formatDateDiff(institute.first_grant_date, institute.latest_end_date, 'short');
+
+        const yearsActiveText = startYear
+            ? [`${startYear} - ${endYear}`, duration]
+            : ['N/A'];
+
         const stats: StatItem[] = [
-            { icon: LuUsers, label: 'Recipients', value: institute.recipient_count || 0 },
-            { icon: LuBookMarked, label: 'Grants', value: institute.grant_count || 0 },
-            { icon: LuCircleDollarSign, label: 'Total Funding', value: formatCurrency(institute.total_funding || 0) },
-            { icon: LuCalendar, label: 'Active Since', value: institute.first_grant_date ? new Date(institute.first_grant_date).getFullYear().toString() : 'N/A' },
-            { icon: LuScale, label: 'Avg Funding', value: formatCurrency(institute.avg_funding || 0) }
+            // Row 1
+            { icon: LuUsers, label: 'Recipients', values: [institute.recipient_count || 0] },
+            { icon: LuBookMarked, label: 'Grants', values: [institute.grant_count || 0] },
+            { icon: LuDollarSign, label: 'Total Funding', values: [formatCurrency(institute.total_funding || 0)] },
+
+            // Row 2
+            { icon: TbFileDollar, label: 'Avg Funding / Grant', values: [formatCurrency(institute.avg_funding || 0)] },
+            { icon: TbUserDollar, label: 'Avg Funding / Recipient', values: [formatCurrency(avgFundingPerRecipient)] },
+
+            // Row 3 (Active stats)
+            { icon: LuUserCheck, label: 'Active Recipients', values: [activeRecipients, `${activeRecipientPercent}%`] },
+            { icon: LuFileCheck, label: 'Active Grants', values: [activeGrants, `${activeGrantPercent}%`] },
+
+            // Row 4
+            { icon: LuCalendar, label: 'Years Active', values: yearsActiveText },
         ];
         return <StatDisplay items={stats} columns={4} />;
     };
@@ -124,8 +158,8 @@ export function InstituteDetailClient({
                     <EntityAnalytics
                         entity={institute}
                         entityType="institute"
-                        grants={grants} // Simplified list if from lightweight query
-                        recipients={[]} // We aren't passing full list here, analytics might need adjustment if it relies on this
+                        grants={grants}
+                        recipients={recipients}
                     />
                 );
 

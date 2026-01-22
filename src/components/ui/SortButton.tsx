@@ -9,8 +9,8 @@ export type SortDirection = "asc" | "desc";
 interface SortButtonProps {
     label: string;
     icon: IconType;
-    field: string;        // Changed from keyof T to string
-    currentField: string; // Changed from keyof T to string
+    field: string;
+    currentField: string;
     direction: SortDirection;
     onClick: () => void;
     className?: string;
@@ -40,18 +40,20 @@ export const SortButton = ({
                     : "text-gray-600 hover:text-gray-900 shadow-none",
                 className
             )}
-            aria-label={isActive ? `Sorted by ${label} in ${direction === "asc" ? "ascending" : "descending"} order` : `Sort by ${label}`}  
+            aria-label={isActive ? `Sorted by ${label} in ${direction === "asc" ? "ascending" : "descending"} order` : `Sort by ${label}`}
         >
-            <span className={!isActive ? "hidden lg:flex" : "pl-1"}>{label}</span>
+            <span className={`text-xs md:text-sm ${!isActive ? "hidden lg:flex" : "pl-1"}`}>{label}</span>
             {isActive && (
                 <span className="text-gray-900">
                     {direction === "asc" ? (
-                        <LuMoveUp size={12} />
+                        <LuMoveUp className="size-3" />
                     ) : (
-                        <LuMoveDown size={12} />
+                        <LuMoveDown className="size-3" />
                     )}
                 </span>
             )}
         </Button>
     );
 };
+
+export default SortButton;

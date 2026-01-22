@@ -83,7 +83,7 @@ export function BookmarkButton({
             onClick={handleToggle}
             disabled={loading}
             title={bookmarked ? "Remove bookmark" : "Add bookmark"}
-            className={`p-1 md:p-2 ${variant === "outline" ? "bg-white" : ""}`}
+            className={variant === "outline" ? "bg-white" : ""}
         >
             {bookmarked ? (
                 <>

@@ -83,10 +83,10 @@ export function RecipientDetailClient({
 
     const renderStats = () => {
         const stats: StatItem[] = [
-            { icon: LuBookMarked, label: 'Total Grants', value: recipient.grant_count || 0 },
-            { icon: LuCircleDollarSign, label: 'Total Funding', value: formatCurrency(recipient.total_funding || 0) },
-            { icon: LuScale, label: 'Average Grant', value: formatCurrency(recipient.avg_funding || 0) },
-            { icon: LuCalendar, label: 'Active Since', value: recipient.first_grant_date ? new Date(recipient.first_grant_date).getFullYear().toString() : 'N/A' }
+            { icon: LuBookMarked, label: 'Total Grants', values: [recipient.grant_count || 0] },
+            { icon: LuCircleDollarSign, label: 'Total Funding', values: [formatCurrency(recipient.total_funding || 0)] },
+            { icon: LuScale, label: 'Average Grant', values: [formatCurrency(recipient.avg_funding || 0)] },
+            { icon: LuCalendar, label: 'Active Since', values: [recipient.first_grant_date ? new Date(recipient.first_grant_date).getFullYear().toString() : 'N/A'] }
         ];
         return <StatDisplay items={stats} columns={4} />;
     };

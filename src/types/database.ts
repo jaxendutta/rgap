@@ -78,7 +78,7 @@ export interface Institute {
  */
 export interface Recipient {
     recipient_id: number;
-    type: 'I' | 'P'; // I = Institution, P = Person
+    type: keyof typeof RECIPIENT_TYPE_LABELS;
     business_number: string | null;
     legal_name: string;
     operating_name: string | null;
@@ -181,6 +181,10 @@ export interface InstituteWithStats extends Institute {
     total_grants: number;
     total_recipients: number;
 
+    // Active counts (New)
+    active_recipient_count?: number;
+    active_grant_count?: number;
+
     // Funding statistics
     total_funding: number;
     avg_funding: number;
@@ -188,6 +192,7 @@ export interface InstituteWithStats extends Institute {
     // Date ranges
     first_grant_date: string | Date;
     latest_grant_date: string | Date;
+    latest_end_date: string | Date;
 
     // Misc
     funding_agencies_count: number;

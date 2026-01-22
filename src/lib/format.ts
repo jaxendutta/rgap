@@ -10,8 +10,8 @@ export function formatSentenceCase(text: string | null | undefined): string {
     return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 
-// 🎯 FIXED: Timezone-safe date diff calculation
-export function formatDateDiff(startDate: Date | string, endDate: Date | string): string {
+// Timezone-safe date diff calculation
+export function formatDateDiff(startDate: Date | string, endDate: Date | string, style: 'long' | 'short' = 'long'): string {
     // Parse dates safely
     const parseDate = (date: Date | string): Date => {
         if (typeof date === 'string') {
@@ -36,15 +36,14 @@ export function formatDateDiff(startDate: Date | string, endDate: Date | string)
         months += 12;
     }
 
-    const yearPart = years > 0 ? `${years} year${years > 1 ? 's' : ''}` : '';
-    const monthPart = months > 0 ? `${months} month${months > 1 ? 's' : ''}` : '';
+    if (style === 'short') {
+        return `${years}yrs ${months}mos`;
+    } else {
+        const yearPart = years > 0 ? `${years} year${years > 1 ? 's' : ''}` : '';
+        const monthPart = months > 0 ? `${months} month${months > 1 ? 's' : ''}` : '';
 
-    return [yearPart, monthPart].filter(part => part !== '').join(' ') || '0 months';
-}
-
-export function formatRecipientType(type: string | null): string {
-    if (!type) return 'N/A';
-    return type === 'I' ? 'Institution' : 'Person';
+        return [yearPart, monthPart].filter(part => part !== '').join(' ') || '0 months';
+    }
 }
 
 // Re-export common utils so you can import everything from one place if needed
