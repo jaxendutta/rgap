@@ -11,15 +11,15 @@ import {
     LuTrendingDown,
     LuMoveRight,
     LuGraduationCap,
-    LuUniversity,
     LuCalendar,
-    LuActivity,
     LuAward,
+    LuCalendarClock,
 } from "react-icons/lu";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { IconType } from "react-icons";
 import { getCategoryColor } from "@/lib/chartColors";
+import { MdAccountBalance, MdOutlineSsidChart } from "react-icons/md";
 
 // ============================================================================
 // ANALYTICS UTILITY FUNCTIONS
@@ -175,9 +175,9 @@ export const KpiCard = ({
     icon: IconType;
 }) => (
     <Card className="p-4">
-        <div className="flex items-center mb-2">
-            <Icon className="h-3.5 md:h-5 w-3.5 md:w-5 text-blue-600" />
-            <h3 className="font-medium text-gray-800 ml-2 text-sm">{title}</h3>
+        <div className="flex items-center mb-2 gap-2">
+            <Icon className="size-3.5 md:size-4 text-blue-600" />
+            <h3 className="font-medium text-gray-800 text-sm">{title}</h3>
         </div>
         <div className="mt-1 text-lg md:text-xl font-bold text-gray-900">{value}</div>
     </Card>
@@ -269,8 +269,8 @@ export const AgencyBreakdown = ({
 
     return (
         <Card className="p-4 md:p-6">
-            <div className="flex items-start mb-4 gap-2">
-                <LuUniversity className="h-4 md:h-5 w-4 md:w-5 text-blue-600 mt-0.5" />
+            <div className="flex items-center mb-4 gap-2">
+                <MdAccountBalance className="size-3.5 md:size-4.5 text-blue-600" />
                 <h3 className="text-base md:text-lg font-semibold text-gray-900">Agency Breakdown</h3>
             </div>
             <div className="space-y-3">
@@ -335,8 +335,8 @@ export const TimePeriodAnalytics = ({
 
     return (
         <Card className="p-4 md:p-6">
-            <div className="flex items-center mb-4">
-                <LuCalendar className="h-3.5 md:h-5 w-3.5 md:w-5 text-gray-700 mr-2" />
+            <div className="flex items-center mb-4 gap-2">
+                <LuCalendarClock className="size-3.5 md:size-4.5 text-blue-600" />
                 <h3 className="text-base md:text-lg font-semibold text-gray-900">{title}</h3>
             </div>
             <div className="space-y-3">
@@ -429,7 +429,7 @@ export default function EntityAnalytics({
                             </span>
                         </div>
                     }
-                    icon={LuActivity}
+                    icon={MdOutlineSsidChart}
                 />
 
                 {/* Entity-specific metric */}
@@ -478,7 +478,7 @@ export default function EntityAnalytics({
                             )}
                         </div>
                     }
-                    icon={LuUniversity}
+                    icon={MdAccountBalance}
                 />
             </div>
 

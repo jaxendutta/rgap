@@ -1,8 +1,9 @@
 // src/lib/utils.ts
 
-import { GrantWithDetails, InstituteWithStats, RecipientWithStats, SortOption } from '@/types/database';
+import { SortOption } from '@/types/database';
 import { clsx, type ClassValue } from 'clsx';
 import { LuCalendar, LuDollarSign, LuHash, LuUsers } from 'react-icons/lu';
+import { PiUsersThree } from 'react-icons/pi';
 import { MdSortByAlpha } from 'react-icons/md';
 import { twMerge } from 'tailwind-merge';
 
@@ -166,18 +167,18 @@ export function getSortOptions(entityType: 'grant' | 'recipient' | 'institute', 
         case 'recipient':
             let recipientSortOptions: SortOption[] = [
                 {
-                    value: 'grant_count',
-                    label: 'Grants',
-                    field: 'grant_count',
-                    direction: 'desc',
-                    icon: LuHash,
-                },
-                {
                     value: 'total_funding',
                     label: 'Funding',
                     field: 'total_funding',
                     direction: 'desc',
                     icon: LuDollarSign,
+                },
+                {
+                    value: 'grant_count',
+                    label: 'Grants',
+                    field: 'grant_count',
+                    direction: 'desc',
+                    icon: LuHash,
                 },
             ];
             if (context !== 'grant') {
@@ -194,18 +195,18 @@ export function getSortOptions(entityType: 'grant' | 'recipient' | 'institute', 
         case 'institute':
             let instituteSortOptions: SortOption[] = [
                 {
-                    value: 'grant_count',
-                    label: 'Grants',
-                    field: 'grant_count',
-                    direction: 'desc',
-                    icon: LuHash,
-                },
-                {
                     value: 'total_funding',
                     label: 'Funding',
                     field: 'total_funding',
                     direction: 'desc',
                     icon: LuDollarSign,
+                },
+                {
+                    value: 'grant_count',
+                    label: 'Grants',
+                    field: 'grant_count',
+                    direction: 'desc',
+                    icon: LuHash,
                 },
             ];
             if (context === 'institute') {
@@ -215,7 +216,7 @@ export function getSortOptions(entityType: 'grant' | 'recipient' | 'institute', 
                         label: 'Recipients',
                         field: 'recipient_count',
                         direction: 'desc',
-                        icon: LuUsers,
+                        icon: PiUsersThree,
                     },
                     {
                         value: 'name',

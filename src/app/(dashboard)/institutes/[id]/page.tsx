@@ -159,7 +159,7 @@ export default async function InstitutePage({ params, searchParams }: PageProps)
     const resolvedSearchParams = await searchParams;
     const id = parseInt(resolvedParams.id);
     const page = parseInt((resolvedSearchParams.page as string) || '1');
-    const tab = (resolvedSearchParams.tab as string) || 'recipients';
+    const tab = (resolvedSearchParams.tab as string) || 'analytics';
     const sort = (resolvedSearchParams.sort as string) || '';
     const dir = (resolvedSearchParams.dir as 'asc' | 'desc') || 'desc';
     const limit = 15;

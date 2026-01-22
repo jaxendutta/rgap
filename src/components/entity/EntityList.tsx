@@ -25,7 +25,7 @@ export interface EntityListProps<T> {
     entities?: T[];
     totalCount: number;
     children: React.ReactNode;
-    sortOptions: SortOption[];
+    sortOptions?: SortOption[]; // Made optional
     showVisualization?: boolean;
     visualizationData?: any[];
     viewContext?: ViewContext;
@@ -47,7 +47,6 @@ function EntityList<T>(props: EntityListProps<T>) {
         entities = [],
         totalCount,
         children,
-        sortOptions = getSortOptions(entityType, entityType),
         showVisualization = false,
         visualizationData = [],
         viewContext = "search",
@@ -62,11 +61,12 @@ function EntityList<T>(props: EntityListProps<T>) {
         pageSize = 15,
     } = props;
 
+    const sortOptions = props.sortOptions || getSortOptions(entityType, entityType as any);
+
     const router = useRouter();
     const searchParams = useSearchParams();
 
     const [layoutVariant, setLayoutVariant] = useState<LayoutVariant>("grid");
-    // RESTORED: State for visibility
     const [isVisualizationVisible, setIsVisualizationVisible] = useState(false);
 
     const currentSortField = searchParams.get('sort') || sortOptions[0]?.field;
@@ -103,7 +103,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                     {entityType}{totalCount !== 1 ? 's' : ''}
                 </span>
 
-                <div className="flex gap-2 flex-wrap flex-grow justify-center sm:justify-end">
+                <div className="flex gap-2 flex-wrap flex-grow items-center justify-center sm:justify-end">
                     {sortOptions.map((option) => (
                         <SortButton
                             key={typeof option.field === "symbol" ? String(option.field) : String(option.field)}
@@ -118,7 +118,7 @@ function EntityList<T>(props: EntityListProps<T>) {
 
                     <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
 
-                    {/* RESTORED: Visualization Toggle Button */}
+                    {/* Visualization Toggle Button */}
                     {showVisualization && visualizationData.length > 0 && (
                         <Button
                             variant="secondary"
@@ -145,7 +145,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                 </div>
             </Card>
 
-            {/* RESTORED: Trend Visualizer Component */}
+            {/* Trend Visualizer Component */}
             <AnimatePresence>
                 {isVisualizationVisible && showVisualization && visualizationData.length > 0 && (
                     <motion.div

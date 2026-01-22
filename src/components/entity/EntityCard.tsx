@@ -20,7 +20,7 @@ import {
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatCSV, formatCurrency } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { cn, formatNumber } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import Tag from "@/components/ui/Tag";
@@ -196,12 +196,12 @@ export const EntityCard = ({
         ? [
             {
                 label: "Recipients",
-                value: recipients ? recipients.toLocaleString() : "N/A",
+                value: recipients ? formatNumber(recipients) : "N/A",
                 icon: LuUsers,
             },
             {
                 label: "Grants",
-                value: grants ? grants.toLocaleString() : "N/A",
+                value: grants ? formatNumber(grants) : "N/A",
                 icon: LuBookMarked,
             },
             {
@@ -213,7 +213,7 @@ export const EntityCard = ({
         : [
             {
                 label: "Grants",
-                value: grants ? grants.toLocaleString() : "N/A",
+                value: grants ? formatNumber(grants) : "N/A",
                 icon: LuBookMarked,
             },
             {

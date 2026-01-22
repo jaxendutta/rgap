@@ -116,13 +116,18 @@ export function RecipientDetailClient({
                                 </h2>
                                 <div className="space-y-3">
                                     {topPrograms.map((program, index) => (
-                                        <div key={program.prog_id || index} className="flex items-center gap-2 md:gap-4 p-2 md:p-4 bg-gray-100 rounded-2xl">
+                                        <div key={program.prog_id || index} className="flex items-center gap-2 md:gap-4 p-2 md:p-4 bg-gray-100 rounded-3xl">
+                                            <div className="flex-shrink-0">
+                                                <span className="size-6 md:size-10 flex items-center justify-center bg-purple-100 text-purple-600 rounded-full font-semibold text-sm md:text-base">
+                                                    {index + 1}
+                                                </span>
+                                            </div>
                                             <div className="flex-1">
                                                 <p className="font-medium text-gray-900 text-sm md:text-base">{program.program_name}</p>
                                                 <p className="text-xs md:text-sm text-gray-600">{program.grant_count} grants</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className="font-semibold text-gray-900">{formatCurrency(program.total_funding)}</p>
+                                                <p className="text-sm md:text-base font-semibold text-gray-900">{formatCurrency(program.total_funding)}</p>
                                             </div>
                                         </div>
                                     ))}

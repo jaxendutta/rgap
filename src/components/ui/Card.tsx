@@ -74,11 +74,11 @@ const CardHeader = ({
                 <div className="flex items-start gap-1 md:gap-2">
                     {Icon && (
                         <Icon className={cn("flex-shrink-0 text-blue-600",
-                            size === "md" ? "h-4 w-4 mt-1" : "h-3 w-3 mt-0.5 md:h-3.5 md:w-3.5 md:mt-0.75",
+                            size === "md" ? "size-4 mt-1" : "size-3 mt-0.5 md:size-3.5 md:mt-0.75",
                         )} />
                     )}
                     {title && (
-                        <span className={cn("font-medium text-gray-700",
+                        <span className={cn("font-semibold text-gray-700",
                             size === "md" ? "text-md" : "text-xs md:text-sm",
                         )}>
                             {title}
