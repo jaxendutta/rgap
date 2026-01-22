@@ -5,14 +5,7 @@ import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn, getSortOptions } from "@/lib/utils";
 import { EntityType } from "@/types/database";
-import {
-    LuGrid2X2,
-    LuList,
-    LuDollarSign,
-    LuHash,
-    LuCalendar,
-} from "react-icons/lu";
-import { MdSortByAlpha } from "react-icons/md";
+import { LuGrid2X2, LuList } from "react-icons/lu";
 import LoadingState from "@/components/ui/LoadingState";
 import EmptyState from "@/components/ui/EmptyState";
 import ErrorState from "@/components/ui/ErrorState";
@@ -43,7 +36,7 @@ export interface EntityListProps<T> {
     error?: Error | unknown;
     emptyMessage?: string;
     className?: string;
-    // Pagination Props
+
     page?: number;
     pageSize?: number;
 }
