@@ -99,8 +99,8 @@ export function InstituteDetailClient({
             { icon: LuDollarSign, label: 'Total Funding', values: [formatCurrency(institute.total_funding || 0)] },
 
             // Row 2
-            { icon: TbFileDollar, label: 'Avg Funding / Grant', values: [formatCurrency(institute.avg_funding || 0)] },
-            { icon: TbUserDollar, label: 'Avg Funding / Recipient', values: [formatCurrency(avgFundingPerRecipient)] },
+            { icon: TbFileDollar, label: 'Mean Funding / Grant', values: [formatCurrency(institute.avg_funding || 0)] },
+            { icon: TbUserDollar, label: 'Mean Funding / Recipient', values: [formatCurrency(avgFundingPerRecipient)] },
 
             // Row 3 (Active stats)
             { icon: LuUserCheck, label: 'Active Recipients', values: [activeRecipients, `${activeRecipientPercent}%`] },
