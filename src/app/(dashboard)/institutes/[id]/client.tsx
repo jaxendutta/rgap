@@ -44,9 +44,9 @@ export function InstituteDetailClient({
     ].filter(Boolean) as string[]);
 
     const tabs: TabItem[] = [
+        { id: 'analytics', label: 'Analytics', icon: GrAnalytics },
         { id: 'recipients', label: 'Recipients', icon: LuUsers, count: institute.recipient_count },
         { id: 'grants', label: 'Grants', icon: LuBookMarked, count: institute.grant_count },
-        { id: 'analytics', label: 'Analytics', icon: GrAnalytics }
     ];
 
     const actions: ActionButton[] = [

@@ -139,7 +139,9 @@ async function getInstituteAnalyticsData(id: number) {
             g.agreement_start_date,
             g.agreement_end_date,
             g.recipient_id,
+            r.legal_name,
             p.prog_title_en,
+            o.org,
             o.org_title_en
         FROM grants g
         JOIN recipients r ON g.recipient_id = r.recipient_id

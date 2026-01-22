@@ -43,7 +43,7 @@ export function Pagination({
                 variant="outline"
                 onClick={() => handlePageChange(1)}
                 disabled={currentPage === 1}
-                className="gap-1 pl-2.5"
+                className="gap-1 pl-2.5 bg-white"
             >
                 <LuChevronsLeft className="h-4 w-4" />
             </Button>
@@ -52,7 +52,7 @@ export function Pagination({
                 variant="outline"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage <= 1}
-                className="gap-1 pl-2.5"
+                className="gap-1 pl-2.5 bg-white"
             >
                 <LuChevronLeft className="h-4 w-4" />
             </Button>
@@ -65,7 +65,7 @@ export function Pagination({
                 variant="outline"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage >= totalPages}
-                className="gap-1 pr-2.5"
+                className="gap-1 pr-2.5 bg-white"
             >
                 <LuChevronRight className="h-4 w-4" />
             </Button>
@@ -74,7 +74,7 @@ export function Pagination({
                 variant="outline"
                 onClick={() => handlePageChange(totalPages)}
                 disabled={currentPage >= totalPages}
-                className="gap-1 pr-2.5"
+                className="gap-1 pr-2.5 bg-white"
             >
                 <LuChevronsRight className="h-4 w-4" />
             </Button>
