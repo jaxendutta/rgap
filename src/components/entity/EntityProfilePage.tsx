@@ -119,7 +119,7 @@ export interface StatItem {
 const StatItemContent: React.FC<{ item: StatItem }> = ({ item }) => {
     const Icon = item.icon;
     return (
-        <div className="flex flex-col items-center p-3 bg-blue-100/60 rounded-lg">
+        <div className="flex flex-col items-center p-3 bg-blue-100/60 rounded-2xl">
             <span className="flex text-gray-700 rounded-lg text-xs items-center justify-center gap-1">
                 <Icon className="w-2.5 md:w-3 h-2.5 md:h-3" />
                 {item.label}
