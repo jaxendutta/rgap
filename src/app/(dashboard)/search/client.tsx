@@ -101,10 +101,6 @@ export default function SearchPageClient({
         setIsLoading(true);
         setHasSearched(true);
 
-        if (params.pagination.page === 1) {
-            saveSearchHistory(params.searchTerms);
-        }
-
         try {
             const [listResponse, visResponse] = await Promise.all([
                 fetch('/api/grants', {
@@ -124,9 +120,22 @@ export default function SearchPageClient({
             const listData = await listResponse.json();
             const visData = await visResponse.json();
 
+            // 1. DEFINE count here
+            const count = listData.pagination?.total || 0;
+
             setGrants(listData.data || []);
-            setTotalResults(listData.pagination?.total || 0);
+            setTotalResults(count);
             setVisualizationData(visData.data || []);
+
+            // 2. USE count here
+            if (params.pagination.page === 1) {
+                saveSearchHistory(
+                    params.searchTerms,
+                    params.filters,
+                    count
+                );
+            }
+
         } catch (error) {
             console.error('Search error:', error);
             setGrants([]);

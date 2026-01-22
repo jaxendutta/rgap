@@ -5,31 +5,45 @@ import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
 import { revalidateTag } from 'next/cache';
 
-export async function saveSearchHistory(searchTerms: Record<string, string>) {
+export async function saveSearchHistory(
+    searchTerms: Record<string, string>,
+    activeFilters: any,
+    resultCount: number
+) {
     try {
         const user = await getCurrentUser();
-
-        // Construct the filters object for the JSONB column
-        const filters = {
-            recipient: searchTerms.recipient || null,
-            institute: searchTerms.institute || null,
-        };
-
         const mainQuery = searchTerms.grant || '';
 
-        // Only save if there's actually something searched
-        if (!mainQuery && !filters.recipient && !filters.institute) return;
+        // Construct the filters object for the JSONB column
+        // We combine specific search fields (recipient/institute) with the sidebar filters
+        const filtersToSave = {
+            recipient: searchTerms.recipient || null,
+            institute: searchTerms.institute || null,
+            // Spread the active filters (agencies, dates, etc.)
+            ...activeFilters
+        };
 
-        // Insert into DB. If user is undefined, we pass null.
-        await db.query(
-            `INSERT INTO search_history (user_id, search_query, filters, result_count)
-       VALUES ($1, $2, $3, $4)`,
-            [user?.id || null, mainQuery, JSON.stringify(filters), 0]
+        // Only save if there's actually something searched (query or active filters)
+        const hasActiveFilters = Object.values(activeFilters).some((val: any) =>
+            Array.isArray(val) ? val.length > 0 : !!val
         );
 
-        // FIXED: Next.js 16 requires a second argument 'profile'.
-        // 'max' uses Stale-While-Revalidate (updates in background).
-        // Use { expire: 0 } if you need it to expire immediately.
+        if (!mainQuery && !searchTerms.recipient && !searchTerms.institute && !hasActiveFilters) {
+            return;
+        }
+
+        // Insert into DB with the actual result count
+        await db.query(
+            `INSERT INTO search_history (user_id, search_query, filters, result_count)
+             VALUES ($1, $2, $3, $4)`,
+            [
+                user?.id || null,
+                mainQuery, // Stores the Grant Title query
+                JSON.stringify(filtersToSave),
+                resultCount // Stores the actual count
+            ]
+        );
+
         revalidateTag('analytics', 'max');
 
     } catch (error) {
