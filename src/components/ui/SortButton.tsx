@@ -34,6 +34,7 @@ export const SortButton = ({
             leftIcon={Icon}
             onClick={onClick}
             className={cn(
+                "gap-0.5 md:gap-1.5",
                 isActive
                     ? "bg-gray-200 text-gray-900 font-medium"
                     : "text-gray-600 hover:text-gray-900 shadow-none",
@@ -43,7 +44,7 @@ export const SortButton = ({
         >
             <span className="hidden lg:flex">{label}</span>
             {isActive && (
-                <span className="ml-1 text-gray-900">
+                <span className="text-gray-900">
                     {direction === "asc" ? (
                         <LuMoveUp size={12} />
                     ) : (

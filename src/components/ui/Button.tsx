@@ -10,7 +10,7 @@ export const variants = {
     secondary:
         "bg-gray-100 text-gray-700 hover:bg-gray-200",
     outline:
-        "bg-transparent text-gray-700 border border-gray-300 hover:bg-gray-100",
+        "bg-transparent text-gray-700 border border-gray-300 hover:bg-shadow-sm",
     destructive: "bg-red-600 text-white hover:bg-red-700",
     ghost: "bg-transparent text-gray-700 hover:bg-gray-100",
 };
@@ -57,7 +57,7 @@ export const Button = ({
     return (
         <button
             className={cn(
-                "flex items-center justify-center font-medium gap-2 cursor-pointer",
+                "flex items-center justify-center font-medium gap-2 cursor-pointer shadow-xs",
                 "transition-colors duration-300 ease-in-out",
                 pill ? "rounded-full" : "rounded-md",
                 variants[variant],

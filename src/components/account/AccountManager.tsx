@@ -3,10 +3,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { FiUser, FiShield, FiChevronDown, FiLogOut } from 'react-icons/fi';
+import { FiShield, FiChevronDown, FiLogOut } from 'react-icons/fi';
 import { Card } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import Tabs from '@/components/ui/Tabs'; // Import the Tabs component you provided
+import Tabs from '@/components/ui/Tabs';
 import ProfileEditor from '@/components/account/ProfileEditor';
 import PasswordManager from '@/components/account/PasswordManager';
 import DeleteAccountSection from '@/components/account/DeleteAccountSection';
@@ -16,8 +16,9 @@ import SearchHistoryList from '@/components/account/SearchHistoryList';
 import { User } from '@/types/database';
 import { logoutAction } from '@/app/actions/auth';
 import { MdLockReset } from 'react-icons/md';
-import { RxActivityLog } from 'react-icons/rx';
+import { BsPersonGear } from 'react-icons/bs';
 import { TbClockSearch } from 'react-icons/tb';
+import { RiProfileLine } from 'react-icons/ri';
 
 interface AccountManagerProps {
     user: User;
@@ -27,14 +28,14 @@ interface AccountManagerProps {
     currentSessionId?: string;
     totalHistoryCount: number; // Added
     currentHistoryPage: number; // Added
-    initialSection?: string;
+    initialTab?: string;
 }
 
-const SECTIONS = [
-    { id: 'profile', label: 'Profile', icon: FiUser },
+const TABS = [
+    { id: 'profile', label: 'Profile', icon: RiProfileLine },
     { id: 'security', label: 'Security', icon: FiShield },
     { id: 'history', label: 'Search History', icon: TbClockSearch },
-    { id: 'activity', label: 'Activity Log', icon: RxActivityLog },
+    { id: 'activity', label: 'Activity Log', icon: BsPersonGear },
     { id: 'sessions', label: 'Sessions', icon: MdLockReset },
 ] as const;
 
@@ -46,16 +47,16 @@ export default function AccountManager({
     currentSessionId,
     totalHistoryCount = 0, // Default to 0 to prevent crash
     currentHistoryPage = 1,
-    initialSection = 'profile'
+    initialTab = 'profile'
 }: AccountManagerProps) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
     // Initialize state from URL param if available, otherwise prop, otherwise default
-    const paramSection = searchParams.get('section');
-    const [activeSection, setActiveSection] = useState<string>(
-        (paramSection && SECTIONS.some(s => s.id === paramSection)) ? paramSection : initialSection
+    const paramTab = searchParams.get('tab');
+    const [activeTab, setActiveTab] = useState<string>(
+        (paramTab && TABS.some(t => t.id === paramTab)) ? paramTab : initialTab
     );
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -63,22 +64,22 @@ export default function AccountManager({
 
     // Sync state with URL manually if user navigates back/forward
     useEffect(() => {
-        const section = searchParams.get('section');
-        if (section && SECTIONS.some(s => s.id === section)) {
-            setActiveSection(section);
+        const tab = searchParams.get('tab');
+        if (tab && TABS.some(t => t.id === tab)) {
+            setActiveTab(tab);
         }
     }, [searchParams]);
 
     // Handle Tab Change with URL update
-    const handleSectionChange = (sectionId: string) => {
-        setActiveSection(sectionId);
+    const handleTabChange = (tabId: string) => {
+        setActiveTab(tabId);
         setIsDropdownOpen(false);
 
         // Update URL without full reload
         const params = new URLSearchParams(searchParams.toString());
-        params.set('section', sectionId);
+        params.set('tab', tabId);
         // Reset history page when switching tabs if we are leaving history
-        if (sectionId !== 'history') {
+        if (tabId !== 'history') {
             params.delete('history_page');
         }
         router.push(`${pathname}?${params.toString()}`, { scroll: false });
@@ -95,10 +96,10 @@ export default function AccountManager({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const activeLabel = SECTIONS.find(s => s.id === activeSection)?.label;
+    const activeLabel = TABS.find(t => t.id === activeTab)?.label;
 
     return (
-        <div className="flex flex-col gap-6 w-full">
+        <div className="flex flex-col md:gap-6 w-full">
 
             {/* --- HEADER ROW --- */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gray-100">
@@ -110,7 +111,7 @@ export default function AccountManager({
                     <p className="text-xs md:text-sm text-gray-500">Manage your account settings here</p>
                 </div>
 
-                <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                <div className="flex flex-col-reverse md:flex-row items-center gap-3 w-full md:w-auto">
 
                     {/* MOBILE: Dropdown (< md) */}
                     <div className="relative z-10 w-full md:hidden" ref={dropdownRef}>
@@ -126,16 +127,16 @@ export default function AccountManager({
 
                         {isDropdownOpen && (
                             <div className="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
-                                {SECTIONS.map((section) => (
+                                {TABS.map((tab) => (
                                     <button
-                                        key={section.id}
-                                        onClick={() => handleSectionChange(section.id)}
+                                        key={tab.id}
+                                        onClick={() => handleTabChange(tab.id)}
                                         className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition-colors cursor-pointer
-                                            ${activeSection === section.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}
+                                            ${activeTab === tab.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}
                                         `}
                                     >
-                                        <section.icon className="size-4" />
-                                        {section.label}
+                                        <tab.icon className="size-4" />
+                                        {tab.label}
                                     </button>
                                 ))}
                             </div>
@@ -145,11 +146,10 @@ export default function AccountManager({
                     {/* DESKTOP: Pills Tabs (>= md) */}
                     <div className="hidden md:block">
                         <Tabs
-                            tabs={SECTIONS.map(s => ({ ...s, id: s.id }))}
-                            activeTab={activeSection}
-                            onChange={handleSectionChange}
+                            tabs={TABS.map(t => ({ ...t, id: t.id }))}
+                            activeTab={activeTab}
+                            onChange={handleTabChange}
                             variant="pills"
-                            size="md"
                         />
                     </div>
 
@@ -161,21 +161,21 @@ export default function AccountManager({
                         onClick={logoutAction}
                     >
                         <FiLogOut className="size-3.5 md:size-4" />
-                        <span className="md:hidden">Sign Out</span>
+                        <span>Sign Out</span>
                     </Button>
                 </div>
             </div>
 
             {/* --- MAIN CONTENT AREA --- */}
-            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 min-h-[400px]">
-                {activeSection === 'profile' && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                {activeTab === 'profile' && (
                     <Card className="p-4 md:p-8 rounded-3xl">
                         <ProfileEditor user={user} />
                     </Card>
                 )}
 
-                {activeSection === 'security' && (
-                    <div className="flex flex-col gap-6">
+                {activeTab === 'security' && (
+                    <div className="flex flex-col gap-3 md:gap-6">
                         <Card className="p-4 md:p-8 rounded-3xl">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h3>
                             <PasswordManager />
@@ -184,7 +184,7 @@ export default function AccountManager({
                     </div>
                 )}
 
-                {activeSection === 'history' && (
+                {activeTab === 'history' && (
                     <div className="flex flex-col gap-4">
                         <SearchHistoryList
                             history={searchHistory}
@@ -194,14 +194,14 @@ export default function AccountManager({
                     </div>
                 )}
 
-                {activeSection === 'activity' && (
+                {activeTab === 'activity' && (
                     <div className="flex flex-col gap-4">
                         <h3 className="text-lg font-semibold text-gray-900 px-1">Activity Log</h3>
                         <ActivityHistory logs={auditLogs} />
                     </div>
                 )}
 
-                {activeSection === 'sessions' && (
+                {activeTab === 'sessions' && (
                     <div className="flex flex-col gap-4">
                         <h3 className="text-lg font-semibold text-gray-900">Your Active Sessions</h3>
                         <SessionList sessions={sessions} currentSessionId={currentSessionId} />

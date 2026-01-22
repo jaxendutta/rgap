@@ -55,8 +55,14 @@ const Tabs: React.FC<TabsProps> = ({
     // Size-specific styles with vertical padding
     const sizeClasses = {
         sm: "text-xs md:text-sm py-1 md:py-1.5 px-2 md:px-3",
-        md: "text-sm md:text-base py-1.5 px-4 gap-1.75",
+        md: "text-sm py-1.5 px-4 gap-1.75",
         lg: "text-base md:text-lg py-2 px-5",
+    };
+
+    const iconSizeClasses = {
+        sm: "size-2 md:size-4",
+        md: "size-2 md:size-4",
+        lg: "size-5 md:size-5",
     };
 
     // Variant-specific styles
@@ -179,8 +185,8 @@ const Tabs: React.FC<TabsProps> = ({
                         {Icon && (
                             <Icon
                                 className={cn(
-                                    "size-3 md:size-4 flex-shrink-0",
-                                    manyTabs && "md:size-4 lg:size-6"
+                                    iconSizeClasses[size],
+                                    manyTabs && "md:size-4 lg:size-5"
                                 )}
                             />
                         )}

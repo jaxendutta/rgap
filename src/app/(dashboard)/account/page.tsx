@@ -9,8 +9,10 @@ import PageContainer from '@/components/layout/PageContainer';
 interface AccountPageProps {
     searchParams: Promise<{
         verified?: string;
-        section?: string;
+        tab?: string; // CHANGED
         history_page?: string;
+        history_sort?: string;
+        history_dir?: string;
     }>;
 }
 
@@ -21,28 +23,25 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     const params = await searchParams;
     const session = await getSession();
 
-    // Pagination defaults
+    // History Config
     const historyPage = Number(params.history_page) || 1;
-    const historyLimit = 15;
-    const historyOffset = (historyPage - 1) * historyLimit;
+    const limit = 15;
+    const offset = (historyPage - 1) * limit;
 
-    // Fetch all data in parallel
+    // Sort Config
+    const sortField = params.history_sort === 'result_count' ? 'result_count' : 'searched_at';
+    const sortDir = params.history_dir === 'asc' ? 'ASC' : 'DESC';
+
     const [userResult, sessionsResult, auditResult, searchResult, countResult] = await Promise.all([
         db.query('SELECT * FROM users WHERE id = $1', [user.id]),
-
         db.query('SELECT * FROM sessions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10', [user.id]),
-
         db.query('SELECT * FROM user_audit_logs WHERE user_id = $1 ORDER BY created_at DESC LIMIT 20', [user.id]),
-
-        // Paginated history
         db.query(`
             SELECT * FROM search_history 
             WHERE user_id = $1 
-            ORDER BY searched_at DESC 
+            ORDER BY ${sortField} ${sortDir} 
             LIMIT $2 OFFSET $3
-        `, [user.id, historyLimit, historyOffset]),
-
-        // Total count
+        `, [user.id, limit, offset]),
         db.query('SELECT COUNT(*) as count FROM search_history WHERE user_id = $1', [user.id])
     ]);
 
@@ -58,7 +57,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                 currentSessionId={session.sessionId}
                 totalHistoryCount={Number(countResult.rows[0]?.count || 0)}
                 currentHistoryPage={historyPage}
-                initialSection={params.section || 'profile'}
+                initialTab={params.tab || 'profile'}
             />
         </PageContainer>
     );
