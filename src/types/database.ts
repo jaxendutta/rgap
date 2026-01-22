@@ -4,9 +4,7 @@
 
 import { IconType } from "react-icons";
 
-/**
- * User account information
- */
+// User account information
 export interface User {
     id: number;
     name: string;
@@ -35,9 +33,7 @@ export interface AuditLog {
     created_at: Date;
 }
 
-/**
- * Funding organization (NSERC, CIHR, SSHRC)
- */
+// Funding organization (NSERC, CIHR, SSHRC)
 export interface Organization {
     org: 'NSERC' | 'CIHR' | 'SSHRC';
     org_fr: 'CRSNG' | 'IRSC' | 'CRSH';
@@ -45,9 +41,7 @@ export interface Organization {
     org_title_fr: string;
 }
 
-/**
- * Funding program
- */
+// Funding program
 export interface Program {
     prog_id: number;
     prog_title_en: string;
@@ -55,11 +49,9 @@ export interface Program {
     org: string | null;
 }
 
-/**
- * Research institution
- * CONTAINS: All location data (city, province, country)
- * UNIQUE BY: name + city + country
- */
+// Research institution
+// CONTAINS: All location data (city, province, country)
+// UNIQUE BY: name + city + country
 export interface Institute {
     institute_id: number;
     name: string;
@@ -71,11 +63,10 @@ export interface Institute {
     federal_riding_number: string | null;
 }
 
-/**
- * Grant recipient (person or institution)
- * LOCATION: Inherited from linked Institute
- * UNIQUE BY: legal_name + institute_id
- */
+
+// Grant recipient (person or institution)
+// LOCATION: Inherited from linked Institute
+// UNIQUE BY: legal_name + institute_id
 export interface Recipient {
     recipient_id: number;
     type: keyof typeof RECIPIENT_TYPE_LABELS;
@@ -85,9 +76,7 @@ export interface Recipient {
     institute_id: number | null;
 }
 
-/**
- * Research grant
- */
+// Research grant
 export interface Grant {
     grant_id: number;
     ref_number: string;
@@ -109,9 +98,7 @@ export interface Grant {
     amendments_history: GrantAmendment[] | null;
 }
 
-/**
- * Grant amendment information
- */
+// Grant amendment information
 export interface GrantAmendment {
     amendment_number: number;
     amendment_date: string;
@@ -121,42 +108,7 @@ export interface GrantAmendment {
     additional_information_en?: string;
 }
 
-/**
- * Bookmarked grant
- */
-export interface BookmarkedGrant {
-    bookmark_id: number;
-    user_id: number;
-    grant_id: number;
-    bookmarked_at: Date;
-    notes: string | null;
-}
-
-/**
- * Bookmarked institute
- */
-export interface BookmarkedInstitute {
-    bookmark_id: number;
-    user_id: number;
-    institute_id: number;
-    bookmarked_at: Date;
-    notes: string | null;
-}
-
-/**
- * Bookmarked recipient
- */
-export interface BookmarkedRecipient {
-    bookmark_id: number;
-    user_id: number;
-    recipient_id: number;
-    bookmarked_at: Date;
-    notes: string | null;
-}
-
-/**
- * Search history
- */
+// Search history
 export interface SearchHistory {
     search_id: number;
     user_id: number;
@@ -166,14 +118,52 @@ export interface SearchHistory {
     searched_at: Date;
 }
 
+// Bookmarked searches
+export interface BookmarkedSearch {
+    bookmark_id: number;
+    user_id: number;
+    search_history_id: number;
+    bookmarked_at: Date;
+    notes: string | null;
+    // Joined fields
+    search_query?: string;
+    filters?: any;
+    result_count?: number;
+}
+
+// Bookmarked grant
+export interface BookmarkedGrant {
+    bookmark_id: number;
+    user_id: number;
+    grant_id: number;
+    bookmarked_at: Date;
+    notes: string | null;
+}
+
+// Bookmarked institute
+export interface BookmarkedInstitute {
+    bookmark_id: number;
+    user_id: number;
+    institute_id: number;
+    bookmarked_at: Date;
+    notes: string | null;
+}
+
+// Bookmarked recipient
+export interface BookmarkedRecipient {
+    bookmark_id: number;
+    user_id: number;
+    recipient_id: number;
+    bookmarked_at: Date;
+    notes: string | null;
+}
+
 // ============================================================================
 // EXTENDED TYPES (With Aggregated Data from API/Views)
 // ============================================================================
 
-/**
- * Institute with aggregated statistics
- * Used in list views and profile pages
- */
+// Institute with aggregated statistics
+// Used in list views and profile pages
 export interface InstituteWithStats extends Institute {
     // Aggregated counts
     recipient_count: number;
@@ -201,11 +191,9 @@ export interface InstituteWithStats extends Institute {
     is_bookmarked: boolean;
 }
 
-/**
- * Recipient with aggregated statistics AND institute location data
- * Used in list views and profile pages
- * IMPORTANT: Location fields are populated from the linked Institute
- */
+// Recipient with aggregated statistics AND institute location data
+// Used in list views and profile pages
+// IMPORTANT: Location fields are populated from the linked Institute
 export interface RecipientWithStats extends Recipient {
     // Institute information (for display)
     research_organization_name?: string; // Institute name
@@ -234,9 +222,7 @@ export interface RecipientWithStats extends Recipient {
     is_bookmarked?: boolean;
 }
 
-/**
- * Grant with full details (joins with recipient, institute, program, org)
- */
+// Grant with full details (joins with recipient, institute, program, org)
 export type GrantWithDetails = Grant & Recipient & Institute & Program & Organization & {
     is_bookmarked?: boolean;
 };
@@ -245,14 +231,10 @@ export type GrantWithDetails = Grant & Recipient & Institute & Program & Organiz
 // TYPE UTILITIES
 // ============================================================================
 
-/**
- * Entity types for routing and components
- */
+// Entity types for routing and components
 export type EntityType = 'grant' | 'recipient' | 'institute';
 
-/**
- * Recipient type labels
- */
+// Recipient type labels
 export const RECIPIENT_TYPE_LABELS = {
     A: "Indigenous recipients",
     F: "For-profit organizations",
@@ -264,16 +246,12 @@ export const RECIPIENT_TYPE_LABELS = {
     S: "Academia"
 } as const;
 
-/**
- * Type guard to check if entity is an Institute
- */
+// Type guard to check if entity is an Institute
 export function isInstitute(entity: InstituteWithStats | RecipientWithStats): entity is InstituteWithStats {
     return 'institute_id' in entity && !('recipient_id' in entity);
 }
 
-/**
- * Type guard to check if entity is a Recipient
- */
+// Type guard to check if entity is a Recipient
 export function isRecipient(entity: InstituteWithStats | RecipientWithStats): entity is RecipientWithStats {
     return 'recipient_id' in entity;
 }

@@ -1,3 +1,4 @@
+// src/components/bookmarks/BookmarkButton.tsx
 "use client";
 
 import { useAuth } from "@/providers/AuthProvider";
@@ -7,6 +8,12 @@ import { LuBookmark, LuBookmarkCheck } from "react-icons/lu";
 import { useState } from "react";
 import { Button, variants } from "@/components/ui/Button";
 import Link from "next/link";
+import {
+    toggleGrantBookmark,
+    toggleRecipientBookmark,
+    toggleInstituteBookmark,
+    toggleSearchBookmark
+} from "@/app/actions/bookmarks";
 
 interface BookmarkButtonProps {
     entityType: "grant" | "recipient" | "institute" | "search";
@@ -32,41 +39,44 @@ export function BookmarkButton({
     const [loading, setLoading] = useState(false);
 
     const handleToggle = async () => {
-        // 1. Check if user is logged in
         if (!user) {
             notify(
                 <span>
-                    Please{" "}
-                    <Link
-                        href={`/login?redirect=${pathname}`}
-                        className="underline font-bold hover:text-blue-800 transition-colors"
-                    >
-                        sign in
-                    </Link>{" "}
-                    to bookmark items.
+                    Please <Link href={`/login?redirect=${pathname}`} className="underline font-bold">sign in</Link> to bookmark items.
                 </span>,
                 "info"
             );
             return;
         }
 
-        // 2. Perform Bookmark Action
         setLoading(true);
         try {
-            const response = await fetch(`/api/bookmarks/${entityType}`, {
-                method: bookmarked ? "DELETE" : "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ entityId }),
-            });
+            let result;
 
-            if (response.ok) {
-                setBookmarked(!bookmarked);
-                // Optional: Notify success on add
-                if (!bookmarked) {
-                    notify("Saved to bookmarks", "success");
-                }
+            switch (entityType) {
+                case "grant":
+                    result = await toggleGrantBookmark(entityId);
+                    break;
+                case "recipient":
+                    result = await toggleRecipientBookmark(entityId);
+                    break;
+                case "institute":
+                    result = await toggleInstituteBookmark(entityId);
+                    break;
+                case "search":
+                    result = await toggleSearchBookmark(entityId);
+                    break;
+            }
+
+            if (result && result.success) {
+                // Fix: explicit boolean cast
+                setBookmarked(!!result.isBookmarked);
+
+                // Fix: Use 'info' or 'success' which are valid ToastTypes
+                if (result.isBookmarked) notify("Saved to bookmarks", "success");
+                else notify("Removed from bookmarks", "info");
             } else {
-                notify("Failed to update bookmark", "error");
+                notify(result?.error || "Failed to update bookmark", "error");
             }
         } catch (error) {
             console.error("Bookmark error:", error);
@@ -80,7 +90,7 @@ export function BookmarkButton({
         <Button
             variant={variant}
             size={size}
-            onClick={handleToggle}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggle(); }}
             disabled={loading}
             title={bookmarked ? "Remove bookmark" : "Add bookmark"}
             className={variant === "outline" ? "bg-white" : ""}
@@ -88,16 +98,12 @@ export function BookmarkButton({
             {bookmarked ? (
                 <>
                     <LuBookmarkCheck className="w-4 h-4 text-blue-600" />
-                    {showLabel && (
-                        <span className="hidden md:inline-flex">Bookmarked</span>
-                    )}
+                    {showLabel && <span className="hidden md:inline-flex">Bookmarked</span>}
                 </>
             ) : (
                 <>
                     <LuBookmark className="w-4 h-4" />
-                    {showLabel && (
-                        <span className="hidden md:inline-flex">Bookmark</span>
-                    )}
+                    {showLabel && <span className="hidden md:inline-flex">Bookmark</span>}
                 </>
             )}
         </Button>

@@ -153,7 +153,23 @@ CREATE TABLE IF NOT EXISTS verification_tokens (
 );
 
 -- ============================================================================
--- Bookmarks & History (Standard)
+-- Search History
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS search_history (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER,
+    search_query TEXT NOT NULL,
+    filters JSONB,
+    result_count INTEGER,
+    searched_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_search_history_user ON search_history(user_id);
+CREATE INDEX idx_search_history_date ON search_history(searched_at DESC);
+
+-- ============================================================================
+-- Bookmarks
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS bookmarked_grants (
     id SERIAL PRIMARY KEY,
@@ -188,15 +204,13 @@ CREATE TABLE IF NOT EXISTS bookmarked_institutes (
     UNIQUE(user_id, institute_id)
 );
 
-CREATE TABLE IF NOT EXISTS search_history (
+CREATE TABLE IF NOT EXISTS bookmarked_searches (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER,
-    search_query TEXT NOT NULL,
-    filters JSONB,
-    result_count INTEGER,
-    searched_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    user_id INTEGER NOT NULL,
+    search_history_id INTEGER NOT NULL,
+    bookmarked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    notes TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (search_history_id) REFERENCES search_history(id) ON DELETE CASCADE,
+    UNIQUE(user_id, search_history_id)
 );
-
-CREATE INDEX idx_search_history_user ON search_history(user_id);
-CREATE INDEX idx_search_history_date ON search_history(searched_at DESC);

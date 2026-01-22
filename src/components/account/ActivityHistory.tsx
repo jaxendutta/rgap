@@ -1,7 +1,8 @@
+// src/components/account/ActivityHistory.tsx
 'use client';
 
-import React from 'react';
-import { FiEdit2, FiLock, FiMail, FiLogIn, FiClock } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import { FiEdit2, FiLock, FiMail, FiLogIn, FiClock, FiBookmark, FiTrash2 } from 'react-icons/fi';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { Card } from '@/components/ui/Card';
 import Tag from '../ui/Tag';
@@ -15,8 +16,17 @@ interface AuditLog {
 }
 
 export default function ActivityHistory({ logs }: { logs: AuditLog[] }) {
+    // Hydration fix: Only render local dates after mounting on the client
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const getIcon = (type: string) => {
+        if (type.startsWith('REMOVE_BOOKMARK')) return FiTrash2;
+        if (type.startsWith('BOOKMARK')) return FiBookmark;
+
         switch (type) {
             case 'PASSWORD_CHANGE': return FiLock;
             case 'EMAIL_CHANGE': return FiMail;
@@ -27,6 +37,9 @@ export default function ActivityHistory({ logs }: { logs: AuditLog[] }) {
     };
 
     const getStyle = (type: string) => {
+        if (type.startsWith('REMOVE_BOOKMARK')) return 'bg-red-50 border-red-200 text-red-700';
+        if (type.startsWith('BOOKMARK')) return 'bg-indigo-50 border-indigo-200 text-indigo-700';
+
         switch (type) {
             case 'PASSWORD_CHANGE': return 'bg-orange-50 border-orange-200 text-orange-700';
             case 'EMAIL_CHANGE': return 'bg-blue-50 border-blue-200 text-blue-700';
@@ -41,8 +54,24 @@ export default function ActivityHistory({ logs }: { logs: AuditLog[] }) {
             case 'PASSWORD_CHANGE': return "Changed password";
             case 'EMAIL_CHANGE': return "Changed email";
             case 'NAME_CHANGE': return "Renamed account";
-            default: return log.event_type.replace('_', ' ').toLowerCase();
+            case 'BOOKMARK_GRANT': return "Bookmarked Grant";
+            case 'REMOVE_BOOKMARK_GRANT': return "Removed Grant Bookmark";
+            case 'BOOKMARK_RECIPIENT': return "Bookmarked Recipient";
+            case 'REMOVE_BOOKMARK_RECIPIENT': return "Removed Recipient Bookmark";
+            case 'BOOKMARK_INSTITUTE': return "Bookmarked Institute";
+            case 'REMOVE_BOOKMARK_INSTITUTE': return "Removed Institute Bookmark";
+            default: return log.event_type.replace(/_/g, ' ').toLowerCase();
         }
+    };
+
+    // Safe date formatter that returns a consistent server string initially
+    const formatDate = (dateString: string) => {
+        if (!isMounted) {
+            // Return a stable format for server-side rendering (ISO UTC)
+            return new Date(dateString).toISOString().slice(0, 19).replace('T', ' ') + ' UTC';
+        }
+        // Return browser locale string after mount
+        return new Date(dateString).toLocaleString();
     };
 
     if (logs.length === 0) {
@@ -65,23 +94,30 @@ export default function ActivityHistory({ logs }: { logs: AuditLog[] }) {
                                 <span className="text-xs md:text-sm ml-2">{formatText(log)}</span>
                             </div>
                             <Tag
-                                text={new Date(log.created_at).toLocaleString()}
+                                text={formatDate(log.created_at)}
                                 variant="ghost"
                                 className="w-fit text-xs md:text-sm md:hidden"
                             />
                         </div>
                         <div className="flex flex-row gap-1 text-gray-700 items-center justify-center md:col-span-2">
-                            {log.old_value && log.new_value && (
+                            {/* For bookmarks, show the ID if helpful, or specific logic */}
+                            {(log.old_value || log.new_value) && (
                                 <div className="flex flex-wrap gap-1 items-center justify-center">
-                                    <Tag text={log.old_value} variant="outline" className="w-fit text-xs md:text-sm" />
-                                    <span className=" text-gray-400">→</span>
-                                    <Tag text={log.new_value} variant="outline" className="w-fit text-xs md:text-sm" />
+                                    {log.old_value && (
+                                        <>
+                                            <Tag text={log.old_value} variant="outline" className="w-fit text-xs md:text-sm" />
+                                            {log.new_value && <span className=" text-gray-400">→</span>}
+                                        </>
+                                    )}
+                                    {log.new_value && (
+                                        <Tag text={log.new_value} variant="outline" className="w-fit text-xs md:text-sm" />
+                                    )}
                                 </div>
                             )}
                         </div>
                         <div className="w-full hidden md:flex md:flex-col md:flex-row md:justify-end items-center gap-2 md:col-span-1">
                             <Tag
-                                text={new Date(log.created_at).toLocaleString()}
+                                text={formatDate(log.created_at)}
                                 variant="outline"
                                 className="w-fit text-xs md:text-sm"
                             />
