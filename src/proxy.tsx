@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     // 1. Define protected routes
     if (request.nextUrl.pathname.startsWith('/account') ||
         request.nextUrl.pathname.startsWith('/bookmarks')) {
