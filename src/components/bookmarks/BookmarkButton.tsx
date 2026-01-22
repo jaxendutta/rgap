@@ -9,7 +9,7 @@ import { Button, variants } from "@/components/ui/Button";
 import Link from "next/link";
 
 interface BookmarkButtonProps {
-    entityType: "grant" | "recipient" | "institute";
+    entityType: "grant" | "recipient" | "institute" | "search";
     entityId: number;
     isBookmarked?: boolean;
     size?: "sm" | "md" | "lg";
