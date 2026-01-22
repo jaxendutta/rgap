@@ -6,15 +6,15 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeader from '@/components/layout/PageHeader';
 import SearchInterface from '@/components/search/SearchInterface';
-import EntityList, { SortOption } from '@/components/entity/EntityList';
+import EntityList from '@/components/entity/EntityList';
 import { GrantCard } from '@/components/grants/GrantCard';
 import EmptyState from '@/components/ui/EmptyState';
 import { Pagination } from '@/components/ui/Pagination';
-import { LuSearch, LuGraduationCap, LuUniversity, LuBookMarked, LuDollarSign, LuCalendar } from 'react-icons/lu';
-import { MdSortByAlpha } from "react-icons/md";
+import { LuSearch, LuGraduationCap, LuUniversity, LuBookMarked } from 'react-icons/lu';
 import type { GrantWithDetails } from '@/types/database';
 import { DEFAULT_FILTER_STATE } from '@/constants/filters';
 import { saveSearchHistory } from '@/app/actions/history';
+import { getSortOptions } from '@/lib/utils';
 
 interface FilterOptions {
     agencies: string[];
@@ -28,13 +28,6 @@ interface SearchPageClientProps {
     initialSearchTerms?: Record<string, string>;
     initialFilters?: typeof DEFAULT_FILTER_STATE;
 }
-
-// Client Components CAN pass functions (icons) to other Client Components
-const SEARCH_SORT_OPTIONS: SortOption[] = [
-    { label: 'Value', field: 'agreement_value', icon: LuDollarSign },
-    { label: 'Date', field: 'agreement_start_date', icon: LuCalendar },
-    { label: 'Recipient', field: 'recipient', icon: MdSortByAlpha },
-];
 
 export default function SearchPageClient({
     filterOptions,
@@ -230,7 +223,7 @@ export default function SearchPageClient({
                             entityType="grant"
                             entities={grants}
                             totalCount={totalResults}
-                            sortOptions={SEARCH_SORT_OPTIONS} // Passing custom client options
+                            sortOptions={getSortOptions('grant', 'grant')}
                             showVisualization={true}
                             visualizationData={visualizationData}
                             emptyMessage="Try adjusting your search terms or filters"

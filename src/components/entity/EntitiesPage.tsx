@@ -4,7 +4,8 @@ import PageHeader from "@/components/layout/PageHeader";
 import EntityList from "@/components/entity/EntityList";
 import { EntityCard } from "@/components/entity/EntityCard";
 import { IconType } from "react-icons";
-import { EntityType, GrantWithDetails, InstituteWithStats, RecipientWithStats } from "@/types/database";
+import { EntityType, GrantWithDetails, InstituteWithStats, RecipientWithStats, SortOption } from "@/types/database";
+import { getSortOptions } from "@/lib/utils";
 
 interface EntitiesPageProps {
     title: string;
@@ -16,6 +17,7 @@ interface EntitiesPageProps {
     emptyMessage?: string;
     showVisualization?: boolean;
     visualizationData?: GrantWithDetails[];
+    sortOptions?: SortOption[];
 }
 
 const EntitiesPage = ({
@@ -28,6 +30,7 @@ const EntitiesPage = ({
     emptyMessage = "No items found",
     showVisualization = false,
     visualizationData = [],
+    sortOptions = getSortOptions(entityType, entityType),
 }: EntitiesPageProps) => {
     return (
         <PageContainer className="space-y-6">
@@ -44,6 +47,7 @@ const EntitiesPage = ({
                 emptyMessage={emptyMessage}
                 showVisualization={showVisualization}
                 visualizationData={visualizationData}
+                sortOptions={sortOptions}
             >
                 {entities.map((entity) => {
                     const id = 'recipient_id' in entity

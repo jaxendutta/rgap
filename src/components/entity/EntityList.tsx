@@ -3,7 +3,7 @@
 
 import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn, getSortOptions } from "@/lib/utils";
 import { EntityType } from "@/types/database";
 import {
     LuGrid2X2,
@@ -21,33 +21,9 @@ import { Card } from "@/components/ui/Card";
 import { SortButton } from "@/components/ui/SortButton";
 import { AnimatePresence, motion } from "framer-motion";
 import TrendVisualizer, { ViewContext } from "@/components/visualizations/TrendVisualizer";
-import { IconType } from "react-icons";
 import { TbGraph, TbGraphOff } from "react-icons/tb";
 import Pagination from "@/components/ui/Pagination";
-
-export interface SortOption {
-    label: string;
-    field: string;
-    icon: IconType;
-}
-
-export const DEFAULT_SORT_OPTIONS: Record<EntityType, SortOption[]> = {
-    grant: [
-        { label: "Value", field: "agreement_value", icon: LuDollarSign },
-        { label: "Date", field: "agreement_start_date", icon: LuCalendar },
-        { label: "Recipient", field: "recipient", icon: MdSortByAlpha },
-    ],
-    institute: [
-        { label: "Funding", field: "total_funding", icon: LuDollarSign },
-        { label: "Grants", field: "grant_count", icon: LuHash },
-        { label: "Name", field: "name", icon: MdSortByAlpha },
-    ],
-    recipient: [
-        { label: "Funding", field: "total_funding", icon: LuDollarSign },
-        { label: "Grants", field: "grant_count", icon: LuHash },
-        { label: "Name", field: "legal_name", icon: MdSortByAlpha },
-    ],
-}
+import { SortOption } from "@/types/database";
 
 export type LayoutVariant = "list" | "grid";
 
@@ -56,7 +32,7 @@ export interface EntityListProps<T> {
     entities?: T[];
     totalCount: number;
     children: React.ReactNode;
-    sortOptions?: SortOption[];
+    sortOptions: SortOption[];
     showVisualization?: boolean;
     visualizationData?: any[];
     viewContext?: ViewContext;
@@ -78,8 +54,7 @@ function EntityList<T>(props: EntityListProps<T>) {
         entities = [],
         totalCount,
         children,
-        sortOptions = DEFAULT_SORT_OPTIONS[entityType],
-        // RESTORED: Defaults
+        sortOptions = getSortOptions(entityType, entityType),
         showVisualization = false,
         visualizationData = [],
         viewContext = "search",
@@ -138,13 +113,13 @@ function EntityList<T>(props: EntityListProps<T>) {
                 <div className="flex gap-2 flex-wrap flex-grow justify-center sm:justify-end">
                     {sortOptions.map((option) => (
                         <SortButton
-                            key={option.field}
+                            key={typeof option.field === "symbol" ? String(option.field) : String(option.field)}
                             label={option.label}
                             icon={option.icon}
-                            field={option.field}
-                            currentField={currentSortField}
+                            field={String(option.field)}
+                            currentField={String(currentSortField)}
                             direction={currentSortDir}
-                            onClick={() => handleSort(option.field)}
+                            onClick={() => handleSort(String(option.field))}
                         />
                     ))}
 

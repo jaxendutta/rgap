@@ -299,16 +299,16 @@ export interface PaginatedResponse<T = any> {
 // SORT & FILTER TYPES
 // ============================================================================
 
-export interface SortConfig<T> {
-    field: keyof T;
+export interface SortConfig {
+    field: string;
     label: string;
     direction: 'asc' | 'desc';
 }
 
-export type SortOption<T> = {
+export type SortOption = {
     value: string;
     label: string;
-    field: keyof T;
+    field: string;
     direction: 'asc' | 'desc';
     icon: IconType;
 };

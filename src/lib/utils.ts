@@ -2,7 +2,7 @@
 
 import { GrantWithDetails, InstituteWithStats, RecipientWithStats, SortOption } from '@/types/database';
 import { clsx, type ClassValue } from 'clsx';
-import { LuCalendar, LuDollarSign, LuHash } from 'react-icons/lu';
+import { LuCalendar, LuDollarSign, LuHash, LuUsers } from 'react-icons/lu';
 import { MdSortByAlpha } from 'react-icons/md';
 import { twMerge } from 'tailwind-merge';
 
@@ -136,7 +136,7 @@ export function calculateOffset(page: number, pageSize: number): number {
 export function getSortOptions(entityType: 'grant' | 'recipient' | 'institute', context: "recipient" | "institute" | "grant") {
     switch (entityType) {
         case 'grant':
-            let grantSortOptions: SortOption<GrantWithDetails>[] = [
+            let grantSortOptions: SortOption[] = [
                 {
                     value: 'agreement_start_date',
                     label: 'Date',
@@ -164,7 +164,7 @@ export function getSortOptions(entityType: 'grant' | 'recipient' | 'institute', 
             return grantSortOptions;
 
         case 'recipient':
-            let recipientSortOptions: SortOption<RecipientWithStats>[] = [
+            let recipientSortOptions: SortOption[] = [
                 {
                     value: 'grant_count',
                     label: 'Grants',
@@ -192,7 +192,7 @@ export function getSortOptions(entityType: 'grant' | 'recipient' | 'institute', 
             return recipientSortOptions;
 
         case 'institute':
-            let instituteSortOptions: SortOption<InstituteWithStats>[] = [
+            let instituteSortOptions: SortOption[] = [
                 {
                     value: 'grant_count',
                     label: 'Grants',
@@ -209,17 +209,23 @@ export function getSortOptions(entityType: 'grant' | 'recipient' | 'institute', 
                 },
             ];
             if (context === 'institute') {
-                instituteSortOptions.push({
-                    value: 'name',
-                    label: 'Name',
-                    field: 'name',
-                    direction: 'asc',
-                    icon: MdSortByAlpha,
-                });
+                instituteSortOptions.push(
+                    {
+                        value: 'recipient_count',
+                        label: 'Recipients',
+                        field: 'recipient_count',
+                        direction: 'desc',
+                        icon: LuUsers,
+                    },
+                    {
+                        value: 'name',
+                        label: 'Institute',
+                        field: 'name',
+                        direction: 'asc',
+                        icon: MdSortByAlpha,
+                    },
+                );
             }
             return instituteSortOptions;
-
-        default:
-            return [];
     }
 }

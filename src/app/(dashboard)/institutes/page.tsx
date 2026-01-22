@@ -2,16 +2,12 @@
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
 import EntitiesPage from '@/components/entity/EntitiesPage';
-import { SortOption } from '@/components/entity/EntityList';
 import { LuUniversity } from 'react-icons/lu';
 import { InstituteWithStats } from '@/types/database';
 import { Metadata } from 'next';
+import { getSortOptions } from '@/lib/utils';
 
-const SORT_FIELDS = {
-    funding: 'total_funding',
-    count: 'grant_count',
-    name: 'name'
-};
+const sortOptions = getSortOptions('institute', 'institute');
 
 interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -27,14 +23,13 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
     const limit = 20;
     const offset = (page - 1) * limit;
 
-    const sortParam = (resolvedParams.sort as string) || 'funding';
+    const sortParam = (resolvedParams.sort as string) || sortOptions[0].value;
     const sortDir = (resolvedParams.dir as string) === 'asc' ? 'ASC' : 'DESC';
-    const sortField = SORT_FIELDS[sortParam as keyof typeof SORT_FIELDS] || 'total_funding';
+    const sortField = sortOptions.find(option => option.value === sortParam)?.field || sortOptions[0].field;
 
     // 2. Counts
     const countResult = await db.query(`SELECT COUNT(*) as total FROM institutes`);
     const totalItems = parseInt(countResult.rows[0].total);
-    const totalPages = Math.ceil(totalItems / limit);
 
     // 3. Build Dynamic Query
     const queryParams: any[] = [];
@@ -92,10 +87,9 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
             icon={LuUniversity}
             entities={institutes}
             totalItems={totalItems}
-            totalPages={totalPages}
             entityType="institute"
             emptyMessage="No institutes found"
-            showVisualization={false}
+            showVisualization={true}
         />
     );
 }
