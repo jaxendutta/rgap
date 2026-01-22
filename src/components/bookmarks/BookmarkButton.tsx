@@ -89,14 +89,14 @@ export function BookmarkButton({
                 <>
                     <LuBookmarkCheck className="w-4 h-4 text-blue-600" />
                     {showLabel && (
-                        <span className="hidden md:inline-flex ml-2">Bookmarked</span>
+                        <span className="hidden md:inline-flex">Bookmarked</span>
                     )}
                 </>
             ) : (
                 <>
                     <LuBookmark className="w-4 h-4" />
                     {showLabel && (
-                        <span className="hidden md:inline-flex ml-2">Bookmark</span>
+                        <span className="hidden md:inline-flex">Bookmark</span>
                     )}
                 </>
             )}

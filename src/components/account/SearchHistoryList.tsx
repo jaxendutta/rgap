@@ -1,12 +1,12 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { FiSearch, FiCalendar, FiHash, FiMapPin, FiUser } from 'react-icons/fi';
 import { LuLayoutGrid } from "react-icons/lu";
 import { Card } from '@/components/ui/Card';
 import Tag, { Tags } from '@/components/ui/Tag';
 import BookmarkButton from '@/components/bookmarks/BookmarkButton';
 import Button from '@/components/ui/Button';
-import { useRouter } from 'next/navigation';
 
 interface SearchHistoryItem {
     id: number;
@@ -38,11 +38,20 @@ export default function SearchHistoryList({ history }: { history: SearchHistoryI
             <div className="divide-y divide-gray-100">
                 {history.map((item) => {
                     // 1. Safe JSON Parsing
-                    const filters = typeof item.filters === 'string'
+                    const rawFilters = typeof item.filters === 'string'
                         ? JSON.parse(item.filters)
                         : (item.filters || {});
 
-                    // 2. Format Date Range
+                    // 2. CLEAN THE FILTERS (Fixes the "null" issue)
+                    const filters: Record<string, any> = {};
+                    Object.entries(rawFilters).forEach(([key, value]) => {
+                        // Only keep valid values (exclude null, "null", undefined, empty string)
+                        if (value && value !== 'null' && value !== '') {
+                            filters[key] = value;
+                        }
+                    });
+
+                    // 3. Format Date Range
                     let dateRangeText = null;
                     if (filters.from_year && filters.to_year) {
                         dateRangeText = `${filters.from_year} - ${filters.to_year}`;
@@ -52,11 +61,16 @@ export default function SearchHistoryList({ history }: { history: SearchHistoryI
                         dateRangeText = `Until ${filters.to_year}`;
                     }
 
-                    // 3. Construct Search URL for "Re-run"
+                    // 4. Construct Search URL (using CLEAN filters)
                     const searchParams = new URLSearchParams();
-                    if (item.search_query) searchParams.set('q', item.search_query);
+                    if (item.search_query && item.search_query !== 'null') {
+                        searchParams.set('q', item.search_query);
+                    }
                     Object.entries(filters).forEach(([k, v]) => searchParams.set(k, String(v)));
                     const searchUrl = `/search?${searchParams.toString()}`;
+
+                    const hasFilters = Object.keys(filters).length > 0;
+                    const hasQuery = item.search_query && item.search_query !== 'null';
 
                     return (
                         <div key={item.id} className="group p-5 hover:bg-gray-50/80 transition-all duration-200 flex flex-col md:flex-row gap-5 md:items-center justify-between">
@@ -64,11 +78,11 @@ export default function SearchHistoryList({ history }: { history: SearchHistoryI
                             {/* LEFT: Search Context */}
                             <div className="flex flex-col gap-3 flex-1 min-w-0">
 
-                                {/* Tag Group using your component */}
+                                {/* Tag Group */}
                                 <Tags spacing="tight" className="items-center">
 
-                                    {/* A. Search Query (Primary Blue) */}
-                                    {item.search_query ? (
+                                    {/* A. Search Query */}
+                                    {hasQuery ? (
                                         <Tag
                                             text="Keywords"
                                             innerText={item.search_query}
@@ -77,8 +91,8 @@ export default function SearchHistoryList({ history }: { history: SearchHistoryI
                                             size="sm"
                                         />
                                     ) : (
-                                        // "All Grants" if no query exists
-                                        Object.keys(filters).length === 0 && (
+                                        // "All Grants" if no query AND no filters
+                                        !hasFilters && (
                                             <Tag text="All Grants" variant="default" size="sm" />
                                         )
                                     )}
@@ -152,9 +166,10 @@ export default function SearchHistoryList({ history }: { history: SearchHistoryI
                                 <Button
                                     variant="secondary"
                                     onClick={() => router.push(searchUrl)}
+                                    className="p-1 md:p-2"
                                 >
                                     <FiSearch className="size-4" />
-                                    <span>Search Again</span>
+                                    <span className="hidden md:inline-flex">Search Again</span>
                                 </Button>
                             </div>
                         </div>
