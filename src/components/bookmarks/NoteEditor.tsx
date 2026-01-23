@@ -56,10 +56,10 @@ export default function NoteEditor({
         return (
             <button
                 onClick={() => setIsExpanded(true)}
-                className="text-sm text-gray-500 hover:text-blue-600 flex items-center gap-2 transition-colors md:py-2 group"
+                className="text-xs md:text-sm text-gray-500 hover:text-blue-600 flex items-center gap-2 transition-colors md:py-2 group"
             >
                 <div className="p-1 rounded bg-gray-100 group-hover:bg-blue-50 text-gray-400 group-hover:text-blue-600">
-                    <LuPlus className="w-3 h-3" />
+                    <LuPlus className="size-2.5 md:size-3" />
                 </div>
                 Add notes only visible to you
             </button>
@@ -69,14 +69,14 @@ export default function NoteEditor({
     return (
         <div className={cn("relative group animate-in fade-in zoom-in-95 duration-200", className)}>
             <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                    <LuStickyNote className="w-3 h-3" />
+                <label className="text-xs font-semibold text-gray-500 flex items-center gap-1 md:gap-1.5">
+                    <LuStickyNote className="size-2.5 md:size-3" />
                     {label}
                 </label>
                 <div className="flex items-center gap-2">
                     <div className="text-xs h-4">
-                        {isSaving && <span className="text-blue-600 flex items-center gap-1"><LuLoader className="animate-spin w-3 h-3" /> Saving...</span>}
-                        {!isSaving && lastSaved && <span className="text-green-600 flex items-center gap-1"><LuCheck className="w-3 h-3" /> Saved</span>}
+                        {isSaving && <span className="text-blue-600 flex items-center gap-1"><LuLoader className="animate-spin size-2.5 md:size-3" /> Saving...</span>}
+                        {!isSaving && lastSaved && <span className="text-green-600 flex items-center gap-1"><LuCheck className="size-2.5 md:size-3" /> Saved</span>}
                     </div>
                 </div>
             </div>
@@ -89,7 +89,7 @@ export default function NoteEditor({
                 }}
                 onBlur={handleSave}
                 placeholder={placeholder}
-                className="w-full text-sm p-3 bg-yellow-50/50 border border-yellow-200 rounded-2xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent outline-none resize-none min-h-[80px] transition-all placeholder:text-gray-400 text-gray-700 block"
+                className="w-full text-xs md:text-sm p-3 bg-yellow-50/50 border border-yellow-200 rounded-2xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent outline-none resize-none min-h-[80px] transition-all placeholder:text-gray-400 text-gray-700 block"
             />
 
             {isDirty && !isSaving && (

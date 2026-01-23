@@ -66,7 +66,7 @@ export default function BookmarkedEntityCard({ data, type }: BookmarkedEntityCar
 
     return (
         <Card className="flex flex-col h-full hover:border-gray-300 transition-all duration-200">
-            <div className="p-3 md:p-4 flex-1 flex flex-col gap-0.75 md:gap-1.25">
+            <div className="p-3 md:p-4 flex-1 flex flex-col gap-0.75 md:gap-1.25 border-b-1 border-gray-300 shadow-sm rounded-2xl">
                 {/* Header */}
                 <div className="flex justify-between items-start gap-3">
                     <Link
@@ -111,15 +111,15 @@ export default function BookmarkedEntityCard({ data, type }: BookmarkedEntityCar
                         />
                     )}
                 </div>
-
-                {/* Notes Section - Pushed to bottom */}
-                <div className="mt-2 md:mt-3 lg:mt-4 pt-2.5 md:pt-2 border-t border-gray-100">
-                    <NoteEditor
-                        initialNote={data.notes || null}
-                        onSave={handleSaveNote}
-                        placeholder={`Notes about this ${type}...`}
-                    />
-                </div>
+            </div>
+            
+            {/* Notes Section - Pushed to bottom */}
+            <div className="p-2.5 md:pt-2">
+                <NoteEditor
+                    initialNote={data.notes || null}
+                    onSave={handleSaveNote}
+                    placeholder={`Notes about this ${type}...`}
+                />
             </div>
         </Card>
     );
