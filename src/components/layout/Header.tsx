@@ -9,7 +9,6 @@ import { AnimatePresence, motion } from "framer-motion";
 
 const Header = () => {
     const [showScrollTop, setShowScrollTop] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false); // Kept state for future use if needed
 
     useEffect(() => {
         const handleScroll = () => {
@@ -30,23 +29,6 @@ const Header = () => {
         };
     }, []);
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const response = await fetch("/api/auth/check", {
-                    credentials: "include",
-                });
-                const data = await response.json();
-                setIsLoggedIn(data.loggedIn);
-            } catch (error) {
-                console.error("Error checking authentication", error);
-                setIsLoggedIn(false);
-            }
-        };
-
-        checkAuth();
-    }, []);
-
     const scrollToTop = () => {
         const mainContent = document.getElementById("main-content");
         if (mainContent) {
@@ -58,9 +40,9 @@ const Header = () => {
     };
 
     return (
-        <header className="lg:hidden fixed top-0 left-0 right-0 z-40 p-3 flex items-center justify-between pointer-events-none">
+        <header className="lg:hidden fixed top-0 left-0 right-0 z-40 p-0.5 flex items-center justify-between pointer-events-none bg-white rounded-b-3xl shadow-md border border-white/20">
             {/* Logo - Pointer events auto to allow clicking */}
-            <div className="pointer-events-auto flex items-center justify-center space-x-2 bg-white/50 backdrop-blur-sm px-4 py-1 rounded-3xl shadow-md border border-white/20">
+            <div className="pointer-events-auto flex items-center justify-center space-x-2 px-4 py-1">
                 <Link href="/" className="flex items-center">
                     <GiAbstract014 className="h-4.5 w-4.5 text-gray-900 mr-2" />
                     <span className="text-lg font-semibold text-gray-900">[ RGAP ]</span>
@@ -71,7 +53,7 @@ const Header = () => {
             <motion.div
                 layout // Animate the container's layout changes (width/background)
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className="pointer-events-auto flex items-center bg-white/50 backdrop-blur-sm rounded-3xl shadow-md border border-white/20 overflow-hidden"
+                className="pointer-events-auto flex items-center overflow-hidden"
             >
                 <AnimatePresence mode="popLayout">
                     {showScrollTop && (
@@ -87,7 +69,7 @@ const Header = () => {
                                 className="p-2 px-3 text-gray-600 hover:text-gray-900 transition-colors whitespace-nowrap"
                                 aria-label="Scroll to top"
                             >
-                                <LuCircleArrowUp className="h-6 w-6" />
+                                <LuCircleArrowUp className="size-5" />
                             </button>
                         </motion.div>
                     )}
@@ -96,11 +78,8 @@ const Header = () => {
                 {/* Theme Toggle Placeholder */}
                 {/* flex-shrink-0 prevents this from getting squished during animation */}
                 <div className="p-2 px-3 flex-shrink-0">
-                    <Link
-                        href="#"
-                        className="text-gray-600 hover:text-gray-900 transition-colors block"
-                    >
-                        <LuSun className="h-5 w-5" />
+                    <Link href="#" className="text-gray-600 hover:text-gray-900 transition-colors block"                    >
+                        <LuSun className="size-5" />
                     </Link>
                 </div>
             </motion.div>
