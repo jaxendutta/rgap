@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LuPencil, LuCheck, LuLoader } from "react-icons/lu";
+import { LuCheck, LuLoader, LuPlus, LuStickyNote } from "react-icons/lu";
 import { cn } from "@/lib/utils";
 
 interface NoteEditorProps {
@@ -10,18 +10,27 @@ interface NoteEditorProps {
     onSave: (note: string) => Promise<{ success: boolean; error?: string }>;
     placeholder?: string;
     className?: string;
+    label?: string;
 }
 
-export default function NoteEditor({ initialNote, onSave, placeholder = "Add a note...", className }: NoteEditorProps) {
+export default function NoteEditor({
+    initialNote,
+    onSave,
+    placeholder = "Add a note...",
+    className,
+    label = "Personal Notes"
+}: NoteEditorProps) {
     const [note, setNote] = useState(initialNote || "");
     const [isDirty, setIsDirty] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [isExpanded, setIsExpanded] = useState(!!initialNote);
 
-    // Reset internal state if prop changes (e.g. revalidation)
+    // Sync state with props
     useEffect(() => {
         setNote(initialNote || "");
         setIsDirty(false);
+        if (initialNote) setIsExpanded(true);
     }, [initialNote]);
 
     const handleSave = async () => {
@@ -34,23 +43,44 @@ export default function NoteEditor({ initialNote, onSave, placeholder = "Add a n
         if (result.success) {
             setIsDirty(false);
             setLastSaved(new Date());
-            // Clear "Saved" message after 3 seconds
             setTimeout(() => setLastSaved(null), 3000);
+
+            // If empty after save, collapse it
+            if (!note.trim()) {
+                setIsExpanded(false);
+            }
         }
     };
 
+    if (!isExpanded) {
+        return (
+            <button
+                onClick={() => setIsExpanded(true)}
+                className="text-sm text-gray-500 hover:text-blue-600 flex items-center gap-2 transition-colors md:py-2 group"
+            >
+                <div className="p-1 rounded bg-gray-100 group-hover:bg-blue-50 text-gray-400 group-hover:text-blue-600">
+                    <LuPlus className="w-3 h-3" />
+                </div>
+                Add notes only visible to you
+            </button>
+        );
+    }
+
     return (
-        <div className={cn("relative group", className)}>
-            <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                    <LuPencil className="w-3 h-3" />
-                    Personal Notes
+        <div className={cn("relative group animate-in fade-in zoom-in-95 duration-200", className)}>
+            <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <LuStickyNote className="w-3 h-3" />
+                    {label}
                 </label>
-                <div className="text-xs h-4">
-                    {isSaving && <span className="text-blue-600 flex items-center gap-1"><LuLoader className="animate-spin w-3 h-3" /> Saving...</span>}
-                    {!isSaving && lastSaved && <span className="text-green-600 flex items-center gap-1"><LuCheck className="w-3 h-3" /> Saved</span>}
+                <div className="flex items-center gap-2">
+                    <div className="text-xs h-4">
+                        {isSaving && <span className="text-blue-600 flex items-center gap-1"><LuLoader className="animate-spin w-3 h-3" /> Saving...</span>}
+                        {!isSaving && lastSaved && <span className="text-green-600 flex items-center gap-1"><LuCheck className="w-3 h-3" /> Saved</span>}
+                    </div>
                 </div>
             </div>
+
             <textarea
                 value={note}
                 onChange={(e) => {
@@ -59,10 +89,11 @@ export default function NoteEditor({ initialNote, onSave, placeholder = "Add a n
                 }}
                 onBlur={handleSave}
                 placeholder={placeholder}
-                className="w-full text-sm p-3 bg-yellow-50/50 border border-yellow-200 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent outline-none resize-none min-h-[80px] transition-all placeholder:text-gray-400 text-gray-700"
+                className="w-full text-sm p-3 bg-yellow-50/50 border border-yellow-200 rounded-2xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent outline-none resize-none min-h-[80px] transition-all placeholder:text-gray-400 text-gray-700 block"
             />
+
             {isDirty && !isSaving && (
-                <div className="absolute bottom-3 right-3 text-xs text-gray-400 italic pointer-events-none">
+                <div className="absolute bottom-2 right-3 text-xs text-gray-400 italic pointer-events-none">
                     Click outside to save
                 </div>
             )}

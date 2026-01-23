@@ -1,9 +1,9 @@
-// src/app/(dashboard)/bookmarks/client.tsx
+// src/components/bookmarks/BookmarksClient.tsx
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
-import { LuSearch, LuFileText, LuGraduationCap, LuUniversity, LuBookmarkPlus } from "react-icons/lu";
+import { LuSearch, LuGraduationCap, LuUniversity, LuBookmarkPlus, LuBookMarked } from "react-icons/lu";
 import Tabs, { TabContent, TabItem } from "@/components/ui/Tabs";
 import GrantCard from "@/components/grants/GrantCard";
 import BookmarkedEntityCard from "@/components/bookmarks/BookmarkedEntityCard";
@@ -23,7 +23,7 @@ export default function BookmarksClient({ grants, recipients, institutes, search
     const [activeTab, setActiveTab] = useState("grants");
 
     const tabItems: TabItem[] = [
-        { id: "grants", label: "Grants", icon: LuFileText, count: grants.length },
+        { id: "grants", label: "Grants", icon: LuBookMarked, count: grants.length },
         { id: "recipients", label: "Recipients", icon: LuGraduationCap, count: recipients.length },
         { id: "institutes", label: "Institutes", icon: LuUniversity, count: institutes.length },
         { id: "searches", label: "Searches", icon: LuSearch, count: searches.length },
@@ -41,25 +41,21 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                 fullWidth
             />
 
-            <div className="min-h-[400px]">
+            <div>
                 <TabContent activeTab={activeTab}>
                     {/* Grants Tab */}
                     {activeTab === "grants" && (
                         <div className="space-y-6">
                             {grants.length > 0 ? (
                                 grants.map((grant) => (
-                                    <div key={grant.grant_id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                                        <div className="border-b border-gray-100">
-                                            {/* Render standard grant card, but remove border/shadow to nest it cleanly */}
-                                            <div className="[&>div]:border-0 [&>div]:shadow-none">
-                                                <GrantCard {...grant} isBookmarked={true} />
-                                            </div>
-                                        </div>
-                                        <div className="p-4 bg-gray-50/50">
+                                    <div key={grant.grant_id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                                        <GrantCard {...grant} isBookmarked={true} />
+                                        <div className="px-3 py-2.5 bg-gray-50/50">
                                             <NoteEditor
                                                 initialNote={grant.notes}
                                                 onSave={(note) => updateGrantNote(grant.grant_id, note)}
-                                                placeholder="Add notes about this grant..."
+                                                placeholder="Add notes about this grant only visible to you..."
+                                                label="Grant Notes"
                                             />
                                         </div>
                                     </div>
@@ -149,6 +145,7 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                                                 onSave={(note) => updateSearchNote(search.id, note)}
                                                 placeholder="Notes about this search query..."
                                                 className="bg-transparent"
+                                                label="Search History Notes"
                                             />
                                         </div>
                                     </div>

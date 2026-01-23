@@ -192,6 +192,7 @@ const Tabs: React.FC<TabsProps> = ({
                         {Icon && (
                             <Icon
                                 className={cn(
+                                    "flex-shrink-0",
                                     iconSizeClasses[size],
                                     manyTabs && "size-4 md:size-4 lg:size-5"
                                 )}

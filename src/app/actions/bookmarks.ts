@@ -221,14 +221,20 @@ export async function getUserBookmarks() {
 
     try {
         // Fetch Grants
+        // JOINing all related tables to populate GrantWithDetails fields
         const grants = await db.query(`
-            SELECT g.*, bg.bookmarked_at, 
-                   r.legal_name as recipient_name, 
-                   org.org_title_en as org_name,
-                   p.prog_title_en as program_name
+            SELECT 
+                g.*, 
+                bg.bookmarked_at,
+                bg.notes,
+                r.legal_name,
+                i.name, i.city, i.province, i.country,
+                org.org_title_en,
+                p.prog_title_en, p.prog_purpose_en
             FROM bookmarked_grants bg
             JOIN grants g ON bg.grant_id = g.grant_id
             JOIN recipients r ON g.recipient_id = r.recipient_id
+            JOIN institutes i ON r.institute_id = i.institute_id
             LEFT JOIN organizations org ON g.org = org.org
             LEFT JOIN programs p ON g.prog_id = p.prog_id
             WHERE bg.user_id = $1
@@ -236,8 +242,14 @@ export async function getUserBookmarks() {
         `, [user.id]);
 
         // Fetch Recipients
+        // JOINing institutes to get research_organization_name
         const recipients = await db.query(`
-            SELECT r.*, br.bookmarked_at, i.name as institute_name, i.city, i.province
+            SELECT 
+                r.*, 
+                br.bookmarked_at, 
+                br.notes,
+                i.name as research_organization_name, 
+                i.city, i.province, i.country
             FROM bookmarked_recipients br
             JOIN recipients r ON br.recipient_id = r.recipient_id
             JOIN institutes i ON r.institute_id = i.institute_id
@@ -247,7 +259,10 @@ export async function getUserBookmarks() {
 
         // Fetch Institutes
         const institutes = await db.query(`
-            SELECT i.*, bi.bookmarked_at
+            SELECT 
+                i.*, 
+                bi.bookmarked_at,
+                bi.notes
             FROM bookmarked_institutes bi
             JOIN institutes i ON bi.institute_id = i.institute_id
             WHERE bi.user_id = $1
@@ -256,7 +271,10 @@ export async function getUserBookmarks() {
 
         // Fetch Saved Searches
         const searches = await db.query(`
-            SELECT sh.*, bs.bookmarked_at
+            SELECT 
+                sh.*, 
+                bs.bookmarked_at,
+                bs.notes
             FROM bookmarked_searches bs
             JOIN search_history sh ON bs.search_history_id = sh.id
             WHERE bs.user_id = $1
