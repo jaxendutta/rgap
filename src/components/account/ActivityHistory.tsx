@@ -6,16 +6,26 @@ import { FiEdit2, FiLock, FiMail, FiLogIn, FiClock, FiBookmark, FiTrash2 } from 
 import { SlSocialDropbox } from 'react-icons/sl';
 import { Card } from '@/components/ui/Card';
 import Tag from '../ui/Tag';
+import { Pagination } from '@/components/ui/Pagination';
 import { AuditLog } from '@/types/database';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatTime } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
-export interface ActivityHistoryProps {
+interface ActivityHistoryProps {
     logs: AuditLog[];
+    totalCount: number;
+    currentPage: number;
+    itemsPerPage?: number;
 }
 
-export default function ActivityHistory({ logs }: ActivityHistoryProps) {
-    // Hydration fix: Only render local dates after mounting on the client
+export default function ActivityHistory({
+    logs,
+    totalCount,
+    currentPage,
+    itemsPerPage = 15
+}: ActivityHistoryProps) {
     const [isMounted, setIsMounted] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         setIsMounted(true);
@@ -24,7 +34,6 @@ export default function ActivityHistory({ logs }: ActivityHistoryProps) {
     const getIcon = (type: string) => {
         if (type.startsWith('REMOVE_BOOKMARK')) return FiTrash2;
         if (type.startsWith('BOOKMARK')) return FiBookmark;
-
         switch (type) {
             case 'PASSWORD_CHANGE': return FiLock;
             case 'EMAIL_CHANGE': return FiMail;
@@ -33,19 +42,6 @@ export default function ActivityHistory({ logs }: ActivityHistoryProps) {
             default: return FiClock;
         }
     };
-
-    const getStyle = (type: string) => {
-        if (type.startsWith('REMOVE_BOOKMARK')) return 'bg-red-50 border-red-200 text-red-700';
-        if (type.startsWith('BOOKMARK')) return 'bg-indigo-50 border-indigo-200 text-indigo-700';
-
-        switch (type) {
-            case 'PASSWORD_CHANGE': return 'bg-orange-50 border-orange-200 text-orange-700';
-            case 'EMAIL_CHANGE': return 'bg-blue-50 border-blue-200 text-blue-700';
-            case 'NAME_CHANGE': return 'bg-purple-50 border-purple-200 text-purple-700';
-            case 'LOGIN': return 'bg-green-50 border-green-200 text-green-700';
-            default: return 'bg-gray-50 border-gray-200 text-gray-700';
-        }
-    }
 
     const formatText = (log: AuditLog) => {
         switch (log.event_type) {
@@ -62,6 +58,19 @@ export default function ActivityHistory({ logs }: ActivityHistoryProps) {
         }
     };
 
+    const getLinkForEvent = (log: AuditLog) => {
+        const type = log.event_type;
+        const name = log.new_value || log.old_value;
+
+        if (!name) return null;
+
+        if (type.includes('GRANT')) return { href: '/bookmarks?tab=grants', label: "Grant ID: " + name };
+        if (type.includes('RECIPIENT')) return { href: `/recipients/${name}`, label: "Recipient ID: " + name };
+        if (type.includes('INSTITUTE')) return { href: `/institutes/${name}`, label: "Institute ID: " + name };
+
+        return null;
+    };
+
     if (logs.length === 0) {
         return (
             <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
@@ -71,48 +80,78 @@ export default function ActivityHistory({ logs }: ActivityHistoryProps) {
         );
     }
 
+    const totalPages = Math.ceil(totalCount / itemsPerPage);
+
     return (
-        <Card className="rounded-3xl">
-            <div className="w-full divide-y divide-gray-100">
-                {logs.map((log, i) => (
-                    <div key={i} className="p-2 md:p-4 flex flex-wrap md:grid md:grid-cols-4 items-center justify-center gap-4 hover:bg-gray-50/50 transition-colors">
-                        <div className="w-full flex justify-between">
-                            <div className={`mt-1 px-2 py-1.5 md:py-2 md:px-3 flex rounded-full items-center justify-center md:col-span-1 ${getStyle(log.event_type)}`}>
-                                {React.createElement(getIcon(log.event_type), { className: "flex-shrink-0 size-3.5" })}
-                                <span className="text-xs md:text-sm ml-2">{formatText(log)}</span>
-                            </div>
-                            <Tag
-                                text={formatDate(log.created_at)}
-                                variant="ghost"
-                                className="w-fit text-xs md:text-sm md:hidden"
-                            />
-                        </div>
-                        <div className="flex flex-row gap-1 text-gray-700 items-center justify-center md:col-span-2">
-                            {/* For bookmarks, show the ID if helpful, or specific logic */}
-                            {(log.old_value || log.new_value) && (
-                                <div className="flex flex-wrap gap-1 items-center justify-center">
-                                    {log.old_value && (
-                                        <>
-                                            <Tag text={log.old_value} variant="outline" className="w-fit text-xs md:text-sm" />
-                                            {log.new_value && <span className=" text-gray-400">→</span>}
-                                        </>
-                                    )}
-                                    {log.new_value && (
-                                        <Tag text={log.new_value} variant="outline" className="w-fit text-xs md:text-sm" />
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                        <div className="w-full hidden md:flex md:flex-col md:flex-row md:justify-end items-center gap-2 md:col-span-1">
-                            <Tag
-                                text={formatDate(log.created_at)}
-                                variant="outline"
-                                className="w-fit text-xs md:text-sm"
-                            />
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </Card >
+        <div className="space-y-4">
+            <Card className="p-0 overflow-hidden border border-gray-200 shadow-sm overflow-x-auto rounded-2xl md:rounded-3xl">
+                <table className="min-w-full text-xs md:text-sm text-left whitespace-nowrap">
+                    <thead className="text-gray-500 border-b border-gray-200 bg-gray-50/50">
+                        <tr>
+                            <th className="py-3 px-4 font-medium w-1/3">Action</th>
+                            <th className="py-3 px-4 font-medium w-1/2 text-center">Details</th>
+                            <th className="py-3 px-4 font-medium text-right w-1/6">Date & Time</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {logs.map((log, i) => {
+                            const linkData = getLinkForEvent(log);
+
+                            return (
+                                <tr key={i} className="hover:bg-gray-50/50 transition-colors">
+                                    <td className="px-3 md:px-4 py-2 md:py-3">
+                                        <div className="flex items-center gap-1 md:gap-3">
+                                            <div className="md:p-2 md:bg-gray-100 rounded-full text-gray-600">
+                                                {React.createElement(getIcon(log.event_type), { className: "size-3 md:size-4" })}
+                                            </div>
+                                            <span className="md:font-medium text-gray-900">{formatText(log)}</span>
+                                        </div>
+                                    </td>
+
+                                    <td className="py-2 md:py-3 px-4 flex justify-center">
+                                        {linkData ? (
+                                            <Tag
+                                                size="sm"
+                                                text={linkData.label}
+                                                variant="link"
+                                                onClick={() => router.push(linkData.href)}
+                                                className="group-hover:bg-blue-50 group-hover:text-blue-700 group-hover:border-blue-200 transition-colors cursor-pointer"
+                                            />
+                                        ) : (
+                                            <div className="flex flex-wrap gap-2">
+                                                {log.old_value && (
+                                                    <Tag size="xs" text="From" innerText={log.old_value} variant="secondary" className="w-fit mx-auto" />
+
+                                                )}
+                                                {log.new_value && (
+                                                    <Tag size="xs" text="To" innerText={log.new_value} variant="primary" className="w-fit mx-auto" />
+                                                )}
+                                            </div>
+                                        )}
+                                    </td>
+
+                                    <td className="py-2 md:py-3 px-4 text-gray-600">
+                                        <div className="flex items-center gap-1 md:gap-1.5">
+                                            <span className="text-gray-400">
+                                                {formatDate(log.created_at)}
+                                            </span>
+                                            <span className="text-gray-400">
+                                                {formatTime(log.created_at)}
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </Card>
+
+            <Pagination
+                totalPages={totalPages}
+                currentPage={currentPage}
+                paramName="activity_page"
+            />
+        </div>
     );
 }

@@ -30,8 +30,15 @@ interface AccountManagerProps {
     auditLogs: AuditLog[];
     searchHistory: SearchHistoryItem[];
     currentSessionId?: string;
+
+    // History Pagination
     totalHistoryCount: number;
     currentHistoryPage: number;
+
+    // Activity Pagination (NEW)
+    totalActivityCount: number;
+    currentActivityPage: number;
+
     initialTab?: string;
 }
 
@@ -49,8 +56,10 @@ export default function AccountManager({
     auditLogs,
     searchHistory,
     currentSessionId,
-    totalHistoryCount = 0, // Default to 0 to prevent crash
+    totalHistoryCount = 0,
     currentHistoryPage = 1,
+    totalActivityCount = 0,
+    currentActivityPage = 1,
     initialTab = 'profile'
 }: AccountManagerProps) {
     const router = useRouter();
@@ -77,7 +86,7 @@ export default function AccountManager({
             await importHistory(importedHistory);
 
             notify('Search history imported successfully.', 'success');
-            
+
             router.refresh();
 
         } catch (error) {
@@ -98,13 +107,13 @@ export default function AccountManager({
         setActiveTab(tabId);
         setIsDropdownOpen(false);
 
-        // Update URL without full reload
         const params = new URLSearchParams(searchParams.toString());
         params.set('tab', tabId);
-        // Reset history page when switching tabs if we are leaving history
-        if (tabId !== 'history') {
-            params.delete('history_page');
-        }
+
+        // Clean up pagination params for other tabs
+        if (tabId !== 'history') params.delete('history_page');
+        if (tabId !== 'activity') params.delete('activity_page'); // Added
+
         router.push(`${pathname}?${params.toString()}`, { scroll: false });
     };
 
@@ -231,7 +240,11 @@ export default function AccountManager({
                 {activeTab === 'activity' && (
                     <div className="flex flex-col gap-4">
                         <h3 className="text-lg font-semibold text-gray-900 px-1">Activity Log</h3>
-                        <ActivityHistory logs={auditLogs} />
+                        <ActivityHistory
+                            logs={auditLogs}
+                            totalCount={totalActivityCount}
+                            currentPage={currentActivityPage}
+                        />
                     </div>
                 )}
 

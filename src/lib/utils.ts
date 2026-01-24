@@ -70,6 +70,42 @@ export function formatDate(date: Date | string | null | undefined, format: 'shor
     }).format(dateObj);
 }
 
+// Format time
+export function formatTime(date: Date | string | null | undefined, format: 'short' | 'long' = 'short'): string {
+    if (!date) return 'N/A';
+
+    let dateObj: Date;
+
+    // Handle string dates
+    if (typeof date === 'string') {
+        dateObj = new Date(date);
+    } else {
+        dateObj = date;
+    }
+
+    // Check for invalid date
+    if (isNaN(dateObj.getTime())) return 'Invalid Date';
+
+    // Format with UTC timezone
+    if (format === 'long') {
+        return new Intl.DateTimeFormat('en-CA', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            timeZone: 'UTC',
+        }).format(dateObj);
+    }
+
+    return new Intl.DateTimeFormat('en-CA', {
+        hour: 'numeric',
+        minute: 'numeric',
+        timeZone: 'UTC',
+    }).format(dateObj);
+}
+
 // Truncate text
 export function truncate(text: string | null | undefined, length: number = 100): string {
     if (!text) return '';
