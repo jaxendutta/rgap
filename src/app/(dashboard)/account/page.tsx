@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import AccountManager from '@/components/account/AccountManager';
 import AccountNotifications from '@/components/account/AccountNotifications';
 import PageContainer from '@/components/layout/PageContainer';
+import { DEFAULT_ITEM_PER_PAGE } from '@/constants/data';
 
 interface AccountPageProps {
     searchParams: Promise<{
@@ -13,7 +14,7 @@ interface AccountPageProps {
         history_page?: string;
         history_sort?: string;
         history_dir?: string;
-        activity_page?: string; // ADDED
+        activity_page?: string;
     }>;
 }
 
@@ -26,14 +27,14 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
     // Search History Config
     const historyPage = Number(params.history_page) || 1;
-    const historyLimit = 15;
+    const historyLimit = DEFAULT_ITEM_PER_PAGE
     const historyOffset = (historyPage - 1) * historyLimit;
     const historySortField = params.history_sort === 'result_count' ? 'result_count' : 'searched_at';
     const historySortDir = params.history_dir === 'asc' ? 'ASC' : 'DESC';
 
-    // Activity Log Config (NEW)
+    // Activity Log Config
     const activityPage = Number(params.activity_page) || 1;
-    const activityLimit = 15;
+    const activityLimit = DEFAULT_ITEM_PER_PAGE;
     const activityOffset = (activityPage - 1) * activityLimit;
 
     // Run queries in parallel
@@ -41,7 +42,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         userResult,
         sessionsResult,
         auditResult,
-        auditCountResult, // NEW
+        auditCountResult,
         searchResult,
         searchCountResult
     ] = await Promise.all([

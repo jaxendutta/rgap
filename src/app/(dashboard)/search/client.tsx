@@ -14,6 +14,7 @@ import type { GrantWithDetails } from '@/types/database';
 import { DEFAULT_FILTER_STATE } from '@/constants/filters';
 import { saveSearchHistory } from '@/app/actions/history';
 import { getSortOptions } from '@/lib/utils';
+import { DEFAULT_ITEM_PER_PAGE } from '@/constants/data';
 
 interface FilterOptions {
     agencies: string[];
@@ -44,7 +45,6 @@ export default function SearchPageClient({
     const [totalResults, setTotalResults] = useState(0);
 
     const currentPage = Number(searchParams.get('page')) || 1;
-    const itemsPerPage = 30;
 
     // Effect triggers when URL string changes
     useEffect(() => {
@@ -75,7 +75,7 @@ export default function SearchPageClient({
             },
             pagination: {
                 page: currentPage,
-                limit: itemsPerPage
+                limit: DEFAULT_ITEM_PER_PAGE
             }
         };
 
@@ -214,7 +214,6 @@ export default function SearchPageClient({
                         entityType="grant"
                         entities={grants}
                         totalCount={totalResults}
-                        pageSize={itemsPerPage}
                         sortOptions={getSortOptions('grant', 'grant')}
                         showVisualization={true}
                         visualizationData={visualizationData}

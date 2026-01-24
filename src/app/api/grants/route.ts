@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
+import { DEFAULT_ITEM_PER_PAGE } from '@/constants/data';
 
 export async function POST(request: NextRequest) {
     try {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
             searchTerms = {},
             filters = {},
             sortConfig = { field: 'agreement_start_date', direction: 'desc' },
-            pagination = { page: 1, limit: 20 },
+            pagination = { page: 1, limit: DEFAULT_ITEM_PER_PAGE },
             format = 'full'
         } = body;
 
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
 
         // --- 3. Handle Full Pagination Mode ---
         const page = pagination.page || 1;
-        const limit = pagination.limit || 20;
+        const limit = pagination.limit || 30;
         const offset = (page - 1) * limit;
 
         // Count total

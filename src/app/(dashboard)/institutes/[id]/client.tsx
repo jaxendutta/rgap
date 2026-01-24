@@ -148,7 +148,10 @@ export function InstituteDetailClient({
                         sortOptions={getSortOptions('grant', 'institute')}
                     >
                         {grants.map((grant) => (
-                            <GrantCard key={grant.grant_id} {...grant} />
+                            <GrantCard key={grant.grant_id} {...grant}
+                                bookmarked_at={grant.bookmarked_at instanceof Date ? grant.bookmarked_at.toISOString() : grant.bookmarked_at}
+                                notes={grant.notes ?? undefined}
+                            />
                         ))}
                     </EntityList>
                 );

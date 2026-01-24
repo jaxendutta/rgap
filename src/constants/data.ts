@@ -17,3 +17,5 @@ export const RECIPIENT_TYPE_LABELS: Record<string, string> = {
     I: 'Institution',
     P: 'Person',
 };
+
+export const DEFAULT_ITEM_PER_PAGE = 30;

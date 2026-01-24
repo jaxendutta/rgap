@@ -17,6 +17,7 @@ import TrendVisualizer, { ViewContext } from "@/components/visualizations/TrendV
 import { TbGraph, TbGraphOff } from "react-icons/tb";
 import Pagination from "@/components/ui/Pagination";
 import { SortOption } from "@/types/database";
+import { DEFAULT_ITEM_PER_PAGE } from "@/constants/data";
 
 export type LayoutVariant = "list" | "grid";
 
@@ -24,6 +25,9 @@ export interface EntityListProps<T> {
     entityType: EntityType;
     entities?: T[];
     totalCount: number;
+    page?: number;
+    pageSize?: number;
+
     children: React.ReactNode;
     sortOptions?: SortOption[];
     showVisualization?: boolean;
@@ -36,9 +40,6 @@ export interface EntityListProps<T> {
     error?: Error | unknown;
     emptyMessage?: string;
     className?: string;
-
-    page?: number;
-    pageSize: number;
 }
 
 function EntityList<T>(props: EntityListProps<T>) {
@@ -46,6 +47,8 @@ function EntityList<T>(props: EntityListProps<T>) {
         entityType,
         entities = [],
         totalCount,
+        page = 1,
+        pageSize = DEFAULT_ITEM_PER_PAGE,
         children,
         showVisualization = false,
         visualizationData = [],
@@ -57,8 +60,6 @@ function EntityList<T>(props: EntityListProps<T>) {
         error,
         emptyMessage = "No items found.",
         className,
-        page = 1,
-        pageSize,
     } = props;
 
     const sortOptions = props.sortOptions || getSortOptions(entityType, entityType as any);
