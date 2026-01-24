@@ -9,6 +9,7 @@ import { useState } from "react";
 import { Button, variants } from "@/components/ui/Button";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
     toggleGrantBookmark,
     toggleRecipientBookmark,
@@ -20,26 +21,31 @@ interface BookmarkButtonProps {
     entityType: "grant" | "recipient" | "institute" | "search";
     entityId: number;
     isBookmarked?: boolean;
+    hasNote?: boolean;
     size?: "sm" | "md" | "lg";
     showLabel?: boolean;
     variant?: keyof typeof variants;
     className?: string;
+    onBookmarkChange?: (isBookmarked: boolean) => void;
 }
 
 export function BookmarkButton({
     entityType,
     entityId,
     isBookmarked = false,
+    hasNote = false,
     size = "sm",
     showLabel = true,
     variant = "outline",
     className,
+    onBookmarkChange,
 }: BookmarkButtonProps) {
     const { user } = useAuth();
     const { notify } = useNotify();
     const pathname = usePathname();
     const [bookmarked, setBookmarked] = useState(isBookmarked);
     const [loading, setLoading] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false); // STATE FOR DIALOG
 
     const handleToggle = async () => {
         if (!user) {
@@ -52,7 +58,19 @@ export function BookmarkButton({
             return;
         }
 
+        // WARN IF HAS NOTE AND IS BOOKMARKED
+        if (bookmarked && hasNote) {
+            setShowConfirm(true);
+            return;
+        }
+
+        await executeToggle();
+    };
+
+    const executeToggle = async () => {
         setLoading(true);
+        setShowConfirm(false); // Close dialog if open
+
         try {
             let result;
 
@@ -72,10 +90,8 @@ export function BookmarkButton({
             }
 
             if (result && result.success) {
-                // Fix: explicit boolean cast
                 setBookmarked(!!result.isBookmarked);
-
-                // Fix: Use 'info' or 'success' which are valid ToastTypes
+                onBookmarkChange?.(!!result.isBookmarked);
                 if (result.isBookmarked) notify("Saved to bookmarks", "success");
                 else notify("Removed from bookmarks", "info");
             } else {
@@ -90,30 +106,49 @@ export function BookmarkButton({
     };
 
     return (
-        <Button
-            variant={variant}
-            size={size}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggle(); }}
-            disabled={loading}
-            title={bookmarked ? "Remove bookmark" : "Add bookmark"}
-            className={cn(
-                bookmarked ? "bg-blue-600 hover:bg-blue-500" :
-                    variant === "outline" ? "bg-white" : "",
-                className
-            )}
-        >
-            {bookmarked ? (
-                <>
-                    <LuBookmarkCheck className="w-4 h-4 text-blue-50" />
-                    {showLabel && <span className="hidden md:inline-flex text-blue-50">Bookmarked</span>}
-                </>
-            ) : (
-                <>
-                    <LuBookmark className="w-4 h-4" />
-                    {showLabel && <span className="hidden md:inline-flex">Bookmark</span>}
-                </>
-            )}
-        </Button>
+        <>
+            <Button
+                variant={variant}
+                size={size}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggle(); }}
+                disabled={loading}
+                title={bookmarked ? "Remove bookmark" : "Add bookmark"}
+                className={cn(
+                    bookmarked ? "bg-blue-600 hover:bg-blue-500" :
+                        variant === "outline" ? "bg-white" : "",
+                    className
+                )}
+            >
+                {bookmarked ? (
+                    <>
+                        <LuBookmarkCheck className="w-4 h-4 text-blue-50" />
+                        {showLabel && <span className="hidden md:inline-flex text-blue-50">Bookmarked</span>}
+                    </>
+                ) : (
+                    <>
+                        <LuBookmark className="w-4 h-4" />
+                        {showLabel && <span className="hidden md:inline-flex">Bookmark</span>}
+                    </>
+                )}
+            </Button>
+
+            <ConfirmDialog
+                isOpen={showConfirm}
+                onClose={() => setShowConfirm(false)}
+                onConfirm={executeToggle}
+                title="Remove Bookmark?"
+                description={
+                    <span className="flex flex-col gap-1">
+                        <span>Are you sure you want to remove this bookmark?</span>
+                        <span className="font-semibold text-red-600">
+                            Warning: The personal note attached to this bookmark will be permanently deleted.
+                        </span>
+                    </span>
+                }
+                confirmLabel="Remove Bookmark"
+                variant="danger"
+            />
+        </>
     );
 }
 

@@ -96,6 +96,10 @@ export interface Grant {
     recipient_id: number;
     prog_id: number;
     amendments_history: GrantAmendment[] | null;
+
+    // UI State Fields (Joined from bookmarks table)
+    bookmarked_at?: string | Date | null;
+    notes?: string | null;
 }
 
 // Grant amendment information
@@ -232,7 +236,7 @@ export type GrantWithDetails = Grant & Recipient & Institute & Program & Organiz
 // ============================================================================
 
 // Entity types for routing and components
-export type EntityType = 'grant' | 'recipient' | 'institute';
+export type EntityType = 'grant' | 'recipient' | 'institute' | 'search';
 
 // Recipient type labels
 export const RECIPIENT_TYPE_LABELS = {

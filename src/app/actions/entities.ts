@@ -1,3 +1,4 @@
+// src/app/actions/entities.ts
 'use server';
 
 import { db } from '@/lib/db';
@@ -70,10 +71,22 @@ export async function getEntityGrants(
     type: 'recipient' | 'institute',
     id: number
 ): Promise<GrantWithDetails[]> {
+    const user = await getCurrentUser();
+    const userId = user?.id;
+
     // Determine column to filter by
     const filterCol = type === 'recipient' ? 'r.recipient_id' : 'i.institute_id';
 
-    // Note: This query joins everything to get full grant details
+    const params = [id];
+    let bookmarkJoin = '';
+    let bookmarkSelect = '';
+
+    if (userId) {
+        params.push(userId);
+        bookmarkJoin = `LEFT JOIN bookmarked_grants bg ON g.grant_id = bg.grant_id AND bg.user_id = $2`;
+        bookmarkSelect = ', bg.bookmarked_at, bg.notes';
+    }
+
     const result = await db.query<GrantWithDetails>(`
     SELECT 
       g.*,
@@ -81,15 +94,17 @@ export async function getEntityGrants(
       i.name as institute_name, i.city, i.province, i.country,
       p.prog_title_en,
       o.org_title_en
+      ${bookmarkSelect}
     FROM grants g
     JOIN recipients r ON g.recipient_id = r.recipient_id
     JOIN institutes i ON r.institute_id = i.institute_id
     LEFT JOIN programs p ON g.prog_id = p.prog_id
     LEFT JOIN organizations o ON g.org = o.org
+    ${bookmarkJoin}
     WHERE ${filterCol} = $1
     ORDER BY g.agreement_start_date DESC
     LIMIT 100
-  `, [id]);
+    `, params);
 
     return result.rows;
 }

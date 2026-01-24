@@ -29,7 +29,6 @@ export async function toggleGrantBookmark(grantId: number) {
     if (!user) return { success: false, error: 'Must be logged in' };
 
     try {
-        // CHANGED: 'bookmark_id' -> 'id'
         const check = await db.query(
             'SELECT id FROM bookmarked_grants WHERE grant_id = $1 AND user_id = $2',
             [grantId, user.id]
@@ -59,7 +58,6 @@ export async function toggleRecipientBookmark(recipientId: number) {
     if (!user) return { success: false, error: 'Must be logged in' };
 
     try {
-        // CHANGED: 'bookmark_id' -> 'id'
         const check = await db.query(
             'SELECT id FROM bookmarked_recipients WHERE recipient_id = $1 AND user_id = $2',
             [recipientId, user.id]
@@ -89,7 +87,6 @@ export async function toggleInstituteBookmark(instituteId: number) {
     if (!user) return { success: false, error: 'Must be logged in' };
 
     try {
-        // CHANGED: 'bookmark_id' -> 'id'
         const check = await db.query(
             'SELECT id FROM bookmarked_institutes WHERE institute_id = $1 AND user_id = $2',
             [instituteId, user.id]
@@ -119,7 +116,6 @@ export async function toggleSearchBookmark(searchHistoryId: number) {
     if (!user) return { success: false, error: 'Must be logged in' };
 
     try {
-        // CHANGED: 'bookmark_id' -> 'id'
         const check = await db.query(
             'SELECT id FROM bookmarked_searches WHERE search_history_id = $1 AND user_id = $2',
             [searchHistoryId, user.id]
@@ -127,14 +123,10 @@ export async function toggleSearchBookmark(searchHistoryId: number) {
 
         if (check.rows.length > 0) {
             await db.query('DELETE FROM bookmarked_searches WHERE search_history_id = $1 AND user_id = $2', [searchHistoryId, user.id]);
-            // Optional: Log search bookmark removal
-
             revalidatePath('/bookmarks');
             return { success: true, isBookmarked: false };
         } else {
             await db.query('INSERT INTO bookmarked_searches (search_history_id, user_id) VALUES ($1, $2)', [searchHistoryId, user.id]);
-            // Optional: Log search bookmark addition
-
             revalidatePath('/bookmarks');
             return { success: true, isBookmarked: true };
         }
@@ -144,84 +136,62 @@ export async function toggleSearchBookmark(searchHistoryId: number) {
     }
 }
 
-// --- Update Note Actions ---
+// --- Update Note Actions (unchanged) ---
 export async function updateGrantNote(grantId: number, note: string) {
     const user = await getCurrentUser();
     if (!user) return { success: false, error: 'Must be logged in' };
-
     try {
-        await db.query(
-            'UPDATE bookmarked_grants SET notes = $1 WHERE grant_id = $2 AND user_id = $3',
-            [note, grantId, user.id]
-        );
+        await db.query('UPDATE bookmarked_grants SET notes = $1 WHERE grant_id = $2 AND user_id = $3', [note, grantId, user.id]);
         revalidatePath('/bookmarks');
         return { success: true };
-    } catch (error) {
-        console.error('Error updating grant note:', error);
-        return { success: false, error: 'Failed to update note' };
-    }
+    } catch (error) { return { success: false, error: 'Failed' }; }
 }
-
 export async function updateRecipientNote(recipientId: number, note: string) {
     const user = await getCurrentUser();
     if (!user) return { success: false, error: 'Must be logged in' };
-
     try {
-        await db.query(
-            'UPDATE bookmarked_recipients SET notes = $1 WHERE recipient_id = $2 AND user_id = $3',
-            [note, recipientId, user.id]
-        );
+        await db.query('UPDATE bookmarked_recipients SET notes = $1 WHERE recipient_id = $2 AND user_id = $3', [note, recipientId, user.id]);
         revalidatePath('/bookmarks');
         return { success: true };
-    } catch (error) {
-        console.error('Error updating recipient note:', error);
-        return { success: false, error: 'Failed to update note' };
-    }
+    } catch (error) { return { success: false, error: 'Failed' }; }
 }
-
 export async function updateInstituteNote(instituteId: number, note: string) {
     const user = await getCurrentUser();
     if (!user) return { success: false, error: 'Must be logged in' };
-
     try {
-        await db.query(
-            'UPDATE bookmarked_institutes SET notes = $1 WHERE institute_id = $2 AND user_id = $3',
-            [note, instituteId, user.id]
-        );
+        await db.query('UPDATE bookmarked_institutes SET notes = $1 WHERE institute_id = $2 AND user_id = $3', [note, instituteId, user.id]);
         revalidatePath('/bookmarks');
         return { success: true };
-    } catch (error) {
-        console.error('Error updating institute note:', error);
-        return { success: false, error: 'Failed to update note' };
-    }
+    } catch (error) { return { success: false, error: 'Failed' }; }
 }
-
 export async function updateSearchNote(searchHistoryId: number, note: string) {
     const user = await getCurrentUser();
     if (!user) return { success: false, error: 'Must be logged in' };
-
     try {
-        await db.query(
-            'UPDATE bookmarked_searches SET notes = $1 WHERE search_history_id = $2 AND user_id = $3',
-            [note, searchHistoryId, user.id]
-        );
+        await db.query('UPDATE bookmarked_searches SET notes = $1 WHERE search_history_id = $2 AND user_id = $3', [note, searchHistoryId, user.id]);
         revalidatePath('/bookmarks');
         return { success: true };
-    } catch (error) {
-        console.error('Error updating search note:', error);
-        return { success: false, error: 'Failed to update note' };
-    }
+    } catch (error) { return { success: false, error: 'Failed' }; }
 }
 
-// --- Fetch Actions (For Bookmarks Page) ---
+// --- Fetch Actions (Modified for sorting) ---
 
-export async function getUserBookmarks() {
+export async function getUserBookmarks(sortConfig?: { field: string, direction: 'asc' | 'desc' }) {
     const user = await getCurrentUser();
     if (!user) return null;
 
+    // Default sort: Latest bookmarked first
+    const sortField = sortConfig?.field || 'bookmarked_at';
+    const sortDir = sortConfig?.direction === 'asc' ? 'ASC' : 'DESC';
+
+    // Map common fields to table aliases
+    const getSort = (alias: string, field: string) => {
+        if (field === 'bookmarked_at') return `${alias}.bookmarked_at`;
+        if (field === 'value') return 'agreement_value'; // For grants
+        return `${alias}.bookmarked_at`; // Fallback
+    };
+
     try {
-        // Fetch Grants
-        // JOINing all related tables to populate GrantWithDetails fields
         const grants = await db.query(`
             SELECT 
                 g.*, 
@@ -238,11 +208,9 @@ export async function getUserBookmarks() {
             LEFT JOIN organizations org ON g.org = org.org
             LEFT JOIN programs p ON g.prog_id = p.prog_id
             WHERE bg.user_id = $1
-            ORDER BY bg.bookmarked_at DESC
+            ORDER BY ${getSort('bg', sortField)} ${sortDir}
         `, [user.id]);
 
-        // Fetch Recipients
-        // JOINing institutes to get research_organization_name
         const recipients = await db.query(`
             SELECT 
                 r.*, 
@@ -254,10 +222,9 @@ export async function getUserBookmarks() {
             JOIN recipients r ON br.recipient_id = r.recipient_id
             JOIN institutes i ON r.institute_id = i.institute_id
             WHERE br.user_id = $1
-            ORDER BY br.bookmarked_at DESC
+            ORDER BY ${getSort('br', sortField)} ${sortDir}
         `, [user.id]);
 
-        // Fetch Institutes
         const institutes = await db.query(`
             SELECT 
                 i.*, 
@@ -266,10 +233,9 @@ export async function getUserBookmarks() {
             FROM bookmarked_institutes bi
             JOIN institutes i ON bi.institute_id = i.institute_id
             WHERE bi.user_id = $1
-            ORDER BY bi.bookmarked_at DESC
+            ORDER BY ${getSort('bi', sortField)} ${sortDir}
         `, [user.id]);
 
-        // Fetch Saved Searches
         const searches = await db.query(`
             SELECT 
                 sh.*, 
@@ -278,7 +244,7 @@ export async function getUserBookmarks() {
             FROM bookmarked_searches bs
             JOIN search_history sh ON bs.search_history_id = sh.id
             WHERE bs.user_id = $1
-            ORDER BY bs.bookmarked_at DESC
+            ORDER BY ${getSort('bs', sortField)} ${sortDir}
         `, [user.id]);
 
         return {

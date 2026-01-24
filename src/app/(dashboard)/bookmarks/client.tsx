@@ -1,9 +1,9 @@
-// src/components/bookmarks/BookmarksClient.tsx
+// src/app/(dashboard)/bookmarks/client.tsx
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
-import { LuSearch, LuGraduationCap, LuUniversity, LuBookmarkPlus, LuBookMarked } from "react-icons/lu";
+import { LuSearch, LuGraduationCap, LuUniversity, LuBookMarked, LuCalendarDays } from "react-icons/lu";
 import Tabs, { TabContent, TabItem } from "@/components/ui/Tabs";
 import GrantCard from "@/components/grants/GrantCard";
 import BookmarkedEntityCard from "@/components/bookmarks/BookmarkedEntityCard";
@@ -11,6 +11,57 @@ import BookmarkButton from "@/components/bookmarks/BookmarkButton";
 import NoteEditor from "@/components/bookmarks/NoteEditor";
 import { Button } from "@/components/ui/Button";
 import { updateGrantNote, updateSearchNote } from "@/app/actions/bookmarks";
+import EntityList from "@/components/entity/EntityList";
+import { Card } from "@/components/ui/Card";
+import { SortOption } from "@/types/database";
+import { MdSortByAlpha } from "react-icons/md";
+
+// NEW: Search Card Component
+const BookmarkedSearchCard = ({ search }: { search: any }) => {
+    return (
+        <Card className="flex flex-col h-full">
+            <div className="p-4 border-b border-gray-100 flex justify-between items-start gap-4">
+                <div>
+                    <div className="font-semibold text-lg text-gray-900 line-clamp-1">
+                        "{search.search_query}"
+                    </div>
+                    <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                        <span>{search.result_count ? `${search.result_count.toLocaleString()} results` : 'Search query'}</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                            <LuCalendarDays className="w-3.5 h-3.5" />
+                            {new Date(search.searched_at).toLocaleDateString()}
+                        </span>
+                    </div>
+                    {/* Bookmarked Date Badge */}
+                    <div className="mt-2 inline-flex items-center text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                        Saved {new Date(search.bookmarked_at).toLocaleDateString()}
+                    </div>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                    <Link href={`/search?q=${encodeURIComponent(search.search_query)}`}>
+                        <Button size="sm" variant="outline"><LuSearch className="w-4 h-4 mr-2" /> Run</Button>
+                    </Link>
+                    <BookmarkButton
+                        entityType="search"
+                        entityId={search.id}
+                        isBookmarked={true}
+                        hasNote={!!search.notes}
+                        showLabel={false}
+                    />
+                </div>
+            </div>
+            <div className="p-3 bg-gray-50/50 flex-1">
+                <NoteEditor
+                    initialNote={search.notes}
+                    onSave={(note) => updateSearchNote(search.id, note)}
+                    placeholder="Notes about this search query..."
+                    label="Personal Notes"
+                />
+            </div>
+        </Card>
+    );
+};
 
 interface BookmarksClientProps {
     grants: any[];
@@ -29,6 +80,15 @@ export default function BookmarksClient({ grants, recipients, institutes, search
         { id: "searches", label: "Searches", icon: LuSearch, count: searches.length },
     ];
 
+    // Common Sort Options for Bookmarks
+    const bookmarkSearchSortOptions: SortOption[] = [
+        { value: 'bookmarked_at', label: 'Date Bookmarked', field: 'bookmarked_at', direction: 'desc', icon: LuCalendarDays },
+    ];
+    const bookmarkSortOptions: SortOption[] = [
+        { value: 'bookmarked_at', label: 'Date Bookmarked', field: 'bookmarked_at', direction: 'desc', icon: LuCalendarDays },
+        { value: 'legal_name', label: 'Name', field: 'legal_name', direction: 'asc', icon: MdSortByAlpha },
+    ];
+
     return (
         <div className="w-full">
             <Tabs
@@ -45,139 +105,83 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                 <TabContent activeTab={activeTab}>
                     {/* Grants Tab */}
                     {activeTab === "grants" && (
-                        <div className="space-y-6">
-                            {grants.length > 0 ? (
-                                grants.map((grant) => (
-                                    <div key={grant.grant_id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                                        <GrantCard {...grant} isBookmarked={true} />
-                                        <div className="px-3 py-2.5 bg-gray-50/50">
-                                            <NoteEditor
-                                                initialNote={grant.notes}
-                                                onSave={(note) => updateGrantNote(grant.grant_id, note)}
-                                                placeholder="Add notes about this grant only visible to you..."
-                                            />
-                                        </div>
+                        <EntityList
+                            entityType="grant"
+                            entities={grants}
+                            totalCount={grants.length}
+                            emptyMessage="You haven't bookmarked any grants yet."
+                            sortOptions={bookmarkSortOptions}
+                        >
+                            {grants.map((grant) => (
+                                <div key={grant.grant_id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-4">
+                                    <GrantCard {...grant} isBookmarked={true} />
+                                    <div className="px-3 py-2.5 bg-gray-50/50 border-t border-gray-100">
+                                        <NoteEditor
+                                            initialNote={grant.notes}
+                                            onSave={(note) => updateGrantNote(grant.grant_id, note)}
+                                            placeholder="Add notes about this grant..."
+                                            label="Personal Notes"
+                                        />
                                     </div>
-                                ))
-                            ) : (
-                                <EmptyTabState
-                                    type="Grants"
-                                    message="You haven't bookmarked any grants yet."
-                                    actionLabel="Explore Grants"
-                                    actionLink="/search"
-                                />
-                            )}
-                        </div>
+                                </div>
+                            ))}
+                        </EntityList>
                     )}
 
                     {/* Recipients Tab */}
                     {activeTab === "recipients" && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {recipients.length > 0 ? (
-                                recipients.map((recipient) => (
-                                    <BookmarkedEntityCard
-                                        key={recipient.recipient_id}
-                                        data={recipient}
-                                        type="recipient"
-                                    />
-                                ))
-                            ) : (
-                                <EmptyTabState
-                                    type="Recipients"
-                                    message="No recipients saved."
-                                    actionLabel="Find Recipients"
-                                    actionLink="/recipients"
-                                    className="col-span-full"
+                        <EntityList
+                            entityType="recipient"
+                            entities={recipients}
+                            totalCount={recipients.length}
+                            emptyMessage="No recipients saved."
+                            sortOptions={bookmarkSortOptions}
+                        >
+                            {recipients.map((recipient) => (
+                                <BookmarkedEntityCard
+                                    key={recipient.recipient_id}
+                                    data={recipient}
+                                    type="recipient"
                                 />
-                            )}
-                        </div>
+                            ))}
+                        </EntityList>
                     )}
 
                     {/* Institutes Tab */}
                     {activeTab === "institutes" && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {institutes.length > 0 ? (
-                                institutes.map((institute) => (
-                                    <BookmarkedEntityCard
-                                        key={institute.institute_id}
-                                        data={institute}
-                                        type="institute"
-                                    />
-                                ))
-                            ) : (
-                                <EmptyTabState
-                                    type="Institutes"
-                                    message="No institutes saved."
-                                    actionLabel="Browse Institutes"
-                                    actionLink="/institutes"
-                                    className="col-span-full"
+                        <EntityList
+                            entityType="institute"
+                            entities={institutes}
+                            totalCount={institutes.length}
+                            emptyMessage="No institutes saved."
+                            sortOptions={bookmarkSortOptions}
+                        >
+                            {institutes.map((institute) => (
+                                <BookmarkedEntityCard
+                                    key={institute.institute_id}
+                                    data={institute}
+                                    type="institute"
                                 />
-                            )}
-                        </div>
+                            ))}
+                        </EntityList>
                     )}
 
-                    {/* Searches Tab */}
+                    {/* Searches Tab - NOW USING GRID AND NEW CARD */}
                     {activeTab === "searches" && (
-                        <div className="space-y-4">
-                            {searches.length > 0 ? (
-                                searches.map((search) => (
-                                    <div key={search.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <div className="font-medium text-lg text-gray-900">
-                                                    "{search.search_query}"
-                                                </div>
-                                                <div className="text-sm text-gray-500 mt-1">
-                                                    {search.result_count ? `${search.result_count.toLocaleString()} results` : 'Search query'} • {new Date(search.searched_at).toLocaleDateString()}
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <Link href={`/search?q=${encodeURIComponent(search.search_query)}`}>
-                                                    <Button size="sm" variant="outline"><LuSearch className="w-4 h-4 mr-2" /> Run</Button>
-                                                </Link>
-                                                <BookmarkButton entityType="search" entityId={search.id} isBookmarked={true} showLabel={false} />
-                                            </div>
-                                        </div>
-                                        <div className="pt-3 border-t border-gray-100">
-                                            <NoteEditor
-                                                initialNote={search.notes}
-                                                onSave={(note) => updateSearchNote(search.id, note)}
-                                                placeholder="Notes about this search query..."
-                                                className="bg-transparent"
-                                                label="Search History Notes"
-                                            />
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <EmptyTabState
-                                    type="Searches"
-                                    message="No saved searches."
-                                    actionLabel="View Search History"
-                                    actionLink="/account?tab=history"
-                                />
-                            )}
-                        </div>
+                        <EntityList
+                            entityType="search"
+                            entities={searches}
+                            totalCount={searches.length}
+                            emptyMessage="No saved searches."
+                            sortOptions={bookmarkSearchSortOptions}
+                        >
+                            {searches.map((search) => (
+                                <BookmarkedSearchCard key={search.id} search={search} />
+                            ))}
+                        </EntityList>
                     )}
                 </TabContent>
             </div>
-        </div>
-    );
-}
-
-function EmptyTabState({ type, message, actionLabel, actionLink, className }: { type: string, message: string, actionLabel: string, actionLink: string, className?: string }) {
-    return (
-        <div className={`flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50 ${className}`}>
-            <div className="bg-white p-4 rounded-full mb-4 shadow-sm">
-                <LuBookmarkPlus className="h-8 w-8 text-gray-300" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900">{type} Collection Empty</h3>
-            <p className="text-gray-500 max-w-sm mt-2 mb-6">
-                {message}
-            </p>
-            <Link href={actionLink}>
-                <Button>{actionLabel}</Button>
-            </Link>
         </div>
     );
 }

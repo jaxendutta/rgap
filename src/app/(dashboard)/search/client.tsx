@@ -9,7 +9,6 @@ import SearchInterface from '@/components/search/SearchInterface';
 import EntityList from '@/components/entity/EntityList';
 import { GrantCard } from '@/components/grants/GrantCard';
 import EmptyState from '@/components/ui/EmptyState';
-import { Pagination } from '@/components/ui/Pagination';
 import { LuSearch, LuGraduationCap, LuUniversity, LuBookMarked } from 'react-icons/lu';
 import type { GrantWithDetails } from '@/types/database';
 import { DEFAULT_FILTER_STATE } from '@/constants/filters';
@@ -46,7 +45,6 @@ export default function SearchPageClient({
 
     const currentPage = Number(searchParams.get('page')) || 1;
     const itemsPerPage = 20;
-    const totalPages = Math.ceil(totalResults / itemsPerPage);
 
     // Effect triggers when URL string changes
     useEffect(() => {
@@ -180,12 +178,6 @@ export default function SearchPageClient({
         router.replace(`${pathname}?${urlParams.toString()}`, { scroll: false });
     };
 
-    const handlePageChange = (newPage: number) => {
-        const params = new URLSearchParams(searchParams.toString());
-        params.set('page', newPage.toString());
-        router.push(`${pathname}?${params.toString()}`, { scroll: false });
-    };
-
     return (
         <PageContainer>
             <PageHeader
@@ -218,30 +210,29 @@ export default function SearchPageClient({
                         message="Enter search terms or use filters to find grants"
                     />
                 ) : (
-                    <>
-                        <EntityList
-                            entityType="grant"
-                            entities={grants}
-                            totalCount={totalResults}
-                            sortOptions={getSortOptions('grant', 'grant')}
-                            showVisualization={true}
-                            visualizationData={visualizationData}
-                            emptyMessage="Try adjusting your search terms or filters"
-                            viewContext="search"
-                        >
-                            {grants.map((grant) => (
-                                <GrantCard key={grant.grant_id} {...grant} />
-                            ))}
-                        </EntityList>
-
-                        {totalPages > 1 && (
-                            <Pagination
-                                totalPages={totalPages}
-                                currentPage={currentPage}
-                                onPageChange={handlePageChange}
+                    <EntityList
+                        entityType="grant"
+                        entities={grants}
+                        totalCount={totalResults}
+                        sortOptions={getSortOptions('grant', 'grant')}
+                        showVisualization={true}
+                        visualizationData={visualizationData}
+                        emptyMessage="Try adjusting your search terms or filters"
+                        viewContext="search"
+                    >
+                        {grants.map((grant) => (
+                            <GrantCard
+                                key={grant.grant_id}
+                                {...grant}
+                                bookmarked_at={
+                                    grant.bookmarked_at instanceof Date
+                                        ? grant.bookmarked_at.toISOString()
+                                        : grant.bookmarked_at
+                                }
+                                notes={grant.notes ?? undefined}
                             />
-                        )}
-                    </>
+                        ))}
+                    </EntityList>
                 )}
             </div>
         </PageContainer>

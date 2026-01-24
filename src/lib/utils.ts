@@ -1,6 +1,6 @@
 // src/lib/utils.ts
 
-import { SortOption } from '@/types/database';
+import { EntityType, SortOption } from '@/types/database';
 import { clsx, type ClassValue } from 'clsx';
 import { LuCalendar, LuDollarSign, LuHash, LuUsers } from 'react-icons/lu';
 import { PiUsersThree } from 'react-icons/pi';
@@ -134,7 +134,7 @@ export function calculateOffset(page: number, pageSize: number): number {
 }
 
 // Sort options helper
-export function getSortOptions(entityType: 'grant' | 'recipient' | 'institute', context: "recipient" | "institute" | "grant") {
+export function getSortOptions(entityType: EntityType, context: "recipient" | "institute" | "grant"): SortOption[] {
     switch (entityType) {
         case 'grant':
             let grantSortOptions: SortOption[] = [
@@ -228,5 +228,16 @@ export function getSortOptions(entityType: 'grant' | 'recipient' | 'institute', 
                 );
             }
             return instituteSortOptions;
+
+        case 'search':
+            return [
+                {
+                    value: 'created_at',
+                    label: 'Date Created',
+                    field: 'created_at',
+                    direction: 'desc',
+                    icon: LuCalendar,
+                },
+            ];
     }
 }

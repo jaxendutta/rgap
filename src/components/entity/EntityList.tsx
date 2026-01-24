@@ -25,7 +25,7 @@ export interface EntityListProps<T> {
     entities?: T[];
     totalCount: number;
     children: React.ReactNode;
-    sortOptions?: SortOption[]; // Made optional
+    sortOptions?: SortOption[];
     showVisualization?: boolean;
     visualizationData?: any[];
     viewContext?: ViewContext;
@@ -97,13 +97,13 @@ function EntityList<T>(props: EntityListProps<T>) {
     return (
         <div className={cn("space-y-6", className)}>
             <Card variant="default" className="flex flex-wrap justify-between items-center rounded-3xl p-2 bg-white backdrop-blur-xs border border-gray-100 gap-4 sm:gap-0">
-                <span className="text-xs md:text-sm text-gray-500 px-2 flex-grow text-center sm:text-left">
+                <span className="text-xs md:text-sm text-gray-500 px-2 text-center sm:text-left">
                     Showing <span className="font-semibold text-gray-900">{entities.length}</span> of{' '}
                     <span className="font-semibold text-gray-900">{totalCount.toLocaleString()}</span>{' '}
                     {entityType}{totalCount !== 1 ? 's' : ''}
                 </span>
 
-                <div className="flex gap-2 flex-wrap flex-grow items-center justify-center sm:justify-end">
+                <div className="flex gap-2 flex-wrap items-center justify-center sm:justify-end">
                     {sortOptions.map((option) => (
                         <SortButton
                             key={typeof option.field === "symbol" ? String(option.field) : String(option.field)}

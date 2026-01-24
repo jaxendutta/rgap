@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
     LuUniversity,
-    LuBookmark,
     LuDatabase,
     LuArrowUpRight,
     LuMapPin,
@@ -26,7 +25,8 @@ import {
     LuGraduationCap,
     LuLandmark,
     LuBookOpen,
-    LuBook,
+    LuCalendarDays,
+    LuBookmarkCheck
 } from "react-icons/lu";
 import { GrantAmendment, GrantWithDetails } from "@/types/database";
 import { Card } from "@/components/ui/Card";
@@ -46,8 +46,10 @@ import { cn } from "@/lib/utils";
 // --- Types ---
 
 interface GrantCardProps {
-    grant: GrantWithDetails;
-    isBookmarked?: boolean;
+    grant: GrantWithDetails & {
+        bookmarked_at?: string | null;
+        notes?: string;
+    };
 }
 
 type TabId = "details" | "versions" | "timeline";
@@ -77,19 +79,29 @@ const RenderChangeIndicator = ({ current, previous }: { current: number; previou
 
 // --- Sub-components ---
 
-const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookmarked: boolean }) => {
+const GrantHeader = ({
+    grant,
+    isBookmarked,
+    hasNote,
+    onBookmarkChange,
+}: {
+    grant: GrantCardProps["grant"];
+    isBookmarked: boolean;
+    hasNote: boolean;
+    onBookmarkChange: (isBookmarked: boolean) => void;
+}) => {
     const router = useRouter();
 
     return (
         <div className="flex flex-col lg:flex-row gap-2 lg:gap-6 p-1 pr-0">
             <div className="flex-1 max-w-full">
-                <div className="flex items-start justify-between gap-2 mb-2 lg:mb-1">
+                <div className="flex items-center justify-between gap-2.5 mb-2 lg:mb-1">
                     <Link
                         href={`/recipients/${grant.recipient_id}`}
                         className="flex md:text-lg items-start font-medium hover:text-blue-700 transition-colors gap-1 group"
                         aria-label={`View profile for recipient ${grant.legal_name}`}
                     >
-                        <LuGraduationCap className="h-4.5 w-4.5 mt-0.75 align-text-bottom flex-shrink-0" />
+                        <LuGraduationCap className="hidden md:flex size-4.5 mt-0.5 align-text-bottom flex-shrink-0" />
                         <span className="inline-block">
                             {grant.legal_name}
                             <LuArrowUpRight className="hidden md:inline-block h-4 w-4 ml-1 mb-0.5 align-text-bottom opacity-20 group-hover:opacity-100 group-hover:-translate-y-0.5 transition-all" />
@@ -104,6 +116,7 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
                             entityId={grant.grant_id}
                             entityType="grant"
                             isBookmarked={isBookmarked}
+                            hasNote={hasNote}
                             size="md"
                             showLabel={false}
                             variant="ghost"
@@ -111,9 +124,22 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
                                 "p-2 transition-all duration-300",
                                 isBookmarked ? "ml-2" : "ml-0"
                             )}
+                            onBookmarkChange={onBookmarkChange}
                         />
                     </div>
                 </div>
+
+                {/* Badge using the data directly */}
+                {isBookmarked && (
+                    <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md w-fit mb-2">
+                        <LuBookmarkCheck className="size-3" />
+                        {grant.bookmarked_at ? (
+                            <span>Bookmarked on {new Date(grant.bookmarked_at).toLocaleDateString()}</span>
+                        ) : (
+                            <span>Bookmarked just now</span>
+                        )}
+                    </div>
+                )}
 
                 <Tags spacing="normal">
                     <Tag
@@ -122,7 +148,7 @@ const GrantHeader = ({ grant, isBookmarked }: { grant: GrantWithDetails; isBookm
                         variant="link"
                         onClick={() => router.push(`/institutes/${grant.institute_id}`)}
                         text={grant.name || "Unknown Institute"}
-                        className="group w-full lg:w-auto"
+                        className="group w-full md:w-auto"
                     />
                     <Tag
                         icon={LuBookOpen}
@@ -378,11 +404,20 @@ const FundingTab = ({ grant, amendments, hasAmendments }: { grant: GrantWithDeta
 
 // --- Main Component ---
 
-export const GrantCard = (grant: GrantWithDetails) => {
+export const GrantCard = (grant: GrantCardProps["grant"]) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [activeTab, setActiveTab] = useState<TabId>("details");
 
-    const isBookmarked = grant.is_bookmarked ?? false;
+    const [isBookmarked, setIsBookmarked] = useState(!!grant.bookmarked_at);
+    const [hasNote, setHasNote] = useState(!!grant.notes && grant.notes.trim().length > 0);
+
+    const handleBookmarkChange = (bookmarked: boolean) => {
+        setIsBookmarked(bookmarked);
+        if (!bookmarked) {
+            setHasNote(false);
+        }
+    };
+
     const amendmentNumber = grant.latest_amendment_number ? Number(grant.latest_amendment_number) : 0;
     const hasAmendments = !!grant.amendments_history && grant.amendments_history.length > 0;
 
@@ -424,7 +459,12 @@ export const GrantCard = (grant: GrantWithDetails) => {
     return (
         <Card isHoverable className="px-3 md:px-5 py-2 md:py-3 lg:px-5 transition-all duration-300">
             <div>
-                <GrantHeader grant={grant} isBookmarked={isBookmarked} />
+                <GrantHeader
+                    grant={grant}
+                    isBookmarked={isBookmarked}
+                    hasNote={hasNote}
+                    onBookmarkChange={handleBookmarkChange}
+                />
                 <MetadataTags grant={grant} />
 
                 {/* Amendment History Badge */}

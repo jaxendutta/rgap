@@ -1,16 +1,20 @@
 // src/app/api/grants/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getCurrentUser } from '@/lib/session';
 
 export async function POST(request: NextRequest) {
     try {
+        const user = await getCurrentUser();
+        const userId = user?.id;
+
         const body = await request.json();
         const {
             searchTerms = {},
             filters = {},
             sortConfig = { field: 'agreement_start_date', direction: 'desc' },
             pagination = { page: 1, limit: 20 },
-            format = 'full' // 'full' | 'visualization'
+            format = 'full'
         } = body;
 
         // --- 1. Build Dynamic WHERE Clause ---
@@ -122,11 +126,9 @@ export async function POST(request: NextRequest) {
         const total = parseInt(countResult.rows[0].total);
 
         // --- SORT CONFIGURATION ---
-        // FIXED: Added 'legal_name' to valid sort fields to support Recipient sort
         const validSortFields = ['agreement_start_date', 'agreement_value', 'agreement_title_en', 'legal_name'];
         let sortField = sortConfig.field;
 
-        // Map frontend sort keys to DB columns
         if (sortField === 'value') sortField = 'agreement_value';
         if (sortField === 'date') sortField = 'agreement_start_date';
         if (sortField === 'recipient') sortField = 'legal_name';
@@ -136,9 +138,23 @@ export async function POST(request: NextRequest) {
         }
 
         const sortDirection = sortConfig.direction === 'asc' ? 'ASC' : 'DESC';
-
-        // Determine correct table alias for sort
         const sortColumn = sortField === 'legal_name' ? 'r.legal_name' : `g.${sortField}`;
+
+        // --- JOIN BOOKMARKS LOGIC ---
+        // We prepare the final parameter array including limit, offset, and potentially userId
+        const finalParams = [...params, limit, offset];
+        let bookmarkJoin = '';
+        let bookmarkSelect = '';
+
+        if (userId) {
+            // FIXED: Use length + 1 because SQL parameters are 1-based
+            const userParamIndex = finalParams.length + 1;
+            finalParams.push(userId);
+
+            // LEFT JOIN ensures we get the row even if bookmark is null
+            bookmarkJoin = `LEFT JOIN bookmarked_grants bg ON g.grant_id = bg.grant_id AND bg.user_id = $${userParamIndex}`;
+            bookmarkSelect = ', bg.bookmarked_at, bg.notes';
+        }
 
         const dataQuery = `
             SELECT 
@@ -156,17 +172,19 @@ export async function POST(request: NextRequest) {
                 p.prog_purpose_en,
                 o.org_title_en,
                 o.org
+                ${bookmarkSelect}
             FROM grants g
             JOIN recipients r ON g.recipient_id = r.recipient_id
             JOIN institutes i ON r.institute_id = i.institute_id
             JOIN programs p ON g.prog_id = p.prog_id
             JOIN organizations o ON g.org = o.org
+            ${bookmarkJoin}
             ${whereClause}
             ORDER BY ${sortColumn} ${sortDirection}
-            LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+            LIMIT $${params.length + 1} OFFSET $${params.length + 2}
         `;
 
-        const dataResult = await db.query(dataQuery, [...params, limit, offset]);
+        const dataResult = await db.query(dataQuery, finalParams);
 
         return NextResponse.json({
             data: dataResult.rows,

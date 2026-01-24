@@ -13,6 +13,7 @@ import DeleteAccountSection from '@/components/account/DeleteAccountSection';
 import SessionList from '@/components/account/SessionList';
 import ActivityHistory from '@/components/account/ActivityHistory';
 import SearchHistoryList from '@/components/account/SearchHistoryList';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { User } from '@/types/database';
 import { logoutAction } from '@/app/actions/auth';
 import { MdLockReset } from 'react-icons/md';
@@ -59,6 +60,7 @@ export default function AccountManager({
         (paramTab && TABS.some(t => t.id === paramTab)) ? paramTab : initialTab
     );
 
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -158,7 +160,7 @@ export default function AccountManager({
                         variant="outline"
                         className="w-full bg-red-50 text-red-600 border-red-100 hover:bg-red-100 hover:border-red-200 px-3 py-2 lg:w-fit"
                         title="Sign Out"
-                        onClick={logoutAction}
+                        onClick={() => setShowLogoutConfirm(true)}
                     >
                         <FiLogOut className="size-3.5 md:size-4 flex-shrink-0" />
                         <span>Sign Out</span>
@@ -168,6 +170,16 @@ export default function AccountManager({
 
             {/* --- MAIN CONTENT AREA --- */}
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <ConfirmDialog
+                    isOpen={showLogoutConfirm}
+                    onClose={() => setShowLogoutConfirm(false)}
+                    onConfirm={logoutAction}
+                    title="Sign Out"
+                    description="Are you sure you want to sign out of your account?"
+                    confirmLabel="Sign Out"
+                    variant="danger"
+                />
+
                 {activeTab === 'profile' && (
                     <Card className="p-4 md:p-8 rounded-3xl">
                         <ProfileEditor user={user} />
