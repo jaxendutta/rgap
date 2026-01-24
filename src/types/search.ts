@@ -19,3 +19,11 @@ export interface FilterState {
     category: SearchCategory;
     // ... add other UI-specific filters here
 }
+
+export interface SearchHistoryItem {
+    id: number;
+    search_query: string;
+    filters: Record<string, any>;
+    result_count: number;
+    searched_at: string;
+}

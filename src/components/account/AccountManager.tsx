@@ -14,18 +14,21 @@ import SessionList from '@/components/account/SessionList';
 import ActivityHistory from '@/components/account/ActivityHistory';
 import SearchHistoryList from '@/components/account/SearchHistoryList';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { User } from '@/types/database';
+import { User, Session, AuditLog } from '@/types/database';
 import { logoutAction } from '@/app/actions/auth';
 import { MdLockReset } from 'react-icons/md';
 import { BsPersonGear } from 'react-icons/bs';
 import { TbClockSearch } from 'react-icons/tb';
 import { RiProfileLine } from 'react-icons/ri';
+import { importHistory } from '@/app/actions/history';
+import { useNotify } from '@/providers/NotificationProvider';
+import { SearchHistoryItem } from '@/types/search';
 
 interface AccountManagerProps {
     user: User;
-    sessions: any[];
-    auditLogs: any[];
-    searchHistory: any[];
+    sessions: Session[];
+    auditLogs: AuditLog[];
+    searchHistory: SearchHistoryItem[];
     currentSessionId?: string;
     totalHistoryCount: number; // Added
     currentHistoryPage: number; // Added
@@ -53,6 +56,7 @@ export default function AccountManager({
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
+    const { notify } = useNotify();
 
     // Initialize state from URL param if available, otherwise prop, otherwise default
     const paramTab = searchParams.get('tab');
@@ -63,6 +67,23 @@ export default function AccountManager({
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const handleImportHistory = async (importedHistory: SearchHistoryItem[]) => {
+        try {
+            // Basic validation
+            if (!Array.isArray(importedHistory)) {
+                throw new Error('Invalid file format');
+            }
+            await importHistory(importedHistory);
+
+            notify('Search history imported successfully.', 'success');
+            
+            router.refresh();
+
+        } catch (error) {
+            notify(error instanceof Error ? error.message : 'An unknown error occurred.', 'error');
+        }
+    };
 
     // Sync state with URL manually if user navigates back/forward
     useEffect(() => {
@@ -202,6 +223,7 @@ export default function AccountManager({
                             history={searchHistory}
                             totalCount={totalHistoryCount}
                             currentPage={currentHistoryPage}
+                            onImportHistory={handleImportHistory}
                         />
                     </div>
                 )}
