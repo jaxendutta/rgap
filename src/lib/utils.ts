@@ -106,6 +106,11 @@ export function formatTime(date: Date | string | null | undefined, format: 'shor
     }).format(dateObj);
 }
 
+// Format Date + Time
+export function formatDateTime(date: Date | string | null | undefined, format: 'short' | 'long' = 'short'): string {
+    return `${formatDate(date, format)} ${formatTime(date, format)}`;
+}
+
 // Truncate text
 export function truncate(text: string | null | undefined, length: number = 100): string {
     if (!text) return '';

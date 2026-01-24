@@ -19,7 +19,7 @@ const variants = {
 
 // Define size styles
 const padding = {
-    xs: "px-2 py-0.5",
+    xs: "px-2 py-0.75",
     sm: "px-3 py-1",
     md: "px-3.5 py-1",
     lg: "px-4 py-1.5",
@@ -35,7 +35,7 @@ const fontSizes = {
 
 // Define icon sizes
 const iconSizes = {
-    xs: "h-2.5 w-2.5",
+    xs: "size-2.75",
     sm: "h-3 w-3",
     md: "h-4 w-4",
     lg: "h-5 w-5",
@@ -43,7 +43,7 @@ const iconSizes = {
 
 // Spacing between icon and text
 const iconSpacing = {
-    xs: "mr-0.5",
+    xs: "mr-0.5 mb-0.25",
     sm: "mr-0.5",
     md: "mr-1",
     lg: "mr-1",
@@ -86,17 +86,17 @@ export const Tag: React.FC<TagProps> = ({
             )}
             onClick={onClick}
         >
-            <div className={`flex flex-row gap-1 items-center justify-center ${padding[size]} ${!innerText ? "flex-1" : ""} ${innerText || onClick ? "pr-0" : ""}`}>
+            <div className={`flex flex-row gap-0.75 md:gap-1 items-center justify-center ${padding[size]} ${!innerText ? "flex-1" : ""} ${innerText || onClick ? "pr-0" : ""}`}>
                 {Icon && (
-                <Icon
-                    className={cn(
-                        iconSizes[size],
-                        onRemove ? "" : iconSpacing[size],
-                        "flex-shrink-0"
-                    )}
-                    {...iconProps}
-                />
-            )}
+                    <Icon
+                        className={cn(
+                            iconSizes[size],
+                            onRemove ? "" : iconSpacing[size],
+                            "flex-shrink-0"
+                        )}
+                        {...iconProps}
+                    />
+                )}
                 {text}
             </div>
             {innerText && <span className={`flex-1 bg-white w-full m-1 px-1.75 py-1 rounded-3xl 

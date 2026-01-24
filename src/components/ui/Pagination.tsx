@@ -48,40 +48,40 @@ export function Pagination({
                 variant="outline"
                 onClick={() => handlePageChange(1)}
                 disabled={currentPage === 1}
-                className="gap-1 pl-2.5 bg-white"
+                className="gap-1 p-2 md:pl-2.5 bg-white"
             >
-                <LuChevronsLeft className="h-4 w-4" />
+                <LuChevronsLeft className="size-4" />
             </Button>
 
             <Button
                 variant="outline"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage <= 1}
-                className="gap-1 pl-2.5 bg-white"
+                className="gap-1 p-2 md:pl-2.5 bg-white"
             >
-                <LuChevronLeft className="h-4 w-4" />
+                <LuChevronLeft className="size-4" />
             </Button>
 
-            <div className="flex items-center text-sm font-medium mx-2">
-                Page {currentPage} of {totalPages}
+            <div className="flex items-center text-xs md:text-sm font-medium mx-2">
+                Page {currentPage.toLocaleString()} of {totalPages.toLocaleString()}
             </div>
 
             <Button
                 variant="outline"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage >= totalPages}
-                className="gap-1 pr-2.5 bg-white"
+                className="gap-1 p-2 md:pr-2.5 bg-white"
             >
-                <LuChevronRight className="h-4 w-4" />
+                <LuChevronRight className="size-4" />
             </Button>
 
             <Button
                 variant="outline"
                 onClick={() => handlePageChange(totalPages)}
                 disabled={currentPage >= totalPages}
-                className="gap-1 pr-2.5 bg-white"
+                className="gap-1 p-2 md:r-2.5 bg-white"
             >
-                <LuChevronsRight className="h-4 w-4" />
+                <LuChevronsRight className="size-4" />
             </Button>
         </div>
     );

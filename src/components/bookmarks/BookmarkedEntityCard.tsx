@@ -3,16 +3,20 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LuArrowUpRight, LuMapPin, LuUniversity, LuLandmark, LuSquareUser } from "react-icons/lu";
+import { LuArrowUpRight, LuMapPin, LuUniversity, LuLandmark, LuSquareUser, LuCalendarClock } from "react-icons/lu";
 import { Card } from "@/components/ui/Card";
 import Tag from "@/components/ui/Tag";
 import BookmarkButton from "@/components/bookmarks/BookmarkButton";
 import NoteEditor from "@/components/bookmarks/NoteEditor";
 import { updateRecipientNote, updateInstituteNote } from "@/app/actions/bookmarks";
-import { Institute, Recipient, InstituteWithStats, RecipientWithStats, isRecipient, RECIPIENT_TYPE_LABELS } from "@/types/database";
+import { Institute, Recipient, InstituteWithStats, RecipientWithStats, RECIPIENT_TYPE_LABELS } from "@/types/database";
+import { formatDate, formatDateTime } from "@/lib/utils";
 
 // Define a union type that matches what our API returns (includes notes)
-type BookmarkedData = (InstituteWithStats | RecipientWithStats) & { notes?: string };
+type BookmarkedData = (InstituteWithStats | RecipientWithStats) & {
+    bookmarked_at: Date | string;
+    notes?: string
+};
 
 interface BookmarkedEntityCardProps {
     data: BookmarkedData;
@@ -88,6 +92,21 @@ export default function BookmarkedEntityCard({ data, type }: BookmarkedEntityCar
 
                 {/* Metadata Tags */}
                 <div className="flex flex-wrap gap-2">
+                    <Tag size="xs" variant="default"
+                        icon={LuCalendarClock}
+                        text="Bookmarked"
+                        innerText={formatDateTime(data.bookmarked_at)}
+                    />
+
+                    {!isInstitute && recipientType !== "Institute" && (
+                        <Tag
+                            icon={LuSquareUser}
+                            text={RECIPIENT_TYPE_LABELS[recipientType as keyof typeof RECIPIENT_TYPE_LABELS]}
+                            size="xs"
+                            variant="default"
+                        />
+                    )}
+
                     {location && (
                         <Tag icon={LuMapPin} text={location} size="xs" variant="outline" />
                     )}
@@ -101,18 +120,9 @@ export default function BookmarkedEntityCard({ data, type }: BookmarkedEntityCar
                             onClick={() => router.push(`/institutes/${instituteId}`)}
                         />
                     )}
-
-                    {!isInstitute && recipientType !== "Institute" && (
-                        <Tag
-                            icon={LuSquareUser}
-                            text={RECIPIENT_TYPE_LABELS[recipientType as keyof typeof RECIPIENT_TYPE_LABELS]}
-                            size="xs"
-                            variant="default"
-                        />
-                    )}
                 </div>
             </div>
-            
+
             {/* Notes Section - Pushed to bottom */}
             <div className="p-2.5 md:pt-2">
                 <NoteEditor
