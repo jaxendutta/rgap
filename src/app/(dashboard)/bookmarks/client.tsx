@@ -111,6 +111,9 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                             totalCount={grants.length}
                             emptyMessage="You haven't bookmarked any grants yet."
                             sortOptions={bookmarkSortOptions}
+                            showVisualization={true}
+                            visualizationData={grants}
+                            pageSize={30}
                         >
                             {grants.map((grant) => (
                                 <div key={grant.grant_id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-4">
@@ -134,6 +137,7 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                             entityType="recipient"
                             entities={recipients}
                             totalCount={recipients.length}
+                            pageSize={30}
                             emptyMessage="No recipients saved."
                             sortOptions={bookmarkSortOptions}
                         >
@@ -153,6 +157,7 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                             entityType="institute"
                             entities={institutes}
                             totalCount={institutes.length}
+                            pageSize={30}
                             emptyMessage="No institutes saved."
                             sortOptions={bookmarkSortOptions}
                         >
@@ -172,6 +177,7 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                             entityType="search"
                             entities={searches}
                             totalCount={searches.length}
+                            pageSize={30}
                             emptyMessage="No saved searches."
                             sortOptions={bookmarkSearchSortOptions}
                         >

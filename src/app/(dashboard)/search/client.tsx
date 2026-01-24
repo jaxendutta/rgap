@@ -44,7 +44,7 @@ export default function SearchPageClient({
     const [totalResults, setTotalResults] = useState(0);
 
     const currentPage = Number(searchParams.get('page')) || 1;
-    const itemsPerPage = 20;
+    const itemsPerPage = 30;
 
     // Effect triggers when URL string changes
     useEffect(() => {
@@ -214,6 +214,7 @@ export default function SearchPageClient({
                         entityType="grant"
                         entities={grants}
                         totalCount={totalResults}
+                        pageSize={itemsPerPage}
                         sortOptions={getSortOptions('grant', 'grant')}
                         showVisualization={true}
                         visualizationData={visualizationData}

@@ -38,7 +38,7 @@ export interface EntityListProps<T> {
     className?: string;
 
     page?: number;
-    pageSize?: number;
+    pageSize: number;
 }
 
 function EntityList<T>(props: EntityListProps<T>) {
@@ -58,7 +58,7 @@ function EntityList<T>(props: EntityListProps<T>) {
         emptyMessage = "No items found.",
         className,
         page = 1,
-        pageSize = 15,
+        pageSize,
     } = props;
 
     const sortOptions = props.sortOptions || getSortOptions(entityType, entityType as any);
