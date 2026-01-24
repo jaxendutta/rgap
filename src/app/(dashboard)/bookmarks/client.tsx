@@ -76,16 +76,15 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                             viewContext="custom"
                         >
                             {grants.map((grant) => (
-                                <div key={grant.grant_id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-4 flex flex-col h-full">
+                                <div key={grant.grant_id} className="bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col h-full">
                                     <div className="flex-1">
                                         <GrantCard {...grant} isBookmarked={true} />
                                     </div>
-                                    <div className="px-3 py-2.5 bg-gray-50/50 border-t border-gray-100 mt-auto">
+                                    <div className="px-2 md:px-4 py-2 lg:py-3 bg-gray-50/50 rounded-b-2xl">
                                         <NoteEditor
                                             initialNote={grant.notes}
                                             onSave={(note) => updateGrantNote(grant.grant_id, note)}
-                                            placeholder="Add notes about this grant..."
-                                            label="Personal Notes"
+                                            placeholder="Add notes about this bookmarked grant..."
                                         />
                                     </div>
                                 </div>
@@ -151,12 +150,11 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                                             isBookmarked={true}
                                         />
                                     </div>
-                                    <div className="px-2 md:px-4 py-2 lg:py-3 bg-gray-50/50 border-t border-gray-100 mt-auto">
+                                    <div className="px-2 md:px-4 py-2 lg:py-3 bg-gray-50/50 rounded-b-2xl">
                                         <NoteEditor
                                             initialNote={search.notes}
                                             onSave={(note) => updateSearchNote(search.id, note)}
-                                            placeholder="Notes about this search query..."
-                                            label="Personal Notes"
+                                            placeholder="Notes about this bookmarked search query..."
                                         />
                                     </div>
                                 </div>

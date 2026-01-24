@@ -98,18 +98,6 @@ export default function BookmarkedEntityCard({ data, type }: BookmarkedEntityCar
                         innerText={formatDateTime(data.bookmarked_at)}
                     />
 
-                    {!isInstitute && recipientType !== "Institute" && (
-                        <Tag
-                            icon={LuSquareUser}
-                            text={RECIPIENT_TYPE_LABELS[recipientType as keyof typeof RECIPIENT_TYPE_LABELS]}
-                            size="xs"
-                            variant="default"
-                        />
-                    )}
-
-                    {location && (
-                        <Tag icon={LuMapPin} text={location} size="xs" variant="outline" />
-                    )}
                     {instituteName && instituteId && (
                         <Tag
                             icon={LuUniversity}
@@ -119,6 +107,19 @@ export default function BookmarkedEntityCard({ data, type }: BookmarkedEntityCar
                             className="cursor-pointer hover:bg-gray-100 max-w-full truncate"
                             onClick={() => router.push(`/institutes/${instituteId}`)}
                         />
+                    )}
+
+                    {!isInstitute && recipientType !== "Institute" && (
+                        <Tag
+                            icon={LuSquareUser}
+                            variant="outline"
+                            text={RECIPIENT_TYPE_LABELS[recipientType as keyof typeof RECIPIENT_TYPE_LABELS]}
+                            size="xs"
+                        />
+                    )}
+
+                    {location && (
+                        <Tag icon={LuMapPin} text={location} size="xs" variant="outline" />
                     )}
                 </div>
             </div>

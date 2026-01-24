@@ -46,7 +46,7 @@ export default function SearchHistoryItem({ item, onSearchAgain, isBookmarked = 
     }
 
     return (
-        <div key={item.id} className="group p-3 md:p-5 hover:bg-gray-50/80 transition-all duration-200 flex flex-row gap-0 md:gap-5 md:items-center">
+        <div key={item.id} className="group p-3 md:p-5 hover:bg-gray-50/80 transition-all duration-200 flex flex-row gap-3 md:gap-5 md:items-center">
             <div className="flex flex-col gap-2 md:gap-3 justify-center">
                 <Tags spacing="tight" className="items-center flex-wrap">
                     {filters.recipient && (
@@ -78,28 +78,24 @@ export default function SearchHistoryItem({ item, onSearchAgain, isBookmarked = 
                     )}
                 </Tags>
 
-                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400 pl-1 whitespace-nowrap">
-                    <span>
-                        Searched {new Date(item.searched_at).toLocaleDateString(undefined, {
+                <div className="flex flex-wrap items-center gap-1 md:gap-2 text-[10px] md:text-xs text-gray-600 whitespace-nowrap">
+                    <span className="border-1 border-gray-300 px-1.5 py-0.5 rounded-3xl">
+                        Searched | {new Date(item.searched_at).toLocaleDateString(undefined, {
                             month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
                         })}
                     </span>
-                    <span>•</span>
-                    <span className={item.result_count > 0 ? "text-green-600 font-medium" : "text-gray-400"}>
-                        {item.result_count.toLocaleString()} results found
+                    <span className={item.result_count > 0 ? "border-1 border-green-400 px-1.5 py-0.5 rounded-3xl text-green-600 font-medium" : "text-gray-400"}>
+                        {item.result_count.toLocaleString()} results
                     </span>
                     {item.bookmarked_at && (
-                        <>
-                            <span>•</span>
-                            <span>
-                                Bookmarked {formatDateTime(item.bookmarked_at)}
-                            </span>
-                        </>
+                        <span className="border-1 border-gray-300 px-1.5 py-0.5 rounded-3xl">
+                            Bookmarked | {formatDateTime(item.bookmarked_at)}
+                        </span>
                     )}
                 </div>
             </div>
 
-            <div className="flex w-full flex-1 flex-col md:flex-wrap items-center gap-2 md:pl-5 md:ml-2">
+            <div className="flex flex-col lg:flex-row col md:w-full flex-1 justify-end gap-2 md:pl-5 md:ml-2">
                 <BookmarkButton
                     variant="secondary"
                     entityId={item.id}
