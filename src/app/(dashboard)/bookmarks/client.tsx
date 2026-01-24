@@ -55,7 +55,6 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                                                 initialNote={grant.notes}
                                                 onSave={(note) => updateGrantNote(grant.grant_id, note)}
                                                 placeholder="Add notes about this grant only visible to you..."
-                                                label="Grant Notes"
                                             />
                                         </div>
                                     </div>

@@ -1,7 +1,7 @@
 // src/components/bookmarks/NoteEditor.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { LuCheck, LuLoader, LuPlus, LuStickyNote } from "react-icons/lu";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +18,7 @@ export default function NoteEditor({
     onSave,
     placeholder = "Add a note...",
     className,
-    label = "Personal Notes"
+    label = "Notes"
 }: NoteEditorProps) {
     const [note, setNote] = useState(initialNote || "");
     const [isDirty, setIsDirty] = useState(false);
@@ -26,12 +26,26 @@ export default function NoteEditor({
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
     const [isExpanded, setIsExpanded] = useState(!!initialNote);
 
+    // 1. Create a ref to access the textarea DOM element
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
     // Sync state with props
     useEffect(() => {
         setNote(initialNote || "");
         setIsDirty(false);
         if (initialNote) setIsExpanded(true);
     }, [initialNote]);
+
+    // 2. Auto-focus whenever the editor expands
+    useEffect(() => {
+        if (isExpanded && textareaRef.current) {
+            // Small timeout ensures the render is complete before focusing
+            // preventing race conditions in some browsers
+            setTimeout(() => {
+                textareaRef.current?.focus();
+            }, 0);
+        }
+    }, [isExpanded]);
 
     const handleSave = async () => {
         if (!isDirty) return;
@@ -49,6 +63,16 @@ export default function NoteEditor({
             if (!note.trim()) {
                 setIsExpanded(false);
             }
+        }
+    };
+
+    const handleBlur = () => {
+        // If empty and clean (user opened but didn't type, or cleared it previously), collapse immediately
+        if (!note.trim() && !isDirty) {
+            setIsExpanded(false);
+        } else {
+            // Otherwise try to save
+            handleSave();
         }
     };
 
@@ -82,12 +106,13 @@ export default function NoteEditor({
             </div>
 
             <textarea
+                ref={textareaRef}
                 value={note}
                 onChange={(e) => {
                     setNote(e.target.value);
                     setIsDirty(true);
                 }}
-                onBlur={handleSave}
+                onBlur={handleBlur}
                 placeholder={placeholder}
                 className="w-full text-xs md:text-sm p-3 bg-yellow-50/50 border border-yellow-200 rounded-2xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent outline-none resize-none min-h-[80px] transition-all placeholder:text-gray-400 text-gray-700 block"
             />
