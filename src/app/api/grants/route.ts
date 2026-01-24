@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
 
         // --- 3. Handle Full Pagination Mode ---
         const page = pagination.page || 1;
-        const limit = pagination.limit || 30;
+        const limit = pagination.limit || DEFAULT_ITEM_PER_PAGE;
         const offset = (page - 1) * limit;
 
         // Count total
@@ -142,21 +142,18 @@ export async function POST(request: NextRequest) {
         const sortColumn = sortField === 'legal_name' ? 'r.legal_name' : `g.${sortField}`;
 
         // --- JOIN BOOKMARKS LOGIC ---
-        // We prepare the final parameter array including limit, offset, and potentially userId
         const finalParams = [...params, limit, offset];
         let bookmarkJoin = '';
         let bookmarkSelect = '';
 
         if (userId) {
-            // FIXED: Use length + 1 because SQL parameters are 1-based
             const userParamIndex = finalParams.length + 1;
             finalParams.push(userId);
-
-            // LEFT JOIN ensures we get the row even if bookmark is null
             bookmarkJoin = `LEFT JOIN bookmarked_grants bg ON g.grant_id = bg.grant_id AND bg.user_id = $${userParamIndex}`;
             bookmarkSelect = ', bg.bookmarked_at, bg.notes';
         }
 
+        // FIXED: Changed JOIN to LEFT JOIN for programs and organizations to prevent data loss
         const dataQuery = `
             SELECT 
                 g.*,
@@ -177,8 +174,8 @@ export async function POST(request: NextRequest) {
             FROM grants g
             JOIN recipients r ON g.recipient_id = r.recipient_id
             JOIN institutes i ON r.institute_id = i.institute_id
-            JOIN programs p ON g.prog_id = p.prog_id
-            JOIN organizations o ON g.org = o.org
+            LEFT JOIN programs p ON g.prog_id = p.prog_id
+            LEFT JOIN organizations o ON g.org = o.org
             ${bookmarkJoin}
             ${whereClause}
             ORDER BY ${sortColumn} ${sortDirection}
