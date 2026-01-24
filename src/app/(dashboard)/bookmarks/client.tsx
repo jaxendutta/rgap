@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { LuSearch, LuGraduationCap, LuUniversity, LuBookMarked, LuCalendarDays } from "react-icons/lu";
 import Tabs, { TabContent, TabItem } from "@/components/ui/Tabs";
 import GrantCard from "@/components/grants/GrantCard";
@@ -71,7 +72,14 @@ interface BookmarksClientProps {
 }
 
 export default function BookmarksClient({ grants, recipients, institutes, searches }: BookmarksClientProps) {
-    const [activeTab, setActiveTab] = useState("grants");
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+
+    // Initialize state from URL or default to "grants"
+    const [activeTab, setActiveTab] = useState(() => {
+        return searchParams.get('tab') || "grants";
+    });
 
     const tabItems: TabItem[] = [
         { id: "grants", label: "Grants", icon: LuBookMarked, count: grants.length },
@@ -79,6 +87,14 @@ export default function BookmarksClient({ grants, recipients, institutes, search
         { id: "institutes", label: "Institutes", icon: LuUniversity, count: institutes.length },
         { id: "searches", label: "Searches", icon: LuSearch, count: searches.length },
     ];
+
+    // Handle tab change and update URL
+    const handleTabChange = (id: string) => {
+        setActiveTab(id);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('tab', id);
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    };
 
     // Common Sort Options for Bookmarks
     const bookmarkSearchSortOptions: SortOption[] = [
@@ -94,7 +110,7 @@ export default function BookmarksClient({ grants, recipients, institutes, search
             <Tabs
                 tabs={tabItems}
                 activeTab={activeTab}
-                onChange={setActiveTab}
+                onChange={handleTabChange}
                 variant="pills"
                 className="mb-6"
                 showCounts={true}
