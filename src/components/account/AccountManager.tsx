@@ -30,8 +30,8 @@ interface AccountManagerProps {
     auditLogs: AuditLog[];
     searchHistory: SearchHistoryItem[];
     currentSessionId?: string;
-    totalHistoryCount: number; // Added
-    currentHistoryPage: number; // Added
+    totalHistoryCount: number;
+    currentHistoryPage: number;
     initialTab?: string;
 }
 

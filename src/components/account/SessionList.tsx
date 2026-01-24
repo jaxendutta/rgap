@@ -5,17 +5,9 @@ import { revokeSessionAction } from '@/app/actions/auth';
 import { useNotify } from '@/providers/NotificationProvider';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
-import Tag from '../ui/Tag';
-
-interface Session {
-    session_id: string;
-    created_at: string;
-    last_active_at: string;
-    user_agent: string | null;
-    ip_address: string | null;
-    location: string | null;
-    is_revoked: boolean;
-}
+import Tag from '@/components/ui/Tag';
+import { Session } from '@/types/database';
+import { formatDate } from '@/lib/utils';
 
 export default function SessionList({ sessions, currentSessionId }: { sessions: Session[], currentSessionId?: string }) {
     const { notify } = useNotify();
@@ -38,14 +30,6 @@ export default function SessionList({ sessions, currentSessionId }: { sessions: 
         if (agent.includes('windows')) return { icon: FiMonitor, name: 'Windows' };
         if (agent.includes('linux')) return { icon: FiMonitor, name: 'Linux' };
         return { icon: FiMonitor, name: 'Browser' };
-    };
-
-    // Helper to format date consistent with UI needs
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleString(undefined, {
-            month: 'short', day: 'numeric', year: 'numeric',
-            hour: 'numeric', minute: '2-digit'
-        });
     };
 
     return (

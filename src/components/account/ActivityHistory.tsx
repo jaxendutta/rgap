@@ -6,16 +6,14 @@ import { FiEdit2, FiLock, FiMail, FiLogIn, FiClock, FiBookmark, FiTrash2 } from 
 import { SlSocialDropbox } from 'react-icons/sl';
 import { Card } from '@/components/ui/Card';
 import Tag from '../ui/Tag';
+import { AuditLog } from '@/types/database';
+import { formatDate } from '@/lib/utils';
 
-interface AuditLog {
-    event_type: string;
-    old_value: string | null;
-    new_value: string | null;
-    created_at: string;
-    ip_address?: string;
+export interface ActivityHistoryProps {
+    logs: AuditLog[];
 }
 
-export default function ActivityHistory({ logs }: { logs: AuditLog[] }) {
+export default function ActivityHistory({ logs }: ActivityHistoryProps) {
     // Hydration fix: Only render local dates after mounting on the client
     const [isMounted, setIsMounted] = useState(false);
 
@@ -62,16 +60,6 @@ export default function ActivityHistory({ logs }: { logs: AuditLog[] }) {
             case 'REMOVE_BOOKMARK_INSTITUTE': return "Unbookmarked Institute";
             default: return log.event_type.replace(/_/g, ' ').toLowerCase();
         }
-    };
-
-    // Safe date formatter that returns a consistent server string initially
-    const formatDate = (dateString: string) => {
-        if (!isMounted) {
-            // Return a stable format for server-side rendering (ISO UTC)
-            return new Date(dateString).toISOString().slice(0, 19).replace('T', ' ') + ' UTC';
-        }
-        // Return browser locale string after mount
-        return new Date(dateString).toLocaleString();
     };
 
     if (logs.length === 0) {
@@ -121,13 +109,6 @@ export default function ActivityHistory({ logs }: { logs: AuditLog[] }) {
                                 variant="outline"
                                 className="w-fit text-xs md:text-sm"
                             />
-                            {log.ip_address && (
-                                <Tag
-                                    text={log.ip_address}
-                                    variant="outline"
-                                    className="w-fit text-xs md:text-sm"
-                                />
-                            )}
                         </div>
                     </div>
                 ))}

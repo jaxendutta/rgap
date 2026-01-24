@@ -4,12 +4,10 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LuCalendarClock, LuHash, LuLayoutGrid } from "react-icons/lu";
 import { Card } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
 import { SortButton } from '@/components/ui/SortButton';
 import { Pagination } from '@/components/ui/Pagination';
 import { SearchHistoryItem as SearchHistoryItemData } from '@/types/search';
 import SearchHistoryItem from './SearchHistoryItem';
-import React from 'react';
 
 interface SearchHistoryListProps {
     history: SearchHistoryItemData[];
@@ -26,36 +24,6 @@ export default function SearchHistoryList({
 }: SearchHistoryListProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const fileInputRef = React.useRef<HTMLInputElement>(null);
-
-    const handleImportClick = () => {
-        fileInputRef.current?.click();
-    };
-    
-    const handleExport = () => {
-        const dataStr = JSON.stringify(history, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-        const exportFileDefaultName = 'search-history.json';
-    
-        const linkElement = document.createElement('a');
-        linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', exportFileDefaultName);
-        linkElement.click();
-    };
-    
-    const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const fileReader = new FileReader();
-        if (event.target.files && event.target.files[0]) {
-            fileReader.readAsText(event.target.files[0], "UTF-8");
-            fileReader.onload = e => {
-                if (e.target && typeof e.target.result === 'string') {
-                    const importedHistory = JSON.parse(e.target.result);
-                    onImportHistory(importedHistory);
-                }
-            };
-        }
-    };
 
     // Defaults
     const currentSort = searchParams.get('history_sort') || 'searched_at';
@@ -117,15 +85,6 @@ export default function SearchHistoryList({
                 </span>
 
                 <div className="flex gap-2 flex-wrap justify-center sm:justify-end">
-                    <Button onClick={handleExport} disabled={history.length === 0}>Export</Button>
-                    <Button onClick={handleImportClick}>Import</Button>
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleImport}
-                        accept=".json"
-                        className="hidden"
-                    />
                     <SortButton
                         label="Date"
                         icon={LuCalendarClock}
