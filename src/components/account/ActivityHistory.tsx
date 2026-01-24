@@ -108,7 +108,7 @@ export default function ActivityHistory({
                                         </div>
                                     </td>
 
-                                    <td className="py-2 md:py-3 px-4 flex justify-center">
+                                    <td className="py-2 md:py-4 px-4 flex justify-center">
                                         {linkData ? (
                                             <Tag
                                                 size="sm"

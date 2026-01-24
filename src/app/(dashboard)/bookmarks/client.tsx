@@ -154,6 +154,8 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                             totalCount={recipients.length}
                             emptyMessage="No recipients saved."
                             sortOptions={bookmarkSortOptions}
+                            showVisualization={true}
+                            visualizationData={recipients}
                         >
                             {recipients.map((recipient) => (
                                 <BookmarkedEntityCard
@@ -173,6 +175,8 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                             totalCount={institutes.length}
                             emptyMessage="No institutes saved."
                             sortOptions={bookmarkSortOptions}
+                            showVisualization={true}
+                            visualizationData={institutes}
                         >
                             {institutes.map((institute) => (
                                 <BookmarkedEntityCard
