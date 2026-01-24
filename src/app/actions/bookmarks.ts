@@ -22,7 +22,7 @@ async function logActivity(userId: number, eventType: string, oldValue: string |
     }
 }
 
-// --- Toggle Actions ---
+// --- Toggle Actions (unchanged) ---
 
 export async function toggleGrantBookmark(grantId: number) {
     const user = await getCurrentUser();
@@ -176,7 +176,7 @@ export async function updateSearchNote(searchHistoryId: number, note: string) {
 
 // --- Fetch Actions (Modified for sorting) ---
 
-export async function getUserBookmarks(sortConfig?: { field: string, direction: 'asc' | 'desc' }) {
+export async function getUserBookmarks(sortConfig?: { field?: string, direction: 'asc' | 'desc' }) {
     const user = await getCurrentUser();
     if (!user) return null;
 
@@ -184,11 +184,28 @@ export async function getUserBookmarks(sortConfig?: { field: string, direction: 
     const sortField = sortConfig?.field || 'bookmarked_at';
     const sortDir = sortConfig?.direction === 'asc' ? 'ASC' : 'DESC';
 
-    // Map common fields to table aliases
-    const getSort = (alias: string, field: string) => {
+    // Map common fields to table aliases specific to each query
+    const getSort = (type: 'grant' | 'recipient' | 'institute' | 'search', alias: string, field: string) => {
+        // Common
         if (field === 'bookmarked_at') return `${alias}.bookmarked_at`;
-        if (field === 'value') return 'agreement_value'; // For grants
-        return `${alias}.bookmarked_at`; // Fallback
+
+        // Specifics
+        if (type === 'grant') {
+            if (field === 'value') return 'g.agreement_value';
+            if (field === 'legal_name') return 'r.legal_name';
+        }
+        if (type === 'recipient') {
+            if (field === 'legal_name') return 'r.legal_name';
+        }
+        if (type === 'institute') {
+            if (field === 'legal_name') return 'i.name'; // Institute table has 'name'
+        }
+        if (type === 'search') {
+            if (field === 'results_count') return 'sh.result_count';
+        }
+
+        // Fallback to default if the sort field doesn't apply to this entity type
+        return `${alias}.bookmarked_at`;
     };
 
     try {
@@ -208,7 +225,7 @@ export async function getUserBookmarks(sortConfig?: { field: string, direction: 
             LEFT JOIN organizations org ON g.org = org.org
             LEFT JOIN programs p ON g.prog_id = p.prog_id
             WHERE bg.user_id = $1
-            ORDER BY ${getSort('bg', sortField)} ${sortDir}
+            ORDER BY ${getSort('grant', 'bg', sortField)} ${sortDir}
         `, [user.id]);
 
         const recipients = await db.query(`
@@ -222,7 +239,7 @@ export async function getUserBookmarks(sortConfig?: { field: string, direction: 
             JOIN recipients r ON br.recipient_id = r.recipient_id
             JOIN institutes i ON r.institute_id = i.institute_id
             WHERE br.user_id = $1
-            ORDER BY ${getSort('br', sortField)} ${sortDir}
+            ORDER BY ${getSort('recipient', 'br', sortField)} ${sortDir}
         `, [user.id]);
 
         const institutes = await db.query(`
@@ -233,7 +250,7 @@ export async function getUserBookmarks(sortConfig?: { field: string, direction: 
             FROM bookmarked_institutes bi
             JOIN institutes i ON bi.institute_id = i.institute_id
             WHERE bi.user_id = $1
-            ORDER BY ${getSort('bi', sortField)} ${sortDir}
+            ORDER BY ${getSort('institute', 'bi', sortField)} ${sortDir}
         `, [user.id]);
 
         const searches = await db.query(`
@@ -244,7 +261,7 @@ export async function getUserBookmarks(sortConfig?: { field: string, direction: 
             FROM bookmarked_searches bs
             JOIN search_history sh ON bs.search_history_id = sh.id
             WHERE bs.user_id = $1
-            ORDER BY ${getSort('bs', sortField)} ${sortDir}
+            ORDER BY ${getSort('search', 'bs', sortField)} ${sortDir}
         `, [user.id]);
 
         return {

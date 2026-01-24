@@ -8,7 +8,12 @@ import { Button } from "@/components/ui/Button";
 import BookmarksClient from "@/app/(dashboard)/bookmarks/client";
 import { LuBookmark, LuLock } from "react-icons/lu";
 
-export default async function BookmarksPage() {
+type Props = {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+export default async function BookmarksPage(props: Props) {
+    const searchParams = await props.searchParams;
     const user = await getCurrentUser();
 
     if (!user) {
@@ -37,7 +42,11 @@ export default async function BookmarksPage() {
         );
     }
 
-    const data = await getUserBookmarks();
+    // Extract sort parameters
+    const sortField = typeof searchParams.sort === 'string' ? searchParams.sort : undefined;
+    const sortDir = searchParams.dir === 'asc' ? 'asc' : 'desc';
+
+    const data = await getUserBookmarks({ field: sortField, direction: sortDir });
 
     // Handle potential error or null data
     if (!data) {
