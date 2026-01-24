@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/Card';
 import Tag from '@/components/ui/Tag';
 import { ListHeader } from '@/components/ui/ListHeader';
 import { Session } from '@/types/database';
-import { formatDate, formatTime } from '@/lib/utils';
+import { formatDateTime } from '@/lib/utils';
 import { VscSignIn, VscSignOut } from 'react-icons/vsc';
 
 interface SessionListProps {
@@ -128,9 +128,9 @@ export default function SessionList({
                                     </td>
                                     <td className="py-4 px-4 text-gray-600">
                                         <div className="flex flex-col gap-1">
-                                            <Tag size="sm" text="Log On" innerText={`${formatDate(sess.created_at)} ${formatTime(sess.created_at)}`} variant="success" className="w-fit" />
+                                            <Tag size="sm" text="Log On" innerText={formatDateTime(sess.created_at)} variant="success" className="w-fit" />
                                             {isRevoked && (
-                                                <Tag size="sm" text="Log Off" innerText={`${formatDate(sess.last_active_at)} ${formatTime(sess.last_active_at)}`} variant="warning" className="w-fit" />
+                                                <Tag size="sm" text="Log Off" innerText={formatDateTime(sess.last_active_at)} variant="warning" className="w-fit" />
                                             )}
                                         </div>
                                     </td>

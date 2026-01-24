@@ -9,7 +9,7 @@ import Tag from '@/components/ui/Tag';
 import { Pagination } from '@/components/ui/Pagination';
 import { ListHeader } from '@/components/ui/ListHeader';
 import { AuditLog } from '@/types/database';
-import { formatDate, formatTime } from '@/lib/utils';
+import { formatDateTime } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
 interface ActivityHistoryProps {
@@ -148,10 +148,7 @@ export default function ActivityHistory({
                                     <td className="py-2 md:py-3 px-4 text-gray-600">
                                         <div className="flex items-center gap-1 md:gap-1.5">
                                             <span className="text-gray-400">
-                                                {formatDate(log.created_at)}
-                                            </span>
-                                            <span className="text-gray-400">
-                                                {formatTime(log.created_at)}
+                                                {formatDateTime(log.created_at)}
                                             </span>
                                         </div>
                                     </td>

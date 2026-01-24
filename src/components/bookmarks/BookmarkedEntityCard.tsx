@@ -3,14 +3,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LuArrowUpRight, LuMapPin, LuUniversity, LuLandmark, LuSquareUser, LuCalendarClock } from "react-icons/lu";
+import { LuArrowUpRight, LuMapPin, LuUniversity, LuSquareUser, LuBookmarkCheck } from "react-icons/lu";
 import { Card } from "@/components/ui/Card";
 import Tag from "@/components/ui/Tag";
 import BookmarkButton from "@/components/bookmarks/BookmarkButton";
 import NoteEditor from "@/components/bookmarks/NoteEditor";
 import { updateRecipientNote, updateInstituteNote } from "@/app/actions/bookmarks";
 import { Institute, Recipient, InstituteWithStats, RecipientWithStats, RECIPIENT_TYPE_LABELS } from "@/types/database";
-import { formatDate, formatDateTime } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils";
 
 // Define a union type that matches what our API returns (includes notes)
 type BookmarkedData = (InstituteWithStats | RecipientWithStats) & {
@@ -93,7 +93,7 @@ export default function BookmarkedEntityCard({ data, type }: BookmarkedEntityCar
                 {/* Metadata Tags */}
                 <div className="flex flex-wrap gap-2">
                     <Tag size="xs" variant="default"
-                        icon={LuCalendarClock}
+                        icon={LuBookmarkCheck}
                         text="Bookmarked"
                         innerText={formatDateTime(data.bookmarked_at)}
                     />
