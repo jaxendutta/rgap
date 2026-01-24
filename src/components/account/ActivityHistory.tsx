@@ -91,6 +91,7 @@ export default function ActivityHistory({
                 currentSortField="created_at"
                 currentSortDir="desc"
             />
+
             <Card className="p-0 overflow-hidden border border-gray-200 shadow-sm overflow-x-auto rounded-2xl md:rounded-3xl">
                 <table className="min-w-full text-xs md:text-sm text-left whitespace-nowrap">
                     <thead className="text-gray-500 border-b border-gray-200 bg-gray-50/50">
