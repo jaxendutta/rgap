@@ -4,8 +4,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-    LuSearch, LuGraduationCap, LuUniversity, LuBookMarked,
-    LuCalendarDays, LuScrollText, LuFilter, LuDollarSign, LuMapPin
+    LuSearch, LuGraduationCap, LuUniversity, LuBookMarked, LuHash,
+    LuCalendarDays, LuScrollText, LuFilter, LuDollarSign, LuMapPin,
 } from "react-icons/lu";
 import { MdOutlineAccountBalance, MdSortByAlpha } from 'react-icons/md';
 import Tabs, { TabContent, TabItem } from "@/components/ui/Tabs";
@@ -149,6 +149,10 @@ export default function BookmarksClient({ grants, recipients, institutes, search
         { id: "searches", label: "Searches", icon: LuSearch, count: searches.length },
     ];
 
+    const searchBookmarkSortOptions: SortOption[] = [
+        { value: 'bookmarked_at', label: 'Date Bookmarked', field: 'bookmarked_at', direction: 'desc', icon: LuCalendarDays },
+        { value: 'results_count', label: 'Results', field: 'results_count', direction: 'desc', icon: LuHash },
+    ];
     const bookmarkSortOptions: SortOption[] = [
         { value: 'bookmarked_at', label: 'Date Bookmarked', field: 'bookmarked_at', direction: 'desc', icon: LuCalendarDays },
         { value: 'legal_name', label: 'Name', field: 'legal_name', direction: 'asc', icon: MdSortByAlpha },
@@ -243,7 +247,7 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                             entities={searches}
                             totalCount={searches.length}
                             emptyMessage="No saved searches."
-                            sortOptions={bookmarkSortOptions}
+                            sortOptions={searchBookmarkSortOptions}
                         >
                             {searches.map((search) => (
                                 <BookmarkedSearchCard key={search.id} search={search} />

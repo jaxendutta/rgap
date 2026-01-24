@@ -268,7 +268,6 @@ export default function AccountManager({
                             history={searchHistory}
                             totalCount={totalHistoryCount}
                             currentPage={currentHistoryPage}
-                            onImportHistory={handleImportHistory}
                         />
                     </div>
                 )}
