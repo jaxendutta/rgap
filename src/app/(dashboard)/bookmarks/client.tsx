@@ -16,7 +16,6 @@ import NoteEditor from "@/components/bookmarks/NoteEditor";
 import { Button } from "@/components/ui/Button";
 import { updateGrantNote, updateSearchNote } from "@/app/actions/bookmarks";
 import EntityList from "@/components/entity/EntityList";
-import { Card } from "@/components/ui/Card";
 import { SortOption } from "@/types/database";
 import Tag, { Tags } from '@/components/ui/Tag';
 
