@@ -4,16 +4,19 @@
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { LuChevronLeft, LuChevronRight, LuChevronsLeft, LuChevronsRight } from 'react-icons/lu';
+import { DEFAULT_ITEM_PER_PAGE } from '@/constants/data';
 
 export interface PaginationProps {
-    totalPages: number;
+    totalCount: number;
+    pageSize?: number;
     currentPage?: number;
     paramName?: string;
     onPageChange?: (page: number) => void;
 }
 
 export function Pagination({
-    totalPages,
+    totalCount,
+    pageSize = DEFAULT_ITEM_PER_PAGE,
     currentPage: propCurrentPage,
     paramName = 'page',
     onPageChange
@@ -24,6 +27,8 @@ export function Pagination({
 
     // Use prop if provided, otherwise fall back to URL param
     const currentPage = propCurrentPage || Number(searchParams.get(paramName)) || 1;
+    const totalPages = Math.ceil(totalCount / pageSize);
+
 
     const handlePageChange = (page: number) => {
         if (onPageChange) {

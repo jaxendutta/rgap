@@ -48,7 +48,7 @@ function EntityList<T>(props: EntityListProps<T>) {
         entities = [],
         totalCount,
         page = 1,
-        pageSize = DEFAULT_ITEM_PER_PAGE,
+        pageSize,
         children,
         showVisualization = false,
         visualizationData = [],
@@ -169,7 +169,7 @@ function EntityList<T>(props: EntityListProps<T>) {
             <div
                 className={cn(
                     layoutVariant === "grid"
-                        ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"
+                        ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 items-start"
                         : "space-y-4"
                 )}
             >
@@ -178,7 +178,8 @@ function EntityList<T>(props: EntityListProps<T>) {
 
             <Pagination
                 currentPage={page}
-                totalPages={Math.ceil(totalCount / pageSize)}
+                totalCount={totalCount}
+                pageSize={pageSize}
                 onPageChange={handlePageChange}
             />
         </div>

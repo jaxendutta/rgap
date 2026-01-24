@@ -113,7 +113,7 @@ export default function SearchHistoryList({
             </Card>
 
             <Pagination
-                totalPages={Math.ceil(totalCount / 15)}
+                totalCount={totalCount}
                 currentPage={currentPage}
                 paramName="history_page"
             />

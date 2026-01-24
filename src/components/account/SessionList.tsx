@@ -1,11 +1,13 @@
+// src/components/account/SessionList.tsx
 'use client';
 
-import { FiSmartphone, FiMonitor, FiGlobe, FiLogOut } from 'react-icons/fi';
+import { FiSmartphone, FiMonitor, FiGlobe, FiLogOut, FiCalendar } from 'react-icons/fi';
 import { revokeSessionAction } from '@/app/actions/auth';
 import { useNotify } from '@/providers/NotificationProvider';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
-import Tag from '@/components/ui/Tag';
+import Tag from '../ui/Tag';
+import { SortButton } from '@/components/ui/SortButton';
 import { Session } from '@/types/database';
 import { formatDate } from '@/lib/utils';
 
@@ -23,85 +25,129 @@ export default function SessionList({ sessions, currentSessionId }: { sessions: 
         }
     };
 
+    // Improved User Agent Parsing
     const parseUA = (ua: string | null) => {
         const agent = (ua || '').toLowerCase();
-        if (agent.includes('mobile')) return { icon: FiSmartphone, name: 'Mobile' };
-        if (agent.includes('mac')) return { icon: FiMonitor, name: 'Mac OS' };
-        if (agent.includes('windows')) return { icon: FiMonitor, name: 'Windows' };
-        if (agent.includes('linux')) return { icon: FiMonitor, name: 'Linux' };
-        return { icon: FiMonitor, name: 'Browser' };
+
+        let browser = 'Browser';
+        let os = 'Unknown OS';
+        let icon = FiMonitor;
+
+        // Detect OS
+        if (agent.includes('mobile') || agent.includes('android') || agent.includes('iphone')) {
+            os = 'Mobile';
+            icon = FiSmartphone;
+        } else if (agent.includes('macintosh') || agent.includes('mac os')) {
+            os = 'macOS';
+        } else if (agent.includes('windows')) {
+            os = 'Windows';
+        } else if (agent.includes('linux')) {
+            os = 'Linux';
+        }
+
+        // Detect Browser
+        if (agent.includes('edg/')) {
+            browser = 'Edge';
+        } else if (agent.includes('chrome/') && !agent.includes('edg/')) {
+            browser = 'Chrome';
+        } else if (agent.includes('firefox/')) {
+            browser = 'Firefox';
+        } else if (agent.includes('safari/') && !agent.includes('chrome/')) {
+            browser = 'Safari';
+        }
+
+        return { icon, name: `${browser} on ${os}` };
     };
 
     return (
-        <Card className="p-0 overflow-hidden border border-gray-200 shadow-sm overflow-x-auto">
-            <table className="min-w-full text-sm text-left whitespace-nowrap">
-                <thead className="text-gray-500 border-b border-gray-200">
-                    <tr>
-                        <th className="py-3 px-4 font-medium">Device</th>
-                        <th className="py-3 px-4 font-medium">Location & IP</th>
-                        <th className="py-3 px-4 font-medium">Activity</th>
-                        <th className="py-3 px-4 font-medium">Status</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                    {sessions.map((sess) => {
-                        const device = parseUA(sess.user_agent);
-                        const isCurrent = sess.session_id === currentSessionId;
-                        const isRevoked = sess.is_revoked;
+        <div className="space-y-4">
+            {/* Header matching EntityList style */}
+            <Card variant="default" className="flex flex-wrap justify-between items-center rounded-3xl p-2 bg-white backdrop-blur-xs border border-gray-100">
+                <span className="text-sm text-gray-500 px-2">
+                    Showing <span className="font-semibold text-gray-900">{sessions.length}</span> active sessions
+                </span>
+                <div className="flex gap-2">
+                    <SortButton
+                        label="Date"
+                        field="date"
+                        currentField="date"
+                        direction="desc"
+                        icon={FiCalendar}
+                        onClick={() => { }} // No-op as per request
+                    />
+                </div>
+            </Card>
 
-                        return (
-                            <tr key={sess.session_id} className="hover:bg-gray-50/50 transition-colors">
-                                <td className="py-4 px-4">
-                                    <div className="flex items-start gap-3">
-                                        <div className="p-2 bg-gray-100 rounded-full text-gray-600">
-                                            <device.icon />
+            <Card className="p-0 overflow-hidden border border-gray-200 shadow-sm overflow-x-auto rounded-3xl">
+                <table className="min-w-full text-sm text-left whitespace-nowrap">
+                    <thead className="text-gray-500 border-b border-gray-200 bg-gray-50/50">
+                        <tr>
+                            <th className="py-3 px-4 font-medium">Device</th>
+                            <th className="py-3 px-4 font-medium">Location & IP</th>
+                            <th className="py-3 px-4 font-medium">Activity</th>
+                            <th className="py-3 px-4 font-medium">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {sessions.map((sess) => {
+                            const device = parseUA(sess.user_agent);
+                            const isCurrent = sess.session_id === currentSessionId;
+                            const isRevoked = sess.is_revoked;
+
+                            return (
+                                <tr key={sess.session_id} className="hover:bg-gray-50/50 transition-colors">
+                                    <td className="py-4 px-4">
+                                        <div className="flex items-start gap-3">
+                                            <div className="p-2 bg-gray-100 rounded-full text-gray-600">
+                                                <device.icon className="size-4" />
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-gray-900">{device.name}</p>
+                                                <p className="text-xs text-gray-500 max-w-[200px] truncate" title={sess.user_agent || ''}>
+                                                    {sess.user_agent || 'Unknown'}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-medium text-gray-900">{device.name}</p>
-                                            <p className="text-xs text-gray-500 max-w-[300px] whitespace-normal" title={sess.user_agent || ''}>
-                                                {sess.user_agent || 'Unknown'}
-                                            </p>
+                                    </td>
+                                    <td className="py-4 px-4">
+                                        <div className="flex items-center gap-2 text-gray-700">
+                                            <FiGlobe className="text-gray-400 flex-shrink-0" />
+                                            <span>{sess.location || 'Unknown'}</span>
                                         </div>
-                                    </div>
-                                </td>
-                                <td className="py-4 px-4">
-                                    <div className="flex items-center gap-2 text-gray-700">
-                                        <FiGlobe className="text-gray-400 flex-shrink-0" />
-                                        <span>{sess.location || 'Unknown'}</span>
-                                    </div>
-                                    <p className="text-xs text-gray-500 ml-6">{sess.ip_address || 'Hidden'}</p>
-                                </td>
-                                <td className="py-4 px-4 text-gray-600">
-                                    <div className="flex flex-col gap-1">
-                                        <Tag size="sm" text="Log On" innerText={formatDate(sess.created_at)} variant="success" className="w-fit" />
-                                        {isRevoked && (
-                                            <Tag size="sm" text="Log Off" innerText={formatDate(sess.last_active_at)} variant="warning" className="w-fit" />
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="py-4 px-4">
-                                    <div className="flex items-center gap-3">
-                                        {isRevoked ? (<Tag size="sm" text="Logged Out" variant="secondary" />) : (
-                                            <>
-                                                {isCurrent ? (<Tag size="sm" text="This Device" variant="primary" />) : (<Tag size="sm" text="Active" variant="success" />)}
-                                                {!isCurrent && (
-                                                    <button
-                                                        onClick={() => handleRevoke(sess.session_id)}
-                                                        className="text-gray-400 hover:text-red-600 transition-colors p-1"
-                                                        title="Log out this device"
-                                                    >
-                                                        <FiLogOut />
-                                                    </button>
-                                                )}
-                                            </>
-                                        )}
-                                    </div>
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
-        </Card>
+                                        <p className="text-xs text-gray-500 ml-6">{sess.ip_address || 'Hidden'}</p>
+                                    </td>
+                                    <td className="py-4 px-4 text-gray-600">
+                                        <div className="flex flex-col gap-1">
+                                            <Tag size="sm" text="Log On" innerText={formatDate(sess.created_at)} variant="success" className="w-fit" />
+                                            {isRevoked && (
+                                                <Tag size="sm" text="Log Off" innerText={formatDate(sess.last_active_at)} variant="warning" className="w-fit" />
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="py-4 px-4">
+                                        <div className="flex items-center gap-3">
+                                            {isRevoked ? (<Tag size="sm" text="Logged Out" variant="secondary" />) : (
+                                                <>
+                                                    {isCurrent ? (<Tag size="sm" text="This Device" variant="primary" />) : (<Tag size="sm" text="Active" variant="success" />)}
+                                                    {!isCurrent && (
+                                                        <button
+                                                            onClick={() => handleRevoke(sess.session_id)}
+                                                            className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                                                            title="Log out this device"
+                                                        >
+                                                            <FiLogOut />
+                                                        </button>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </Card>
+        </div>
     );
 }

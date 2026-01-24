@@ -15,14 +15,12 @@ interface ActivityHistoryProps {
     logs: AuditLog[];
     totalCount: number;
     currentPage: number;
-    itemsPerPage?: number;
 }
 
-export default function ActivityHistory({
-    logs,
-    totalCount,
-    currentPage,
-    itemsPerPage = 15
+export default function ActivityHistory({ 
+    logs, 
+    totalCount, 
+    currentPage 
 }: ActivityHistoryProps) {
     const [isMounted, setIsMounted] = useState(false);
     const router = useRouter();
@@ -79,8 +77,6 @@ export default function ActivityHistory({
             </div>
         );
     }
-
-    const totalPages = Math.ceil(totalCount / itemsPerPage);
 
     return (
         <div className="space-y-4">
@@ -148,7 +144,7 @@ export default function ActivityHistory({
             </Card>
 
             <Pagination
-                totalPages={totalPages}
+                totalCount={totalCount}
                 currentPage={currentPage}
                 paramName="activity_page"
             />

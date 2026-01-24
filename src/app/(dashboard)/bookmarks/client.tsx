@@ -3,8 +3,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { LuSearch, LuGraduationCap, LuUniversity, LuBookMarked, LuCalendarDays } from "react-icons/lu";
+import {
+    LuSearch, LuGraduationCap, LuUniversity, LuBookMarked,
+    LuCalendarDays, LuScrollText, LuFilter, LuDollarSign, LuMapPin
+} from "react-icons/lu";
+import { MdOutlineAccountBalance, MdSortByAlpha } from 'react-icons/md';
 import Tabs, { TabContent, TabItem } from "@/components/ui/Tabs";
 import GrantCard from "@/components/grants/GrantCard";
 import BookmarkedEntityCard from "@/components/bookmarks/BookmarkedEntityCard";
@@ -15,44 +18,109 @@ import { updateGrantNote, updateSearchNote } from "@/app/actions/bookmarks";
 import EntityList from "@/components/entity/EntityList";
 import { Card } from "@/components/ui/Card";
 import { SortOption } from "@/types/database";
-import { MdSortByAlpha } from "react-icons/md";
+import Tag, { Tags } from '@/components/ui/Tag';
 
-// NEW: Search Card Component
+// Helper to parse search filters for display
+const SearchTags = ({ item }: { item: any }) => {
+    const rawFilters = typeof item.filters === 'string'
+        ? JSON.parse(item.filters)
+        : (item.filters || {});
+
+    const filters: any = {};
+    Object.entries(rawFilters).forEach(([key, value]) => {
+        if (value && value !== 'null' && value !== '') {
+            filters[key] = value;
+        }
+    });
+
+    const dateFrom = filters.dateRange?.from || filters.from;
+    const dateTo = filters.dateRange?.to || filters.to;
+    let dateRangeText = null;
+
+    if (dateFrom && dateTo) {
+        const dFrom = new Date(dateFrom);
+        const dTo = new Date(dateTo);
+        dateRangeText = `${dFrom.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })} - ${dTo.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}`;
+    }
+
+    const valMin = filters.valueRange?.min;
+    const valMax = filters.valueRange?.max;
+    let valueRangeText = null;
+    if ((valMin !== undefined && valMin > 0) || (valMax !== undefined && valMax < 200_000_000)) {
+        valueRangeText = `$${(valMin || 0).toLocaleString()} - $${(valMax || 'Max').toLocaleString()}`;
+    }
+
+    return (
+        <Tags spacing="tight" className="items-center flex-wrap">
+            {filters.recipient && (
+                <Tag text="Recipient" innerText={filters.recipient} variant="primary" icon={LuGraduationCap} size="sm" />
+            )}
+            {filters.institute && (
+                <Tag text="Institute" innerText={filters.institute} variant="danger" icon={MdOutlineAccountBalance} size="sm" />
+            )}
+            {item.search_query && item.search_query !== 'null' && (
+                <Tag text="Grant Title" innerText={item.search_query} variant="warning" icon={LuScrollText} size="sm" />
+            )}
+            {filters.agencies?.length > 0 && (
+                <Tag text="Agencies" innerText={filters.agencies.join(' | ')} variant="secondary" icon={LuFilter} size="sm" />
+            )}
+            {dateRangeText && (
+                <Tag text="Dates" innerText={dateRangeText} variant="secondary" icon={LuCalendarDays} size="sm" />
+            )}
+            {valueRangeText && (
+                <Tag text="Values" innerText={valueRangeText} variant="secondary" icon={LuDollarSign} size="sm" />
+            )}
+            {(filters.countries?.length > 0 || filters.provinces?.length > 0) && (
+                <Tag text="Location" innerText={[...(filters.countries || []), ...(filters.provinces || [])].join(' | ')} variant="secondary" icon={LuMapPin} size="sm" />
+            )}
+        </Tags>
+    );
+};
+
+// NEW: Search Card Component matching SearchHistoryItem style
 const BookmarkedSearchCard = ({ search }: { search: any }) => {
     return (
-        <Card className="flex flex-col h-full">
-            <div className="p-4 border-b border-gray-100 flex justify-between items-start gap-4">
-                <div>
-                    <div className="font-semibold text-lg text-gray-900 line-clamp-1">
-                        "{search.search_query}"
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full">
+            <div className="p-4 md:p-5 flex flex-col gap-4 flex-1">
+                <div className="flex justify-between items-start gap-4">
+                    <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                            <LuCalendarDays className="size-3" />
+                            <span>Searched {new Date(search.searched_at).toLocaleDateString()}</span>
+                            <span>•</span>
+                            <span className={search.result_count > 0 ? "text-green-600 font-medium" : "text-gray-400"}>
+                                {search.result_count?.toLocaleString() || 0} results
+                            </span>
+                        </div>
+                        <SearchTags item={search} />
                     </div>
-                    <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                        <span>{search.result_count ? `${search.result_count.toLocaleString()} results` : 'Search query'}</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                            <LuCalendarDays className="w-3.5 h-3.5" />
-                            {new Date(search.searched_at).toLocaleDateString()}
-                        </span>
+
+                    <div className="flex flex-col gap-2 shrink-0">
+                        <BookmarkButton
+                            entityType="search"
+                            entityId={search.id}
+                            isBookmarked={true}
+                            hasNote={!!search.notes}
+                            showLabel={false}
+                            className="self-end"
+                        />
                     </div>
-                    {/* Bookmarked Date Badge */}
-                    <div className="mt-2 inline-flex items-center text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                </div>
+
+                <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
+                    <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded font-medium">
                         Saved {new Date(search.bookmarked_at).toLocaleDateString()}
                     </div>
-                </div>
-                <div className="flex gap-2 shrink-0">
-                    <Link href={`/search?q=${encodeURIComponent(search.search_query)}`}>
-                        <Button size="sm" variant="outline"><LuSearch className="w-4 h-4 mr-2" /> Run</Button>
+                    <Link href={`/search?q=${encodeURIComponent(search.search_query || '')}&re-run=true`}>
+                        <Button size="sm" variant="outline" className="h-8 text-xs">
+                            <LuSearch className="w-3.5 h-3.5 mr-1.5" />
+                            Run Search
+                        </Button>
                     </Link>
-                    <BookmarkButton
-                        entityType="search"
-                        entityId={search.id}
-                        isBookmarked={true}
-                        hasNote={!!search.notes}
-                        showLabel={false}
-                    />
                 </div>
             </div>
-            <div className="p-3 bg-gray-50/50 flex-1">
+
+            <div className="px-4 py-3 bg-gray-50/50 border-t border-gray-100">
                 <NoteEditor
                     initialNote={search.notes}
                     onSave={(note) => updateSearchNote(search.id, note)}
@@ -60,7 +128,7 @@ const BookmarkedSearchCard = ({ search }: { search: any }) => {
                     label="Personal Notes"
                 />
             </div>
-        </Card>
+        </div>
     );
 };
 
@@ -72,14 +140,7 @@ interface BookmarksClientProps {
 }
 
 export default function BookmarksClient({ grants, recipients, institutes, searches }: BookmarksClientProps) {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const pathname = usePathname();
-
-    // Initialize state from URL or default to "grants"
-    const [activeTab, setActiveTab] = useState(() => {
-        return searchParams.get('tab') || "grants";
-    });
+    const [activeTab, setActiveTab] = useState("grants");
 
     const tabItems: TabItem[] = [
         { id: "grants", label: "Grants", icon: LuBookMarked, count: grants.length },
@@ -88,18 +149,6 @@ export default function BookmarksClient({ grants, recipients, institutes, search
         { id: "searches", label: "Searches", icon: LuSearch, count: searches.length },
     ];
 
-    // Handle tab change and update URL
-    const handleTabChange = (id: string) => {
-        setActiveTab(id);
-        const params = new URLSearchParams(searchParams.toString());
-        params.set('tab', id);
-        router.push(`${pathname}?${params.toString()}`, { scroll: false });
-    };
-
-    // Common Sort Options for Bookmarks
-    const bookmarkSearchSortOptions: SortOption[] = [
-        { value: 'bookmarked_at', label: 'Date Bookmarked', field: 'bookmarked_at', direction: 'desc', icon: LuCalendarDays },
-    ];
     const bookmarkSortOptions: SortOption[] = [
         { value: 'bookmarked_at', label: 'Date Bookmarked', field: 'bookmarked_at', direction: 'desc', icon: LuCalendarDays },
         { value: 'legal_name', label: 'Name', field: 'legal_name', direction: 'asc', icon: MdSortByAlpha },
@@ -110,7 +159,7 @@ export default function BookmarksClient({ grants, recipients, institutes, search
             <Tabs
                 tabs={tabItems}
                 activeTab={activeTab}
-                onChange={handleTabChange}
+                onChange={setActiveTab}
                 variant="pills"
                 className="mb-6"
                 showCounts={true}
@@ -119,7 +168,7 @@ export default function BookmarksClient({ grants, recipients, institutes, search
 
             <div>
                 <TabContent activeTab={activeTab}>
-                    {/* Grants Tab */}
+                    {/* Grants Tab - With Visualization Enabled */}
                     {activeTab === "grants" && (
                         <EntityList
                             entityType="grant"
@@ -129,11 +178,14 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                             sortOptions={bookmarkSortOptions}
                             showVisualization={true}
                             visualizationData={grants}
+                            viewContext="custom"
                         >
                             {grants.map((grant) => (
-                                <div key={grant.grant_id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-4">
-                                    <GrantCard {...grant} isBookmarked={true} />
-                                    <div className="px-3 py-2.5 bg-gray-50/50 border-t border-gray-100">
+                                <div key={grant.grant_id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-4 flex flex-col h-full">
+                                    <div className="flex-1">
+                                        <GrantCard {...grant} isBookmarked={true} />
+                                    </div>
+                                    <div className="px-3 py-2.5 bg-gray-50/50 border-t border-gray-100 mt-auto">
                                         <NoteEditor
                                             initialNote={grant.notes}
                                             onSave={(note) => updateGrantNote(grant.grant_id, note)}
@@ -154,8 +206,6 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                             totalCount={recipients.length}
                             emptyMessage="No recipients saved."
                             sortOptions={bookmarkSortOptions}
-                            showVisualization={true}
-                            visualizationData={recipients}
                         >
                             {recipients.map((recipient) => (
                                 <BookmarkedEntityCard
@@ -175,8 +225,6 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                             totalCount={institutes.length}
                             emptyMessage="No institutes saved."
                             sortOptions={bookmarkSortOptions}
-                            showVisualization={true}
-                            visualizationData={institutes}
                         >
                             {institutes.map((institute) => (
                                 <BookmarkedEntityCard
@@ -188,14 +236,14 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                         </EntityList>
                     )}
 
-                    {/* Searches Tab - NOW USING GRID AND NEW CARD */}
+                    {/* Searches Tab */}
                     {activeTab === "searches" && (
                         <EntityList
                             entityType="search"
                             entities={searches}
                             totalCount={searches.length}
                             emptyMessage="No saved searches."
-                            sortOptions={bookmarkSearchSortOptions}
+                            sortOptions={bookmarkSortOptions}
                         >
                             {searches.map((search) => (
                                 <BookmarkedSearchCard key={search.id} search={search} />
