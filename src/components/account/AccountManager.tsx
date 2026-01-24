@@ -174,7 +174,7 @@ export default function AccountManager({
 
                 <div className="flex flex-col text-center md:text-left gap-1">
                     <h1 className="text-2xl font-bold text-gray-900">
-                        Hi, {user.name ? user.name.split(' ')[0] : 'there'}
+                        [ Hi, {user.name ? user.name.split(' ')[0] : 'there'} ]
                     </h1>
                     <p className="text-xs md:text-sm text-gray-500">Manage your account settings here</p>
                 </div>
