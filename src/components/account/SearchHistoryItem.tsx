@@ -88,17 +88,17 @@ export default function SearchHistoryItem({ item, onSearchAgain }: SearchHistory
                 </div>
             </div>
 
-            <div className="flex  md:flex-wrap items-center justify-start gap-2 md:pl-5 md:ml-2">
+            <div className="flex flex-col md:flex-row items-center justify-start gap-2 md:pl-5 md:ml-2">
                 <BookmarkButton
                     variant="secondary"
                     entityId={item.id}
                     entityType="search"
                     isBookmarked={false}
-                    className="p-2 flex w-full"
+                    className="p-2 flex flex-1"
                 />
-                <Button variant="secondary" onClick={() => onSearchAgain(item, filters)} className="p-2">
+                <Button variant="secondary" onClick={() => onSearchAgain(item, filters)} className="p-2 flex-1">
                     <FiSearch className="size-4" />
-                    <span className="hidden md:inline-flex">Search Again</span>
+                    <span className="hidden md:inline-flex whitespace-nowrap">Search Again</span>
                 </Button>
             </div>
         </div>

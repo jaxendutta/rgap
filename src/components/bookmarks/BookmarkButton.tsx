@@ -92,7 +92,7 @@ export function BookmarkButton({
             if (result && result.success) {
                 setBookmarked(!!result.isBookmarked);
                 onBookmarkChange?.(!!result.isBookmarked);
-                if (result.isBookmarked) notify("Saved to bookmarks", "success");
+                if (result.isBookmarked) notify("Added to bookmarks", "success");
                 else notify("Removed from bookmarks", "info");
             } else {
                 notify(result?.error || "Failed to update bookmark", "error");

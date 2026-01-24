@@ -4,23 +4,21 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LuCalendarClock, LuHash, LuLayoutGrid } from "react-icons/lu";
 import { Card } from '@/components/ui/Card';
-import { SortButton } from '@/components/ui/SortButton';
 import { Pagination } from '@/components/ui/Pagination';
 import { SearchHistoryItem as SearchHistoryItemData } from '@/types/search';
-import SearchHistoryItem from './SearchHistoryItem';
+import SearchHistoryItem from '@/components/account/SearchHistoryItem';
+import { ListHeader } from '@/components/ui/ListHeader';
 
 interface SearchHistoryListProps {
     history: SearchHistoryItemData[];
     totalCount?: number;
     currentPage?: number;
-    onImportHistory: (history: SearchHistoryItemData[]) => void;
 }
 
 export default function SearchHistoryList({
     history,
     totalCount = 0,
-    currentPage = 1,
-    onImportHistory
+    currentPage = 1
 }: SearchHistoryListProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -77,32 +75,22 @@ export default function SearchHistoryList({
 
     return (
         <div className="space-y-4">
-            <Card variant="default" className="flex flex-wrap justify-between items-center rounded-3xl p-1.5 md:p-2 bg-white backdrop-blur-xs border border-gray-100 gap-4 sm:gap-0">
-                <span className="text-xs md:text-sm text-gray-500 px-2 md:px-4 flex-grow">
-                    Showing <span className="font-semibold text-gray-900">{history.length}</span> of{' '}
-                    <span className="font-semibold text-gray-900">{(totalCount || 0).toLocaleString()}</span>{' '}
-                    records
-                </span>
+            <ListHeader
+                totalCount={totalCount || 0}
+                showingCount={history.length}
+                entityType="search"
+                sortOptions={[
+                    { value: 'searched_at', label: 'Date', field: 'searched_at', direction: 'desc', icon: LuCalendarClock },
+                    { value: 'result_count', label: 'Results', field: 'result_count', direction: 'desc', icon: LuHash },
+                ]}
+                currentSortField={currentSort}
+                currentSortDir={currentDir}
+                onSort={handleSort}
+                showVisualization={false}
+                showLayoutToggle={false}
+                layoutVariant="list"
+            />
 
-                <div className="flex gap-2 flex-wrap justify-center sm:justify-end">
-                    <SortButton
-                        label="Date"
-                        icon={LuCalendarClock}
-                        field="searched_at"
-                        currentField={currentSort}
-                        direction={currentDir}
-                        onClick={() => handleSort('searched_at')}
-                    />
-                    <SortButton
-                        label="Results"
-                        icon={LuHash}
-                        field="result_count"
-                        currentField={currentSort}
-                        direction={currentDir}
-                        onClick={() => handleSort('result_count')}
-                    />
-                </div>
-            </Card>
 
             <Card className="rounded-3xl overflow-hidden p-0 border border-gray-200 shadow-sm">
                 <div className="divide-y divide-gray-100">
