@@ -12,7 +12,21 @@ import { Session } from '@/types/database';
 import { formatDate, formatTime } from '@/lib/utils';
 import { VscSignIn, VscSignOut } from 'react-icons/vsc';
 
-export default function SessionList({ sessions, currentSessionId }: { sessions: Session[], currentSessionId?: string }) {
+interface SessionListProps {
+    sessions: Session[];
+    currentSessionId?: string;
+    currentSort?: string;
+    currentDir?: 'asc' | 'desc';
+    onSort?: (field: string) => void;
+}
+
+export default function SessionList({
+    sessions,
+    currentSessionId,
+    currentSort,
+    currentDir,
+    onSort
+}: SessionListProps) {
     const { notify } = useNotify();
     const router = useRouter();
 
@@ -27,7 +41,6 @@ export default function SessionList({ sessions, currentSessionId }: { sessions: 
     };
 
     const parseUA = (ua: string | null) => {
-        // ... (Keep existing parseUA logic) ...
         const agent = (ua || '').toLowerCase();
 
         let browser = 'Browser';
@@ -67,16 +80,16 @@ export default function SessionList({ sessions, currentSessionId }: { sessions: 
                 showingCount={sessions.length}
                 entityType="session"
                 sortOptions={[
-                    { label: "Log On", field: "date", direction: "desc", icon: VscSignIn, value: "date" },
+                    { label: "Log On", field: "created_at", direction: "desc", icon: VscSignIn, value: "created_at" },
                     { label: "Log Off", field: "last_active_at", direction: "desc", icon: VscSignOut, value: "last_active_at" }
                 ]}
-                currentSortField="date"
-                currentSortDir="desc"
+                currentSortField={currentSort}
+                currentSortDir={currentDir}
+                onSort={onSort}
             />
 
             <Card className="p-0 overflow-hidden border border-gray-200 shadow-sm overflow-x-auto rounded-3xl">
                 <table className="min-w-full text-sm text-left whitespace-nowrap">
-                    {/* ... (Keep existing table content) ... */}
                     <thead className="text-gray-500 border-b border-gray-200 bg-gray-50/50">
                         <tr>
                             <th className="py-3 px-4 font-medium">Device</th>

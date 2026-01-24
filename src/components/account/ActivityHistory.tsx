@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { FiEdit2, FiLock, FiMail, FiLogIn, FiClock, FiBookmark, FiTrash2 } from 'react-icons/fi';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { Card } from '@/components/ui/Card';
-import Tag from '../ui/Tag';
+import Tag from '@/components/ui/Tag';
 import { Pagination } from '@/components/ui/Pagination';
 import { ListHeader } from '@/components/ui/ListHeader';
 import { AuditLog } from '@/types/database';
@@ -16,12 +16,18 @@ interface ActivityHistoryProps {
     logs: AuditLog[];
     totalCount: number;
     currentPage: number;
+    currentSort?: string;
+    currentDir?: 'asc' | 'desc';
+    onSort?: (field: string) => void;
 }
 
 export default function ActivityHistory({
     logs,
     totalCount,
-    currentPage
+    currentPage,
+    currentSort,
+    currentDir,
+    onSort
 }: ActivityHistoryProps) {
     const [isMounted, setIsMounted] = useState(false);
     const router = useRouter();
@@ -88,8 +94,9 @@ export default function ActivityHistory({
                 sortOptions={[
                     { label: "Date", field: "created_at", direction: "desc", icon: FiClock, value: "created_at" }
                 ]}
-                currentSortField="created_at"
-                currentSortDir="desc"
+                currentSortField={currentSort}
+                currentSortDir={currentDir}
+                onSort={onSort}
             />
 
             <Card className="p-0 overflow-hidden border border-gray-200 shadow-sm overflow-x-auto rounded-2xl md:rounded-3xl">

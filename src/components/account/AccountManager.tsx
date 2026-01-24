@@ -35,9 +35,15 @@ interface AccountManagerProps {
     totalHistoryCount: number;
     currentHistoryPage: number;
 
-    // Activity Pagination (NEW)
+    // Activity Pagination & Sort
     totalActivityCount: number;
     currentActivityPage: number;
+    currentActivitySort?: string;
+    currentActivityDir?: 'asc' | 'desc';
+
+    // Session Sort
+    currentSessionSort?: string;
+    currentSessionDir?: 'asc' | 'desc';
 
     initialTab?: string;
 }
@@ -60,6 +66,10 @@ export default function AccountManager({
     currentHistoryPage = 1,
     totalActivityCount = 0,
     currentActivityPage = 1,
+    currentActivitySort = 'created_at',
+    currentActivityDir = 'desc',
+    currentSessionSort = 'created_at',
+    currentSessionDir = 'desc',
     initialTab = 'profile'
 }: AccountManagerProps) {
     const router = useRouter();
@@ -112,7 +122,33 @@ export default function AccountManager({
 
         // Clean up pagination params for other tabs
         if (tabId !== 'history') params.delete('history_page');
-        if (tabId !== 'activity') params.delete('activity_page'); // Added
+        if (tabId !== 'activity') params.delete('activity_page');
+
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    };
+
+    const handleSessionSort = (field: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+
+        // Toggle direction if clicking same field, otherwise default to desc
+        const newDir = (field === currentSessionSort && currentSessionDir === 'desc') ? 'asc' : 'desc';
+
+        params.set('session_sort', field);
+        params.set('session_dir', newDir);
+        params.set('tab', 'sessions'); // Ensure we stay on correct tab
+
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    };
+
+    const handleActivitySort = (field: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+
+        const newDir = (field === currentActivitySort && currentActivityDir === 'desc') ? 'asc' : 'desc';
+
+        params.set('activity_sort', field);
+        params.set('activity_dir', newDir);
+        params.set('activity_page', '1'); // Reset to page 1 on sort
+        params.set('tab', 'activity');
 
         router.push(`${pathname}?${params.toString()}`, { scroll: false });
     };
@@ -244,6 +280,9 @@ export default function AccountManager({
                             logs={auditLogs}
                             totalCount={totalActivityCount}
                             currentPage={currentActivityPage}
+                            currentSort={currentActivitySort}
+                            currentDir={currentActivityDir}
+                            onSort={handleActivitySort}
                         />
                     </div>
                 )}
@@ -251,7 +290,13 @@ export default function AccountManager({
                 {activeTab === 'sessions' && (
                     <div className="flex flex-col gap-4">
                         <h3 className="text-lg font-semibold text-gray-900">Your Active Sessions</h3>
-                        <SessionList sessions={sessions} currentSessionId={currentSessionId} />
+                        <SessionList
+                            sessions={sessions}
+                            currentSessionId={currentSessionId}
+                            currentSort={currentSessionSort}
+                            currentDir={currentSessionDir}
+                            onSort={handleSessionSort}
+                        />
                     </div>
                 )}
             </div>
