@@ -5,19 +5,15 @@ import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn, getSortOptions } from "@/lib/utils";
 import { EntityType } from "@/types/database";
-import { LuGrid2X2, LuList } from "react-icons/lu";
 import LoadingState from "@/components/ui/LoadingState";
 import EmptyState from "@/components/ui/EmptyState";
 import ErrorState from "@/components/ui/ErrorState";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { SortButton } from "@/components/ui/SortButton";
 import { AnimatePresence, motion } from "framer-motion";
 import TrendVisualizer, { ViewContext } from "@/components/visualizations/TrendVisualizer";
-import { TbGraph, TbGraphOff } from "react-icons/tb";
 import Pagination from "@/components/ui/Pagination";
 import { SortOption } from "@/types/database";
 import { DEFAULT_ITEM_PER_PAGE } from "@/constants/data";
+import { ListHeader } from "@/components/ui/ListHeader";
 
 export type LayoutVariant = "list" | "grid";
 
@@ -27,13 +23,11 @@ export interface EntityListProps<T> {
     totalCount: number;
     page?: number;
     pageSize?: number;
-
     children: React.ReactNode;
     sortOptions?: SortOption[];
     showVisualization?: boolean;
     visualizationData?: any[];
     viewContext?: ViewContext;
-
     entityId?: number;
     isLoading?: boolean;
     isError?: boolean;
@@ -48,12 +42,11 @@ function EntityList<T>(props: EntityListProps<T>) {
         entities = [],
         totalCount,
         page = 1,
-        pageSize,
+        pageSize = DEFAULT_ITEM_PER_PAGE,
         children,
         showVisualization = false,
         visualizationData = [],
         viewContext = "search",
-
         entityId,
         isLoading = false,
         isError = false,
@@ -63,7 +56,6 @@ function EntityList<T>(props: EntityListProps<T>) {
     } = props;
 
     const sortOptions = props.sortOptions || getSortOptions(entityType, entityType as any);
-
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -97,56 +89,26 @@ function EntityList<T>(props: EntityListProps<T>) {
 
     return (
         <div className={cn("space-y-6", className)}>
-            <Card variant="default" className="flex flex-wrap justify-between items-center rounded-3xl p-2 bg-white backdrop-blur-xs border border-gray-100 gap-4 sm:gap-0">
-                <span className="text-xs md:text-sm text-gray-500 px-2 text-center sm:text-left">
-                    Showing <span className="font-semibold text-gray-900">{entities.length}</span> of{' '}
-                    <span className="font-semibold text-gray-900">{totalCount.toLocaleString()}</span>{' '}
-                    {entityType}{totalCount !== 1 ? 's' : ''}
-                </span>
+            <ListHeader
+                totalCount={totalCount}
+                showingCount={entities.length}
+                entityType={entityType}
 
-                <div className="flex gap-2 flex-wrap items-center justify-center sm:justify-end">
-                    {sortOptions.map((option) => (
-                        <SortButton
-                            key={typeof option.field === "symbol" ? String(option.field) : String(option.field)}
-                            label={option.label}
-                            icon={option.icon}
-                            field={String(option.field)}
-                            currentField={String(currentSortField)}
-                            direction={currentSortDir}
-                            onClick={() => handleSort(String(option.field))}
-                        />
-                    ))}
+                sortOptions={sortOptions}
+                currentSortField={String(currentSortField)}
+                currentSortDir={currentSortDir}
+                onSort={handleSort}
 
-                    <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block" />
+                showVisualization={showVisualization}
+                isVisualizationVisible={isVisualizationVisible}
+                onToggleVisualization={() => setIsVisualizationVisible(!isVisualizationVisible)}
+                hasVisualizationData={visualizationData.length > 0}
 
-                    {/* Visualization Toggle Button */}
-                    {showVisualization && visualizationData.length > 0 && (
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => setIsVisualizationVisible(!isVisualizationVisible)}
-                            className={cn(
-                                "transition-colors gap-1.5 py-1.5",
-                                isVisualizationVisible ? "bg-blue-50 text-blue-600" : "text-gray-600"
-                            )}
-                        >
-                            {isVisualizationVisible ? <TbGraphOff className="w-5 h-5" /> : <TbGraph className="w-5 h-5" />}
-                            <span className="hidden md:inline">{isVisualizationVisible ? "Hide Trends" : "Show Trends"}</span>
-                        </Button>
-                    )}
+                showLayoutToggle={true}
+                layoutVariant={layoutVariant}
+                onToggleLayout={() => setLayoutVariant(layoutVariant === 'list' ? 'grid' : 'list')}
+            />
 
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        leftIcon={layoutVariant === 'grid' ? LuList : LuGrid2X2}
-                        onClick={() => setLayoutVariant(layoutVariant === 'list' ? 'grid' : 'list')}
-                        aria-label="Toggle layout"
-                        className="hidden sm:flex"
-                    />
-                </div>
-            </Card>
-
-            {/* Trend Visualizer Component */}
             <AnimatePresence>
                 {isVisualizationVisible && showVisualization && visualizationData.length > 0 && (
                     <motion.div

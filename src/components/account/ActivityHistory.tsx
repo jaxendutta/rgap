@@ -7,6 +7,7 @@ import { SlSocialDropbox } from 'react-icons/sl';
 import { Card } from '@/components/ui/Card';
 import Tag from '../ui/Tag';
 import { Pagination } from '@/components/ui/Pagination';
+import { ListHeader } from '@/components/ui/ListHeader';
 import { AuditLog } from '@/types/database';
 import { formatDate, formatTime } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -17,10 +18,10 @@ interface ActivityHistoryProps {
     currentPage: number;
 }
 
-export default function ActivityHistory({ 
-    logs, 
-    totalCount, 
-    currentPage 
+export default function ActivityHistory({
+    logs,
+    totalCount,
+    currentPage
 }: ActivityHistoryProps) {
     const [isMounted, setIsMounted] = useState(false);
     const router = useRouter();
@@ -80,6 +81,16 @@ export default function ActivityHistory({
 
     return (
         <div className="space-y-4">
+            <ListHeader
+                totalCount={totalCount}
+                showingCount={logs.length}
+                entityType="activity"
+                sortOptions={[
+                    { label: "Date", field: "created_at", direction: "desc", icon: FiClock, value: "created_at" }
+                ]}
+                currentSortField="created_at"
+                currentSortDir="desc"
+            />
             <Card className="p-0 overflow-hidden border border-gray-200 shadow-sm overflow-x-auto rounded-2xl md:rounded-3xl">
                 <table className="min-w-full text-xs md:text-sm text-left whitespace-nowrap">
                     <thead className="text-gray-500 border-b border-gray-200 bg-gray-50/50">
