@@ -42,7 +42,7 @@ export const SortButton = ({
             )}
             aria-label={isActive ? `Sorted by ${label} in ${direction === "asc" ? "ascending" : "descending"} order` : `Sort by ${label}`}
         >
-            <span className={`text-xs md:text-sm ${!isActive ? "hidden lg:flex" : "pl-1"}`}>{label}</span>
+            <span className={`text-xs md:text-sm whitespace-nowrap ${!isActive ? "hidden lg:flex" : "pl-1"}`}>{label}</span>
             {isActive && (
                 <span className="text-gray-900">
                     {direction === "asc" ? (

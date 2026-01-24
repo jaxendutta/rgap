@@ -75,7 +75,7 @@ export const Button = ({
                 <>
                     {LeftIcon && (
                         <span className={cn(iconClasses[responsiveIcon])}>
-                            <LeftIcon className={`size-4 md:size-5 flex-shrink-0`} />
+                            <LeftIcon className={`size-3 md:size-3.5 lg:size-4 flex-shrink-0`} />
                         </span>
                     )}
 

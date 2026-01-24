@@ -41,7 +41,7 @@ import {
     formatDate,
     formatDateDiff,
 } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { cn, formatDateTime } from "@/lib/utils";
 
 // --- Types ---
 
@@ -129,19 +129,15 @@ const GrantHeader = ({
                     </div>
                 </div>
 
-                {/* Badge using the data directly */}
-                {isBookmarked && (
-                    <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md w-fit mb-2">
-                        <LuBookmarkCheck className="size-3" />
-                        {grant.bookmarked_at ? (
-                            <span>Bookmarked on {new Date(grant.bookmarked_at).toLocaleDateString()}</span>
-                        ) : (
-                            <span>Bookmarked just now</span>
-                        )}
-                    </div>
-                )}
-
                 <Tags spacing="normal">
+                    {isBookmarked && (
+                        grant.bookmarked_at ? (
+                            <Tag size="xs" variant="success" icon={LuBookmarkCheck} text="Bookmarked" innerText={formatDateTime(grant.bookmarked_at)} />
+                        ) : (
+                            <Tag size="xs" variant="success" icon={LuBookmarkCheck} text="Bookmarked just now!" />
+                        )
+                    )}
+
                     <Tag
                         icon={LuUniversity}
                         size="sm"
@@ -168,16 +164,8 @@ const GrantHeader = ({
 
 const MetadataTags = ({ grant }: { grant: GrantWithDetails }) => {
     const tags = useMemo(() => [
+        { icon: LuLandmark, text: grant.org },
         { icon: LuDatabase, text: grant.ref_number },
-        {
-            icon: LuMapPin,
-            text: formatCSV([grant.city, grant.province, grant.country].filter((v): v is string => !!v)),
-            hide: !(
-                (grant.city && grant.city.toUpperCase() !== "N/A") ||
-                (grant.province && grant.province.toUpperCase() !== "N/A") ||
-                (grant.country && grant.country.toUpperCase() !== "N/A")
-            ),
-        },
         {
             icon: LuCalendar1,
             text: `${formatDate(new Date(grant.agreement_start_date))} → ${grant.agreement_end_date ? formatDate(new Date(grant.agreement_end_date)) : "N/A"
@@ -189,7 +177,15 @@ const MetadataTags = ({ grant }: { grant: GrantWithDetails }) => {
                 ? formatDateDiff(grant.agreement_start_date, grant.agreement_end_date)
                 : "One-time payment",
         },
-        { icon: LuLandmark, text: grant.org },
+        {
+            icon: LuMapPin,
+            text: formatCSV([grant.city, grant.province, grant.country].filter((v): v is string => !!v)),
+            hide: !(
+                (grant.city && grant.city.toUpperCase() !== "N/A") ||
+                (grant.province && grant.province.toUpperCase() !== "N/A") ||
+                (grant.country && grant.country.toUpperCase() !== "N/A")
+            ),
+        },
     ].filter((tag) => !tag.hide), [grant]);
 
     return (

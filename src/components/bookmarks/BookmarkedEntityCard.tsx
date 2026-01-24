@@ -92,7 +92,7 @@ export default function BookmarkedEntityCard({ data, type }: BookmarkedEntityCar
 
                 {/* Metadata Tags */}
                 <div className="flex flex-wrap gap-2">
-                    <Tag size="xs" variant="default"
+                    <Tag size="xs" variant="success"
                         icon={LuBookmarkCheck}
                         text="Bookmarked"
                         innerText={formatDateTime(data.bookmarked_at)}

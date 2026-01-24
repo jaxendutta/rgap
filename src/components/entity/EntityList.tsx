@@ -25,6 +25,8 @@ export interface EntityListProps<T> {
     pageSize?: number;
     children: React.ReactNode;
     sortOptions?: SortOption[];
+    initialLayoutVariant?: LayoutVariant;
+    showLayoutToggle?: boolean;
     showVisualization?: boolean;
     visualizationData?: any[];
     viewContext?: ViewContext;
@@ -44,6 +46,8 @@ function EntityList<T>(props: EntityListProps<T>) {
         page = 1,
         pageSize = DEFAULT_ITEM_PER_PAGE,
         children,
+        initialLayoutVariant = "grid",
+        showLayoutToggle = true,
         showVisualization = false,
         visualizationData = [],
         viewContext = "search",
@@ -59,7 +63,7 @@ function EntityList<T>(props: EntityListProps<T>) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const [layoutVariant, setLayoutVariant] = useState<LayoutVariant>("grid");
+    const [layoutVariant, setLayoutVariant] = useState<LayoutVariant>(initialLayoutVariant);
     const [isVisualizationVisible, setIsVisualizationVisible] = useState(false);
 
     const currentSortField = searchParams.get('sort') || sortOptions[0]?.field;
@@ -104,7 +108,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                 onToggleVisualization={() => setIsVisualizationVisible(!isVisualizationVisible)}
                 hasVisualizationData={visualizationData.length > 0}
 
-                showLayoutToggle={true}
+                showLayoutToggle={showLayoutToggle}
                 layoutVariant={layoutVariant}
                 onToggleLayout={() => setLayoutVariant(layoutVariant === 'list' ? 'grid' : 'list')}
             />

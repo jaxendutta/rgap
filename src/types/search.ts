@@ -26,4 +26,6 @@ export interface SearchHistoryItem {
     filters: Record<string, any>;
     result_count: number;
     searched_at: string;
+    bookmarked_at?: string | Date | null;
+    notes?: string | null;
 }
