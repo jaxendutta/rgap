@@ -178,7 +178,7 @@ const Tabs: React.FC<TabsProps> = ({
                         onClick={() => !tab.disabled && onChange(tab.id)}
                         disabled={tab.disabled}
                         className={cn(
-                            "flex items-center justify-center font-medium transition-colors relative gap-1 md:gap-2",
+                            "flex items-center justify-center font-medium transition-colors relative gap-1 md:gap-2 cursor-pointer",
                             manyTabs && "flex-col md:flex-row",
                             sizeClasses[size],
                             paddingClasses[size],
