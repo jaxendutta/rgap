@@ -23,14 +23,13 @@ const Sidebar = () => {
     const pathname = usePathname();
     const router = useRouter();
     const { notify } = useNotify();
-    const [isExpanded, setIsExpanded] = useState(false);
-
     const { user } = useAuth();
 
-    // Logic: If user exists, show "Account" -> /account. If not, "Sign In" -> /login
+    const [isExpanded, setIsExpanded] = useState(false);
+
     const accountItem = {
         name: user ? "Account" : "Sign In",
-        icon: user ? LuUser : LuLogIn, // Visually distinguishes login state
+        icon: user ? LuUser : LuLogIn,
         href: user ? "/account" : "/login"
     };
 
