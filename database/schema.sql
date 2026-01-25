@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     email_verified_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    pending_email VARCHAR(100),
+    pending_email VARCHAR(100)
 );
 
 CREATE INDEX idx_users_email ON users(email);
