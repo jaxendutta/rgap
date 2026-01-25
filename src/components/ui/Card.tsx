@@ -65,7 +65,7 @@ const CardHeader = ({
         <div
             className={cn(
                 "border-b border-gray-100 flex items-center justify-between",
-                size === "md" ? "p-4" : "px-3 py-2.5 md:px-4",
+                size === "md" ? "px-4 py-3 md:px-5 md:py-4" : "px-3 py-2.5 md:px-4",
                 className
             )}
             {...props}

@@ -201,12 +201,13 @@ export const TopRecipientsAnalysis = ({
     const maxFunding = Math.max(...topRecipients.map(r => r.total_funding || 0));
 
     return (
-        <Card className="p-4 md:p-6">
-            <div className="flex items-center mb-4">
-                <LuAward className="h-3.5 md:h-5 w-3.5 md:w-5 text-gray-700 mr-2" />
-                <h3 className="text-base md:text-lg font-semibold text-gray-900">Top Recipients</h3>
-            </div>
-            <div className="space-y-3">
+        <Card>
+            <Card.Header
+                icon={LuGraduationCap}
+                title="Top Recipients"
+                size="md"
+            />
+            <Card.Content className="space-y-4">
                 {topRecipients.length === 0 ? (
                     <p className="text-gray-500 text-sm">No recipient data available</p>
                 ) : (
@@ -221,7 +222,7 @@ export const TopRecipientsAnalysis = ({
 
                         return (
                             <div key={recipient.recipient_id}>
-                                <div className="flex justify-between items-end mb-1">
+                                <div className="flex justify-between items-end mb-0.5 md:mb-1">
                                     <Link
                                         href={`/recipients/${recipient.recipient_id}`}
                                         className="font-medium text-gray-900 text-xs md:text-sm truncate pr-2 hover:text-blue-600 transition-colors"
@@ -233,20 +234,20 @@ export const TopRecipientsAnalysis = ({
                                         {formatCurrency(recipient.total_funding)}
                                     </div>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+                                <div className="w-full bg-gray-200 rounded-full h-2 mb-0.5 md:mb-1">
                                     <div
                                         className="bg-blue-500 h-2 rounded-full transition-all"
                                         style={{ width: `${barPercentage}%` }}
                                     />
                                 </div>
-                                <div className="text-right text-xs text-gray-500">
+                                <div className="text-right text-[10px] md:text-xs text-gray-500">
                                     {sharePercentage.toFixed(1)}% of total
                                 </div>
                             </div>
                         );
                     })
                 )}
-            </div>
+            </Card.Content>
         </Card>
     );
 };
@@ -255,9 +256,11 @@ export const TopRecipientsAnalysis = ({
 export const AgencyBreakdown = ({
     grants,
     totalFunding,
+    title = "Agency Breakdown",
 }: {
     grants: GrantWithDetails[];
     totalFunding: number;
+    title?: string;
 }) => {
     const agencyFunding: Record<string, number> = {};
 
@@ -271,12 +274,13 @@ export const AgencyBreakdown = ({
         .slice(0, 5);
 
     return (
-        <Card className="p-4 md:p-6">
-            <div className="flex items-center mb-4 gap-2">
-                <MdAccountBalance className="size-3.5 md:size-4.5 text-blue-600" />
-                <h3 className="text-base md:text-lg font-semibold text-gray-900">Agency Breakdown</h3>
-            </div>
-            <div className="space-y-3">
+        <Card>
+            <Card.Header
+                icon={MdAccountBalance}
+                title={title}
+                size="md"
+            />
+            <Card.Content className="space-y-3">
                 {agencies.map(([agency, funding], index) => {
                     const percentage = totalFunding > 0 ? (funding / totalFunding) * 100 : 0;
 
@@ -286,7 +290,7 @@ export const AgencyBreakdown = ({
                                 {agency}
                             </div>
                             <div className="flex-1 mb-2">
-                                <div className="flex justify-between text-sm text-gray-600 mb-1 text-xs md:text-sm">
+                                <div className="flex justify-between text-xs md:text-sm text-gray-600 mb-0.25 md:mb-0.5 text-xs md:text-sm">
                                     <span>{percentage.toFixed(1)}%</span>
                                     <span className="font-semibold text-gray-900 text-xs md:text-base">
                                         {formatCurrency(funding)}
@@ -305,7 +309,7 @@ export const AgencyBreakdown = ({
                         </div>
                     );
                 })}
-            </div>
+            </Card.Content>
         </Card>
     );
 };
@@ -337,12 +341,13 @@ export const TimePeriodAnalytics = ({
     const maxFunding = Math.max(...years.map(([_, data]) => data.funding));
 
     return (
-        <Card className="p-4 md:p-6">
-            <div className="flex items-center mb-4 gap-2">
-                <LuCalendarClock className="size-3.5 md:size-4.5 text-blue-600" />
-                <h3 className="text-base md:text-lg font-semibold text-gray-900">{title}</h3>
-            </div>
-            <div className="space-y-3">
+        <Card>
+            <Card.Header
+                icon={LuCalendarClock}
+                title={title}
+                size="md"
+            />
+            <Card.Content className="space-y-3">
                 {years.map(([year, data]) => {
                     const percentage = maxFunding > 0 ? (data.funding / maxFunding) * 100 : 0;
 
@@ -350,8 +355,8 @@ export const TimePeriodAnalytics = ({
                         <div key={year} className="flex items-center gap-4">
                             <div className="w-8 md:w-12 font-medium text-gray-900 text-sm md:text-base">{year}</div>
                             <div className="flex-1 mb-2">
-                                <div className="flex justify-between text-sm text-gray-600 mb-1 text-xs md:text-sm">
-                                    <span>{data.count.toLocaleString()} grant{data.count !== 1 ? 's' : ''}</span>
+                                <div className="flex justify-between items-end text-sm text-gray-600 mb-0.25 md:mb-0.5 text-xs md:text-sm">
+                                    <span className="text-[10px] md:text-sm">{data.count.toLocaleString()} grant{data.count !== 1 ? 's' : ''}</span>
                                     <span className="font-semibold text-gray-900 text-xs md:text-base">
                                         {formatCurrency(data.funding)}
                                     </span>
@@ -366,7 +371,7 @@ export const TimePeriodAnalytics = ({
                         </div>
                     );
                 })}
-            </div>
+            </Card.Content>
         </Card>
     );
 };
@@ -510,7 +515,7 @@ export default function EntityAnalytics({
             )}
 
             {/* Time Period Analytics */}
-            <TimePeriodAnalytics grants={grants} title="Funding by Year" />
+            <TimePeriodAnalytics grants={grants} />
 
             {/* Agency Breakdown */}
             <div className="grid gap-6 grid-cols-1">

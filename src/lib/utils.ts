@@ -174,6 +174,18 @@ export function calculateOffset(page: number, pageSize: number): number {
     return (page - 1) * pageSize;
 }
 
+// Get the width of a text in a given font
+export function getTextWidth(text: string, font: string): number {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) {
+        return 0;
+    }
+    context.font = font;
+    const metrics = context.measureText(text);
+    return metrics.width;
+}
+
 // Sort options helper
 export function getSortOptions(entityType: EntityType, context: "recipient" | "institute" | "grant"): SortOption[] {
     switch (entityType) {

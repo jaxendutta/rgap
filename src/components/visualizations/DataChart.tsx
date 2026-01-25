@@ -52,7 +52,7 @@ export const DataChart: React.FC<DataChartProps> = ({
 
     const chartMargin =
         screenSize === "sm"
-            ? { top: 5, right: 20, left: -20, bottom: 0 }
+            ? { top: 5, right: 20, left: -15, bottom: 0 }
             : screenSize === "md"
               ? { top: 10, right: 25, left: -5, bottom: 0 }
               : { top: 15, right: 35, left: 2.5, bottom: 0 };

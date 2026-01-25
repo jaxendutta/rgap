@@ -278,7 +278,6 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                             value={groupingDimension}
                             options={groupingDisplayOptions}
                             onChange={(value) => setGroupingDimension(value as GroupingDimension)}
-                            className="min-w-[150px]"
                             disabled={isInitialLoading}
                         />
                     )}
