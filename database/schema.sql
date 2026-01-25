@@ -107,6 +107,18 @@ CREATE INDEX idx_grants_ref ON grants(ref_number);
 CREATE INDEX idx_grants_title_search ON grants USING GIN (to_tsvector('english', COALESCE(agreement_title_en, '')));
 CREATE INDEX idx_grants_amendments ON grants USING GIN (amendments_history);
 
+-- Enable Trigram extension (required for text search)
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- Create standard indexes
+CREATE INDEX IF NOT EXISTS idx_grants_title_trgm ON grants USING gin (agreement_title_en gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_recipients_name_trgm ON recipients USING gin (legal_name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_institutes_name_trgm ON institutes USING gin (name gin_trgm_ops);
+
+-- Index for filtering
+CREATE INDEX IF NOT EXISTS idx_grants_date ON grants (agreement_start_date);
+CREATE INDEX IF NOT EXISTS idx_grants_value ON grants (agreement_value);
+
 -- ============================================================================
 -- Users & Authentication
 -- ============================================================================
