@@ -3,13 +3,59 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
 import { DEFAULT_ITEM_PER_PAGE } from '@/constants/data';
+import { z } from 'zod';
+
+// --- Zod Validation Schema ---
+const searchSchema = z.object({
+    searchTerms: z.object({
+        recipient: z.string().optional(),
+        institute: z.string().optional(),
+        grant: z.string().optional(),
+    }).optional(),
+    filters: z.object({
+        dateRange: z.object({
+            from: z.string().optional(),
+            to: z.string().optional()
+        }).optional(),
+        valueRange: z.object({
+            min: z.number().optional(),
+            max: z.number().optional()
+        }).optional(),
+        agencies: z.array(z.string()).optional(),
+        countries: z.array(z.string()).optional(),
+        provinces: z.array(z.string()).optional(),
+        cities: z.array(z.string()).optional(),
+    }).optional(),
+    sortConfig: z.object({
+        field: z.string().optional(),
+        direction: z.enum(['asc', 'desc']).optional(),
+    }).optional(),
+    pagination: z.object({
+        page: z.number().int().min(1).optional(),
+        limit: z.number().int().min(1).max(100).optional(),
+    }).optional(),
+    format: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
     try {
         const user = await getCurrentUser();
         const userId = user?.id;
 
-        const body = await request.json();
+        // --- 1. Validate Input with Zod ---
+        const json = await request.json();
+        const parsed = searchSchema.safeParse(json);
+
+        if (!parsed.success) {
+            return NextResponse.json(
+                { error: 'Invalid search parameters', details: parsed.error.format() },
+                { status: 400 }
+            );
+        }
+
+        // Use the validated data
+        const body = parsed.data;
+
         const {
             searchTerms = {},
             filters = {},
@@ -18,7 +64,7 @@ export async function POST(request: NextRequest) {
             format = 'full'
         } = body;
 
-        // --- 1. Build Dynamic WHERE Clause ---
+        // --- 2. Build Dynamic WHERE Clause ---
         const conditions: string[] = [];
         const params: any[] = [];
         let paramIndex = 1;
@@ -65,22 +111,22 @@ export async function POST(request: NextRequest) {
         }
 
         // Filters - Arrays
-        if (filters.agencies?.length > 0) {
+        if (filters.agencies && filters.agencies.length > 0) {
             conditions.push(`g.org = ANY($${paramIndex})`);
             params.push(filters.agencies);
             paramIndex++;
         }
-        if (filters.countries?.length > 0) {
+        if (filters.countries && filters.countries.length > 0) {
             conditions.push(`i.country = ANY($${paramIndex})`);
             params.push(filters.countries);
             paramIndex++;
         }
-        if (filters.provinces?.length > 0) {
+        if (filters.provinces && filters.provinces.length > 0) {
             conditions.push(`i.province = ANY($${paramIndex})`);
             params.push(filters.provinces);
             paramIndex++;
         }
-        if (filters.cities?.length > 0) {
+        if (filters.cities && filters.cities.length > 0) {
             conditions.push(`i.city = ANY($${paramIndex})`);
             params.push(filters.cities);
             paramIndex++;
@@ -90,7 +136,7 @@ export async function POST(request: NextRequest) {
             ? 'WHERE ' + conditions.join(' AND ')
             : '';
 
-        // --- 2. Handle Visualization Mode ---
+        // --- 3. Handle Visualization Mode ---
         if (format === 'visualization') {
             const visQuery = `
                 SELECT 
@@ -110,12 +156,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ data: visResult.rows });
         }
 
-        // --- 3. Handle Full Pagination Mode ---
+        // --- 4. Handle Full Pagination Mode ---
         const page = pagination.page || 1;
         const limit = pagination.limit || DEFAULT_ITEM_PER_PAGE;
         const offset = (page - 1) * limit;
 
         // Count total
+        // OPTIMIZATION: On really large datasets, consider estimating this count 
+        // or only running it on the first page load.
         const countQuery = `
             SELECT COUNT(*) as total
             FROM grants g
@@ -128,7 +176,7 @@ export async function POST(request: NextRequest) {
 
         // --- SORT CONFIGURATION ---
         const validSortFields = ['agreement_start_date', 'agreement_value', 'agreement_title_en', 'legal_name'];
-        let sortField = sortConfig.field;
+        let sortField = sortConfig.field || 'agreement_start_date'; // Fallback
 
         if (sortField === 'value') sortField = 'agreement_value';
         if (sortField === 'date') sortField = 'agreement_start_date';
@@ -153,7 +201,6 @@ export async function POST(request: NextRequest) {
             bookmarkSelect = ', bg.bookmarked_at, bg.notes';
         }
 
-        // FIXED: Changed JOIN to LEFT JOIN for programs and organizations to prevent data loss
         const dataQuery = `
             SELECT 
                 g.*,
