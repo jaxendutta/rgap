@@ -17,6 +17,7 @@ import { Card } from "@/components/ui/Card";
 import { IconType } from "react-icons";
 import { LAST_UPDATED } from "@/constants/data";
 import { formatDate, formatDateDiff } from "@/lib/format";
+import { GiAbstract014 } from "react-icons/gi";
 
 export default function HomePage() {
   const features: [
@@ -53,9 +54,11 @@ export default function HomePage() {
   const router = useRouter();
 
   return (
-    <PageContainer className="flex lg:h-full flex-col justify-center gap-3 md:gap-6">
+    <PageContainer className="flex h-full flex-col justify-between md:justify-center gap-3 md:gap-6">
       {/* Hero Section */}
-      <Card className="px-6 lg:px-8 py-14 lg:py-24 hover:border-gray-300 transition-all duration-200 rounded-3xl">
+      <Card className="relative px-6 lg:px-8 py-14 lg:py-24 hover:border-gray-300 transition-all duration-200 rounded-3xl">
+        <GiAbstract014 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-72 md:size-80 text-gray-700 opacity-10 animate-slow-rotate" />
+
         <div className="text-center">
           <p className="text-5xl font-bold text-gray-900 leading-tight flex justify-center items-center">
             <span className="inline-block px-2">[</span>
@@ -76,9 +79,9 @@ export default function HomePage() {
             <div className="flex flex-wrap justify-center sm:flex-row gap-3">
               <Button
                 variant="primary"
-                size="lg"
+                size="md"
                 leftIcon={LuSearch}
-                className="pl-4.5 pr-6 text-sm md:text-base"
+                className="px-4.5 text-sm md:text-base"
                 onClick={() => router.push("/search")}
               >
                 Explore
@@ -86,9 +89,9 @@ export default function HomePage() {
 
               <Button
                 variant="outline"
-                size="lg"
+                size="md"
                 leftIcon={LuLogIn}
-                className="pl-4.5 pr-5 text-sm md:text-base"
+                className="px-4.5 text-sm md:text-base"
                 onClick={() => router.push("/login")}
               >
                 Sign In
@@ -99,7 +102,7 @@ export default function HomePage() {
       </Card>
 
       {/* Last Updated Date */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4 w-full bg-gray-900 text-white py-3 px-4 md:p-4 rounded-full shadow-lg border border-gray-700">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4 w-full bg-gray-900 text-white py-3 px-4 md:p-4 rounded-2xl shadow-lg border border-gray-700">
         <div className="flex gap-2 w-full">
           <LuTriangleAlert className="flex size-6 md:size-9 border border-gray-200 text-gray-200 rounded-full p-1 md:p-2 flex-shrink-0" />
 
