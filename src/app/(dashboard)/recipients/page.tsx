@@ -81,29 +81,6 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
 
     const totalItems = parseInt(countResult.rows[0].total);
     const recipients = result.rows;
-
-    // 4. Fetch Grants for Visualization
-    let visualizationData: GrantWithDetails[] = [];
-    if (recipients.length > 0) {
-        const recipientIds = recipients.map(r => r.recipient_id);
-        const grantsResult = await db.query<GrantWithDetails>(`
-            SELECT 
-                g.*, 
-                r.legal_name,
-                i.name, i.city, i.province, i.country,
-                org.org_title_en,
-                p.prog_title_en
-            FROM grants g
-            JOIN recipients r ON g.recipient_id = r.recipient_id
-            JOIN institutes i ON r.institute_id = i.institute_id
-            LEFT JOIN organizations org ON g.org = org.org
-            LEFT JOIN programs p ON g.prog_id = p.prog_id
-            WHERE r.recipient_id = ANY($1)
-            ORDER BY g.agreement_start_date DESC
-        `, [recipientIds]);
-        visualizationData = grantsResult.rows;
-    }
-
     return (
         <EntitiesPage
             title="Recipients"
@@ -114,7 +91,6 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
             entityType="recipient"
             emptyMessage="No recipients found"
             showVisualization={true}
-            visualizationData={visualizationData}
         />
     );
 }

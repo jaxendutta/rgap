@@ -4,7 +4,8 @@ import PageHeader from "@/components/layout/PageHeader";
 import EntityList from "@/components/entity/EntityList";
 import { EntityCard } from "@/components/entity/EntityCard";
 import { IconType } from "react-icons";
-import { EntityType, GrantWithDetails, InstituteWithStats, RecipientWithStats, SortOption } from "@/types/database";
+import { EntityType, InstituteWithStats, RecipientWithStats, SortOption } from "@/types/database";
+import { TrendVisualizer } from "@/components/visualizations/TrendVisualizer";
 
 interface EntitiesPageProps {
     title: string;
@@ -15,7 +16,6 @@ interface EntitiesPageProps {
     entityType: EntityType;
     emptyMessage?: string;
     showVisualization?: boolean;
-    visualizationData?: GrantWithDetails[];
     sortOptions?: SortOption[];
 }
 
@@ -28,9 +28,15 @@ const EntitiesPage = ({
     entityType,
     emptyMessage = "No items found",
     showVisualization = false,
-    visualizationData = [],
     sortOptions,
 }: EntitiesPageProps) => {
+
+    const ids = entities.map(entity =>
+        'recipient_id' in entity
+            ? entity.recipient_id
+            : (entity as InstituteWithStats).institute_id
+    );
+
     return (
         <PageContainer className="space-y-6">
             <PageHeader
@@ -39,13 +45,20 @@ const EntitiesPage = ({
                 icon={icon}
             />
 
+            {/* Async Chart - Now with 50k limit and all groupings */}
+            {showVisualization && entities.length > 0 && (entityType === 'recipient' || entityType === 'institute') && (
+                <TrendVisualizer
+                    entityType={entityType}
+                    title={`${title} Funding Trends`}
+                />
+            )}
+
             <EntityList
                 entityType={entityType}
                 entities={entities}
                 totalCount={totalItems}
                 emptyMessage={emptyMessage}
-                showVisualization={showVisualization}
-                visualizationData={visualizationData}
+                showVisualization={false} // Disable internal chart
                 sortOptions={sortOptions}
             >
                 {entities.map((entity) => {

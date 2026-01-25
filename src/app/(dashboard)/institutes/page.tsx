@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
 import EntitiesPage from '@/components/entity/EntitiesPage';
 import { LuUniversity } from 'react-icons/lu';
-import { InstituteWithStats, GrantWithDetails } from '@/types/database';
+import { InstituteWithStats } from '@/types/database';
 import { Metadata } from 'next';
 import { getSortOptions } from '@/lib/utils';
 import { DEFAULT_ITEM_PER_PAGE } from '@/constants/data';
@@ -78,28 +78,6 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
     const totalItems = parseInt(countResult.rows[0].total);
     const institutes = result.rows;
 
-    // 4. Fetch Grants for Visualization (Optimized with LIMIT)
-    let visualizationData: GrantWithDetails[] = [];
-    if (institutes.length > 0) {
-        const instituteIds = institutes.map(i => i.institute_id);
-        const grantsResult = await db.query<GrantWithDetails>(`
-            SELECT 
-                g.*, 
-                r.legal_name,
-                i.name, i.city, i.province, i.country,
-                org.org_title_en,
-                p.prog_title_en
-            FROM grants g
-            JOIN recipients r ON g.recipient_id = r.recipient_id
-            JOIN institutes i ON r.institute_id = i.institute_id
-            LEFT JOIN organizations org ON g.org = org.org
-            LEFT JOIN programs p ON g.prog_id = p.prog_id
-            WHERE i.institute_id = ANY($1)
-            ORDER BY g.agreement_start_date DESC
-        `, [instituteIds]);
-        visualizationData = grantsResult.rows;
-    }
-
     return (
         <EntitiesPage
             title="Institutes"
@@ -110,7 +88,6 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
             entityType="institute"
             emptyMessage="No institutes found"
             showVisualization={true}
-            visualizationData={visualizationData}
         />
     );
 }

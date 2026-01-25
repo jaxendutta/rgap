@@ -6,7 +6,7 @@ import { LuChevronDown } from "react-icons/lu";
 import { IconType } from "react-icons";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import Button from "./Button";
+import Button from "@/components/ui/Button";
 
 export interface Option {
     value: string;
@@ -23,6 +23,7 @@ export interface DropdownProps {
     className?: string;
     placeholder?: string;
     renderOption?: (option: Option) => ReactNode;
+    disabled?: boolean;
 }
 
 const normalizeOption = (option: Option | string): Option => {
@@ -42,6 +43,7 @@ export const Dropdown = ({
     className,
     placeholder = "Select",
     renderOption,
+    disabled,
 }: DropdownProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -96,6 +98,7 @@ export const Dropdown = ({
                     isOpen && "border-gray-300 ring-1 ring-gray-300",
                     className
                 )}
+                disabled={disabled}
             >
                 <div className="flex w-full items-center gap-2">
                     {icon && React.createElement(icon, { className: "h-3 md:h-4 w-3 md:w-4 text-gray-500" })}
