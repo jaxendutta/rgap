@@ -27,11 +27,7 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
     const sortDir = (resolvedParams.dir as string) === 'asc' ? 'ASC' : 'DESC';
     const sortField = sortOptions.find(option => option.value === sortParam)?.field || sortOptions[0].field;
 
-    // 2. Count
-    const countResult = await db.query(`SELECT COUNT(*) as total FROM recipients`);
-    const totalItems = parseInt(countResult.rows[0].total);
-
-    // 3. Build Dynamic Query
+    // 2. Build Dynamic Query
     const queryParams: any[] = [];
     let paramIndex = 1;
 
@@ -55,33 +51,38 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
     queryParams.push(offset);
     const offsetIndex = paramIndex++;
 
-    const result = await db.query<RecipientWithStats>(`
-    SELECT 
-      r.recipient_id,
-      r.legal_name,
-      r.type,
-      r.institute_id,
-      i.name as research_organization_name,
-      i.city,
-      i.province,
-      i.country,
-      COUNT(DISTINCT g.grant_id) as grant_count,
-      SUM(g.agreement_value) as total_funding,
-      AVG(g.agreement_value) as avg_funding,
-      MIN(g.agreement_start_date::date) as first_grant_date,
-      MAX(g.agreement_start_date::date) as latest_grant_date,
-      ${bookmarkSelection}
-    FROM recipients r
-    LEFT JOIN institutes i ON r.institute_id = i.institute_id
-    LEFT JOIN grants g ON r.recipient_id = g.recipient_id
-    GROUP BY r.recipient_id, i.name, i.city, i.province, i.country
-    ORDER BY ${sortField} ${sortDir} NULLS LAST
-    LIMIT $${limitIndex} OFFSET $${offsetIndex}
-  `, queryParams);
+    // OPTIMIZATION: Parallel Queries
+    const [countResult, result] = await Promise.all([
+        db.query(`SELECT COUNT(*) as total FROM recipients`),
+        db.query<RecipientWithStats>(`
+            SELECT 
+            r.recipient_id,
+            r.legal_name,
+            r.type,
+            r.institute_id,
+            i.name as research_organization_name,
+            i.city,
+            i.province,
+            i.country,
+            COUNT(DISTINCT g.grant_id) as grant_count,
+            SUM(g.agreement_value) as total_funding,
+            AVG(g.agreement_value) as avg_funding,
+            MIN(g.agreement_start_date::date) as first_grant_date,
+            MAX(g.agreement_start_date::date) as latest_grant_date,
+            ${bookmarkSelection}
+            FROM recipients r
+            LEFT JOIN institutes i ON r.institute_id = i.institute_id
+            LEFT JOIN grants g ON r.recipient_id = g.recipient_id
+            GROUP BY r.recipient_id, i.name, i.city, i.province, i.country
+            ORDER BY ${sortField} ${sortDir} NULLS LAST
+            LIMIT $${limitIndex} OFFSET $${offsetIndex}
+        `, queryParams)
+    ]);
 
+    const totalItems = parseInt(countResult.rows[0].total);
     const recipients = result.rows;
 
-    // 4. NEW: Fetch Grants for Visualization (for the displayed recipients)
+    // 4. Fetch Grants for Visualization
     let visualizationData: GrantWithDetails[] = [];
     if (recipients.length > 0) {
         const recipientIds = recipients.map(r => r.recipient_id);

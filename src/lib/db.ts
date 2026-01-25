@@ -8,8 +8,8 @@ class Database {
     private constructor() {
         this.pool = new Pool({
             connectionString: process.env.DATABASE_URL,
-            // Use 1 connection per lambda in prod (serverless), 20 in dev
-            max: process.env.NODE_ENV === 'production' ? 1 : 20,
+            // Use 5 connections per lambda in prod (serverless), 20 in dev
+            max: process.env.NODE_ENV === 'production' ? 5 : 20,
             idleTimeoutMillis: 30000,
             // Increase from 2000 to 10000 milliseconds to survive "cold starts"
             connectionTimeoutMillis: 10000,

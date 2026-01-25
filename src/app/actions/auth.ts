@@ -42,18 +42,19 @@ function validatePassword(password: string): string | null {
     return null;
 }
 
-// Helper: Estimate Location (Simple heuristic, real apps use MaxMind/API)
+// Helper: Estimate Location
 async function getLocationFromIP(ip: string): Promise<string> {
-    // Check for Localhost / Docker Internal IPs to avoid API errors
     if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('::ffff:') || ip.startsWith('172.') || ip.startsWith('192.168.')) {
         return 'Local Network (Dev)';
     }
 
     try {
-        const response = await fetch(`http://ip-api.com/json/${ip}`);
+        // ipinfo.io/json works without token for low volume, supports HTTPS
+        const response = await fetch(`https://ipinfo.io/${ip}/json`);
         const data = await response.json();
-        if (data.status === 'success') {
-            return `${data.city}, ${data.countryCode}`;
+
+        if (data.city && data.country) {
+            return `${data.city}, ${data.country}`;
         }
         return 'Unknown Location';
     } catch (error) {
@@ -70,7 +71,6 @@ export async function authAction(prevState: any, formData: FormData): Promise<Ac
 
     const headersList = await headers();
     const userAgent = headersList.get('user-agent') || 'Unknown Device';
-    // Get IP (X-Forwarded-For is vital in Docker/Prod)
     const ip = headersList.get('x-forwarded-for') || '127.0.0.1';
 
     try {
