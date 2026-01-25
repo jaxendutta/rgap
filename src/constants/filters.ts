@@ -4,7 +4,7 @@
 export const FILTER_LIMITS = {
     DATE_VALUE: {
         MIN: new Date('2010-01-01'),
-        MAX: new Date('2025-12-31'),
+        MAX: new Date('2026-12-31'),
     },
 
     GRANT_VALUE: {

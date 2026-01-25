@@ -1,21 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 255, 255, 255;
+    --foreground-rgb: 0, 0, 0;
+    --background-start-rgb: 255, 255, 255;
+    --background-end-rgb: 255, 255, 255;
 }
 
 @layer base {
-
-  html,
-  body {
-    @apply min-h-screen bg-slate-100 text-black;
-  }
+    html,
+    body {
+        @apply min-h-screen bg-slate-100 text-black;
+    }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+    .text-balance {
+        text-wrap: balance;
+    }
+}
+
+@layer components {
+    @keyframes slow-rotate {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .animate-slow-rotate {
+        animation: slow-rotate 30s linear infinite;
+    }
 }

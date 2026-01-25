@@ -30,6 +30,13 @@ export function formatDateDiff(startDate: Date | string, endDate: Date | string,
 
     let years = end.getUTCFullYear() - start.getUTCFullYear();
     let months = end.getUTCMonth() - start.getUTCMonth();
+    let days = end.getUTCDate() - start.getUTCDate();
+
+    if (days < 0) {
+        months--;
+        const tempDate = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 0));
+        days += tempDate.getUTCDate();
+    }
 
     if (months < 0) {
         years--;
@@ -37,13 +44,25 @@ export function formatDateDiff(startDate: Date | string, endDate: Date | string,
     }
 
     if (style === 'short') {
-        return `${years}yrs ${months}mos`;
-    } else {
-        const yearPart = years > 0 ? `${years} year${years > 1 ? 's' : ''}` : '';
-        const monthPart = months > 0 ? `${months} month${months > 1 ? 's' : ''}` : '';
-
-        return [yearPart, monthPart].filter(part => part !== '').join(' ') || '0 months';
+        if (years > 0) {
+            return `${years}yrs ${months}mos`;
+        }
+        const monthPart = months > 0 ? `${months}mos` : '';
+        const dayPart = days > 0 ? `${days}d` : '';
+        return [monthPart, dayPart].filter(Boolean).join(' ') || '0d';
     }
+
+    // long style
+    if (years > 0) {
+        const yearPart = `${years} year${years > 1 ? 's' : ''}`;
+        const monthPart = months > 0 ? `${months} month${months > 1 ? 's' : ''}` : '';
+        return [yearPart, monthPart].filter(Boolean).join(' ');
+    }
+
+    const monthPart = months > 0 ? `${months} month${months > 1 ? 's' : ''}` : '';
+    const dayPart = days > 0 ? `${days} day${days > 1 ? 's' : ''}` : '';
+
+    return [monthPart, dayPart].filter(Boolean).join(' ') || '0 days';
 }
 
 // Re-export common utils so you can import everything from one place if needed
