@@ -3,9 +3,10 @@ import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
 import EntitiesPage from '@/components/entity/EntitiesPage';
 import { LuUsers } from 'react-icons/lu';
-import { RecipientWithStats } from '@/types/database';
+import { RecipientWithStats, GrantWithDetails } from '@/types/database';
 import { Metadata } from 'next';
 import { getSortOptions } from '@/lib/utils';
+import { DEFAULT_ITEM_PER_PAGE } from '@/constants/data';
 
 const sortOptions = getSortOptions('recipient', 'recipient');
 
@@ -20,8 +21,7 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
 
     // 1. Pagination & Sort
     const page = Math.max(1, Number(resolvedParams.page) || 1);
-    const limit = 20;
-    const offset = (page - 1) * limit;
+    const offset = (page - 1) * DEFAULT_ITEM_PER_PAGE;
 
     const sortParam = (resolvedParams.sort as string) || sortOptions[0].value;
     const sortDir = (resolvedParams.dir as string) === 'asc' ? 'ASC' : 'DESC';
@@ -30,7 +30,6 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
     // 2. Count
     const countResult = await db.query(`SELECT COUNT(*) as total FROM recipients`);
     const totalItems = parseInt(countResult.rows[0].total);
-    const totalPages = Math.ceil(totalItems / limit);
 
     // 3. Build Dynamic Query
     const queryParams: any[] = [];
@@ -39,7 +38,6 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
     let bookmarkSelection = 'false as is_bookmarked';
 
     if (userId) {
-        // FIXED: Added ::integer cast
         bookmarkSelection = `
             EXISTS(
                 SELECT 1 FROM bookmarked_recipients br 
@@ -51,7 +49,7 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
         paramIndex++;
     }
 
-    queryParams.push(limit);
+    queryParams.push(DEFAULT_ITEM_PER_PAGE);
     const limitIndex = paramIndex++;
 
     queryParams.push(offset);
@@ -83,6 +81,28 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
 
     const recipients = result.rows;
 
+    // 4. NEW: Fetch Grants for Visualization (for the displayed recipients)
+    let visualizationData: GrantWithDetails[] = [];
+    if (recipients.length > 0) {
+        const recipientIds = recipients.map(r => r.recipient_id);
+        const grantsResult = await db.query<GrantWithDetails>(`
+            SELECT 
+                g.*, 
+                r.legal_name,
+                i.name, i.city, i.province, i.country,
+                org.org_title_en,
+                p.prog_title_en
+            FROM grants g
+            JOIN recipients r ON g.recipient_id = r.recipient_id
+            JOIN institutes i ON r.institute_id = i.institute_id
+            LEFT JOIN organizations org ON g.org = org.org
+            LEFT JOIN programs p ON g.prog_id = p.prog_id
+            WHERE r.recipient_id = ANY($1)
+            ORDER BY g.agreement_start_date DESC
+        `, [recipientIds]);
+        visualizationData = grantsResult.rows;
+    }
+
     return (
         <EntitiesPage
             title="Recipients"
@@ -92,7 +112,8 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
             totalItems={totalItems}
             entityType="recipient"
             emptyMessage="No recipients found"
-            showVisualization={false}
+            showVisualization={true}
+            visualizationData={visualizationData}
         />
     );
 }

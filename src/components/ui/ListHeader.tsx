@@ -67,7 +67,7 @@ export function ListHeader({
                 <span className="font-semibold text-gray-900">{showingCount}</span>
                 <span>of</span>
                 <span className="font-semibold text-gray-900">{totalCount.toLocaleString()}</span>
-                <span>{entityType} item{totalCount !== 1 ? 's' : ''}</span>
+                <span>{entityType}{entityType == "search" ? " item" : ""}{totalCount !== 1 ? 's' : ''}</span>
             </div>
 
             <div className="flex gap-2 flex-nowrap items-center justify-center sm:justify-end w-full md:flex-1">
