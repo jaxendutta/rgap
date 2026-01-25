@@ -60,7 +60,8 @@ export default async function BookmarksPage(props: Props) {
         );
     }
 
-    const { grants, recipients, institutes, searches } = data;
+    // Destructure new fields
+    const { grants, recipients, institutes, searches, recipientGrants, instituteGrants } = data;
     const isEmpty = grants.length === 0 && recipients.length === 0 && institutes.length === 0 && searches.length === 0;
 
     if (isEmpty) {
@@ -89,6 +90,8 @@ export default async function BookmarksPage(props: Props) {
                 recipients={recipients}
                 institutes={institutes}
                 searches={searches}
+                recipientGrants={recipientGrants}
+                instituteGrants={instituteGrants}
             />
         </PageContainer>
     );

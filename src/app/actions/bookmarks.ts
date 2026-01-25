@@ -174,7 +174,7 @@ export async function updateSearchNote(searchHistoryId: number, note: string) {
     } catch (error) { return { success: false, error: 'Failed' }; }
 }
 
-// --- Fetch Actions (Modified for sorting) ---
+// --- Fetch Actions ---
 
 export async function getUserBookmarks(sortConfig?: { field?: string, direction: 'asc' | 'desc' }) {
     const user = await getCurrentUser();
@@ -209,6 +209,7 @@ export async function getUserBookmarks(sortConfig?: { field?: string, direction:
     };
 
     try {
+        // 1. Fetch Bookmarked Grants
         const grants = await db.query(`
             SELECT 
                 g.*, 
@@ -228,6 +229,7 @@ export async function getUserBookmarks(sortConfig?: { field?: string, direction:
             ORDER BY ${getSort('grant', 'bg', sortField)} ${sortDir}
         `, [user.id]);
 
+        // 2. Fetch Bookmarked Recipients
         const recipients = await db.query(`
             SELECT 
                 r.*, 
@@ -242,6 +244,7 @@ export async function getUserBookmarks(sortConfig?: { field?: string, direction:
             ORDER BY ${getSort('recipient', 'br', sortField)} ${sortDir}
         `, [user.id]);
 
+        // 3. Fetch Bookmarked Institutes
         const institutes = await db.query(`
             SELECT 
                 i.*, 
@@ -253,6 +256,7 @@ export async function getUserBookmarks(sortConfig?: { field?: string, direction:
             ORDER BY ${getSort('institute', 'bi', sortField)} ${sortDir}
         `, [user.id]);
 
+        // 4. Fetch Bookmarked Searches
         const searches = await db.query(`
             SELECT 
                 sh.*, 
@@ -264,11 +268,57 @@ export async function getUserBookmarks(sortConfig?: { field?: string, direction:
             ORDER BY ${getSort('search', 'bs', sortField)} ${sortDir}
         `, [user.id]);
 
+        // 5. Fetch Grants for Bookmarked Recipients
+        let recipientGrants: any[] = [];
+        const recipientIds = recipients.rows.map(r => r.recipient_id);
+        if (recipientIds.length > 0) {
+            const res = await db.query(`
+                SELECT 
+                    g.*, 
+                    r.legal_name,
+                    i.name, i.city, i.province, i.country,
+                    org.org_title_en,
+                    p.prog_title_en
+                FROM grants g
+                JOIN recipients r ON g.recipient_id = r.recipient_id
+                JOIN institutes i ON r.institute_id = i.institute_id
+                LEFT JOIN organizations org ON g.org = org.org
+                LEFT JOIN programs p ON g.prog_id = p.prog_id
+                WHERE r.recipient_id = ANY($1)
+                ORDER BY g.agreement_start_date DESC
+            `, [recipientIds]);
+            recipientGrants = res.rows;
+        }
+
+        // 6. Fetch Grants for Bookmarked Institutes
+        let instituteGrants: any[] = [];
+        const instituteIds = institutes.rows.map(i => i.institute_id);
+        if (instituteIds.length > 0) {
+            const res = await db.query(`
+                SELECT 
+                    g.*, 
+                    r.legal_name,
+                    i.name, i.city, i.province, i.country,
+                    org.org_title_en,
+                    p.prog_title_en
+                FROM grants g
+                JOIN recipients r ON g.recipient_id = r.recipient_id
+                JOIN institutes i ON r.institute_id = i.institute_id
+                LEFT JOIN organizations org ON g.org = org.org
+                LEFT JOIN programs p ON g.prog_id = p.prog_id
+                WHERE i.institute_id = ANY($1)
+                ORDER BY g.agreement_start_date DESC
+            `, [instituteIds]);
+            instituteGrants = res.rows;
+        }
+
         return {
             grants: grants.rows,
             recipients: recipients.rows,
             institutes: institutes.rows,
-            searches: searches.rows
+            searches: searches.rows,
+            recipientGrants,
+            instituteGrants
         };
     } catch (error) {
         console.error('Error fetching bookmarks:', error);

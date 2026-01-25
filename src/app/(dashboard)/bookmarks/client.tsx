@@ -23,9 +23,19 @@ interface BookmarksClientProps {
     institutes: any[];
     searches: any[];
     initialTab?: string;
+    recipientGrants?: any[];
+    instituteGrants?: any[];
 }
 
-export default function BookmarksClient({ grants, recipients, institutes, searches, initialTab = "grants" }: BookmarksClientProps) {
+export default function BookmarksClient({
+    grants,
+    recipients,
+    institutes,
+    searches,
+    initialTab = "grants",
+    recipientGrants = [],
+    instituteGrants = []
+}: BookmarksClientProps) {
     const [activeTab, setActiveTabState] = useState(initialTab);
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -110,6 +120,8 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                             totalCount={recipients.length}
                             emptyMessage="No recipients saved."
                             sortOptions={bookmarkSortOptions}
+                            showVisualization={true}
+                            visualizationData={recipientGrants}
                         >
                             {recipients.map((recipient) => (
                                 <BookmarkedEntityCard
@@ -129,6 +141,8 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                             totalCount={institutes.length}
                             emptyMessage="No institutes saved."
                             sortOptions={bookmarkSortOptions}
+                            showVisualization={true}
+                            visualizationData={instituteGrants}
                         >
                             {institutes.map((institute) => (
                                 <BookmarkedEntityCard
@@ -140,7 +154,7 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                         </EntityList>
                     )}
 
-                    {/* Searches Tab - Refactored to use SearchHistoryItem */}
+                    {/* Searches Tab */}
                     {activeTab === "searches" && (
                         <EntityList
                             entityType="search"

@@ -35,7 +35,7 @@ const fontSizes = {
 
 // Define icon sizes
 const iconSizes = {
-    xs: "size-2.5",
+    xs: "size-2.75",
     sm: "h-3 w-3",
     md: "h-4 w-4",
     lg: "h-5 w-5",

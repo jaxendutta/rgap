@@ -80,16 +80,14 @@ export default function SearchHistoryItem({ item, onSearchAgain, isBookmarked = 
 
                 <div className="flex flex-wrap items-center gap-1 md:gap-2 text-[10px] md:text-xs text-gray-600 whitespace-nowrap">
                     <span className="border-1 border-gray-300 px-1.5 py-0.5 rounded-3xl">
-                        Searched | {new Date(item.searched_at).toLocaleDateString(undefined, {
-                            month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
-                        })}
+                        Searched <span className="text-gray-400">|</span> {formatDateTime(item.searched_at)}
                     </span>
                     <span className={item.result_count > 0 ? "border-1 border-green-400 px-1.5 py-0.5 rounded-3xl text-green-600 font-medium" : "text-gray-400"}>
                         {item.result_count.toLocaleString()} results
                     </span>
                     {item.bookmarked_at && (
                         <span className="border-1 border-gray-300 px-1.5 py-0.5 rounded-3xl">
-                            Bookmarked | {formatDateTime(item.bookmarked_at)}
+                            Bookmarked <span className="text-gray-400">|</span> {formatDateTime(item.bookmarked_at)}
                         </span>
                     )}
                 </div>
