@@ -281,7 +281,7 @@ export const EntityCard = ({
                 {statItems.map((stat, index) => {
                     const Icon = stat.icon;
                     return (
-                        <div key={index} className="grow text-center py-2 px-2 md:px-3 lg:px-6 bg-slate-100 rounded-lg">
+                        <div key={index} className="grow text-center py-2 px-2 bg-slate-100 rounded-lg">
                             <div className="flex justify-center items-center mb-0.5 md:mb-1 gap-1 text-gray-500">
                                 <Icon className="size-2 md:size-3 mb-0.25 md:mb-0" />
                                 <div className="text-[10px] md:text-xs">{stat.label}</div>
