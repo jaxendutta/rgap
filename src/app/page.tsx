@@ -99,7 +99,7 @@ export default function HomePage() {
       </Card>
 
       {/* Last Updated Date */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4 w-full bg-gradient-to-r from-gray-800 to-gray-900 text-white py-3 px-4 md:p-4 rounded-3xl shadow-lg border border-gray-700">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4 w-full bg-gray-900 text-white py-3 px-4 md:p-4 rounded-full shadow-lg border border-gray-700">
         <div className="flex gap-2 w-full">
           <LuTriangleAlert className="flex size-6 md:size-9 border border-gray-200 text-gray-200 rounded-full p-1 md:p-2 flex-shrink-0" />
 
