@@ -5,15 +5,15 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
     LuDollarSign, LuHash, LuChartColumnStacked, LuChartColumn,
     LuChartSpline, LuActivity, LuLandmark, LuGraduationCap,
-    LuCalendar, LuBookOpen, LuSquareCheck, LuSquare
+    LuCalendar, LuBookOpen,
 } from "react-icons/lu";
 import { IconType } from "react-icons";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { GrantAmendment } from "@/types/database";
 import { Card } from "@/components/ui/Card";
 import { Dropdown } from "@/components/ui/Dropdown";
 import DataChart from "@/components/visualizations/DataChart";
-import { AMENDMENT_COLORS, getCategoryColor } from "@/lib/chartColors";
+import { getCategoryColor } from "@/lib/chartColors";
 import Button from "@/components/ui/Button";
 import ToggleButtons from "@/components/ui/ToggleButtons";
 import LoadingState from "@/components/ui/LoadingState";
@@ -22,9 +22,6 @@ import { formatSentenceCase } from "@/lib/format";
 import { getAggregatedTrends, AggregatedTrendPoint } from "@/app/actions/analytics";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { motion, AnimatePresence } from "framer-motion";
-import { TbInfinity, TbNumber50Small } from "react-icons/tb";
-import { GrExpand } from "react-icons/gr";
-import { RiExpandDiagonalLine } from "react-icons/ri";
 
 export type ChartType = "line" | "stacked" | "grouped";
 export type MetricType = "funding" | "count";
@@ -86,11 +83,9 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
     // --- 1. State & Stability ---
     const isAmendmentView = amendmentsHistory && amendmentsHistory.length > 0;
 
-    // FIX: Create a stable string key for IDs to prevent infinite loops in useEffect
-    // Because [] !== [] in Javascript, passing an empty array prop can trigger infinite re-renders
     const stableIdsKey = useMemo(() => {
         if (!ids || ids.length === 0) return "ALL";
-        return ids.sort().join(',');
+        return [...ids].sort().join(',');
     }, [ids]);
 
     const effectiveAvailableGroupings = useMemo(() => {
@@ -131,7 +126,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
 
         const fetchData = async () => {
             try {
-                // FIX: Use stableIdsKey in the log to verify it's not looping
+                // Use stableIdsKey in the log to verify it's not looping
                 // console.log("Fetching trends for:", stableIdsKey, groupingDimension);
 
                 // Pass the actual `ids` array to the action
@@ -155,7 +150,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
         fetchData();
         return () => { isMounted = false; };
 
-        // FIX: Depend on `stableIdsKey` (string) instead of `ids` (array)
+        // Depend on `stableIdsKey` (string) instead of `ids` (array)
     }, [entityType, stableIdsKey, groupingDimension, preLoadedData, isAmendmentView]);
 
     // --- 3. Data Processing ---
@@ -164,14 +159,13 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
         const chronologicalAmendments = [...amendmentsHistory].sort((a, b) => a.amendment_number - b.amendment_number);
         return chronologicalAmendments.map((amendment, index) => {
             const date = new Date(amendment.amendment_date || amendment.agreement_start_date);
-            const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}`;
             const versionLabel = amendment.amendment_number === 0 ? "Original" : `Amendment ${amendment.amendment_number}`;
             return {
-                year: formattedDate,
+                year: formatDate(date),
                 [versionLabel]: amendment.agreement_value,
                 value: amendment.agreement_value,
+                Funding: amendment.agreement_value,
                 version: versionLabel,
-                displayDate: formattedDate,
                 amendmentNumber: amendment.amendment_number,
                 isInitial: index === 0,
                 isFinal: index === chronologicalAmendments.length - 1
@@ -257,6 +251,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                         height={height}
                         stacked={chartType === "stacked"}
                         showLegend={false}
+                        isAmendmentView={isAmendmentView}
                     />
                 </div>
                 {isRefetching && (
@@ -272,10 +267,10 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
 
     return (
         <motion.div layout transition={{ duration: 0.3, ease: "easeInOut" }}>
-            <Card className={cn("", className)}>
+            <Card className={className}>
                 <Card.Header
                     icon={icon}
-                    className="flex flex-wrap items-center justify-between gap-3"
+                    className="flex flex-wrap items-center justify-between gap-1 md:gap-3"
                     title={effectiveTitle}
                 >
                     {showControls && !isAmendmentView && (
@@ -289,7 +284,8 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                     )}
 
                     {showControls && (
-                        <div className="flex flex-wrap w-full items-center justify-between py-2 lg:py-0 gap-2 lg:gap-3">
+                        <div className={`flex flex-wrap w-full items-center justify-between py-2 lg:py-0 gap-2 lg:gap-3
+                         ${isAmendmentView ? "justify-center md:justify-end" : "justify-between"}`}>
                             {availableMetrics && availableMetrics.length > 1 && !isAmendmentView && (
                                 <ToggleButtons>
                                     {[["funding", LuDollarSign], ["count", LuHash]].map(([type, Icon], index) => (
@@ -297,12 +293,12 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                                             key={index}
                                             onClick={() => setMetricType(type as MetricType)}
                                             className={cn(
-                                                "px-3 py-1.5 text-xs font-medium border flex items-center gap-1",
+                                                "px-3 py-1.5 text-[10px] md:text-xs font-medium border flex items-center gap-1",
                                                 metricType === type ? "bg-gray-100 text-gray-800 border-gray-300" : "bg-white text-gray-500 hover:bg-gray-50 border-gray-200",
                                                 index === 0 ? "rounded-l-md" : index === 1 ? "rounded-r-md" : ""
                                             )}
                                         >
-                                            <Icon className="size-3.5" />
+                                            <Icon className="size-2.75 md:size-3.5" />
                                             <span className="hidden md:inline">{formatSentenceCase(type as string)}</span>
                                         </Button>
                                     ))}
@@ -316,14 +312,14 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                                             key={index}
                                             onClick={() => setShowOther(label === "Add Other")}
                                             className={cn(
-                                                "px-3 py-1.5 text-xs font-medium border flex items-center gap-1",
+                                                "px-3 py-1.5 text-[10px] md:text-xs font-medium border flex items-center gap-1",
                                                 (showOther && index === 1) || (!showOther && index === 0)
                                                     ? "bg-gray-100 text-gray-800 border-gray-300"
                                                     : "bg-white text-gray-500 hover:bg-gray-50 border-gray-200",
                                                 index === 0 ? "rounded-l-md" : index === 1 ? "rounded-r-md" : ""
                                             )}
                                         >
-                                            <span className="">{label as string}</span>
+                                            <span>{label as string}</span>
                                         </Button>
                                     ))}
                                 </ToggleButtons>
@@ -335,13 +331,13 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                                         key={index}
                                         onClick={() => setChartType(type as ChartType)}
                                         className={cn(
-                                            "px-3 py-1.5 text-xs font-medium border flex items-center gap-1",
+                                            "px-3 py-1.5 text-[10px] md:text-xs font-medium border flex items-center gap-1",
                                             chartType === type ? "bg-gray-100 text-gray-800 border-gray-300" : "bg-white text-gray-500 hover:bg-gray-50 border-gray-200",
                                             index === 0 ? "rounded-l-md" : index === 2 ? "rounded-r-md" : ""
                                         )}
                                     >
-                                        <Icon className="h-3.5 w-3.5" />
-                                        <span className="hidden md:inline">{formatSentenceCase(type as string)}</span>
+                                        <Icon className="size-2.75 md:size-3.5" />
+                                        <span className={isAmendmentView ? "" : "hidden md:inline"}>{formatSentenceCase(type as string)}</span>
                                     </Button>
                                 ))}
                             </ToggleButtons>
@@ -349,7 +345,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                     )}
                 </Card.Header>
 
-                <Card.Content className="px-0 md:px-2">
+                <Card.Content className="px-0">
                     <div className={cn(`h-[${height}px] w-full min-w-0 min-h-0`)}>
                         {renderChartArea()}
                     </div>

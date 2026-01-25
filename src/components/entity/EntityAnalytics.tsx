@@ -152,7 +152,10 @@ function calculateAvgGrantDuration(grants: GrantWithDetails[]) {
 
     let text: string;
     if (years > 0) {
-        text = `${years} year${years !== 1 ? 's' : ''} ${months} month${months !== 1 ? 's' : ''}`;
+        text = `${years} year${years !== 1 ? 's' : ''}`;
+        if (months > 0) {
+            text += ` ${months} month${months !== 1 ? 's' : ''}`;
+        }
     } else {
         text = `${months} month${months !== 1 ? 's' : ''}`;
     }
@@ -388,6 +391,11 @@ export default function EntityAnalytics({
     const [chartType] = useState<"line" | "stacked" | "grouped">("line");
     const [chartMetric] = useState<"funding" | "count">("funding");
 
+    // Extract the correct ID based on entity type
+    const entityId = entityType === 'institute'
+        ? (entity as InstituteWithStats).institute_id
+        : (entity as RecipientWithStats).recipient_id;
+
     // Calculate analytics
     const fundingGrowth = calculateFundingGrowth(grants);
     const agencyAnalysis = calculateAgencySpecialization(grants);
@@ -484,7 +492,8 @@ export default function EntityAnalytics({
 
             {/* Trend Visualizer */}
             <TrendVisualizer
-                grants={grants}
+                entityType={entityType}
+                ids={[entityId]}
                 viewContext={entityType === "institute" ? "institute" : "recipient"}
                 height={350}
                 initialChartType={chartType}

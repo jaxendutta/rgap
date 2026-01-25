@@ -36,9 +36,9 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
                 <p className="font-medium text-sm">{versionName || label}</p>
 
                 {/* Date information for amendment view */}
-                {isAmendmentView && payload[0].payload.displayDate && (
+                {isAmendmentView && payload[0].payload.year && (
                     <p className="text-sm text-gray-700">
-                        {payload[0].payload.displayDate}
+                        {payload[0].payload.year}
                     </p>
                 )}
 

@@ -52,7 +52,7 @@ interface GrantCardProps {
     };
 }
 
-type TabId = "details" | "versions" | "timeline";
+type TabId = "details" | "timeline" | "trend";
 
 // --- Helper Functions ---
 
@@ -69,8 +69,8 @@ const RenderChangeIndicator = ({ current, previous }: { current: number; previou
     const colorClass = isPositive ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700";
 
     return (
-        <span className={cn("inline-flex items-start ml-2 px-2 py-0.5 rounded text-xs font-medium", colorClass)}>
-            <Icon className={cn("h-3 w-3 mr-1 shrink-0", isPositive ? "mt-0.5" : "mt-1")} />
+        <span className={cn("inline-flex items-start px-2 py-0.5 rounded text-[10px] md:text-xs font-medium", colorClass)}>
+            <Icon className={cn("size-3 mr-1 shrink-0", isPositive ? "mt-0.5" : "mt-1")} />
             {isPositive ? "+" : ""}
             {formatCurrency(diff)}
         </span>
@@ -216,40 +216,34 @@ const InfoRow = ({ label, value, placeholder, valueClassName, checkValue }: { la
     );
 };
 
-const VersionsTab = ({ amendments, currentAmendmentNumber }: { amendments: any[]; currentAmendmentNumber: number }) => (
+const TimelineTab = ({ amendments, currentAmendmentNumber }: { amendments: any[]; currentAmendmentNumber: number }) => (
     <div>
-        <div className="mb-6 bg-gray-50 p-3 lg:p-4 rounded-xl">
-            <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                <LuLayers className="h-4 w-4 mr-1.5" />
-                Version Timeline
-            </h3>
-            <div className="grid grid-cols-3 gap-2 lg:gap-4 text-center">
-                <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
-                    <h4 className="text-xs lg:text-sm font-medium text-gray-500 mb-1">Total Versions</h4>
-                    <p className="text-sm lg:text-md font-semibold text-gray-900">{amendments.length}</p>
-                </div>
-                {amendments.length > 0 && (
-                    <>
-                        <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
-                            <h4 className="text-xs lg:text-sm font-medium text-gray-500 mb-1">First Version</h4>
-                            <p className="text-sm lg:text-md font-semibold text-gray-900">
-                                {formatDate(amendments[amendments.length - 1].agreement_start_date)}
-                            </p>
-                        </div>
-                        <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
-                            <h4 className="text-xs lg:text-sm font-medium text-gray-500 mb-1">Latest Version</h4>
-                            <p className="text-sm lg:text-md font-semibold text-gray-900">
-                                {formatDate(amendments[0].amendment_date || amendments[0].agreement_start_date)}
-                            </p>
-                        </div>
-                    </>
-                )}
+        <div className="grid grid-cols-3 gap-2 lg:gap-4 text-center py-3">
+            <div className="bg-blue-50 py-2 px-3 lg:px-4 rounded-lg">
+                <h4 className="text-[10px] md:text-xs font-medium text-gray-500 mb-1">Total Versions</h4>
+                <p className="text-xs md:text-base font-semibold text-gray-900">{amendments.length}</p>
             </div>
+            {amendments.length > 0 && (
+                <>
+                    <div className="bg-blue-50 py-2 px-3 lg:px-4 rounded-lg">
+                        <h4 className="text-[10px] md:text-xs font-medium text-gray-500 mb-1">First Version</h4>
+                        <p className="text-xs md:text-base font-semibold text-gray-900">
+                            {formatDate(amendments[amendments.length - 1].agreement_start_date)}
+                        </p>
+                    </div>
+                    <div className="bg-blue-50 py-2 px-3 lg:px-4 rounded-lg">
+                        <h4 className="text-[10px] md:text-xs font-medium text-gray-500 mb-1">Latest Version</h4>
+                        <p className="text-xs md:text-base font-semibold text-gray-900">
+                            {formatDate(amendments[0].amendment_date || amendments[0].agreement_start_date)}
+                        </p>
+                    </div>
+                </>
+            )}
         </div>
 
-        <div className="relative pt-4 lg:pt-6 pb-4">
-            <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-            <div className="space-y-6 lg:space-y-8">
+        <div className="relative pt-3 lg:pt-6 pb-1 md:p-4">
+            <div className="absolute left-1.5 md:left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+            <div className="flex flex-col gap-3 md:gap-4 lg:gap-6">
                 {amendments.map((amendment, index) => {
                     const prevAmendment = amendments[index + 1];
                     const hasValueChange = prevAmendment && amendment.agreement_value !== prevAmendment.agreement_value;
@@ -258,38 +252,38 @@ const VersionsTab = ({ amendments, currentAmendmentNumber }: { amendments: any[]
                     const isCurrentVersion = amendment.amendment_number === currentAmendmentNumber;
 
                     return (
-                        <div key={index} className="relative pl-12 lg:pl-16">
-                            <div className={cn("absolute left-2 w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                        <div key={index} className="relative pl-6 md:pl-8 lg:pl-12">
+                            <div className={cn("absolute mt-0.5 md:mt-1 left-0 md:-left-2.5 size-4 md:size-6 rounded-full border-2 flex items-center justify-center",
                                 amendment.amendment_number === 0 ? "border-blue-500 bg-white" : isCurrentVersion ? "border-green-500 bg-white" : "border-amber-500 bg-white")}>
-                                <div className={cn("w-2 h-2 rounded-full",
+                                <div className={cn("size-1.5 md:size-2 rounded-full",
                                     amendment.amendment_number === 0 ? "bg-blue-500" : isCurrentVersion ? "bg-green-500" : "bg-amber-500")}></div>
                             </div>
 
-                            <div className="bg-white border border-slate-200 rounded-lg shadow-sm">
-                                <div className="p-3 lg:p-4">
+                            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                                <div className="p-2 md:p-3 lg:p-4">
                                     <div className="flex justify-between items-start">
-                                        <div>
-                                            <h4 className={cn("text-sm font-medium",
+                                        <div className="flex flex-col gap-0.5 md:gap-1">
+                                            <h4 className={cn("text-xs md:text-sm lg:text-base font-medium",
                                                 amendment.amendment_number === 0 ? "text-blue-600" : isCurrentVersion ? "text-green-600" : "text-amber-600")}>
                                                 {amendment.amendment_number === 0 ? "Original Agreement" : `Amendment ${amendment.amendment_number}`}
                                                 {isCurrentVersion && " • Current"}
                                             </h4>
-                                            <p className="text-xs text-gray-500 mt-1">
+                                            <p className="text-[10px] md:text-xs text-gray-500">
                                                 {amendment.amendment_date ? formatDate(amendment.amendment_date) : formatDate(amendment.agreement_start_date)}
                                             </p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-sm font-medium">{formatCurrency(amendment.agreement_value)}</p>
+                                            <p className="text-sm md:text-base lg:text-lg font-medium">{formatCurrency(amendment.agreement_value)}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 {(hasChanges || amendment.additional_information_en) && prevAmendment && (
-                                    <div className="border-t border-slate-300 px-4 py-3 bg-gray-50 rounded-b-lg">
+                                    <div className="border-t border-slate-300 p-2 md:p-3 lg:p-4 bg-gray-50 rounded-b-lg">
                                         {hasChanges && (
                                             <>
-                                                <p className="text-xs font-medium text-gray-600 mb-2">Registered changes from previous version:</p>
-                                                <div className="space-y-2 text-sm">
+                                                <p className="text-xs font-medium text-gray-600 mb-1 md:mb-2">Changes detected:</p>
+                                                <div className="space-y-2 text-xs md:text-sm">
                                                     {hasValueChange && (
                                                         <div className="flex items-start">
                                                             <LuCornerDownRight className="h-3 w-3 mr-2 mt-1 shrink-0 text-gray-400" />
@@ -306,7 +300,7 @@ const VersionsTab = ({ amendments, currentAmendmentNumber }: { amendments: any[]
                                                     )}
                                                     {hasEndDateChange && (
                                                         <div className="flex items-start">
-                                                            <LuCornerDownRight className="h-3 w-3 mr-2 mt-1 shrink-0 text-gray-400" />
+                                                            <LuCornerDownRight className="h-3 w-3 mr-2 mt-0 md:mt-1 shrink-0 text-gray-400" />
                                                             <span className="text-gray-600">
                                                                 End date {new Date(amendment.agreement_end_date) > new Date(prevAmendment.agreement_end_date) ? " extended from" : " changed from"}
                                                                 <span className="font-medium mx-1">{formatDate(prevAmendment.agreement_end_date)}</span>
@@ -321,9 +315,9 @@ const VersionsTab = ({ amendments, currentAmendmentNumber }: { amendments: any[]
                                             </>
                                         )}
                                         {amendment.additional_information_en && (
-                                            <div className={cn(hasChanges && "mt-3 pt-3 border-t border-gray-200")}>
-                                                <p className="text-xs font-medium text-gray-600 mb-2">Additional Information:</p>
-                                                <div className="text-sm text-gray-600">{amendment.additional_information_en}</div>
+                                            <div className={cn(hasChanges && "mt-2 md:mt-3 pt-2 md:pt-3 border-t border-gray-200 flex flex-col gap-1 md:gap-2")}>
+                                                <p className="text-xs font-medium text-gray-600">Additional Information from source:</p>
+                                                <div className="text-xs md:text-sm text-gray-600">{amendment.additional_information_en}</div>
                                             </div>
                                         )}
                                     </div>
@@ -338,54 +332,40 @@ const VersionsTab = ({ amendments, currentAmendmentNumber }: { amendments: any[]
 );
 
 const FundingTab = ({ grant, amendments, hasAmendments }: { grant: GrantWithDetails; amendments: GrantAmendment[]; hasAmendments: boolean }) => (
-    <div>
-        <div className="mb-6 bg-gray-50 p-3 lg:p-4 rounded-lg">
-            <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-start">
-                <LuChartLine className="h-4 w-4 mr-1.5 mt-0.5 shrink-0" />
-                Funding Overview
-            </h3>
-
-            {hasAmendments && amendments.length > 0 ? (
-                <div className="grid grid-cols-3 gap-2 lg:gap-4 lg:text-sm text-center">
-                    <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
-                        <p className="text-gray-500 text-xs">Original Value</p>
-                        <p className="text-gray-900 font-medium text-md lg:text-lg">
-                            {formatCurrency(amendments[amendments.length - 1].agreement_value)}
-                        </p>
-                    </div>
-                    <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
-                        <p className="text-gray-500 text-xs">Current Value</p>
-                        <p className="text-gray-900 font-medium text-md lg:text-lg">
-                            {formatCurrency(grant.agreement_value)}
-                        </p>
-                    </div>
-                    <div className="bg-white py-2 px-3 lg:px-4 rounded-lg shadow-sm">
-                        <p className="text-gray-500 text-xs">Total Change</p>
-                        <p className={cn("font-medium text-md lg:text-lg",
-                            grant.agreement_value > amendments[amendments.length - 1].agreement_value ? "text-green-600" :
-                                grant.agreement_value < amendments[amendments.length - 1].agreement_value ? "text-amber-600" : "text-gray-900")}>
-                            {grant.agreement_value !== amendments[amendments.length - 1].agreement_value ? (
-                                grant.agreement_value >= amendments[amendments.length - 1].agreement_value ? (
-                                    <>+{formatCurrency(grant.agreement_value - amendments[amendments.length - 1].agreement_value)}</>
-                                ) : (
-                                    <>-{formatCurrency(amendments[amendments.length - 1].agreement_value - grant.agreement_value)}</>
-                                )
+    hasAmendments && amendments.length > 0 ? (
+        <>
+            <div className="grid grid-cols-3 gap-2 lg:gap-4 lg:text-sm text-center">
+                <div className="bg-blue-50 py-2 px-3 lg:px-4 rounded-lg">
+                    <p className="text-gray-500 text-xs">Original Value</p>
+                    <p className="text-gray-900 font-medium text-md lg:text-lg">
+                        {formatCurrency(amendments[amendments.length - 1].agreement_value)}
+                    </p>
+                </div>
+                <div className="bg-blue-50 py-2 px-3 lg:px-4 rounded-lg">
+                    <p className="text-gray-500 text-xs">Current Value</p>
+                    <p className="text-gray-900 font-medium text-md lg:text-lg">
+                        {formatCurrency(grant.agreement_value)}
+                    </p>
+                </div>
+                <div className="bg-blue-50 py-2 px-3 lg:px-4 rounded-lg">
+                    <p className="text-gray-500 text-xs">Total Change</p>
+                    <p className={cn("font-medium text-md lg:text-lg",
+                        grant.agreement_value > amendments[amendments.length - 1].agreement_value ? "text-green-600" :
+                            grant.agreement_value < amendments[amendments.length - 1].agreement_value ? "text-amber-600" : "text-gray-900")}>
+                        {grant.agreement_value !== amendments[amendments.length - 1].agreement_value ? (
+                            grant.agreement_value >= amendments[amendments.length - 1].agreement_value ? (
+                                <>+{formatCurrency(grant.agreement_value - amendments[amendments.length - 1].agreement_value)}</>
                             ) : (
-                                <>No change</>
-                            )}
-                        </p>
-                    </div>
+                                <>-{formatCurrency(amendments[amendments.length - 1].agreement_value - grant.agreement_value)}</>
+                            )
+                        ) : (
+                            <>No change</>
+                        )}
+                    </p>
                 </div>
-            ) : (
-                <div className="text-center text-sm text-gray-500 py-4">
-                    {`No amendment history available for this grant. Current value: ${formatCurrency(grant.agreement_value)} ${amendments}`}
-                </div>
-            )}
-        </div>
+            </div>
 
-        {hasAmendments && amendments.length > 0 && (
             <TrendVisualizer
-                grants={[grant]}
                 amendmentsHistory={amendments}
                 viewContext="custom"
                 height={250}
@@ -394,8 +374,12 @@ const FundingTab = ({ grant, amendments, hasAmendments }: { grant: GrantWithDeta
                 availableGroupings={["amendment"]}
                 className="mt-4"
             />
-        )}
-    </div>
+        </>
+    ) : (
+        <div className="text-center text-sm text-gray-500 py-4">
+            {`No amendment history available for this grant. Current value: ${formatCurrency(grant.agreement_value)} ${amendments}`}
+        </div>
+    )
 );
 
 // --- Main Component ---
@@ -442,10 +426,10 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
     const tabs: TabItem[] = useMemo(() => {
         const items: TabItem[] = [
             { id: "details", label: "Details", icon: LuFileText },
-            { id: "timeline", label: "Timeline", icon: LuChartLine },
+            { id: "trend", label: "Trend", icon: LuChartLine },
         ];
         if (hasAmendments) {
-            items.splice(1, 0, { id: "versions", label: "Version History", icon: LuHistory });
+            items.splice(1, 0, { id: "timeline", label: "Timeline", icon: LuHistory });
         }
         return items;
     }, [hasAmendments]);
@@ -453,7 +437,7 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
     const hasForeignCurrency = !!grant.foreign_currency_type && !!grant.foreign_currency_value && grant.foreign_currency_value > 0;
 
     return (
-        <Card isHoverable className="px-3 md:px-5 py-2 md:py-3 lg:px-5 transition-all duration-300">
+        <Card isHoverable className="px-2 md:px-3.5 lg:px-5 py-2 md:pt-2.5 md:pb-3.5 lg:py-5 transition-all duration-300 rounded-3xl">
             <div>
                 <GrantHeader
                     grant={grant}
@@ -465,20 +449,20 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
 
                 {/* Amendment History Badge */}
                 {hasAmendments && (
-                    <div className="flex flex-wrap gap-2 mt-3">
+                    <div className="flex flex-wrap mt-1.5 md:mt-3 gap-1.5 md:gap-2">
                         <button
                             onClick={() => {
                                 setIsExpanded(true);
                                 setActiveTab("timeline");
                             }}
-                            className="inline-flex items-center bg-blue-50 hover:bg-blue-100 transition-colors text-blue-700 text-xs font-medium rounded-full px-2.5 py-1"
+                            className="inline-flex items-center bg-blue-50 hover:bg-blue-100 transition-colors text-blue-700 text-[10px] md:text-xs font-medium rounded-full px-2.5 py-1"
                         >
-                            <LuHistory className="h-3 w-3 mr-1" />
+                            <LuHistory className="size-3 mr-1" />
                             {`${amendmentNumber > 0 ? `Amendment ${amendmentNumber}` : "Original"} • Versions available: ${amendments.length}`}
                         </button>
 
                         {amendments.length > 1 && amendmentNumber > 0 && (
-                            <div className="inline-flex items-center text-xs font-medium rounded-full px-2.5 py-1">
+                            <div className="inline-flex items-center font-medium rounded-full py-1">
                                 {(() => {
                                     const current = amendments.find(a => a.amendment_number === amendmentNumber);
                                     const currentIndex = amendments.findIndex(a => a.amendment_number === amendmentNumber);
@@ -515,10 +499,10 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
 
                     <TabContent activeTab={activeTab}>
                         {activeTab === "details" && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 md:gap-4">
                                 <Card>
                                     <Card.Header title="Grant Information" icon={LuDatabase} size="sm" />
-                                    <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 space-y-1">
+                                    <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700 space-y-1">
                                         <InfoRow label="Reference Number" value={grant.ref_number} />
                                         <InfoRow label="Program" value={grant.prog_title_en} placeholder="Not specified" />
                                         <InfoRow label="Agreement Title" value={grant.agreement_title_en || "No Agreement Title Record Found"} placeholder="Not specified" />
@@ -528,7 +512,7 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
 
                                 <Card>
                                     <Card.Header title="Funding Summary" icon={LuDollarSign} size="sm" />
-                                    <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 space-y-1">
+                                    <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700 space-y-1">
                                         <div className="grid grid-cols-12 gap-2 items-center">
                                             <span className="col-span-5 text-gray-500 self-start">Current Value</span>
                                             <div className="col-span-7 flex items-center">
@@ -560,7 +544,7 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
 
                                 <Card>
                                     <Card.Header title="Funding Timeline" icon={LuCalendar} size="sm" />
-                                    <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 space-y-1">
+                                    <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700 space-y-1">
                                         <InfoRow label="Start Date" value={formatDate(grant.agreement_start_date)} />
                                         <InfoRow label="End Date" value={formatDate(grant.agreement_end_date)} />
                                         <InfoRow label="Duration" value={grant.agreement_end_date
@@ -571,7 +555,7 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
 
                                 <Card>
                                     <Card.Header title="Location" icon={LuMapPin} size="sm" />
-                                    <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 space-y-1">
+                                    <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700 space-y-1">
                                         <InfoRow label="Country" value={grant.country} placeholder="Not specified" checkValue={v => !!v && v.toUpperCase() !== "N/A"} />
                                         <InfoRow label="Province/State" value={grant.province} placeholder="Not specified" checkValue={v => !!v && v.toUpperCase() !== "N/A"} />
                                         <InfoRow label="City" value={grant.city} placeholder="Not specified" checkValue={v => !!v && v.toUpperCase() !== "N/A"} />
@@ -580,14 +564,14 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
 
                                 <Card>
                                     <Card.Header title={grant.prog_title_en || "Program Information"} subtitle={grant.prog_title_en ? "Program Purpose" : "Unspecified Program"} icon={LuBookOpen} size="sm" />
-                                    <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 p-4">
+                                    <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700">
                                         {hasValue(grant.prog_purpose_en) ? grant.prog_purpose_en : "Program purpose not specified"}
                                     </Card.Content>
                                 </Card>
 
                                 <Card>
                                     <Card.Header title={grant.agreement_title_en || "Agreement Description"} subtitle={grant.agreement_title_en ? "Agreement Description" : "Unspecified Agreement Description"} icon={LuFileText} size="sm" />
-                                    <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 p-4">
+                                    <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700">
                                         {grant.description_en || "Agreement description not specified"}
                                     </Card.Content>
                                 </Card>
@@ -595,7 +579,7 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
                                 {hasValue(grant.expected_results_en) && (
                                     <Card>
                                         <Card.Header title="Expected Results" icon={LuCircleAlert} size="sm" />
-                                        <Card.Content size="sm" className="text-xs md:text-sm text-gray-700 p-4">
+                                        <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700">
                                             {grant.expected_results_en}
                                         </Card.Content>
                                     </Card>
@@ -603,11 +587,11 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
                             </div>
                         )}
 
-                        {activeTab === "versions" && hasAmendments && (
-                            <VersionsTab amendments={amendments} currentAmendmentNumber={amendmentNumber} />
+                        {activeTab === "timeline" && hasAmendments && (
+                            <TimelineTab amendments={amendments} currentAmendmentNumber={amendmentNumber} />
                         )}
 
-                        {activeTab === "timeline" && (
+                        {activeTab === "trend" && (
                             <FundingTab grant={grant} amendments={amendments} hasAmendments={hasAmendments} />
                         )}
                     </TabContent>

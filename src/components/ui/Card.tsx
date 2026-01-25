@@ -31,7 +31,7 @@ const Card = ({
                 variant === "outline" && "border-2 border-gray-300",
                 variant === "filled" && "bg-gray-50 border border-gray-200",
                 isHoverable &&
-                    "hover:border-gray-300 hover:shadow-sm transition-all duration-200",
+                "hover:border-gray-300 hover:shadow-sm transition-all duration-200",
                 isInteractive && "cursor-pointer",
                 className
             )}
@@ -58,35 +58,35 @@ const CardHeader = ({
     subtitle,
     icon: Icon,
     action,
-    size="md",
+    size = "md",
     ...props
 }: CardHeaderProps) => {
     return (
         <div
             className={cn(
                 "border-b border-gray-100 flex items-center justify-between",
-                size === "md" ? "p-4" : "py-2.5 px-4",
+                size === "md" ? "p-4" : "px-3 py-2.5 md:px-4",
                 className
             )}
             {...props}
         >
             <div className="flex flex-col gap-0.5">
-                <div className="flex items-start gap-1 md:gap-2">
+                <div className="flex items-start gap-1.5 md:gap-2">
                     {Icon && (
                         <Icon className={cn("flex-shrink-0 text-blue-600",
-                            size === "md" ? "size-4 mt-1" : "size-3 mt-0.5 md:size-3.5 md:mt-0.75",
+                            size === "md" ? "size-3 md:size-4 mt-1" : "size-3 md:size-3.5 mt-0.5 md:mt-0.75",
                         )} />
                     )}
                     {title && (
                         <span className={cn("font-semibold text-gray-700",
-                            size === "md" ? "text-md" : "text-xs md:text-sm",
+                            size === "md" ? "text-sm md:text-base" : "text-xs md:text-sm",
                         )}>
                             {title}
                         </span>
                     )}
                 </div>
                 {subtitle && (
-                    <p className="text-xs text-gray-500">{subtitle}</p>
+                    <p className="text-xs md:text-sm text-gray-500">{subtitle}</p>
                 )}
             </div>
             {children}
@@ -116,8 +116,8 @@ const CardContent = ({
                 noPadding
                     ? ""
                     : size === "md"
-                    ? "p-4"
-                    : "p-2 lg:p-4",
+                        ? "p-4 md:p-6 lg:p-8"
+                        : "px-3 py-2 md:px-4 md:py-3 lg:p-4",
                 className
             )}
             {...props}

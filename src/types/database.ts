@@ -115,10 +115,10 @@ export interface Grant {
 // Grant amendment information
 export interface GrantAmendment {
     amendment_number: number;
-    amendment_date: string;
+    amendment_date: string | Date;
     agreement_value: number;
-    agreement_start_date: string;
-    agreement_end_date: string;
+    agreement_start_date: string | Date;
+    agreement_end_date: string | Date | null;
     additional_information_en?: string;
 }
 

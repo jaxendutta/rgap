@@ -46,7 +46,7 @@ function EntityList<T>(props: EntityListProps<T>) {
         page = 1,
         pageSize = DEFAULT_ITEM_PER_PAGE,
         children,
-        initialLayoutVariant = "grid",
+        initialLayoutVariant = entityType !== "grant" ? "grid" : "list",
         showLayoutToggle = true,
         showVisualization = false,
         visualizationData = [],
@@ -123,10 +123,11 @@ function EntityList<T>(props: EntityListProps<T>) {
                         className="overflow-hidden w-full"
                     >
                         <TrendVisualizer
-                            grants={visualizationData}
+                            preLoadedData={visualizationData}
+                            ids={entityId ? [entityId] : []}
+                            entityType={entityType === 'recipient' || entityType === 'institute' ? entityType : undefined}
                             height={350}
                             viewContext={viewContext}
-                            entityId={entityId}
                         />
                     </motion.div>
                 )}
