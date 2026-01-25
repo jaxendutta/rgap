@@ -23,7 +23,7 @@ import { formatCSV, formatCurrency } from "@/lib/format";
 import { cn, formatNumber } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import Tag from "@/components/ui/Tag";
+import Tag, { Tags } from "@/components/ui/Tag";
 import BookmarkButton from "@/components/bookmarks/BookmarkButton";
 import {
     InstituteWithStats,
@@ -33,6 +33,7 @@ import {
     isInstitute,
     isRecipient
 } from "@/types/database";
+import { MdAccountBalance } from "react-icons/md";
 
 // ============================================================================
 // COMPONENT PROPS
@@ -166,7 +167,7 @@ export const EntityCard = ({
     // Show institute link for recipients
     if (instituteInfo?.name) {
         metadataItems.push({
-            icon: LuUniversity,
+            icon: MdAccountBalance,
             text: instituteInfo.name,
             link: `/institutes/${instituteInfo.id}`,
         });
@@ -260,33 +261,33 @@ export const EntityCard = ({
 
             {/* Metadata (Institute, Location, Type) */}
             {metadataItems.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-1.5">
+                <Tags spacing="tightest" className="md:mt-1">
                     {metadataItems.map((item, index) => (
                         <Tag
                             key={index}
                             icon={item.icon}
                             text={item.text}
-                            size="sm"
+                            size="xs"
                             variant="outline"
-                            className={`w-fit ${item.link ? "text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer" : ""}`}
+                            className={`w-fit text-[10px] md:text-[12px] ${item.link ? "text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer" : ""}`}
                             onClick={item.link ? () => router.push(item.link!) : undefined}
                         />
                     ))}
-                </div>
+                </Tags>
             )}
 
             {/* Statistics */}
-            <div className="flex justify-between mt-3 pt-3 border-t border-gray-100">
+            <div className="flex justify-evenly gap-2 mt-2 md:mt-4">
                 {statItems.map((stat, index) => {
                     const Icon = stat.icon;
                     return (
-                        <div key={index} className="text-center px-2 md:px-4">
-                            <div className="flex justify-center items-center mb-1 gap-1">
-                                <Icon className="h-3 w-3 text-gray-500" />
-                                <div className="text-xs text-gray-500">{stat.label}</div>
+                        <div key={index} className="text-center py-2 px-2 md:px-4 lg:px-6 bg-slate-100 rounded-lg">
+                            <div className="flex justify-center items-center mb-0.5 md:mb-1 gap-1 text-gray-500">
+                                <Icon className="size-2 md:size-3 mb-0.25 md:mb-0" />
+                                <div className="text-[10px] md:text-xs">{stat.label}</div>
                             </div>
                             
-                            <div className="text-sm font-medium text-gray-900">{stat.value}</div>
+                            <div className="text-xs md:text-sm font-medium text-gray-900">{stat.value}</div>
                         </div>
                     );
                 })}

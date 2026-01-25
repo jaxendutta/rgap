@@ -27,15 +27,15 @@ const padding = {
 
 // Define font size styles
 const fontSizes = {
-    xs: "text-xs",
-    sm: "text-xs",
-    md: "text-sm",
+    xs: "text-[10px] md:text-xs",
+    sm: "text-xs md:text-sm",
+    md: "text-sm md:text-base",
     lg: "text-base",
 };
 
 // Define icon sizes
 const iconSizes = {
-    xs: "size-2.75",
+    xs: "size-2.5",
     sm: "h-3 w-3",
     md: "h-4 w-4",
     lg: "h-5 w-5",
@@ -143,11 +143,19 @@ export const Tag: React.FC<TagProps> = ({
     );
 };
 
+const spacingClasses = {
+    tightest: "gap-1",
+    tight: "gap-1.5",
+    normal: "gap-2",
+    wide: "gap-2.5",
+    widest: "gap-3"
+};
+
 // TagGroup component for grouping tags
 export interface TagsProps {
     children: React.ReactNode;
     className?: string;
-    spacing?: "tight" | "normal" | "loose";
+    spacing?: keyof typeof spacingClasses;
 }
 
 export const Tags: React.FC<TagsProps> = ({
@@ -155,12 +163,6 @@ export const Tags: React.FC<TagsProps> = ({
     className,
     spacing = "normal",
 }) => {
-    const spacingClasses = {
-        tight: "gap-1",
-        normal: "gap-2",
-        loose: "gap-3",
-    };
-
     return (
         <div
             className={cn("flex flex-wrap", spacingClasses[spacing], className)}

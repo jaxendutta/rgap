@@ -86,7 +86,7 @@ export default function BookmarksClient({ grants, recipients, institutes, search
                             viewContext="custom"
                         >
                             {grants.map((grant) => (
-                                <div key={grant.grant_id} className="bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col h-full">
+                                <div key={grant.grant_id} className="bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col">
                                     <div className="flex-1">
                                         <GrantCard {...grant} isBookmarked={true} />
                                     </div>

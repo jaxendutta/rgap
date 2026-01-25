@@ -48,7 +48,7 @@ export default function SearchHistoryItem({ item, onSearchAgain, isBookmarked = 
     return (
         <div key={item.id} className="group p-3 md:p-5 hover:bg-gray-50/80 transition-all duration-200 flex flex-row gap-3 md:gap-5 md:items-center">
             <div className="flex flex-col gap-2 md:gap-3 justify-center">
-                <Tags spacing="tight" className="items-center flex-wrap">
+                <Tags spacing="tightest" className="items-center flex-wrap">
                     {filters.recipient && (
                         <Tag text="Recipient" innerText={filters.recipient} variant="primary" icon={FiUser} size="sm" />
                     )}

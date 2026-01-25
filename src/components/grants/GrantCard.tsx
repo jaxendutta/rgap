@@ -95,13 +95,13 @@ const GrantHeader = ({
     return (
         <div className="flex flex-col lg:flex-row gap-2 lg:gap-6 p-1 pr-0">
             <div className="flex-1 max-w-full">
-                <div className="flex items-center justify-between gap-2.5 mb-2 lg:mb-1">
+                <div className="flex items-center justify-between gap-3 mb-1">
                     <Link
                         href={`/recipients/${grant.recipient_id}`}
-                        className="flex md:text-lg items-start font-medium hover:text-blue-700 transition-colors gap-1 group"
+                        className="flex text-sm md:text-[16px] lg:text-[18px] items-start font-medium hover:text-blue-700 transition-colors gap-1 group"
                         aria-label={`View profile for recipient ${grant.legal_name}`}
                     >
-                        <LuGraduationCap className="hidden md:flex size-4.5 mt-0.5 align-text-bottom flex-shrink-0" />
+                        <LuGraduationCap className="hidden md:flex md:size-4 lg:size-4.5 mt-0.5 md:mt-0.75 lg:mt-1 align-text-bottom flex-shrink-0" />
                         <span className="inline-block">
                             {grant.legal_name}
                             <LuArrowUpRight className="hidden md:inline-block h-4 w-4 ml-1 mb-0.5 align-text-bottom opacity-20 group-hover:opacity-100 group-hover:-translate-y-0.5 transition-all" />
@@ -109,7 +109,7 @@ const GrantHeader = ({
                     </Link>
 
                     <div className="flex items-center">
-                        <span className="font-medium md:text-lg lg:text-xl">
+                        <span className="font-medium text-sm md:text-[16px] lg:text-[18px]">
                             {formatCurrency(grant.agreement_value)}
                         </span>
                         <BookmarkButton
@@ -129,7 +129,7 @@ const GrantHeader = ({
                     </div>
                 </div>
 
-                <Tags spacing="normal">
+                <Tags spacing="tight">
                     {isBookmarked && (
                         grant.bookmarked_at ? (
                             <Tag size="xs" variant="success" icon={LuBookmarkCheck} text="Bookmarked" innerText={formatDateTime(grant.bookmarked_at)} />
@@ -140,7 +140,7 @@ const GrantHeader = ({
 
                     <Tag
                         icon={LuUniversity}
-                        size="sm"
+                        size="xs"
                         variant="link"
                         onClick={() => router.push(`/institutes/${grant.institute_id}`)}
                         text={grant.name || "Unknown Institute"}
@@ -148,7 +148,7 @@ const GrantHeader = ({
                     />
                     <Tag
                         icon={LuBookOpen}
-                        size="sm"
+                        size="xs"
                         variant="outline"
                         className={cn(
                             !hasValue(grant.agreement_title_en) && "text-gray-400 italic",
@@ -190,9 +190,9 @@ const MetadataTags = ({ grant }: { grant: GrantWithDetails }) => {
 
     return (
         <div className="mt-1.5">
-            <Tags spacing="tight">
+            <Tags spacing="tightest">
                 {tags.map((tag, index) => (
-                    <Tag key={index} icon={tag.icon} size="sm" variant="default" text={tag.text} />
+                    <Tag key={index} icon={tag.icon} size="xs" variant="default" text={tag.text} />
                 ))}
             </Tags>
         </div>
@@ -496,9 +496,9 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
 
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className="mt-3 flex w-full items-center justify-center p-1 text-xs md:text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
+                    className="mt-3 flex w-full items-center justify-center text-[10px] md:text-xs text-gray-500 hover:text-gray-700 focus:outline-none"
                 >
-                    <LuChevronDown className={cn("h-4 md:h-5 w-4 md:w-5 transition-transform duration-200", isExpanded && "transform rotate-180")} />
+                    <LuChevronDown className={cn("size-3.5 md:size-4 transition-transform duration-200", isExpanded && "transform rotate-180")} />
                     <span className="ml-1">{isExpanded ? "Show Less" : "Show More"}</span>
                 </button>
 
