@@ -1,6 +1,7 @@
 import { getIronSession, IronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { db } from './db';
+import { cache } from 'react';
 
 export interface SessionUser {
     id: number;
@@ -14,7 +15,6 @@ export interface SessionData {
     isLoggedIn: boolean;
 }
 
-// FIX: Added 'export' here so auth.ts can use it
 export const sessionOptions = {
     password: process.env.SESSION_SECRET || 'complex_password_at_least_32_characters_long',
     cookieName: 'rgap_session',
@@ -31,14 +31,15 @@ export async function getSession(): Promise<IronSession<SessionData>> {
     return getIronSession<SessionData>(cookieStore, sessionOptions);
 }
 
-export async function getCurrentUser(): Promise<SessionUser | null> {
+// 1. Wrap in React cache() so it only runs once per server request
+export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
     const session = await getSession();
 
     if (!session.user || !session.sessionId) return null;
 
     try {
         const result = await db.query(
-            `SELECT is_revoked FROM sessions WHERE session_id = $1`,
+            `SELECT is_revoked, last_active_at FROM sessions WHERE session_id = $1`,
             [session.sessionId]
         );
 
@@ -47,11 +48,17 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
             return null;
         }
 
-        // Fire and forget update
-        db.query('UPDATE sessions SET last_active_at = NOW() WHERE session_id = $1', [session.sessionId]);
+        // 2. Optimization: Only update 'last_active_at' if > 1 hour ago
+        const lastActive = new Date(result.rows[0].last_active_at).getTime();
+        const oneHour = 60 * 60 * 1000;
+        
+        if (Date.now() - lastActive > oneHour) {
+             // Fire and forget, but throttled
+             db.query('UPDATE sessions SET last_active_at = NOW() WHERE session_id = $1', [session.sessionId]);
+        }
 
         return session.user;
     } catch (error) {
         return null;
     }
-}
+});

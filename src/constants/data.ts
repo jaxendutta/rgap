@@ -19,4 +19,5 @@ export const RECIPIENT_TYPE_LABELS: Record<string, string> = {
 };
 
 export const DEFAULT_ITEM_PER_PAGE = 30;
+export const MAX_NOTE_LENGTH = 2000;
 export const LAST_UPDATED: Date = new Date('2026-01-24T00:00:00Z');

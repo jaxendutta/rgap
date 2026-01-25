@@ -1,6 +1,7 @@
 // src/app/actions/bookmarks.ts
 'use server';
 
+import { MAX_NOTE_LENGTH } from '@/constants/data';
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
 import { revalidatePath } from 'next/cache';
@@ -140,6 +141,9 @@ export async function toggleSearchBookmark(searchHistoryId: number) {
 export async function updateGrantNote(grantId: number, note: string) {
     const user = await getCurrentUser();
     if (!user) return { success: false, error: 'Must be logged in' };
+    if (note.length > MAX_NOTE_LENGTH) {
+        return { success: false, error: 'Note is too long (max 2000 chars)' };
+    }
     try {
         await db.query('UPDATE bookmarked_grants SET notes = $1 WHERE grant_id = $2 AND user_id = $3', [note, grantId, user.id]);
         revalidatePath('/bookmarks');
@@ -149,6 +153,9 @@ export async function updateGrantNote(grantId: number, note: string) {
 export async function updateRecipientNote(recipientId: number, note: string) {
     const user = await getCurrentUser();
     if (!user) return { success: false, error: 'Must be logged in' };
+    if (note.length > MAX_NOTE_LENGTH) {
+        return { success: false, error: 'Note is too long (max 2000 chars)' };
+    }
     try {
         await db.query('UPDATE bookmarked_recipients SET notes = $1 WHERE recipient_id = $2 AND user_id = $3', [note, recipientId, user.id]);
         revalidatePath('/bookmarks');
@@ -158,6 +165,9 @@ export async function updateRecipientNote(recipientId: number, note: string) {
 export async function updateInstituteNote(instituteId: number, note: string) {
     const user = await getCurrentUser();
     if (!user) return { success: false, error: 'Must be logged in' };
+    if (note.length > MAX_NOTE_LENGTH) {
+        return { success: false, error: 'Note is too long (max 2000 chars)' };
+    }
     try {
         await db.query('UPDATE bookmarked_institutes SET notes = $1 WHERE institute_id = $2 AND user_id = $3', [note, instituteId, user.id]);
         revalidatePath('/bookmarks');
@@ -167,6 +177,9 @@ export async function updateInstituteNote(instituteId: number, note: string) {
 export async function updateSearchNote(searchHistoryId: number, note: string) {
     const user = await getCurrentUser();
     if (!user) return { success: false, error: 'Must be logged in' };
+    if (note.length > MAX_NOTE_LENGTH) {
+        return { success: false, error: 'Note is too long (max 2000 chars)' };
+    }
     try {
         await db.query('UPDATE bookmarked_searches SET notes = $1 WHERE search_history_id = $2 AND user_id = $3', [note, searchHistoryId, user.id]);
         revalidatePath('/bookmarks');
