@@ -11,16 +11,18 @@ import {
     LuBookmark,
     LuUser,
     LuSun,
-    LuLogIn // Added for explicit Sign In icon if desired (optional, utilizing LuUser below for consistency)
+    LuLogIn
 } from "react-icons/lu";
 import { GiAbstract014 } from "react-icons/gi";
 import Tabs from "@/components/ui/Tabs";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/AuthProvider";
+import { useNotify } from "@/providers/NotificationProvider";
 
 const Sidebar = () => {
     const pathname = usePathname();
     const router = useRouter();
+    const { notify } = useNotify();
     const [isExpanded, setIsExpanded] = useState(false);
 
     const { user } = useAuth();
@@ -146,7 +148,13 @@ const Sidebar = () => {
                 <Tabs
                     tabs={mobileNavigation.map(item => ({ id: item.href, label: item.name, icon: item.icon }))}
                     activeTab={pathname}
-                    onChange={(tabId) => router.push(tabId)}
+                    onChange={(tabId) => {
+                        if (tabId === '/bookmarks' && !user) {
+                            notify("Please sign in to view bookmarks.", "info");
+                            return;
+                        }
+                        router.push(tabId);
+                    }}
                     variant="pills"
                     size="sm"
                     fullWidth

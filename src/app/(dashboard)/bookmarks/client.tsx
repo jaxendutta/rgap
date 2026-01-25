@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
     LuSearch, LuGraduationCap, LuUniversity, LuBookMarked, LuHash,
     LuCalendarDays,
@@ -22,11 +22,21 @@ interface BookmarksClientProps {
     recipients: any[];
     institutes: any[];
     searches: any[];
+    initialTab?: string;
 }
 
-export default function BookmarksClient({ grants, recipients, institutes, searches }: BookmarksClientProps) {
-    const [activeTab, setActiveTab] = useState("grants");
+export default function BookmarksClient({ grants, recipients, institutes, searches, initialTab = "grants" }: BookmarksClientProps) {
+    const [activeTab, setActiveTabState] = useState(initialTab);
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Sync tab changes to URL
+    const setActiveTab = (id: string) => {
+        setActiveTabState(id);
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('tab', id);
+        router.push(`?${params.toString()}`, { scroll: false });
+    };
 
     const handleSearchAgain = (item: any) => {
         // Redirect to search page with the query and re-run flag
