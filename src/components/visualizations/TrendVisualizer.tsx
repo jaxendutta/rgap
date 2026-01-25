@@ -22,6 +22,7 @@ import { formatSentenceCase } from "@/lib/format";
 import { getAggregatedTrends, AggregatedTrendPoint } from "@/app/actions/analytics";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { motion, AnimatePresence } from "framer-motion";
+import useResponsive from "@/lib/useResponsive";
 
 export type ChartType = "line" | "stacked" | "grouped";
 export type MetricType = "funding" | "count";
@@ -80,6 +81,10 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
     icon = LuActivity,
     showControls = true,
 }) => {
+    const screenSize = useResponsive();
+
+    height = screenSize === "sm" ? 300 : screenSize === "md" ? 400 : 400;
+
     // --- 1. State & Stability ---
     const isAmendmentView = amendmentsHistory && amendmentsHistory.length > 0;
 
@@ -99,7 +104,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
     const [groupingDimension, setGroupingDimension] = useState<GroupingDimension>(
         initialGrouping || (effectiveAvailableGroupings[0] as GroupingDimension)
     );
-    const [showOther, setShowOther] = useState(true);
+    const [showOther, setShowOther] = useState(false);
 
     // Data State
     const [data, setData] = useState<AggregatedTrendPoint[]>(preLoadedData || []);

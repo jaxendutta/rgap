@@ -31,13 +31,13 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
                 : null;
 
         return (
-            <div className="bg-white p-3 border border-gray-200 rounded-md shadow-md">
+            <div className="bg-white p-2 md:p-3 border border-gray-200 rounded-md shadow-md">
                 {/* Header with date/label */}
-                <p className="font-medium text-sm">{versionName || label}</p>
+                <p className="font-medium text-xs md:text-sm">{versionName || label}</p>
 
                 {/* Date information for amendment view */}
                 {isAmendmentView && payload[0].payload.year && (
-                    <p className="text-sm text-gray-700">
+                    <p className="text-[10px] md:text-sm text-gray-700">
                         {payload[0].payload.year}
                     </p>
                 )}
@@ -47,10 +47,10 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
                     {payload.map((entry: any, index: number) => (
                         <p
                             key={index}
-                            className="text-sm flex items-center gap-2"
+                            className="text-xs md:text-sm flex items-center gap-1.5 md:gap-2"
                         >
                             <span
-                                className="h-3 w-3 rounded-full"
+                                className="size-2.5 md:size-3 rounded-full"
                                 style={{ backgroundColor: entry.color }}
                             />
                             <span>

@@ -139,17 +139,17 @@ export const DataChart: React.FC<DataChartProps> = ({
                                                     color = AMENDMENT_COLORS.Amendment;
                                                 }
                                                 return (
-                                                    <circle cx={cx} cy={cy} r={5} fill={color} stroke="none" />
+                                                    <circle cx={cx} cy={cy} r={screenSize === "sm" ? 4 : 5} fill={color} stroke="none" />
                                                 );
                                             }
                                             : {
-                                                r: 4,
+                                                r: screenSize === "sm" ? 4 : 5,
                                                 fill: getCategoryColor(category, index),
                                                 strokeWidth: 0,
                                             }
                                     }
                                     activeDot={{
-                                        r: 6,
+                                        r: screenSize === "sm" ? 4 : 6,
                                         stroke: getCategoryColor(category, index),
                                         strokeWidth: 1,
                                         fill: "#fff",
