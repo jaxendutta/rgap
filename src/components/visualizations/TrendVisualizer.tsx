@@ -349,7 +349,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                     )}
                 </Card.Header>
 
-                <Card.Content className="px-0">
+                <Card.Content className="px-0 py-2 md:py-4 flex flex-col gap-2 md:gap-4">
                     <div className={cn(`h-[${height}px] w-full min-w-0 min-h-0`)}>
                         {renderChartArea()}
                     </div>
@@ -362,12 +362,12 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                                 animate={{ opacity: 1, height: "auto" }}
                                 exit={{ opacity: 0, height: 0 }}
                                 transition={{ duration: 0.3 }}
-                                className="overflow-hidden"
+                                className="overflow-hidden px-2"
                             >
-                                <div className="flex flex-wrap justify-center mt-4 gap-3 pt-2">
+                                <div className="flex flex-wrap justify-center mt-0 md:mt-4 gap-x-2.5 gap-y-1 md:gap-x-3 md:gap-y-2.5 pt-0 md:pt-2">
                                     {chartData.categories.map((category, index) => (
-                                        <div key={category} className="flex items-center text-xs">
-                                            <span className="w-3 h-3 rounded-full mr-1.5" style={{ backgroundColor: getCategoryColor(category, index) }} />
+                                        <div key={category} className="flex items-center text-[10px] md:text-xs gap-1 md:gap-1.5">
+                                            <span className="size-2 md:size-2.5 rounded-full" style={{ backgroundColor: getCategoryColor(category, index) }} />
                                             <span className="text-gray-600 max-w-[200px] truncate">{category}</span>
                                         </div>
                                     ))}

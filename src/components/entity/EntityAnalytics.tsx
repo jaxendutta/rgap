@@ -177,12 +177,15 @@ export const KpiCard = ({
     value: React.ReactNode;
     icon: IconType;
 }) => (
-    <Card className="p-4">
-        <div className="flex items-center mb-2 gap-2">
-            <Icon className="size-3.5 md:size-4 text-blue-600" />
-            <h3 className="font-medium text-gray-800 text-sm">{title}</h3>
+    <Card className="p-2.5 md:p-4 flex flex-col flex-1">
+        <div className="flex items-start mb-0.5 md:mb-2 gap-1.5 md:gap-2">
+            <Icon className="size-9 md:size-3.5 text-blue-600 md:mt-0.75" />
+            <h3 className="font-medium text-gray-600 md:text-gray-800 text-[11px] md:text-sm">{title}</h3>
         </div>
-        <div className="mt-1 text-lg md:text-xl font-bold text-gray-900">{value}</div>
+
+        <div className="h-px bg-gray-200 mb-2 md:mb-1.5" />
+
+        <div className="text-sm md:text-xl font-bold text-gray-900 flex flex-1 items-end md:items-center">{value}</div>
     </Card>
 );
 
@@ -414,9 +417,10 @@ export default function EntityAnalytics({
     return (
         <div className="flex flex-col gap-4 md:gap-6">
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex md:grid md:grid-cols-3 gap-2 md:gap-4">
                 {/* Funding Growth */}
                 <KpiCard
+                    icon={MdOutlineSsidChart}
                     title="Funding Growth"
                     value={
                         <div className="flex items-center">
@@ -442,39 +446,38 @@ export default function EntityAnalytics({
                             </span>
                         </div>
                     }
-                    icon={MdOutlineSsidChart}
                 />
 
                 {/* Entity-specific metric */}
                 {entityType === "institute" ? (
                     <KpiCard
+                        icon={LuGraduationCap}
                         title="Recipient Diversity"
                         value={
                             <div>
-                                <span className="italic text-base md:text-lg">
+                                <span className="italic text-sm md:text-lg">
                                     {recipientDiversity?.rating || "No data"}
                                 </span>
                                 {recipientDiversity && (
-                                    <span className="block text-xs text-gray-600 md:mt-1 font-normal">
-                                        Top 3: {recipientDiversity.concentration.toFixed(1)}% of funding
+                                    <span className="block text-[10px] md:text-xs text-gray-600 md:mt-1 font-normal">
+                                        Top 3: {recipientDiversity.concentration.toFixed(1)}%
                                     </span>
                                 )}
                             </div>
                         }
-                        icon={LuGraduationCap}
                     />
                 ) : (
                     <KpiCard
+                        icon={LuCalendar}
                         title="Grant Duration"
                         value={
                             <div>
-                                <span className="text-base md:text-lg">{grantDuration.text}</span>
-                                <span className="block text-xs text-gray-600 md:mt-1 font-normal">
+                                <span className="text-sm md:text-lg">{grantDuration.text}</span>
+                                <span className="block text-[10px] md:text-xs text-gray-600 md:mt-1 font-normal">
                                     Average across {grants.length} grants
                                 </span>
                             </div>
                         }
-                        icon={LuCalendar}
                     />
                 )}
 
@@ -483,9 +486,9 @@ export default function EntityAnalytics({
                     title="Agency Distribution"
                     value={
                         <div>
-                            <span className="italic text-base md:text-lg">{agencyAnalysis.specialization}</span>
+                            <span className="italic text-sm md:text-lg">{agencyAnalysis.specialization}</span>
                             {agencyAnalysis.topAgency && (
-                                <span className="block text-xs text-gray-600 md:mt-1 font-normal">
+                                <span className="block text-[10px] md:text-xs text-gray-600 md:mt-1 font-normal">
                                     {agencyAnalysis.topAgency}: {agencyAnalysis.topPercentage.toFixed(1)}%
                                 </span>
                             )}
