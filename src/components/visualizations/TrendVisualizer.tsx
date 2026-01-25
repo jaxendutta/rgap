@@ -219,7 +219,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
     const groupingDisplayOptions = useMemo(() => {
         const displayLabels: Record<string, string> = {
             org: "Funding Agency", city: "City", province: "Province/State",
-            country: "Country", recipient: "Recipient", institute: "Institution",
+            country: "Country", recipient: "Recipient", institute: "Institute",
             program: "Program", year: "Year", amendment: "Amendment Version",
         };
         return effectiveAvailableGroupings.map((g) => ({

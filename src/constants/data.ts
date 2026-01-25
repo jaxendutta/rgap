@@ -14,7 +14,7 @@ export const ORG_NAMES: Record<string, string> = {
 };
 
 export const RECIPIENT_TYPE_LABELS: Record<string, string> = {
-    I: 'Institution',
+    I: 'Institute',
     P: 'Person',
 };
 

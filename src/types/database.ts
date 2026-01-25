@@ -59,7 +59,7 @@ export interface Program {
     org: string | null;
 }
 
-// Research institution
+// Research institute
 // CONTAINS: All location data (city, province, country)
 // UNIQUE BY: name + city + country
 export interface Institute {
@@ -74,7 +74,7 @@ export interface Institute {
 }
 
 
-// Grant recipient (person or institution)
+// Grant recipient (person or institute)
 // LOCATION: Inherited from linked Institute
 // UNIQUE BY: legal_name + institute_id
 export interface Recipient {

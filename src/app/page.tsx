@@ -38,7 +38,7 @@ export default function HomePage() {
       ],
       [
         "Recipients + Institutes",
-        "Discover researchers and institutions behind the grants.",
+        "Discover researchers and institutes behind the grants.",
         LuGraduationCap,
         "/recipients",
       ],

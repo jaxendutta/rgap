@@ -16,6 +16,7 @@ import {
 import { ChartDataPoint, formatChartValue } from "@/lib/chartDataTransforms";
 import { getCategoryColor, AMENDMENT_COLORS } from "@/lib/chartColors";
 import CustomTooltip from "./CustomTooltip";
+import useResponsive from "@/lib/useResponsive";
 
 export interface DataChartProps {
     data: ChartDataPoint[];
@@ -44,6 +45,22 @@ export const DataChart: React.FC<DataChartProps> = ({
     className,
     isAmendmentView = false,
 }) => {
+    const screenSize = useResponsive();
+
+    const tickFontSize =
+        screenSize === "sm" ? 8 : screenSize === "md" ? 10 : 12;
+
+    const chartMargin =
+        screenSize === "sm"
+            ? { top: 5, right: 15, left: -15, bottom: 0 }
+            : screenSize === "md"
+              ? { top: 10, right: 20, left: -10, bottom: 0 }
+              : { top: 10, right: 30, left: 0, bottom: 0 };
+
+    const legendIconSize = screenSize === "sm" ? 8 : screenSize === "md" ? 10 : 12;
+    const legendFontSize =
+        screenSize === "sm" ? "10px" : screenSize === "md" ? "12px" : "14px";
+
     // Special formatting for amendment dates
     const formatXAxis = (value: string) => {
         if (isAmendmentView && value.includes("-")) {
@@ -66,7 +83,7 @@ export const DataChart: React.FC<DataChartProps> = ({
                     {chartType === "line" ? (
                         <LineChart
                             data={data}
-                            margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
+                            margin={chartMargin}
                         >
                             {showGrid && (
                                 <CartesianGrid
@@ -78,7 +95,7 @@ export const DataChart: React.FC<DataChartProps> = ({
                                 dataKey="year"
                                 tickLine={false}
                                 axisLine={{ stroke: "#e5e7eb" }}
-                                tick={{ fontSize: 11 }}
+                                tick={{ fontSize: tickFontSize }}
                                 tickFormatter={formatXAxis}
                                 angle={isAmendmentView ? -30 : 0}
                             />
@@ -88,14 +105,19 @@ export const DataChart: React.FC<DataChartProps> = ({
                                 }
                                 tickLine={false}
                                 axisLine={{ stroke: "#e5e7eb" }}
-                                tick={{ fontSize: 11 }}
+                                tick={{ fontSize: tickFontSize }}
                             />
                             <Tooltip
                                 content={
                                     <CustomTooltip chartMetric={dataType} />
                                 }
                             />
-                            {showLegend && <Legend />}
+                            {showLegend && (
+                                <Legend
+                                    iconSize={legendIconSize}
+                                    wrapperStyle={{ fontSize: legendFontSize }}
+                                />
+                            )}
 
                             {categories.map((category, index) => (
                                 <Line
@@ -138,7 +160,7 @@ export const DataChart: React.FC<DataChartProps> = ({
                     ) : (
                         <BarChart
                             data={data}
-                            margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
+                            margin={chartMargin}
                             barCategoryGap={stacked ? "10%" : "20%"}
                             barGap={stacked ? 0 : 4}
                         >
@@ -152,7 +174,7 @@ export const DataChart: React.FC<DataChartProps> = ({
                                 dataKey="year"
                                 tickLine={false}
                                 axisLine={{ stroke: "#e5e7eb" }}
-                                tick={{ fontSize: 11 }}
+                                tick={{ fontSize: tickFontSize }}
                                 tickFormatter={formatXAxis}
                                 angle={isAmendmentView ? -30 : 0}
                             />
@@ -162,14 +184,19 @@ export const DataChart: React.FC<DataChartProps> = ({
                                 }
                                 tickLine={false}
                                 axisLine={{ stroke: "#e5e7eb" }}
-                                tick={{ fontSize: 11 }}
+                                tick={{ fontSize: tickFontSize }}
                             />
                             <Tooltip
                                 content={
                                     <CustomTooltip chartMetric={dataType} />
                                 }
                             />
-                            {showLegend && <Legend />}
+                            {showLegend && (
+                                <Legend
+                                    iconSize={legendIconSize}
+                                    wrapperStyle={{ fontSize: legendFontSize }}
+                                />
+                            )}
 
                             {categories.map((category, index) => (
                                 <Bar

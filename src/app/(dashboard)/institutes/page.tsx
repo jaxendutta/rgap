@@ -81,7 +81,7 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
     return (
         <EntitiesPage
             title="Institutes"
-            subtitle="Browse research institutions and their funding statistics"
+            subtitle="Browse research institutes and their funding statistics"
             icon={LuUniversity}
             entities={institutes}
             totalItems={totalItems}
@@ -94,5 +94,5 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
 
 export const metadata: Metadata = {
     title: 'Institutes | RGAP',
-    description: 'Browse research institutions',
+    description: 'Browse research institutes',
 };

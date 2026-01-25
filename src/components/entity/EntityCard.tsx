@@ -88,7 +88,7 @@ export const EntityCard = ({
 
     // Get entity type label
     const typeLabel = isInstituteType
-        ? "Academic Institution"
+        ? "Academic Institute"
         : isRecipientType && (entity as RecipientWithStats).type
             ? RECIPIENT_TYPE_LABELS[(entity as RecipientWithStats).type as keyof typeof RECIPIENT_TYPE_LABELS] || "Unknown"
             : "Unknown";
