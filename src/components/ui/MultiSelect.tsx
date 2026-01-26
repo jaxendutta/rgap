@@ -9,6 +9,7 @@ export interface MultiSelectProps {
     options: string[];
     values: string[];
     onChange: (values: string[]) => void;
+    fullWidth?: boolean;
 }
 
 export const MultiSelect = ({
@@ -17,6 +18,7 @@ export const MultiSelect = ({
     options = [],
     values = [],
     onChange,
+    fullWidth = false,
 }: MultiSelectProps) => {
     return (
         <Dropdown
@@ -26,6 +28,7 @@ export const MultiSelect = ({
             options={options}
             onChange={onChange}
             multiple={true}
+            fullWidth={fullWidth}
         />
     );
 };

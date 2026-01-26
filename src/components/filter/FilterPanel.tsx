@@ -44,62 +44,64 @@ export function FilterPanel({ filters, filterOptions, onChange }: FilterPanelPro
     };
 
     return (
-        <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
-                {/* Date Range */}
-                <DateRangeFilter
-                    label="Date Range"
-                    value={filters.dateRange || FILTER_LIMITS.DATE_VALUE}
-                    onChange={handleDateRangeChange}
-                />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
+            {/* Date Range */}
+            <DateRangeFilter
+                label="Date Range"
+                value={filters.dateRange || FILTER_LIMITS.DATE_VALUE}
+                onChange={handleDateRangeChange}
+            />
 
-                {/* Value Range */}
-                <ValueRangeFilter
-                    label="Value Range"
-                    type="currency"
-                    value={{
-                        min: filters.valueRange?.min ?? FILTER_LIMITS.GRANT_VALUE.MIN,
-                        max: filters.valueRange?.max ?? FILTER_LIMITS.GRANT_VALUE.MAX,
-                    }}
-                    onChange={handleValueRangeChange}
-                />
+            {/* Value Range */}
+            <ValueRangeFilter
+                label="Value Range"
+                type="currency"
+                value={{
+                    min: filters.valueRange?.min ?? FILTER_LIMITS.GRANT_VALUE.MIN,
+                    max: filters.valueRange?.max ?? FILTER_LIMITS.GRANT_VALUE.MAX,
+                }}
+                onChange={handleValueRangeChange}
+            />
 
-                {/* Agencies */}
-                <MultiSelect
-                    icon={LuLandmark}
-                    label="Agencies"
-                    options={filterOptions.agencies}
-                    values={filters.agencies}
-                    onChange={(values) => handleMultiSelectChange('agencies', values)}
-                />
+            {/* Agencies */}
+            <MultiSelect
+                icon={LuLandmark}
+                label="Agencies"
+                options={filterOptions.agencies}
+                values={filters.agencies}
+                onChange={(values) => handleMultiSelectChange('agencies', values)}
+                fullWidth
+            />
 
-                {/* Countries */}
-                <MultiSelect
-                    icon={LuEarth}
-                    label="Countries"
-                    options={filterOptions.countries}
-                    values={filters.countries}
-                    onChange={(values) => handleMultiSelectChange('countries', values)}
-                />
+            {/* Countries */}
+            <MultiSelect
+                icon={LuEarth}
+                label="Countries"
+                options={filterOptions.countries}
+                values={filters.countries}
+                onChange={(values) => handleMultiSelectChange('countries', values)}
+                fullWidth
+            />
 
-                {/* Provinces */}
-                <MultiSelect
-                    icon={LuRadar}
-                    label="Provinces"
-                    options={filterOptions.provinces}
-                    values={filters.provinces}
-                    onChange={(values) => handleMultiSelectChange('provinces', values)}
-                />
+            {/* Provinces */}
+            <MultiSelect
+                icon={LuRadar}
+                label="Provinces"
+                options={filterOptions.provinces}
+                values={filters.provinces}
+                onChange={(values) => handleMultiSelectChange('provinces', values)}
+                fullWidth
+            />
 
-                {/* Cities */}
-                <MultiSelect
-                    icon={LuLocateFixed}
-                    label="Cities"
-                    options={filterOptions.cities}
-                    values={filters.cities}
-                    onChange={(values) => handleMultiSelectChange('cities', values)}
-                />
-            </div>
-        </>
+            {/* Cities */}
+            <MultiSelect
+                icon={LuLocateFixed}
+                label="Cities"
+                options={filterOptions.cities}
+                values={filters.cities}
+                onChange={(values) => handleMultiSelectChange('cities', values)}
+                fullWidth
+            />
+        </div>
     );
 }

@@ -23,6 +23,7 @@ export interface DropdownProps {
     placeholder?: string;
     renderOption?: (option: Option) => ReactNode;
     disabled?: boolean;
+    fullWidth?: boolean;
 }
 
 const normalizeOption = (option: Option | string): Option => {
@@ -43,6 +44,7 @@ export const Dropdown = ({
     placeholder = "Select",
     renderOption,
     disabled,
+    fullWidth = false,
 }: DropdownProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [dropdownWidth, setDropdownWidth] = useState<number | null>(null);
@@ -69,9 +71,9 @@ export const Dropdown = ({
                 selectedValueWidth = getTextWidth(selectedOption.label, font);
             }
         }
-        
+
         const maxWidth = Math.max(placeholderWidth, optionsWidth, selectedValueWidth);
-        
+
         // Add some padding for the icon and chevron
         setDropdownWidth(maxWidth + 80);
     }, [options, placeholder, value, normalizedOptions]);
@@ -120,31 +122,38 @@ export const Dropdown = ({
             <Button
                 variant={"outline"}
                 onClick={() => setIsOpen(!isOpen)}
-                style={{ width: dropdownWidth ? `${dropdownWidth}px` : undefined }}
+                style={{ width: fullWidth ? undefined : (dropdownWidth ? `${dropdownWidth}px` : undefined) }}
                 className={cn(
                     "flex items-center justify-between px-3 py-2 text-xs md:text-sm border hover:shadow-sm transition-all duration-200 bg-white",
+                    fullWidth && "w-full",
                     isOpen && "border-gray-300 ring-1 ring-gray-300",
                     className
                 )}
                 disabled={disabled}
             >
-                <div className="flex items-center gap-2">
+                <div className="flex flex-1 items-center gap-2">
                     {icon && React.createElement(icon, { className: "h-3 md:h-4 w-3 md:w-4 text-gray-500" })}
                     {label && <span className="font-medium whitespace-nowrap">{label}</span>}
-                    <span className="text-gray-600 italic whitespace-nowrap">{getDisplayValue()}</span>
                 </div>
-                <LuChevronDown
-                    className={cn(
-                        "w-4 h-4 text-gray-400 transition-transform",
-                        isOpen && "transform rotate-180"
-                    )}
-                />
+                <div className="flex flex-1 items-center justify-between gap-1">
+                    <span className="text-gray-600 italic whitespace-nowrap">{getDisplayValue()}</span>
+
+                    <LuChevronDown
+                        className={cn(
+                            "w-4 h-4 text-gray-400 transition-transform",
+                            isOpen && "transform rotate-180"
+                        )}
+                    />
+                </div>
             </Button>
 
             {isOpen && (
                 <div
-                    style={{ width: dropdownWidth ? `${dropdownWidth}px` : undefined }}
-                    className="absolute z-50 mt-1 bg-white rounded-2xl shadow-lg border border-gray-300 overflow-hidden"
+                    style={{ width: fullWidth ? undefined : (dropdownWidth ? `${dropdownWidth}px` : undefined) }}
+                    className={cn(
+                        "absolute z-50 mt-1 bg-white rounded-2xl shadow-lg border border-gray-300 overflow-hidden",
+                        fullWidth && "w-full"
+                    )}
                 >
                     <div className="p-2 max-h-60 overflow-auto space-y-1 custom-scrollbar">
                         {normalizedOptions.map((option) => {
