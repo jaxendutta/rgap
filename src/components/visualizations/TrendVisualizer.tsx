@@ -33,6 +33,7 @@ interface TrendVisualizerProps {
     entityType?: 'recipient' | 'institute';
     ids?: number[];
     preLoadedData?: AggregatedTrendPoint[];
+    rawGrants?: any[];
     amendmentsHistory?: GrantAmendment[];
     viewContext?: ViewContext;
     initialChartType?: ChartType;
@@ -68,6 +69,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
     entityType,
     ids = [],
     preLoadedData,
+    rawGrants,
     amendmentsHistory,
     viewContext = "search",
     initialChartType = "line",
@@ -82,11 +84,11 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
     showControls = true,
 }) => {
     const screenSize = useResponsive();
-
     height = screenSize === "sm" ? 300 : screenSize === "md" ? 400 : 400;
 
     // --- 1. State & Stability ---
     const isAmendmentView = amendmentsHistory && amendmentsHistory.length > 0;
+    const isRawDataView = !!rawGrants && rawGrants.length > 0;
 
     const stableIdsKey = useMemo(() => {
         if (!ids || ids.length === 0) return "ALL";
@@ -105,38 +107,112 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
         initialGrouping || (effectiveAvailableGroupings[0] as GroupingDimension)
     );
     const [showOther, setShowOther] = useState(false);
+    const [showUnknown, setShowUnknown] = useState(false);
 
     // Data State
     const [data, setData] = useState<AggregatedTrendPoint[]>(preLoadedData || []);
 
     // Loading States
-    const [isInitialLoading, setIsInitialLoading] = useState(!preLoadedData && !isAmendmentView);
+    const [isInitialLoading, setIsInitialLoading] = useState(!preLoadedData && !isAmendmentView && !isRawDataView);
     const [isRefetching, setIsRefetching] = useState(false);
     const [error, setError] = useState(false);
 
-    // --- 2. Data Fetching ---
+    // --- 2. Data Fetching & Aggregation ---
     useEffect(() => {
-        if (preLoadedData || isAmendmentView || !entityType) {
+        // CASE 1: Pre-loaded or Amendment
+        if (preLoadedData || isAmendmentView) {
+            setIsInitialLoading(false);
+            return;
+        }
+
+        // CASE 2: Raw Grants (Search Page) - Client-side Aggregation
+        if (isRawDataView && rawGrants) {
+            try {
+                // Step A: Aggregate raw grants
+                const rawMap = new Map<string, AggregatedTrendPoint>();
+                const categoryTotals = new Map<string, number>();
+
+                rawGrants.forEach(g => {
+                    const year = new Date(g.agreement_start_date).getFullYear();
+                    if (isNaN(year)) return;
+
+                    let category = 'Other';
+                    if (groupingDimension === 'org') category = g.org || 'Unknown';
+                    else if (groupingDimension === 'city') category = g.city || 'Unknown';
+                    else if (groupingDimension === 'province') category = g.province || 'Unknown';
+                    else if (groupingDimension === 'country') category = g.country || 'Unknown';
+                    else if (groupingDimension === 'recipient') category = g.legal_name || 'Unknown';
+                    else if (groupingDimension === 'institute') category = g.name || 'Unknown';
+                    else if (groupingDimension === 'program') category = g.prog_title_en || 'Unknown';
+                    else if (groupingDimension === 'year') category = 'All';
+
+                    const amount = Number(g.agreement_value) || 0;
+                    categoryTotals.set(category, (categoryTotals.get(category) || 0) + amount);
+
+                    const key = `${year}-|-${category}`;
+                    if (!rawMap.has(key)) {
+                        rawMap.set(key, { year, category, funding: 0, count: 0 });
+                    }
+                    const entry = rawMap.get(key)!;
+                    entry.funding += amount;
+                    entry.count += 1;
+                });
+
+                // Step B: Top 50 Logic
+                const sortedCategories = Array.from(categoryTotals.entries())
+                    .sort((a, b) => b[1] - a[1])
+                    .map(e => e[0]);
+
+                const top50Set = new Set(sortedCategories.slice(0, 50));
+
+                // Step C: Re-aggregate
+                const finalMap = new Map<string, AggregatedTrendPoint>();
+
+                rawMap.forEach((point) => {
+                    // "Unknown" is preserved as a category here so we can toggle it later
+                    // It is NOT forced into "Other" even if it's not in top 50 (usually it is though)
+                    const isTop50 = top50Set.has(point.category);
+
+                    // If category is Unknown, keep it as Unknown regardless of rank (so we can filter it)
+                    // Otherwise apply Top 50 logic
+                    let finalCategory = point.category;
+                    if (point.category !== 'Unknown' && !isTop50) {
+                        finalCategory = 'Other';
+                    }
+
+                    const finalKey = `${point.year}-|-${finalCategory}`;
+
+                    if (!finalMap.has(finalKey)) {
+                        finalMap.set(finalKey, { year: point.year, category: finalCategory, funding: 0, count: 0 });
+                    }
+                    const finalEntry = finalMap.get(finalKey)!;
+                    finalEntry.funding += point.funding;
+                    finalEntry.count += point.count;
+                });
+
+                setData(Array.from(finalMap.values()));
+                setIsInitialLoading(false);
+            } catch (err) {
+                console.error("Aggregation error:", err);
+                setError(true);
+            }
+            return;
+        }
+
+        // CASE 3: Server-side Fetch
+        if (!entityType) {
             setIsInitialLoading(false);
             return;
         }
 
         let isMounted = true;
-
-        // Show overlay if we have data, otherwise initial loader
         if (data.length > 0) setIsRefetching(true);
         else setIsInitialLoading(true);
-
         setError(false);
 
         const fetchData = async () => {
             try {
-                // Use stableIdsKey in the log to verify it's not looping
-                // console.log("Fetching trends for:", stableIdsKey, groupingDimension);
-
-                // Pass the actual `ids` array to the action
                 const result = await getAggregatedTrends(entityType, ids, groupingDimension);
-
                 if (isMounted) {
                     setData(result);
                     setIsInitialLoading(false);
@@ -155,8 +231,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
         fetchData();
         return () => { isMounted = false; };
 
-        // Depend on `stableIdsKey` (string) instead of `ids` (array)
-    }, [entityType, stableIdsKey, groupingDimension, preLoadedData, isAmendmentView]);
+    }, [entityType, stableIdsKey, groupingDimension, preLoadedData, isAmendmentView, isRawDataView, rawGrants]);
 
     // --- 3. Data Processing ---
     const amendmentChartData = useMemo(() => {
@@ -178,6 +253,10 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
         });
     }, [amendmentsHistory, isAmendmentView]);
 
+    // Check if we have "Unknown" data available to show/hide
+    const hasUnknownData = useMemo(() => data.some(d => d.category === 'Unknown'), [data]);
+    const hasOtherData = useMemo(() => data.some(d => d.category === 'Other'), [data]);
+
     const chartData = useMemo(() => {
         if (isAmendmentView && amendmentChartData) {
             if (chartType === "line") {
@@ -195,6 +274,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
 
         data.forEach(point => {
             if (!showOther && point.category === 'Other') return;
+            if (!showUnknown && point.category === 'Unknown') return;
 
             uniqueCategories.add(point.category);
             if (!yearMap.has(point.year)) yearMap.set(point.year, { year: point.year });
@@ -212,7 +292,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
             data: Array.from(yearMap.values()).sort((a, b) => a.year - b.year),
             categories: categories
         };
-    }, [data, metricType, isAmendmentView, amendmentsHistory, amendmentChartData, chartType, showOther]);
+    }, [data, metricType, isAmendmentView, amendmentsHistory, amendmentChartData, chartType, showOther, showUnknown]);
 
     // --- 4. Render Helpers ---
     const groupingDisplayOptions = useMemo(() => {
@@ -231,8 +311,6 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
     const effectiveTitle = isAmendmentView
         ? "Grant Amendment History"
         : title || `${metricType === "funding" ? "Funding" : "Grant"} Trends`;
-
-    const hasOtherData = useMemo(() => data.some(d => d.category === 'Other'), [data]);
 
     const renderChartArea = () => {
         if (isInitialLoading) {
@@ -309,15 +387,37 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                                 </ToggleButtons>
                             )}
 
+                            {/* Toggle for Top 50 / Show Other */}
                             {hasOtherData && (
                                 <ToggleButtons>
-                                    {[["Top 50"], ["Add Other"]].map(([label], index) => (
+                                    {[["Top 50"], ["Show Other"]].map(([label], index) => (
                                         <Button
                                             key={index}
-                                            onClick={() => setShowOther(label === "Add Other")}
+                                            onClick={() => setShowOther(label === "Show Other")}
                                             className={cn(
                                                 "px-3 py-1.5 text-[10px] md:text-xs font-medium border flex items-center gap-1",
                                                 (showOther && index === 1) || (!showOther && index === 0)
+                                                    ? "bg-gray-100 text-gray-800 border-gray-300"
+                                                    : "bg-white text-gray-500 hover:bg-gray-50 border-gray-200",
+                                                index === 0 ? "rounded-l-md" : index === 1 ? "rounded-r-md" : ""
+                                            )}
+                                        >
+                                            <span>{label as string}</span>
+                                        </Button>
+                                    ))}
+                                </ToggleButtons>
+                            )}
+
+                            {/* Toggle for Hide Unknown / Show Unknown */}
+                            {hasUnknownData && (
+                                <ToggleButtons>
+                                    {[["Hide Unknown"], ["Show Unknown"]].map(([label], index) => (
+                                        <Button
+                                            key={index}
+                                            onClick={() => setShowUnknown(label === "Show Unknown")}
+                                            className={cn(
+                                                "px-3 py-1.5 text-[10px] md:text-xs font-medium border flex items-center gap-1",
+                                                (showUnknown && index === 1) || (!showUnknown && index === 0)
                                                     ? "bg-gray-100 text-gray-800 border-gray-300"
                                                     : "bg-white text-gray-500 hover:bg-gray-50 border-gray-200",
                                                 index === 0 ? "rounded-l-md" : index === 1 ? "rounded-r-md" : ""

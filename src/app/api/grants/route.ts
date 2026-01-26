@@ -144,12 +144,15 @@ export async function POST(request: NextRequest) {
                     g.agreement_start_date,
                     g.org,
                     r.legal_name,
+                    i.name,
                     i.city,
                     i.province,
-                    i.country
+                    i.country,
+                    p.prog_title_en
                 FROM grants g
                 JOIN recipients r ON g.recipient_id = r.recipient_id
                 JOIN institutes i ON r.institute_id = i.institute_id
+                LEFT JOIN programs p ON g.prog_id = p.prog_id
                 ${whereClause}
             `;
             const visResult = await db.query(visQuery, params);

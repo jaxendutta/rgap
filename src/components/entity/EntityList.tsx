@@ -123,7 +123,9 @@ function EntityList<T>(props: EntityListProps<T>) {
                         className="overflow-hidden w-full"
                     >
                         <TrendVisualizer
-                            preLoadedData={visualizationData}
+                            // [FIX] Use rawGrants for client-side aggregated search results
+                            rawGrants={visualizationData} 
+                            // [FIX] Pass IDs only if available (for generic entity pages)
                             ids={entityId ? [entityId] : []}
                             entityType={entityType === 'recipient' || entityType === 'institute' ? entityType : undefined}
                             height={350}
