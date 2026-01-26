@@ -7,10 +7,10 @@ export interface LoadingSpinnerProps {
   className?: string
 }
 
-export const LoadingSpinner = ({ spinnerSize = 6, className }: LoadingSpinnerProps) => {
+export const LoadingSpinner = ({ spinnerSize = 8, className }: LoadingSpinnerProps) => {
   return (
     <GiAbstract014 className={cn(
-      `animate-spin-loader text-gray-500 size-[${spinnerSize}vh] flex-shrink-0`,
+      `animate-spin-loader text-blue-600/80 size-[${spinnerSize}vh] flex-shrink-0`,
       className
     )} />
   )
