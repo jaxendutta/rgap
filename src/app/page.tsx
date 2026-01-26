@@ -54,7 +54,7 @@ export default function HomePage() {
   const router = useRouter();
 
   return (
-    <PageContainer className="flex h-full flex-col justify-between md:justify-center gap-3 md:gap-6">
+    <PageContainer className="flex flex-col justify-between md:justify-center gap-3 md:gap-6">
       {/* Hero Section */}
       <Card className="relative px-6 lg:px-8 py-14 lg:py-24 hover:border-gray-300 transition-all duration-200 rounded-3xl">
         <GiAbstract014 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-72 md:size-80 text-gray-700 opacity-10 animate-spin-slow" />
