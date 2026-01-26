@@ -30,7 +30,11 @@
         }
     }
 
-    .animate-slow-rotate {
+    .animate-spin-slow {
         animation: slow-rotate 30s linear infinite;
+    }
+
+    .animate-spin-loader {
+        animation: slow-rotate 3s linear infinite;
     }
 }

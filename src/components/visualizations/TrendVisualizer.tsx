@@ -340,7 +340,7 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
                 {isRefetching && (
                     <div className="absolute inset-0 flex items-center justify-center z-10">
                         <div className="bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-lg border border-gray-100">
-                            <LoadingSpinner size="md" className="text-blue-600" />
+                            <LoadingSpinner spinnerSize={8} className="text-blue-600" />
                         </div>
                     </div>
                 )}

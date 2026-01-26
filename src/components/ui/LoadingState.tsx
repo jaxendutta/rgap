@@ -3,40 +3,41 @@ import React from "react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { cn } from "@/lib/utils";
 
-interface LoadingStateProps {
+export interface LoadingStateProps {
     title?: string;
     message?: string;
     size?: "sm" | "md" | "lg";
-    spinnerSize?: "sm" | "md" | "lg";
+    spinnerSize?: number;
     fullHeight?: boolean;
     className?: string;
+    messageClassName?: string;
 }
 
 const LoadingState: React.FC<LoadingStateProps> = ({
     title = "Loading",
     message = "Please wait...",
     size = "md",
-    spinnerSize = "md",
+    spinnerSize,
     fullHeight = false,
     className,
+    messageClassName,
 }) => {
     return (
         <div
             className={cn(
                 "flex flex-col items-center justify-center w-full",
-                // FIX: No borders, no specific bg (transparent), fills parent
                 fullHeight ? "h-full" : "p-8",
                 className
             )}
         >
-            <LoadingSpinner size={spinnerSize} className="mb-3 text-blue-600" />
+            <LoadingSpinner spinnerSize={spinnerSize} className="mb-10 md:mb-20 text-blue-600/80 flex-shrink-0" />
             {title && (
                 <h3 className={cn("font-medium text-gray-900", size === "lg" ? "text-lg" : "text-sm")}>
                     {title}
                 </h3>
             )}
             {message && (
-                <p className={cn("text-gray-500", size === "lg" ? "text-sm" : "text-xs")}>
+                <p className={cn("text-gray-500", size === "lg" ? "text-sm" : "text-xs", messageClassName)}>
                     {message}
                 </p>
             )}

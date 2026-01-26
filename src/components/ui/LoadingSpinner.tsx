@@ -1,24 +1,19 @@
 // src/components/common/ui/LoadingSpinner.tsx
-import { LuLoader } from 'react-icons/lu'
 import { cn } from '@/lib/utils'
+import { GiAbstract014 } from 'react-icons/gi'
 
-interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg'
+export interface LoadingSpinnerProps {
+  spinnerSize?: number;
   className?: string
 }
 
-export const LoadingSpinner = ({ size = 'md', className }: LoadingSpinnerProps) => {
-  const sizes = {
-    sm: 'h-4 w-4',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12'
-  }
-
+export const LoadingSpinner = ({ spinnerSize = 6, className }: LoadingSpinnerProps) => {
   return (
-    <LuLoader className={cn(
-      'animate-spin text-gray-500',
-      sizes[size],
+    <GiAbstract014 className={cn(
+      `animate-spin-loader text-gray-500 size-[${spinnerSize}vh] flex-shrink-0`,
       className
     )} />
   )
 }
+
+export default LoadingSpinner;

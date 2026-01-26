@@ -57,7 +57,7 @@ export default function HomePage() {
     <PageContainer className="flex h-full flex-col justify-between md:justify-center gap-3 md:gap-6">
       {/* Hero Section */}
       <Card className="relative px-6 lg:px-8 py-14 lg:py-24 hover:border-gray-300 transition-all duration-200 rounded-3xl">
-        <GiAbstract014 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-72 md:size-80 text-gray-700 opacity-10 animate-slow-rotate" />
+        <GiAbstract014 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-72 md:size-80 text-gray-700 opacity-10 animate-spin-slow" />
 
         <div className="text-center">
           <p className="text-5xl font-bold text-gray-900 leading-tight flex justify-center items-center">
@@ -127,7 +127,7 @@ export default function HomePage() {
               isInteractive
               onClick={link ? () => router.push(link) : undefined}
             >
-              <Icon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-24 md:size-32 text-gray-700 opacity-10 animate-slow-rotate" />
+              <Icon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-24 md:size-32 text-gray-700 opacity-10 animate-spin-slow" />
               <div className="z-10 justify-between flex flex-col h-full">
                 <h3 className="font-semibold text-sm md:text-base text-gray-900">
                   {title}
