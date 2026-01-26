@@ -3,10 +3,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import {
-    LuSearch,
     LuSlidersHorizontal,
     LuSparkles,
     LuCircleAlert,
+    LuArrowRight,
 } from 'react-icons/lu';
 import { IconType } from 'react-icons';
 import { AnimatePresence, motion, Variants } from 'framer-motion';
@@ -210,7 +210,7 @@ export default function SearchInterface({
                                 "py-1.75 md:py-2.5",
                                 activePanelType === 'popular'
                                     ? 'bg-blue-100 hover:bg-blue-200 text-blue-600 border border-blue-300'
-                                    : 'bg-white shadow-sm hover:text-blue-600 hover:border-blue-300'
+                                    : 'bg-white hover:bg-blue-100 hover:text-blue-600 hover:border-blue-300'
                             )}
                         >
                             Popular
@@ -224,7 +224,7 @@ export default function SearchInterface({
                             "py-1.75 md:py-2.5",
                             activePanelType === 'filters'
                                 ? 'bg-blue-100 hover:bg-blue-200 text-blue-600 border border-blue-300'
-                                : 'bg-white shadow-sm hover:text-blue-600 hover:border-blue-300'
+                                : 'bg-white hover:bg-blue-100 hover:text-blue-600 hover:border-blue-300'
                         )}
                     >
                         Filters
@@ -235,7 +235,7 @@ export default function SearchInterface({
                     <Button
                         id="search-button"
                         variant="primary"
-                        leftIcon={LuSearch}
+                        rightIcon={LuArrowRight}
                         onClick={performSearch}
                         className="bg-gray-900 hover:bg-black py-1.75 md:py-2.5"
                     >
