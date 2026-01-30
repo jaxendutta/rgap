@@ -1,54 +1,58 @@
-// src/mdx-components.tsx
 import type { MDXComponents } from 'mdx/types';
 import Link from 'next/link';
+import { LuLink } from 'react-icons/lu';
+import { Alert } from '@/components/mdx/Alert';
+
+// Helper for header links
+const HeaderLink = ({ id, children, className }: { id?: string, children: React.ReactNode, className?: string }) => {
+    if (!id) return <div className={className}>{children}</div>;
+    return (
+        <Link href={`#${id}`} className="group flex items-center gap-2 no-underline">
+            <div className={className}>{children}</div>
+            <LuLink className="w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </Link>
+    );
+}
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
     return {
-        // Headings
-        h1: ({ children }) => (
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 mb-8 mt-2">
+        // Headers with Anchor Links
+        h1: ({ children, id }) => (
+            <HeaderLink id={id} className="text-xl md:text-4xl font-bold tracking-tight text-gray-900 mb-2 md:mb-6 mt-2 md:mt-6 pb-2 border-b border-gray-100">
                 {children}
-            </h1>
+            </HeaderLink>
         ),
-        h2: ({ children }) => (
-            <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900 mt-12 mb-4">
+        h2: ({ children, id }) => (
+            <HeaderLink id={id} className="text-lg md:text-2xl font-semibold tracking-tight text-gray-900 mt-6 md:mt-10 mb-1.75 md:mb-4 pb-2 border-b border-gray-100">
                 {children}
-            </h2>
+            </HeaderLink>
         ),
-        h3: ({ children }) => (
-            <h3 className="text-lg font-medium text-gray-900 mt-8 mb-3">
+        h3: ({ children, id }) => (
+            <HeaderLink id={id} className="text-base font-medium text-gray-900 mt-8 mb-1.5 md:mb-4">
                 {children}
-            </h3>
+            </HeaderLink>
         ),
 
-        // Text
+        // Paragraphs: Removed pb-6, responsive text size
         p: ({ children }) => (
-            <p className="text-[15px] leading-7 text-gray-600 font-normal">
+            <p className="text-xs md:text-[15px] text-gray-600 mb-1 md:mb-5 font-normal">
                 {children}
             </p>
         ),
 
         // Lists
         ul: ({ children }) => (
-            <ul className="list-disc space-y-3 mb-8 ml-6 text-gray-600 marker:text-gray-400">
+            <ul className="list-disc space-y-2 mb-6 ml-6 text-gray-600 marker:text-gray-400">
                 {children}
             </ul>
         ),
         ol: ({ children }) => (
-            <ol className="list-decimal space-y-3 mb-8 ml-6 text-gray-600 marker:text-gray-400">
+            <ol className="list-decimal space-y-2 mb-6 ml-6 text-gray-600 marker:text-gray-400">
                 {children}
             </ol>
         ),
-        // We let the browser handle the 'li' presentation naturally inside ul/ol
         li: ({ children }) => (
-            <li className="pl-1 leading-7">{children}</li>
-        ),
-
-        // Callouts
-        blockquote: ({ children }) => (
-            <div className="my-8 p-4 pl-5 border-l-2 border-gray-900 bg-gray-50/50 rounded-r-lg text-gray-700 text-sm leading-6 italic">
-                {children}
-            </div>
+            <li className="pl-1 leading-7 text-sm md:text-[15px]">{children}</li>
         ),
 
         // Code
@@ -67,14 +71,15 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         a: ({ href, children }) => {
             const isInternal = href?.startsWith('/');
             const className = "font-medium text-gray-900 underline decoration-gray-300 underline-offset-4 decoration-2 hover:decoration-blue-500 hover:text-blue-600 transition-all";
-
             if (isInternal) {
                 return <Link href={href || '#'} className={className}>{children}</Link>;
             }
             return <a href={href} target="_blank" rel="noopener noreferrer" className={className}>{children}</a>;
         },
 
-        hr: () => <hr className="my-12 border-gray-100" />,
+        hr: () => <hr className="my-10 border-gray-100" />,
+
+        Alert,
 
         ...components,
     };
