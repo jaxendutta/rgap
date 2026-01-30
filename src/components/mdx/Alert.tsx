@@ -52,14 +52,14 @@ export function Alert({ type = 'note', title, children }: AlertProps) {
     const Icon = config.icon;
 
     return (
-        <div className={cn("my-2 md:my-6 border-l-4 p-4", config.bg, config.border)}>
+        <div className={cn("mt-2 md:mt-6 border-l-4 p-4", config.bg, config.border)}>
             <div className="flex items-center gap-1 md:gap-2 mb-2">
                 <Icon className={cn("size-3.5 md:size-4", config.color)} />
                 <span className={cn("text-sm font-semibold", config.color)}>
                     {title || config.label}
                 </span>
             </div>
-            <div className="text-gray-700 text-sm leading-6">
+            <div className="text-gray-700 text-sm leading-6 -mb-2">
                 {children}
             </div>
         </div>

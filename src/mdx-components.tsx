@@ -35,24 +35,24 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
 
         // Paragraphs: Removed pb-6, responsive text size
         p: ({ children }) => (
-            <p className="text-xs md:text-[15px] text-gray-600 mb-1 md:mb-5 font-normal">
+            <p className="text-xs md:text-[15px] text-gray-600 mb-3 md:mb-5 font-normal leading-4.5 md:leading-6">
                 {children}
             </p>
         ),
 
         // Lists
         ul: ({ children }) => (
-            <ul className="list-disc space-y-2 mb-6 ml-6 text-gray-600 marker:text-gray-400">
+            <ul className="list-disc space-y-2 mb-6 ml-6 text-gray-600 marker:text-gray-400 text-xs md:text-base">
                 {children}
             </ul>
         ),
         ol: ({ children }) => (
-            <ol className="list-decimal space-y-2 mb-6 ml-6 text-gray-600 marker:text-gray-400">
+            <ol className="list-decimal space-y-2 mb-6 ml-6 text-gray-600 marker:text-gray-400 text-xs md:text-base">
                 {children}
             </ol>
         ),
         li: ({ children }) => (
-            <li className="pl-1 leading-7 text-sm md:text-[15px]">{children}</li>
+            <li className="pl-1 text-xs md:text-[15px] leading-4.5 md:leading-6">{children}</li>
         ),
 
         // Code
@@ -70,7 +70,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         // Links
         a: ({ href, children }) => {
             const isInternal = href?.startsWith('/');
-            const className = "font-medium text-gray-900 underline decoration-gray-300 underline-offset-4 decoration-2 hover:decoration-blue-500 hover:text-blue-600 transition-all";
+            const className = "text-xs md:text-base font-medium text-gray-900 underline decoration-gray-300 underline-offset-4 decoration-2 hover:decoration-blue-500 hover:text-blue-600 transition-all";
             if (isInternal) {
                 return <Link href={href || '#'} className={className}>{children}</Link>;
             }
