@@ -29,7 +29,7 @@ function emailTemplate(title: string, subtitle: string, footer: string, content:
                 />
             </td>
             <td style="vertical-align: middle;">
-                <span style="font-family: 'Segoe UI', sans-serif; font-size: 36px; font-weight: bold; color: #111827; line-height: 1;">
+                <span style="font-family: 'Segoe UI', sans-serif; font-size: 40px; font-weight: bold; color: #111827; line-height: 1;">
                     [ RGAP ]
                 </span>
             </td>
