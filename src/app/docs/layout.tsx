@@ -3,8 +3,11 @@
 import Sidebar from "@/components/layout/Sidebar";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LuBookOpen } from "react-icons/lu";
-import { Dropdown } from "@/components/ui/Dropdown";
+import { LuHouse } from "react-icons/lu";
+import { GiAbstract014 } from "react-icons/gi";
+import Dropdown from "@/components/ui/Dropdown";
+import { SITE_NAME } from "@/constants/site";
+import PageContainer from "@/components/layout/PageContainer";
 
 const docSections = [
     {
@@ -29,11 +32,11 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
     const router = useRouter();
 
     return (
-        <div className="flex flex-col lg:flex-row">
-            {/* 1. Main App Sidebar */}
+        <PageContainer className="flex flex-col lg:flex-row">
+            {/* 1. Main Sidebar in Docs Mode */}
             <Sidebar />
 
-            {/* 2. Desktop Docs Sidebar (Fixed width) */}
+            {/* 2. Desktop Docs Navigation (Sidebar List) */}
             <div className="hidden lg:block w-64 fixed left-16 top-0 bottom-0 border-r border-gray-200 bg-white overflow-y-auto p-6 z-20">
                 <div className="mb-8 pt-2">
                     <h2 className="font-bold text-xl text-gray-900 flex items-center gap-2">
@@ -69,12 +72,20 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                 </nav>
             </div>
 
-            {/* 3. Mobile Navigation (Visible only on small screens) */}
-            <div className="lg:hidden p-4 bg-white border-b border-gray-200 sticky top-0 z-10">
-                <div className="flex items-center gap-2 mb-2">
-                    <LuBookOpen className="text-blue-600" />
-                    <span className="font-semibold text-gray-900">Documentation</span>
+            {/* 3. Mobile Docs Header (Extended) */}
+            <div className="lg:hidden bg-white border-b border-gray-200 absolute fixed left-0 right-0 top-0 z-40 pb-3 pt-1 px-3 shadow-sm rounded-b-3xl">
+                {/* Top Row: Logo & Home Button */}
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 text-lg">
+                        <GiAbstract014 className="text-gray-900 size-4.5" />
+                        <span className="font-semibold text-gray-900 items-end">{SITE_NAME}</span> [ Docs ]
+                    </div>
+                    <Link href="/" className="p-2 text-gray-500 hover:text-gray-900 bg-gray-50 rounded-full">
+                        <LuHouse className="w-5 h-5" />
+                    </Link>
                 </div>
+
+                {/* Extended Dropdown Area */}
                 <Dropdown
                     value={pathname}
                     onChange={(value) => router.push(value)}
@@ -92,11 +103,9 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
             </div>
 
             {/* 4. Content Area */}
-            <main className="flex-1 lg:ml-50 p-2 md:p-4 max-w-5xl pb-24">
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-12 min-h-[80vh]">
-                    {children}
-                </div>
-            </main>
-        </div>
+            <div className="mt-12 lg:mt-0 lg:ml-50 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-12">
+                {children}
+            </div>
+        </PageContainer>
     );
 }

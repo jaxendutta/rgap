@@ -131,10 +131,15 @@ export const Dropdown = ({
                 )}
                 disabled={disabled}
             >
+                {/* Icon and Label */}
+                {(icon || label) && (
                 <div className="flex flex-1 items-center gap-2">
                     {icon && React.createElement(icon, { className: "h-3 md:h-4 w-3 md:w-4 text-gray-500" })}
                     {label && <span className="font-medium whitespace-nowrap">{label}</span>}
                 </div>
+                )}
+
+                {/* Display Value and Chevron Icon */}
                 <div className="flex flex-1 items-center justify-between gap-1">
                     <span className="text-gray-600 italic whitespace-nowrap">{getDisplayValue()}</span>
 

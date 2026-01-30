@@ -11,7 +11,8 @@ import {
     LuBookmark,
     LuUser,
     LuSun,
-    LuLogIn
+    LuLogIn,
+    LuBookOpen
 } from "react-icons/lu";
 import { GiAbstract014 } from "react-icons/gi";
 import Tabs from "@/components/ui/Tabs";
@@ -125,12 +126,13 @@ const Sidebar = () => {
                     </div>
                 </div>
 
-                {/* Theme Toggle Button */}
+                {/* Docs Button */}
                 <button
-                    className="absolute bottom-4 left-1/2 -translate-x-1/2 p-2 text-gray-400 hover:text-yellow-500 hover:bg-gray-100 rounded-full transition-colors"
-                    title="Toggle Theme"
+                    className="absolute bottom-4 left-1/2 -translate-x-1/2 p-2 text-gray-400 hover:text-blue-500 hover:bg-gray-100 rounded-full transition-colors"
+                    title="Documentation"
+                    onClick={() => router.push("/docs")}
                 >
-                    <LuSun className="w-5 h-5" />
+                    <LuBookOpen className="w-5 h-5" />
                 </button>
             </aside>
 

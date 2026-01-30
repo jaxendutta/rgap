@@ -1,18 +1,38 @@
+import { LuBookmark } from "react-icons/lu";
+
 # Bookmarks
 
-Bookmarks allow you to curate your own collections of grants and researchers.
+Bookmarks are your personal curation tool. You can bookmark almost anything in RGAP: a specific Grant, a Researcher, or a University.
 
-## How to Bookmark
+## How to use Bookmarks
 
-Look for the **Bookmark Icon** (a ribbon shape) on any card in the search results or on a profile page.
-* **Empty Icon:** Not bookmarked.
-* **Filled Icon:** Saved to your library.
+Look for the **Ribbon Icon** on cards and profiles. It looks like this:
 
-## Managing Bookmarks
+<div className="my-6 flex items-center gap-6 p-4 bg-gray-50 rounded-xl border border-gray-100 w-fit">
+    <div className="flex flex-col items-center gap-2">
+        <div className="p-3 bg-white rounded-full shadow-sm border border-gray-200">
+            <LuBookmark className="w-6 h-6 text-gray-400" />
+        </div>
+        <span className="text-xs text-gray-500 font-mono">Unsaved</span>
+    </div>
+    <div className="text-gray-300">→</div>
+    <div className="flex flex-col items-center gap-2">
+        <div className="p-3 bg-white rounded-full shadow-sm border border-gray-200">
+            <LuBookmark className="w-6 h-6 text-gray-900 fill-gray-900" />
+        </div>
+        <span className="text-xs text-gray-900 font-mono font-bold">Saved</span>
+    </div>
+</div>
 
-Navigate to the **Bookmarks** tab in the sidebar. Here you can:
-1. View all your saved items.
-2. **Add Notes:** You can add private notes to any bookmark (e.g., *"Potential supervisor for PhD"* or *"Apply for this next year"*).
-3. **Remove:** Click the icon again to remove the item from your list.
+* **Click to Save:** The icon turns solid black. The item is now in your library.
+* **Click to Remove:** The icon reverts to an outline. The item is removed.
 
-> **Privacy:** Your bookmarks and notes are private. They are visible only to you when you are logged in.
+## Adding Notes
+
+The most powerful feature of bookmarks is the ability to add context. 
+
+1.  Go to your **Bookmarks Dashboard** via the sidebar.
+2.  Find the item you saved.
+3.  Click **"Add Note"**.
+
+This is useful for teams or students who are scouting for opportunities. You can write notes like *"Application deadline is Nov 1st"* or *"This researcher's work aligns with our Q3 goals."*

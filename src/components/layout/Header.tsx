@@ -1,20 +1,20 @@
-// src/components/layout/Header.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { LuCircleArrowUp, LuSun } from "react-icons/lu";
+import { usePathname } from "next/navigation"; // 1. Import usePathname
+import { LuCircleArrowUp, LuInfo } from "react-icons/lu";
 import { GiAbstract014 } from "react-icons/gi";
 import { AnimatePresence, motion } from "framer-motion";
-import { SITE_NAME } from "@/constants/site";
 
 const Header = () => {
+    // 2. Get current path
+    const pathname = usePathname();
+
     const [showScrollTop, setShowScrollTop] = useState(false);
 
     useEffect(() => {
         const handleScroll = () => {
-            // Note: Ensure your main scrolling element has the id 'main-content'
-            // If using standard window scroll, change this logic to window.scrollY
             const mainContent = document.getElementById("main-content");
             if (mainContent) {
                 setShowScrollTop(mainContent.scrollTop > 200);
@@ -23,12 +23,16 @@ const Header = () => {
 
         const mainContent = document.getElementById("main-content");
         mainContent?.addEventListener("scroll", handleScroll);
-        handleScroll(); // Initial check
+        handleScroll();
 
         return () => {
             mainContent?.removeEventListener("scroll", handleScroll);
         };
     }, []);
+
+    // 3. FIX: If we are on docs, DO NOT render this header.
+    // The DocsLayout handles its own header.
+    if (pathname?.startsWith('/docs')) return null;
 
     const scrollToTop = () => {
         const mainContent = document.getElementById("main-content");
@@ -42,17 +46,17 @@ const Header = () => {
 
     return (
         <header className="lg:hidden fixed top-0 left-0 right-0 z-40 p-0.5 flex items-center justify-between pointer-events-none bg-white rounded-b-3xl shadow-md border border-white/20">
-            {/* Logo - Pointer events auto to allow clicking */}
+            {/* Logo */}
             <div className="pointer-events-auto flex items-center justify-center space-x-2 px-4 py-1">
                 <Link href="/" className="flex items-center">
                     <GiAbstract014 className="h-4.5 w-4.5 text-gray-900 mr-2" />
-                    <span className="text-lg font-semibold text-gray-900">{SITE_NAME}</span>
+                    <span className="text-lg font-semibold text-gray-900">[ RGAP ]</span>
                 </Link>
             </div>
 
             {/* Right Icons Container */}
             <motion.div
-                layout // Animate the container's layout changes (width/background)
+                layout
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 className="pointer-events-auto flex items-center overflow-hidden"
             >
@@ -76,11 +80,13 @@ const Header = () => {
                     )}
                 </AnimatePresence>
 
-                {/* Theme Toggle Placeholder */}
-                {/* flex-shrink-0 prevents this from getting squished during animation */}
                 <div className="p-2 px-3 flex-shrink-0">
-                    <Link href="#" className="text-gray-600 hover:text-gray-900 transition-colors block"                    >
-                        <LuSun className="size-5" />
+                    <Link
+                        href="/docs"
+                        className="text-gray-600 hover:text-blue-600 transition-colors block"
+                        aria-label="About & Documentation"
+                    >
+                        <LuInfo className="size-5" />
                     </Link>
                 </div>
             </motion.div>
