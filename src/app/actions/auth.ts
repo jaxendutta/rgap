@@ -17,16 +17,24 @@ function emailTemplate(title: string, subtitle: string, footer: string, content:
     return `
 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border: 1px solid #e5e7eb; border-radius: 24px;">
     
-    <div style="text-align: center; margin-bottom: 20px;">
-        <img 
-            src="${logoUrl}" 
-            alt="RGAP Logo" 
-            style="width: 48px; height: 48px; display: inline-block; vertical-align: middle; margin-right: 12px;" 
-        />
-        <span style="font-size: 36px; font-weight: bold; color: #111827; display: inline-block; vertical-align: middle;">
-            [ RGAP ]
-        </span>
-    </div>
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto; margin-bottom: 20px;">
+        <tr>
+            <td style="vertical-align: middle; padding-right: 12px;">
+                <img 
+                    src="${logoUrl}" 
+                    alt="RGAP Logo" 
+                    width="48" 
+                    height="48"
+                    style="display: block; width: 48px; height: 48px; border: 0;" 
+                />
+            </td>
+            <td style="vertical-align: middle;">
+                <span style="font-family: 'Segoe UI', sans-serif; font-size: 36px; font-weight: bold; color: #111827; line-height: 1;">
+                    [ RGAP ]
+                </span>
+            </td>
+        </tr>
+    </table>
 
     <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #111827; font-size: 24px; margin-bottom: 10px;">${title}</h1>
