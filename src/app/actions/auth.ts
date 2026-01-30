@@ -11,18 +11,23 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 const emailSender = 'RGAP <rgap@contact.anirban.ca>';
 function emailTemplate(title: string, subtitle: string, footer: string, content: string) {
-    // 1. Define URL explicitly or via environment variable
-    //    FALLBACK: If the env var is missing, it defaults to live site.
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://rgap.anirban.ca';
-
-    // 2. Construct the FULL address (e.g. https://rgap.anirban.ca/logo.png)
     const logoUrl = `${baseUrl}/logo.png`;
 
     return `
 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border: 1px solid #e5e7eb; border-radius: 24px;">
+    
     <div style="text-align: center; margin-bottom: 20px;">
-        <img src="${logoUrl}" alt="RGAP Logo" style="width: 48px; height: 48px; margin-bottom: 10px;" />
+        <img 
+            src="${logoUrl}" 
+            alt="RGAP Logo" 
+            style="width: 48px; height: 48px; display: inline-block; vertical-align: middle; margin-right: 12px;" 
+        />
+        <span style="font-size: 36px; font-weight: bold; color: #111827; display: inline-block; vertical-align: middle;">
+            [ RGAP ]
+        </span>
     </div>
+
     <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #111827; font-size: 24px; margin-bottom: 10px;">${title}</h1>
         <p style="color: #6b7280; font-size: 16px;">${subtitle}</p>
