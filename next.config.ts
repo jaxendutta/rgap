@@ -1,21 +1,21 @@
 import type { NextConfig } from "next";
+import createMDX from "@next/mdx";
 
 const nextConfig: NextConfig = {
+  // 1. Add MDX to page extensions so Next.js handles .mdx files as pages
+  pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
+
   // Enable standalone output for Docker production builds
   output: 'standalone',
 
   // Disable telemetry
   typescript: {
     // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // Remove this for production!
     ignoreBuildErrors: false,
   },
 
   // Experimental features
   experimental: {
-    // Enable server actions
     serverActions: {
       bodySizeLimit: '2mb',
     },
@@ -32,4 +32,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// 2. Initialize the MDX wrapper
+const withMDX = createMDX({});
+
+// 3. Wrap config with MDX
+export default withMDX(nextConfig);
