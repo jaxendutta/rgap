@@ -18,6 +18,7 @@ import Tabs from "@/components/ui/Tabs";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/AuthProvider";
 import { useNotify } from "@/providers/NotificationProvider";
+import { SITE_FULL_NAME, SITE_NAME } from "@/constants/site";
 
 const Sidebar = () => {
     const pathname = usePathname();
@@ -109,14 +110,12 @@ const Sidebar = () => {
                 >
                     {/* Rotated Text Container - Added rotate-180 to flip direction */}
                     <div className="flex flex-col items-center justify-center gap-4 rotate-180">
-                        {/* Short Text "[ RGAP ]" */}
                         <span className="whitespace-nowrap text-lg font-bold tracking-widest text-gray-900 [writing-mode:vertical-rl] select-none mt-2">
-                            [ RGAP ]
+                            {SITE_NAME}
                         </span>
 
-                        {/* Full Text */}
                         <span className="whitespace-nowrap text-[10px] tracking-[0.2em] text-gray-400 font-medium [writing-mode:vertical-rl] select-none uppercase">
-                            Research Grant Analytics Platform
+                            {SITE_FULL_NAME}
                         </span>
                     </div>
 

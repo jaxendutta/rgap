@@ -6,6 +6,7 @@ import Link from "next/link";
 import { LuCircleArrowUp, LuSun } from "react-icons/lu";
 import { GiAbstract014 } from "react-icons/gi";
 import { AnimatePresence, motion } from "framer-motion";
+import { SITE_NAME } from "@/constants/site";
 
 const Header = () => {
     const [showScrollTop, setShowScrollTop] = useState(false);
@@ -45,7 +46,7 @@ const Header = () => {
             <div className="pointer-events-auto flex items-center justify-center space-x-2 px-4 py-1">
                 <Link href="/" className="flex items-center">
                     <GiAbstract014 className="h-4.5 w-4.5 text-gray-900 mr-2" />
-                    <span className="text-lg font-semibold text-gray-900">[ RGAP ]</span>
+                    <span className="text-lg font-semibold text-gray-900">{SITE_NAME}</span>
                 </Link>
             </div>
 

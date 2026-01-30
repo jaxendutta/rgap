@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { headers } from 'next/headers';
 import { Resend } from 'resend';
+import { SITE_NAME } from '@/constants/site';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const emailSender = 'RGAP <rgap@contact.anirban.ca>';
@@ -29,8 +30,8 @@ function emailTemplate(title: string, subtitle: string, footer: string, content:
                 />
             </td>
             <td style="vertical-align: middle;">
-                <span style="font-family: 'Segoe UI', sans-serif; font-size: 40px; font-weight: bold; color: #111827; line-height: 1;">
-                    [ RGAP ]
+                <span style="font-family: 'Segoe UI', sans-serif; font-size: 40px; font-weight: bold; color: #111827; line-height: 0.5;">
+                    ${SITE_NAME}
                 </span>
             </td>
         </tr>
