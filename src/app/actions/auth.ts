@@ -11,11 +11,12 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 const emailSender = 'RGAP <rgap@contact.anirban.ca>';
 function emailTemplate(title: string, subtitle: string, footer: string, content: string) {
-    // 1. Get the base URL
+    // 1. Define URL explicitly or via environment variable
+    //    FALLBACK: If the env var is missing, it defaults to live site.
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://rgap.anirban.ca';
-    
-    // 2. Construct the absolute path
-    const logoUrl = `${baseUrl}/favicon.png`;
+
+    // 2. Construct the FULL address (e.g. https://rgap.anirban.ca/logo.png)
+    const logoUrl = `${baseUrl}/logo.png`;
 
     return `
 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border: 1px solid #e5e7eb; border-radius: 24px;">
