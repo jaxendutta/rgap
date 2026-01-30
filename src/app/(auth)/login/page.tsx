@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card';
 import Tabs from '@/components/ui/Tabs';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
+import Link from 'next/link';
 
 const initialState = { message: '', success: false };
 
@@ -177,6 +178,16 @@ export default function AuthPage() {
                                     placeholder="••••••••"
                                     required
                                 />
+                                {mode === 'login' && (
+                                    <div className="flex justify-end mt-1">
+                                        <Link
+                                            href="/forgot-password"
+                                            className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                                        >
+                                            Forgot password?
+                                        </Link>
+                                    </div>
+                                )}
                             </motion.div>
 
                             {/* Confirm Password (Register Only) */}

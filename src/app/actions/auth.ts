@@ -11,14 +11,23 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 const emailSender = 'RGAP <rgap@contact.anirban.ca>';
 function emailTemplate(title: string, subtitle: string, footer: string, content: string) {
+    // 1. Get the base URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://rgap.anirban.ca';
+    
+    // 2. Construct the absolute path
+    const logoUrl = `${baseUrl}/favicon.png`;
+
     return `
-<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border: 1px solid #e5e7eb; border-radius: 24px;">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <img src="${logoUrl}" alt="RGAP Logo" style="width: 48px; height: 48px; margin-bottom: 10px;" />
+    </div>
     <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #111827; font-size: 24px; margin-bottom: 10px;">${title}</h1>
         <p style="color: #6b7280; font-size: 16px;">${subtitle}</p>
     </div>
     
-    <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; text-align: center;">
+    <div style="background-color: #f9fafb; padding: 20px; border-radius: 24px; text-align: center;">
         ${content}
     </div>
 
@@ -26,7 +35,7 @@ function emailTemplate(title: string, subtitle: string, footer: string, content:
         <p style="font-size: 12px; color: #9ca3af;">${footer}</p>
     </div>
 </div>
-                `;
+    `;
 }
 
 interface ActionState {
@@ -160,7 +169,7 @@ export async function authAction(prevState: any, formData: FormData): Promise<Ac
                     "We're excited to have you on board.",
                     "If you didn't create an account, you can safely ignore this email.",
                     `<p style="color: #374151; margin-bottom: 20px;">Please verify your email address to get started with your research grant search.</p>
-                    <a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">Verify Email Address</a>
+                    <a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background-color: black; color: white; text-decoration: none; border-radius: 24px; font-weight: 600; font-size: 16px;">Verify Email Address</a>
                     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">Link expires in 24 hours.</p>`
                 )
             });
@@ -345,7 +354,7 @@ export async function updateProfileAction(prevState: any, formData: FormData) {
                     "We've received a request to change your email address.",
                     "If you didn't request this change, please secure your account immediately. Make sure to go through your account settings to review any recent activity.",
                     `<p>You requested to change your email to this address.</p>
-                    <a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">Verify New Email Address</a>
+                    <a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background-color: black; color: white; text-decoration: none; border-radius: 24px; font-weight: 600; font-size: 16px;">Verify New Email Address</a>
                     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">Link expires in 24 hours.</p>`
                 )
             });
@@ -359,5 +368,106 @@ export async function updateProfileAction(prevState: any, formData: FormData) {
     } catch (e) {
         console.error(e);
         return { message: 'Failed to update profile', success: false };
+    }
+}
+
+// ======================== FORGOT PASSWORD ========================
+export async function forgotPasswordAction(prevState: any, formData: FormData) {
+    const email = formData.get('email') as string;
+
+    try {
+        // 1. Check if user exists
+        const result = await db.query('SELECT id, name FROM users WHERE email = $1', [email]);
+        const user = result.rows[0];
+
+        // Security: Always return success to prevent email enumeration, 
+        // but only send the email if the user actually exists.
+        if (user) {
+            // Generate Token
+            const token = crypto.randomUUID();
+            const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 Hour
+
+            // Store Token
+            await db.query(
+                'INSERT INTO password_reset_tokens (token, email, expires_at) VALUES ($1, $2, $3)',
+                [token, email, expires]
+            );
+
+            const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`;
+
+            // Send Email
+            await resend.emails.send({
+                from: emailSender,
+                to: email,
+                subject: 'Reset your RGAP Password',
+                html: emailTemplate(
+                    "Reset Your Password",
+                    `Hi ${user.name}, you requested to reset your password.`,
+                    "If you didn't request a password reset, you can safely ignore this email.",
+                    `<p style="color: #374151; margin-bottom: 20px;">Click the button below to reset your password. This link expires in 1 hour.</p>
+                    <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background-color: black; color: white; text-decoration: none; border-radius: 24px; font-weight: 600; font-size: 16px;">Reset Password</a>`
+                )
+            });
+        }
+
+        return { success: true, message: "If an account exists with that email, we've sent password reset instructions." };
+
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        return { success: false, message: "Something went wrong. Please try again." };
+    }
+}
+
+// ======================== RESET PASSWORD ========================
+export async function resetPasswordAction(prevState: any, formData: FormData) {
+    const token = formData.get('token') as string;
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+
+    if (password !== confirmPassword) {
+        return { success: false, message: "Passwords do not match." };
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+        return { success: false, message: passwordError };
+    }
+
+    try {
+        // 1. Verify Token
+        const tokenResult = await db.query(
+            'SELECT email FROM password_reset_tokens WHERE token = $1 AND expires_at > NOW()',
+            [token]
+        );
+
+        if (tokenResult.rows.length === 0) {
+            return { success: false, message: "Invalid or expired reset link. Please request a new one." };
+        }
+
+        const email = tokenResult.rows[0].email;
+
+        // 2. Hash New Password
+        const hash = await bcrypt.hash(password, 10);
+
+        // 3. Update User
+        await db.query('UPDATE users SET password_hash = $1 WHERE email = $2', [hash, email]);
+
+        // 4. Cleanup (Delete all reset tokens for this email to prevent reuse)
+        await db.query('DELETE FROM password_reset_tokens WHERE email = $1', [email]);
+
+        // 5. Audit Log
+        const userResult = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+        if (userResult.rows[0]) {
+            await db.query(
+                `INSERT INTO user_audit_logs (user_id, event_type, new_value) VALUES ($1, 'PASSWORD_RESET', 'Password reset via email')`,
+                [userResult.rows[0].id]
+            );
+        }
+
+        return { success: true, message: "Password reset successfully! You can now log in." };
+
+    } catch (error) {
+        console.error('Reset password error:', error);
+        return { success: false, message: "Failed to reset password. Please try again." };
     }
 }
