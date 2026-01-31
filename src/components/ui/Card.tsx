@@ -12,7 +12,7 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
     disableOverflow?: boolean;
 }
 
-const Card = ({
+export const Card = ({
     children,
     className,
     isHoverable = false,
@@ -197,4 +197,4 @@ Card.Footer = CardFooter;
 Card.StatItem = CardStatItem;
 Card.Divider = CardDivider;
 
-export { Card };
+export default Card;

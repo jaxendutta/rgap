@@ -1,12 +1,13 @@
 // src/components/account/AccountManager.tsx
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { FiShield, FiChevronDown, FiLogOut } from 'react-icons/fi';
-import { Card } from '@/components/ui/Card';
+import { FiShield, FiLogOut } from 'react-icons/fi';
+import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Tabs from '@/components/ui/Tabs';
+import Dropdown from '@/components/ui/Dropdown';
 import ProfileEditor from '@/components/account/ProfileEditor';
 import PasswordManager from '@/components/account/PasswordManager';
 import DeleteAccountSection from '@/components/account/DeleteAccountSection';
@@ -20,7 +21,6 @@ import { MdLockReset } from 'react-icons/md';
 import { BsPersonGear } from 'react-icons/bs';
 import { TbClockSearch } from 'react-icons/tb';
 import { RiProfileLine } from 'react-icons/ri';
-import { importHistory } from '@/app/actions/history';
 import { useNotify } from '@/providers/NotificationProvider';
 import { SearchHistoryItem } from '@/types/search';
 
@@ -84,8 +84,6 @@ export default function AccountManager({
     );
 
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Sync state with URL manually if user navigates back/forward
     useEffect(() => {
@@ -98,7 +96,6 @@ export default function AccountManager({
     // Handle Tab Change with URL update
     const handleTabChange = (tabId: string) => {
         setActiveTab(tabId);
-        setIsDropdownOpen(false);
 
         const params = new URLSearchParams(searchParams.toString());
         params.set('tab', tabId);
@@ -136,19 +133,6 @@ export default function AccountManager({
         router.push(`${pathname}?${params.toString()}`, { scroll: false });
     };
 
-    // Close dropdown click outside
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsDropdownOpen(false);
-            }
-        }
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const activeLabel = TABS.find(t => t.id === activeTab)?.label;
-
     return (
         <div className="flex flex-col md:gap-6 w-full">
 
@@ -165,33 +149,13 @@ export default function AccountManager({
                 <div className="flex flex-col-reverse md:flex-row items-center gap-3 w-full lg:w-auto">
 
                     {/* MOBILE: Dropdown (< lg) */}
-                    <div className="relative z-10 w-full lg:hidden" ref={dropdownRef}>
-                        <button
-                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className="flex items-center gap-2 px-4 py-2 w-full bg-white border border-gray-200 rounded-3xl text-sm font-medium text-gray-700 hover:shadow-md transition-colors shadow-xs justify-between cursor-pointer"
-                        >
-                            <span className="flex items-center gap-2">
-                                {activeLabel}
-                            </span>
-                            <FiChevronDown className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {isDropdownOpen && (
-                            <div className="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
-                                {TABS.map((tab) => (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => handleTabChange(tab.id)}
-                                        className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 transition-colors cursor-pointer
-                                            ${activeTab === tab.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'}
-                                        `}
-                                    >
-                                        <tab.icon className="size-4" />
-                                        {tab.label}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
+                    <div className="w-full lg:hidden">
+                        <Dropdown
+                            value={activeTab}
+                            options={TABS.map(t => ({ value: t.id, label: t.label, icon: t.icon }))}
+                            onChange={handleTabChange}
+                            fullWidth
+                        />
                     </div>
 
                     {/* DESKTOP: Pills Tabs (>= md) */}
