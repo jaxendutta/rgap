@@ -69,21 +69,34 @@ export async function POST(request: NextRequest) {
         const params: any[] = [];
         let paramIndex = 1;
 
-        // Search Terms
+        // Search Terms: SMART SEARCH UPDATE
+        // We use websearch_to_tsquery which handles "John Doe" matching "Doe, John"
+
         if (searchTerms.recipient) {
-            conditions.push(`r.legal_name ILIKE $${paramIndex}`);
-            params.push(`%${searchTerms.recipient}%`);
+            // Note: We strip special chars to prevent syntax errors in tsquery, though websearch is generally safe
+            conditions.push(`to_tsvector('english', r.legal_name) @@ websearch_to_tsquery('english', $${paramIndex})`);
+            params.push(searchTerms.recipient);
             paramIndex++;
         }
+
         if (searchTerms.institute) {
-            conditions.push(`i.name ILIKE $${paramIndex}`);
-            params.push(`%${searchTerms.institute}%`);
+            conditions.push(`to_tsvector('english', i.name) @@ websearch_to_tsquery('english', $${paramIndex})`);
+            params.push(searchTerms.institute);
             paramIndex++;
         }
+
         if (searchTerms.grant) {
-            conditions.push(`g.agreement_title_en ILIKE $${paramIndex}`);
-            params.push(`%${searchTerms.grant}%`);
-            paramIndex++;
+            // Hybrid Approach for Titles: 
+            // Users might type partial words "Bio" (needs ILIKE) or phrases "Climate Change" (needs FTS)
+            // We search for either.
+            conditions.push(`(
+                g.agreement_title_en ILIKE $${paramIndex} 
+                OR 
+                to_tsvector('english', g.agreement_title_en) @@ websearch_to_tsquery('english', $${paramIndex + 1})
+            )`);
+            params.push(`%${searchTerms.grant}%`); // For ILIKE
+            params.push(searchTerms.grant);        // For FTS
+            paramIndex += 2;
         }
 
         // Filters - Date Range

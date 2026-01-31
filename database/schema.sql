@@ -106,6 +106,9 @@ CREATE INDEX idx_grants_ref ON grants(ref_number);
 -- Full text search
 CREATE INDEX idx_grants_title_search ON grants USING GIN (to_tsvector('english', COALESCE(agreement_title_en, '')));
 CREATE INDEX idx_grants_amendments ON grants USING GIN (amendments_history);
+-- Full Text Search index for recipients (handles "John Doe" == "Doe, John")
+CREATE INDEX IF NOT EXISTS idx_recipients_name_search 
+ON recipients USING GIN (to_tsvector('english', legal_name));
 
 -- Enable Trigram extension (required for text search)
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
