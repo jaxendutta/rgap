@@ -53,7 +53,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
             </div>
 
             {/* 3. Content Area */}
-            <Card className="mt-8 lg:mt-0 lg:ml-50 transition-all duration-300 peer-hover:lg:ml-80 rounded-3xl shadow-sm border border-gray-100 px-4 py-3 md:p-12">
+            <Card className="mt-8 md:mt-16 lg:mt-0 lg:ml-50 transition-all duration-300 peer-hover:lg:ml-80 rounded-3xl shadow-sm border border-gray-100 px-4 py-3 md:p-12">
                 {children}
             </Card>
         </PageContainer>
