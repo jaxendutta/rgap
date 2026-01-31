@@ -474,7 +474,7 @@ export async function resetPasswordAction(prevState: any, formData: FormData) {
         const userResult = await db.query('SELECT id FROM users WHERE email = $1', [email]);
         if (userResult.rows[0]) {
             await db.query(
-                `INSERT INTO user_audit_logs (user_id, event_type, new_value) VALUES ($1, 'PASSWORD_RESET', 'Password reset via email')`,
+                `INSERT INTO user_audit_logs (user_id, event_type) VALUES ($1, 'PASSWORD_RESET')`,
                 [userResult.rows[0].id]
             );
         }

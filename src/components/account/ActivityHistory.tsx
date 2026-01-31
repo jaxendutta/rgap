@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiEdit2, FiLock, FiMail, FiLogIn, FiClock, FiBookmark, FiTrash2 } from 'react-icons/fi';
 import { SlSocialDropbox } from 'react-icons/sl';
+import { MdLockReset } from 'react-icons/md';
 import { Card } from '@/components/ui/Card';
 import Tag from '@/components/ui/Tag';
 import { Pagination } from '@/components/ui/Pagination';
@@ -41,6 +42,7 @@ export default function ActivityHistory({
         if (type.startsWith('BOOKMARK')) return FiBookmark;
         switch (type) {
             case 'PASSWORD_CHANGE': return FiLock;
+            case 'PASSWORD_RESET': return MdLockReset;
             case 'EMAIL_CHANGE': return FiMail;
             case 'NAME_CHANGE': return FiEdit2;
             case 'LOGIN': return FiLogIn;
@@ -51,6 +53,7 @@ export default function ActivityHistory({
     const formatText = (log: AuditLog) => {
         switch (log.event_type) {
             case 'PASSWORD_CHANGE': return "Changed password";
+            case 'PASSWORD_RESET': return "Reset password";
             case 'EMAIL_CHANGE': return "Changed email";
             case 'NAME_CHANGE': return "Renamed account";
             case 'BOOKMARK_GRANT': return "Bookmarked Grant";

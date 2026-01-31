@@ -87,23 +87,6 @@ export default function AccountManager({
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const handleImportHistory = async (importedHistory: SearchHistoryItem[]) => {
-        try {
-            // Basic validation
-            if (!Array.isArray(importedHistory)) {
-                throw new Error('Invalid file format');
-            }
-            await importHistory(importedHistory);
-
-            notify('Search history imported successfully.', 'success');
-
-            router.refresh();
-
-        } catch (error) {
-            notify(error instanceof Error ? error.message : 'An unknown error occurred.', 'error');
-        }
-    };
-
     // Sync state with URL manually if user navigates back/forward
     useEffect(() => {
         const tab = searchParams.get('tab');

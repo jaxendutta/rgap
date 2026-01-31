@@ -29,8 +29,9 @@ export interface AuditLog {
     id: number;
     user_id: number;
     event_type: 'NAME_CHANGE' 
-        | 'EMAIL_CHANGE' 
-        | 'PASSWORD_CHANGE' 
+        | 'EMAIL_CHANGE'
+        | 'PASSWORD_CHANGE'
+        | 'PASSWORD_RESET'
         | 'LOGIN'
         | 'BOOKMARK_GRANT'
         | 'REMOVE_BOOKMARK_GRANT'
