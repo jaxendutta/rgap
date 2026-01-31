@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
 import EntitiesPage from '@/components/entity/EntitiesPage';
 import { LuUsers } from 'react-icons/lu';
-import { RecipientWithStats, GrantWithDetails } from '@/types/database';
+import { RecipientWithStats } from '@/types/database';
 import { Metadata } from 'next';
 import { getSortOptions } from '@/lib/utils';
 import { DEFAULT_ITEM_PER_PAGE } from '@/constants/data';
@@ -19,20 +19,29 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
     const userId = user?.id;
     const resolvedParams = await searchParams;
 
-    // 1. Pagination & Sort
+    // 1. Extract Parameters
     const page = Math.max(1, Number(resolvedParams.page) || 1);
+    const query = (resolvedParams.query as string) || ''; // [FIX] Extract Search Query
     const offset = (page - 1) * DEFAULT_ITEM_PER_PAGE;
 
     const sortParam = (resolvedParams.sort as string) || sortOptions[0].value;
     const sortDir = (resolvedParams.dir as string) === 'asc' ? 'ASC' : 'DESC';
     const sortField = sortOptions.find(option => option.value === sortParam)?.field || sortOptions[0].field;
 
-    // 2. Build Dynamic Query
+    // 2. Build Dynamic SQL
     const queryParams: any[] = [];
     let paramIndex = 1;
+    const conditions: string[] = [];
 
+    // [FIX] Add Search Filter Condition
+    if (query) {
+        conditions.push(`r.legal_name ILIKE $${paramIndex}`);
+        queryParams.push(`%${query}%`);
+        paramIndex++;
+    }
+
+    // Bookmark Logic
     let bookmarkSelection = 'false as is_bookmarked';
-
     if (userId) {
         bookmarkSelection = `
             EXISTS(
@@ -45,15 +54,21 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
         paramIndex++;
     }
 
+    // Combine WHERE clause
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    // Add Pagination Params
     queryParams.push(DEFAULT_ITEM_PER_PAGE);
     const limitIndex = paramIndex++;
 
     queryParams.push(offset);
     const offsetIndex = paramIndex++;
 
-    // OPTIMIZATION: Parallel Queries
+    // 3. Execute Queries
     const [countResult, result] = await Promise.all([
-        db.query(`SELECT COUNT(*) as total FROM recipients`),
+        // Count must also respect the search filter!
+        db.query(`SELECT COUNT(*) as total FROM recipients r ${whereClause}`, query ? [`%${query}%`] : []),
+
         db.query<RecipientWithStats>(`
             SELECT 
             r.recipient_id,
@@ -73,6 +88,7 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
             FROM recipients r
             LEFT JOIN institutes i ON r.institute_id = i.institute_id
             LEFT JOIN grants g ON r.recipient_id = g.recipient_id
+            ${whereClause} -- [FIX] Applied filter here
             GROUP BY r.recipient_id, i.name, i.city, i.province, i.country
             ORDER BY ${sortField} ${sortDir} NULLS LAST
             LIMIT $${limitIndex} OFFSET $${offsetIndex}
@@ -81,6 +97,7 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
 
     const totalItems = parseInt(countResult.rows[0].total);
     const recipients = result.rows;
+
     return (
         <EntitiesPage
             title="Recipients"
@@ -89,8 +106,9 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
             entities={recipients}
             totalItems={totalItems}
             entityType="recipient"
-            emptyMessage="No recipients found"
+            emptyMessage={query ? `No recipients found matching "${query}"` : "No recipients found"}
             showVisualization={true}
+            page={page}
         />
     );
 }

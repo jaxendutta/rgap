@@ -17,6 +17,7 @@ interface EntitiesPageProps {
     emptyMessage?: string;
     showVisualization?: boolean;
     sortOptions?: SortOption[];
+    page: number;
 }
 
 const EntitiesPage = ({
@@ -29,6 +30,7 @@ const EntitiesPage = ({
     emptyMessage = "No items found",
     showVisualization = false,
     sortOptions,
+    page,
 }: EntitiesPageProps) => {
 
     const ids = entities.map(entity =>
@@ -45,7 +47,6 @@ const EntitiesPage = ({
                 icon={icon}
             />
 
-            {/* Async Chart - Now with 50k limit and all groupings */}
             {showVisualization && entities.length > 0 && (entityType === 'recipient' || entityType === 'institute') && (
                 <TrendVisualizer
                     entityType={entityType}
@@ -58,8 +59,9 @@ const EntitiesPage = ({
                 entities={entities}
                 totalCount={totalItems}
                 emptyMessage={emptyMessage}
-                showVisualization={false} // Disable internal chart
+                showVisualization={false}
                 sortOptions={sortOptions}
+                page={page}
             >
                 {entities.map((entity) => {
                     const id = 'recipient_id' in entity

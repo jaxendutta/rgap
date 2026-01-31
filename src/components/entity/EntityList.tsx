@@ -14,6 +14,7 @@ import Pagination from "@/components/ui/Pagination";
 import { SortOption } from "@/types/database";
 import { DEFAULT_ITEM_PER_PAGE } from "@/constants/data";
 import { ListHeader } from "@/components/ui/ListHeader";
+import SearchBar from "@/components/ui/SearchBar"; // <--- IMPORT ADDED
 
 export type LayoutVariant = "list" | "grid";
 
@@ -93,25 +94,29 @@ function EntityList<T>(props: EntityListProps<T>) {
 
     return (
         <div className={cn("space-y-6", className)}>
-            <ListHeader
-                totalCount={totalCount}
-                showingCount={entities.length}
-                entityType={entityType}
+            <div className="flex flex-col w-full gap-2">
+                <ListHeader
+                    totalCount={totalCount}
+                    showingCount={entities.length}
+                    entityType={entityType}
 
-                sortOptions={sortOptions}
-                currentSortField={String(currentSortField)}
-                currentSortDir={currentSortDir}
-                onSort={handleSort}
+                    sortOptions={sortOptions}
+                    currentSortField={String(currentSortField)}
+                    currentSortDir={currentSortDir}
+                    onSort={handleSort}
 
-                showVisualization={showVisualization}
-                isVisualizationVisible={isVisualizationVisible}
-                onToggleVisualization={() => setIsVisualizationVisible(!isVisualizationVisible)}
-                hasVisualizationData={visualizationData.length > 0}
+                    showVisualization={showVisualization}
+                    isVisualizationVisible={isVisualizationVisible}
+                    onToggleVisualization={() => setIsVisualizationVisible(!isVisualizationVisible)}
+                    hasVisualizationData={visualizationData.length > 0}
 
-                showLayoutToggle={showLayoutToggle}
-                layoutVariant={layoutVariant}
-                onToggleLayout={() => setLayoutVariant(layoutVariant === 'list' ? 'grid' : 'list')}
-            />
+                    showLayoutToggle={showLayoutToggle}
+                    layoutVariant={layoutVariant}
+                    onToggleLayout={() => setLayoutVariant(layoutVariant === 'list' ? 'grid' : 'list')}
+                />
+
+                <SearchBar placeholder={`Search ${entityType}s...`} />
+            </div>
 
             <AnimatePresence>
                 {isVisualizationVisible && showVisualization && visualizationData.length > 0 && (
@@ -123,9 +128,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                         className="overflow-hidden w-full"
                     >
                         <TrendVisualizer
-                            // [FIX] Use rawGrants for client-side aggregated search results
-                            rawGrants={visualizationData} 
-                            // [FIX] Pass IDs only if available (for generic entity pages)
+                            rawGrants={visualizationData}
                             ids={entityId ? [entityId] : []}
                             entityType={entityType === 'recipient' || entityType === 'institute' ? entityType : undefined}
                             height={350}

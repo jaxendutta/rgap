@@ -25,10 +25,8 @@ export function Pagination({
     const searchParams = useSearchParams();
     const router = useRouter();
 
-    // Use prop if provided, otherwise fall back to URL param
-    const currentPage = propCurrentPage || Number(searchParams.get(paramName)) || 1;
+    const currentPage = propCurrentPage ?? Number(searchParams.get(paramName)) ?? 1;
     const totalPages = Math.ceil(totalCount / pageSize);
-
 
     const handlePageChange = (page: number) => {
         if (onPageChange) {
@@ -36,7 +34,9 @@ export function Pagination({
         } else {
             const params = new URLSearchParams(searchParams.toString());
             params.set(paramName, page.toString());
-            router.push(`${pathname}?${params.toString()}`, { scroll: false });
+
+            // Force a scroll to top for better UX on page change
+            router.push(`${pathname}?${params.toString()}`, { scroll: true });
         }
     };
 

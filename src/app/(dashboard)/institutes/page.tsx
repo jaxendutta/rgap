@@ -2,7 +2,7 @@
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/session';
 import EntitiesPage from '@/components/entity/EntitiesPage';
-import { LuUniversity } from 'react-icons/lu';
+import { LuBuilding2 } from 'react-icons/lu';
 import { InstituteWithStats } from '@/types/database';
 import { Metadata } from 'next';
 import { getSortOptions } from '@/lib/utils';
@@ -19,20 +19,29 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
     const userId = user?.id;
     const resolvedParams = await searchParams;
 
-    // 1. Pagination & Sort Params
+    // 1. Extract Parameters
     const page = Math.max(1, Number(resolvedParams.page) || 1);
+    const query = (resolvedParams.query as string) || ''; // [FIX] Extract Search Query
     const offset = (page - 1) * DEFAULT_ITEM_PER_PAGE;
 
     const sortParam = (resolvedParams.sort as string) || sortOptions[0].value;
     const sortDir = (resolvedParams.dir as string) === 'asc' ? 'ASC' : 'DESC';
     const sortField = sortOptions.find(option => option.value === sortParam)?.field || sortOptions[0].field;
 
-    // 2. Build Dynamic Query
+    // 2. Build Dynamic SQL
     const queryParams: any[] = [];
     let paramIndex = 1;
+    const conditions: string[] = [];
 
+    // Search Filter Condition
+    if (query) {
+        conditions.push(`i.name ILIKE $${paramIndex}`);
+        queryParams.push(`%${query}%`);
+        paramIndex++;
+    }
+
+    // Bookmark Logic
     let bookmarkSelection = 'false as is_bookmarked';
-
     if (userId) {
         bookmarkSelection = `
             EXISTS(
@@ -45,15 +54,21 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
         paramIndex++;
     }
 
+    // Combine WHERE clause
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    // Add Pagination Params
     queryParams.push(DEFAULT_ITEM_PER_PAGE);
     const limitIndex = paramIndex++;
 
     queryParams.push(offset);
     const offsetIndex = paramIndex++;
 
-    // OPTIMIZATION: Run Count and Data queries in parallel
+    // 3. Execute Queries
     const [countResult, result] = await Promise.all([
-        db.query(`SELECT COUNT(*) as total FROM institutes`),
+        // [FIX] Count must also respect the search filter!
+        db.query(`SELECT COUNT(*) as total FROM institutes i ${whereClause}`, query ? [`%${query}%`] : []),
+
         db.query<InstituteWithStats>(`
             SELECT 
             i.institute_id,
@@ -61,14 +76,17 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
             i.city,
             i.province,
             i.country,
-            i.postal_code,
             COUNT(DISTINCT r.recipient_id) as recipient_count,
             COUNT(DISTINCT g.grant_id) as grant_count,
             SUM(g.agreement_value) as total_funding,
+            AVG(g.agreement_value) as avg_funding,
+            MIN(g.agreement_start_date::date) as first_grant_date,
+            MAX(g.agreement_start_date::date) as latest_grant_date,
             ${bookmarkSelection}
             FROM institutes i
             LEFT JOIN recipients r ON i.institute_id = r.institute_id
             LEFT JOIN grants g ON r.recipient_id = g.recipient_id
+            ${whereClause} -- [FIX] Applied filter here
             GROUP BY i.institute_id
             ORDER BY ${sortField} ${sortDir} NULLS LAST
             LIMIT $${limitIndex} OFFSET $${offsetIndex}
@@ -81,18 +99,19 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
     return (
         <EntitiesPage
             title="Institutes"
-            subtitle="Browse research institutes and their funding statistics"
-            icon={LuUniversity}
+            subtitle="Explore research institutes and their funding distribution"
+            icon={LuBuilding2}
             entities={institutes}
             totalItems={totalItems}
             entityType="institute"
-            emptyMessage="No institutes found"
+            emptyMessage={query ? `No institutes found matching "${query}"` : "No institutes found"}
             showVisualization={true}
+            page={page}
         />
     );
 }
 
 export const metadata: Metadata = {
     title: 'Institutes | RGAP',
-    description: 'Browse research institutes',
+    description: 'Browse research institutes and funding organizations',
 };
