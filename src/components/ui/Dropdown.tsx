@@ -10,6 +10,7 @@ import Button from "@/components/ui/Button";
 export interface Option {
     value: string;
     label: string;
+    icon?: IconType;
 }
 
 export interface DropdownProps {
@@ -110,11 +111,20 @@ export const Dropdown = ({
             const selectedCount = Array.isArray(value) ? value.length : 0;
             return selectedCount ? `${selectedCount} selected` : placeholder;
         }
-
         const selectedOption = normalizedOptions.find(
             (opt) => opt.value === value
         );
         return selectedOption ? selectedOption.label : placeholder;
+    };
+
+    const getDisplayIcon = () => {
+        if (multiple) {
+            return null;
+        }
+        const selectedOption = normalizedOptions.find(
+            (opt) => opt.value === value
+        );
+        return selectedOption ? selectedOption.icon : null;
     };
 
     return (
@@ -133,14 +143,18 @@ export const Dropdown = ({
             >
                 {/* Icon and Label */}
                 {(icon || label) && (
-                <div className="flex flex-1 items-center gap-2">
-                    {icon && React.createElement(icon, { className: "h-3 md:h-4 w-3 md:w-4 text-gray-500" })}
-                    {label && <span className="font-medium whitespace-nowrap">{label}</span>}
-                </div>
+                    <div className="flex flex-1 items-center gap-2">
+                        {icon && !getDisplayIcon() && React.createElement(icon, { className: "h-3 md:h-4 w-3 md:w-4 text-gray-500" })}
+                        {label && <span className="font-medium whitespace-nowrap">{label}</span>}
+                    </div>
                 )}
 
                 {/* Display Value and Chevron Icon */}
                 <div className="flex flex-1 items-center justify-between gap-1">
+                    {(() => {
+                        const displayIcon = getDisplayIcon();
+                        return displayIcon ? React.createElement(displayIcon, { className: "size-3 md:size-4 text-gray-500" }) : null;
+                    })()}
                     <span className="text-gray-600 italic whitespace-nowrap">{getDisplayValue()}</span>
 
                     <LuChevronDown
@@ -188,7 +202,7 @@ export const Dropdown = ({
                                         handleToggleOption(option.value)
                                     }
                                     className={cn(
-                                        "flex items-center p-2 hover:bg-blue-50 rounded-md cursor-pointer transition-colors",
+                                        "flex items-center p-2 hover:bg-blue-50 rounded-2xl cursor-pointer transition-colors text-gray-700",
                                         isSelected && "bg-blue-50 text-blue-700"
                                     )}
                                 >
@@ -202,11 +216,12 @@ export const Dropdown = ({
                                     )}
                                     <span
                                         className={cn(
-                                            "text-xs md:text-sm",
+                                            "text-xs md:text-sm flex items-center gap-2",
                                             multiple && "ml-2",
                                             isSelected && "font-medium"
                                         )}
                                     >
+                                        {option.icon && React.createElement(option.icon, { className: "size-3 md:size-4" })}
                                         {option.label}
                                     </span>
                                 </div>
