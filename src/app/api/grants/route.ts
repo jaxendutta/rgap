@@ -37,6 +37,19 @@ const searchSchema = z.object({
     format: z.string().optional(),
 });
 
+// --- HELPER: Build Prefix Query (John Do -> John:* & Do:*) ---
+function buildPrefixQuery(term: string): string | null {
+    if (!term) return null;
+    // 1. Clean: Remove special chars (keeps alphanumeric & spaces). 
+    // This allows "Doe, John" to become "Doe John"
+    const clean = term.replace(/[^\w\s]/g, '').trim();
+    if (!clean) return null;
+
+    // 2. Format: Split by space, append :* (wildcard), join with & (AND)
+    // "John Do" => "John:* & Do:*"
+    return clean.split(/\s+/).map(w => `${w}:*`).join(' & ');
+}
+
 export async function POST(request: NextRequest) {
     try {
         const user = await getCurrentUser();
@@ -53,9 +66,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Use the validated data
         const body = parsed.data;
-
         const {
             searchTerms = {},
             filters = {},
@@ -69,34 +80,47 @@ export async function POST(request: NextRequest) {
         const params: any[] = [];
         let paramIndex = 1;
 
-        // Search Terms: SMART SEARCH UPDATE
-        // We use websearch_to_tsquery which handles "John Doe" matching "Doe, John"
+        // Search Terms: PREFIX SEARCH UPDATE
 
         if (searchTerms.recipient) {
-            // Note: We strip special chars to prevent syntax errors in tsquery, though websearch is generally safe
-            conditions.push(`to_tsvector('english', r.legal_name) @@ websearch_to_tsquery('english', $${paramIndex})`);
-            params.push(searchTerms.recipient);
-            paramIndex++;
+            const query = buildPrefixQuery(searchTerms.recipient);
+            if (query) {
+                conditions.push(`to_tsvector('english', r.legal_name) @@ to_tsquery('english', $${paramIndex})`);
+                params.push(query);
+                paramIndex++;
+            }
         }
 
         if (searchTerms.institute) {
-            conditions.push(`to_tsvector('english', i.name) @@ websearch_to_tsquery('english', $${paramIndex})`);
-            params.push(searchTerms.institute);
-            paramIndex++;
+            const query = buildPrefixQuery(searchTerms.institute);
+            if (query) {
+                conditions.push(`to_tsvector('english', i.name) @@ to_tsquery('english', $${paramIndex})`);
+                params.push(query);
+                paramIndex++;
+            }
         }
 
         if (searchTerms.grant) {
             // Hybrid Approach for Titles: 
-            // Users might type partial words "Bio" (needs ILIKE) or phrases "Climate Change" (needs FTS)
-            // We search for either.
-            conditions.push(`(
-                g.agreement_title_en ILIKE $${paramIndex} 
-                OR 
-                to_tsvector('english', g.agreement_title_en) @@ websearch_to_tsquery('english', $${paramIndex + 1})
-            )`);
-            params.push(`%${searchTerms.grant}%`); // For ILIKE
-            params.push(searchTerms.grant);        // For FTS
-            paramIndex += 2;
+            // 1. ILIKE for substring matches inside words (e.g. "Bio" matches "Microbiology")
+            // 2. FTS with Prefix for phrase type-ahead (e.g. "Climate Cha" matches "Climate Change")
+            const ftsQuery = buildPrefixQuery(searchTerms.grant);
+
+            if (ftsQuery) {
+                conditions.push(`(
+                    g.agreement_title_en ILIKE $${paramIndex} 
+                    OR 
+                    to_tsvector('english', g.agreement_title_en) @@ to_tsquery('english', $${paramIndex + 1})
+                )`);
+                params.push(`%${searchTerms.grant}%`); // For ILIKE
+                params.push(ftsQuery);                 // For FTS
+                paramIndex += 2;
+            } else {
+                // Fallback if FTS generation fails (rare, e.g. only symbols)
+                conditions.push(`g.agreement_title_en ILIKE $${paramIndex}`);
+                params.push(`%${searchTerms.grant}%`);
+                paramIndex++;
+            }
         }
 
         // Filters - Date Range
@@ -177,9 +201,6 @@ export async function POST(request: NextRequest) {
         const limit = pagination.limit || DEFAULT_ITEM_PER_PAGE;
         const offset = (page - 1) * limit;
 
-        // Count total
-        // OPTIMIZATION: On really large datasets, consider estimating this count 
-        // or only running it on the first page load.
         const countQuery = `
             SELECT COUNT(*) as total
             FROM grants g
@@ -192,7 +213,7 @@ export async function POST(request: NextRequest) {
 
         // --- SORT CONFIGURATION ---
         const validSortFields = ['agreement_start_date', 'agreement_value', 'agreement_title_en', 'legal_name'];
-        let sortField = sortConfig.field || 'agreement_start_date'; // Fallback
+        let sortField = sortConfig.field || 'agreement_start_date';
 
         if (sortField === 'value') sortField = 'agreement_value';
         if (sortField === 'date') sortField = 'agreement_start_date';
