@@ -102,13 +102,14 @@ export default function ActivityHistory({
                 onSort={onSort}
             />
 
-            <Card className="p-0 overflow-hidden border border-gray-200 shadow-sm overflow-x-auto rounded-2xl md:rounded-3xl">
-                <table className="min-w-full text-xs md:text-sm text-left whitespace-nowrap">
+            <Card className="p-0 overflow-hidden border border-gray-200 shadow-sm overflow-x-auto rounded-3xl">
+                <table className="min-w-full text-sm text-left whitespace-nowrap">
                     <thead className="text-gray-500 border-b border-gray-200 bg-gray-50/50">
                         <tr>
-                            <th className="py-3 px-4 font-medium w-1/3">Action</th>
-                            <th className="py-3 px-4 font-medium w-1/2 text-center">Details</th>
-                            <th className="py-3 px-4 font-medium text-right w-1/6">Date & Time</th>
+                            <th className="py-4 px-6 font-medium w-[25%]">Action</th>
+                            <th className="py-4 px-6 font-medium w-[35%] text-center">Details</th>
+                            <th className="py-4 px-6 font-medium w-[20%] text-center">IP Address</th>
+                            <th className="py-4 px-6 font-medium w-[20%] text-right">Date & Time</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -117,43 +118,51 @@ export default function ActivityHistory({
 
                             return (
                                 <tr key={i} className="hover:bg-gray-50/50 transition-colors">
-                                    <td className="px-3 md:px-4 py-2 md:py-3">
-                                        <div className="flex items-center gap-1 md:gap-3">
-                                            <div className="md:p-2 md:bg-gray-100 rounded-full text-gray-600">
-                                                {React.createElement(getIcon(log.event_type), { className: "size-3 md:size-4" })}
+                                    <td className="py-4 px-6 align-middle">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-gray-100 rounded-full text-gray-600">
+                                                {React.createElement(getIcon(log.event_type), { className: "size-4" })}
                                             </div>
-                                            <span className="md:font-medium text-gray-900">{formatText(log)}</span>
+                                            <span className="font-medium text-gray-900 capitalize">{formatText(log)}</span>
                                         </div>
                                     </td>
 
-                                    <td className="py-2 md:py-4 px-4 flex justify-center">
-                                        {linkData ? (
-                                            <Tag
-                                                size="sm"
-                                                text={linkData.label}
-                                                variant="link"
-                                                onClick={() => router.push(linkData.href)}
-                                                className="group-hover:bg-blue-50 group-hover:text-blue-700 group-hover:border-blue-200 transition-colors cursor-pointer"
-                                            />
-                                        ) : (
-                                            <div className="flex flex-wrap gap-2">
-                                                {log.old_value && (
-                                                    <Tag size="xs" text="From" innerText={log.old_value} variant="secondary" className="w-fit mx-auto" />
-
-                                                )}
-                                                {log.new_value && (
-                                                    <Tag size="xs" text="To" innerText={log.new_value} variant="primary" className="w-fit mx-auto" />
-                                                )}
-                                            </div>
-                                        )}
+                                    <td className="py-4 px-6 align-middle">
+                                        <div className="flex justify-center">
+                                            {linkData ? (
+                                                <Tag
+                                                    size="sm"
+                                                    text={linkData.label}
+                                                    variant="link"
+                                                    onClick={() => router.push(linkData.href)}
+                                                    className="group-hover:bg-blue-50 group-hover:text-blue-700 group-hover:border-blue-200 transition-colors cursor-pointer"
+                                                />
+                                            ) : (
+                                                <div className="flex flex-wrap items-center justify-center gap-2">
+                                                    {log.old_value && (
+                                                        <Tag size="xs" text="From" innerText={log.old_value} variant="secondary" className="w-fit" />
+                                                    )}
+                                                    {log.new_value && (
+                                                        <Tag size="xs" text="To" innerText={log.new_value} variant="primary" className="w-fit" />
+                                                    )}
+                                                    {!log.old_value && !log.new_value && (
+                                                        <span className="text-gray-400 text-xs">—</span>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
                                     </td>
 
-                                    <td className="py-2 md:py-3 px-4 text-gray-600">
-                                        <div className="flex items-center gap-1 md:gap-1.5">
-                                            <span className="text-gray-400">
-                                                {formatDateTime(log.created_at)}
-                                            </span>
-                                        </div>
+                                    <td className="py-4 px-6 align-middle text-center">
+                                        <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">
+                                            {log.ip_address || 'Unknown'}
+                                        </span>
+                                    </td>
+
+                                    <td className="py-4 px-6 align-middle text-right">
+                                        <span className="text-gray-500 font-mono text-xs">
+                                            {formatDateTime(log.created_at)}
+                                        </span>
                                     </td>
                                 </tr>
                             );

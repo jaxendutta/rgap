@@ -28,19 +28,20 @@ export interface Session {
 export interface AuditLog {
     id: number;
     user_id: number;
-    event_type: 'NAME_CHANGE' 
-        | 'EMAIL_CHANGE'
-        | 'PASSWORD_CHANGE'
-        | 'PASSWORD_RESET'
-        | 'LOGIN'
-        | 'BOOKMARK_GRANT'
-        | 'REMOVE_BOOKMARK_GRANT'
-        | 'BOOKMARK_RECIPIENT'
-        | 'REMOVE_BOOKMARK_RECIPIENT'
-        | 'BOOKMARK_INSTITUTE'
-        | 'REMOVE_BOOKMARK_INSTITUTE';
+    event_type: 'NAME_CHANGE'
+    | 'EMAIL_CHANGE'
+    | 'PASSWORD_CHANGE'
+    | 'PASSWORD_RESET'
+    | 'LOGIN'
+    | 'BOOKMARK_GRANT'
+    | 'REMOVE_BOOKMARK_GRANT'
+    | 'BOOKMARK_RECIPIENT'
+    | 'REMOVE_BOOKMARK_RECIPIENT'
+    | 'BOOKMARK_INSTITUTE'
+    | 'REMOVE_BOOKMARK_INSTITUTE';
     old_value: string | null;
     new_value: string | null;
+    ip_address: string | null;
     created_at: Date;
 }
 

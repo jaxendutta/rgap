@@ -1,5 +1,5 @@
 import { getIronSession, IronSession } from 'iron-session';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { db } from './db';
 import { cache } from 'react';
 
@@ -29,6 +29,20 @@ export const sessionOptions = {
 export async function getSession(): Promise<IronSession<SessionData>> {
     const cookieStore = await cookies();
     return getIronSession<SessionData>(cookieStore, sessionOptions);
+}
+
+// Helper: Consistent IP Extraction
+export async function getClientIp(): Promise<string> {
+    const headerList = await headers();
+    const forwardedFor = headerList.get('x-forwarded-for');
+    
+    if (forwardedFor) {
+        // The first IP in the list is the original client IP
+        return forwardedFor.split(',')[0].trim();
+    }
+    
+    // Fallback for local development or direct connection
+    return '127.0.0.1';
 }
 
 // 1. Wrap in React cache() so it only runs once per server request

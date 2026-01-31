@@ -1,16 +1,17 @@
 'use server';
 
-import { getSession, getCurrentUser, sessionOptions } from '@/lib/session';
+import { getSession, getCurrentUser, sessionOptions, getClientIp } from '@/lib/session';
 import { db } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { headers } from 'next/headers';
 import { Resend } from 'resend';
 import { SITE_NAME } from '@/constants/site';
+import { headers } from 'next/headers';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const emailSender = 'RGAP <rgap@contact.anirban.ca>';
+
 function emailTemplate(title: string, subtitle: string, footer: string, content: string) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://rgap.anirban.ca';
     const logoUrl = `${baseUrl}/logo.png`;
@@ -95,7 +96,7 @@ export async function authAction(prevState: any, formData: FormData): Promise<Ac
 
     const headersList = await headers();
     const userAgent = headersList.get('user-agent') || 'Unknown Device';
-    const ip = headersList.get('x-forwarded-for') || '127.0.0.1';
+    const ip = await getClientIp();
 
     try {
         // ======================== LOGIN ========================
@@ -120,11 +121,17 @@ export async function authAction(prevState: any, formData: FormData): Promise<Ac
 
             // Create Session
             const sessionId = crypto.randomUUID();
-            const location = await getLocationFromIP(ip.split(',')[0]);
+            const location = await getLocationFromIP(ip);
 
             await db.query(
                 `INSERT INTO sessions (session_id, user_id, user_agent, ip_address, location) VALUES ($1, $2, $3, $4, $5)`,
                 [sessionId, user.id, userAgent, ip, location]
+            );
+
+            // Log Login Event
+            await db.query(
+                `INSERT INTO user_audit_logs (user_id, event_type, ip_address) VALUES ($1, 'LOGIN', $2)`,
+                [user.id, ip]
             );
 
             const session = await getSession();
@@ -228,9 +235,10 @@ export async function changePasswordAction(prevState: any, formData: FormData) {
         await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [newHash, session.user.id]);
 
         // 3. Log Event
+        const ip = await getClientIp();
         await db.query(
-            `INSERT INTO user_audit_logs (user_id, event_type, new_value) VALUES ($1, 'PASSWORD_CHANGE', 'Password updated')`,
-            [session.user.id]
+            `INSERT INTO user_audit_logs (user_id, event_type, ip_address) VALUES ($1, 'PASSWORD_CHANGE', $2)`,
+            [session.user.id, ip]
         );
 
         return { message: "Password changed successfully!", success: true };
@@ -325,13 +333,14 @@ export async function updateProfileAction(prevState: any, formData: FormData) {
 
     const newName = formData.get('name') as string;
     const newEmail = formData.get('email') as string;
+    const ip = await getClientIp();
 
     try {
         // 1. Handle Name Change (Immediate)
         if (newName !== session.user.name) {
             await db.query(
-                `INSERT INTO user_audit_logs (user_id, event_type, old_value, new_value) VALUES ($1, 'NAME_CHANGE', $2, $3)`,
-                [session.user.id, session.user.name, newName]
+                `INSERT INTO user_audit_logs (user_id, event_type, old_value, new_value, ip_address) VALUES ($1, 'NAME_CHANGE', $2, $3, $4)`,
+                [session.user.id, session.user.name, newName, ip]
             );
             await db.query('UPDATE users SET name = $1 WHERE id = $2', [newName, session.user.id]);
             session.user.name = newName;
@@ -472,10 +481,12 @@ export async function resetPasswordAction(prevState: any, formData: FormData) {
 
         // 5. Audit Log
         const userResult = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+        const ip = await getClientIp();
+
         if (userResult.rows[0]) {
             await db.query(
-                `INSERT INTO user_audit_logs (user_id, event_type) VALUES ($1, 'PASSWORD_RESET')`,
-                [userResult.rows[0].id]
+                `INSERT INTO user_audit_logs (user_id, event_type, ip_address) VALUES ($1, 'PASSWORD_RESET', $2)`,
+                [userResult.rows[0].id, ip]
             );
         }
 

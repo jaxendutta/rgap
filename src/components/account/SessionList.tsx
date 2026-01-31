@@ -1,4 +1,3 @@
-// src/components/account/SessionList.tsx
 'use client';
 
 import { FiSmartphone, FiMonitor, FiGlobe, FiLogOut } from 'react-icons/fi';
@@ -11,6 +10,7 @@ import { ListHeader } from '@/components/ui/ListHeader';
 import { Session } from '@/types/database';
 import { formatDateTime } from '@/lib/utils';
 import { VscSignIn, VscSignOut } from 'react-icons/vsc';
+import Button from '../ui/Button';
 
 interface SessionListProps {
     sessions: Session[];
@@ -92,10 +92,10 @@ export default function SessionList({
                 <table className="min-w-full text-sm text-left whitespace-nowrap">
                     <thead className="text-gray-500 border-b border-gray-200 bg-gray-50/50">
                         <tr>
-                            <th className="py-3 px-4 font-medium">Device</th>
-                            <th className="py-3 px-4 font-medium w-1/2 text-center">Location & IP</th>
-                            <th className="py-3 px-4 font-medium text-center w-1/6">Activity</th>
-                            <th className="py-3 px-4 font-medium text-right w-1/6">Status</th>
+                            <th className="py-4 px-6 font-medium w-[35%]">Device</th>
+                            <th className="py-4 px-6 font-medium w-[25%] text-center">Location & IP</th>
+                            <th className="py-4 px-6 font-medium w-[20%] text-center">Activity</th>
+                            <th className="py-4 px-6 font-medium w-[20%] text-center">Status</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -106,7 +106,7 @@ export default function SessionList({
 
                             return (
                                 <tr key={sess.session_id} className="hover:bg-gray-50/50 transition-colors">
-                                    <td className="py-4 px-4">
+                                    <td className="py-4 px-6 align-middle">
                                         <div className="flex items-start gap-3">
                                             <div className="p-2 bg-gray-100 rounded-full text-gray-600">
                                                 <device.icon className="size-4" />
@@ -119,34 +119,45 @@ export default function SessionList({
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="py-4 px-4">
-                                        <div className="flex items-center gap-2 text-gray-700">
-                                            <FiGlobe className="text-gray-400 flex-shrink-0" />
-                                            <span>{sess.location || 'Unknown'}</span>
+                                    <td className="py-4 px-6 align-middle">
+                                        <div className="flex flex-col items-center justify-center gap-1">
+                                            <div className="flex items-center gap-2 text-gray-700 font-medium">
+                                                <FiGlobe className="text-gray-400" />
+                                                <span>{sess.location || 'Unknown'}</span>
+                                            </div>
+                                            <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">
+                                                {sess.ip_address || 'Hidden'}
+                                            </span>
                                         </div>
-                                        <p className="text-xs text-gray-500 ml-6">{sess.ip_address || 'Hidden'}</p>
                                     </td>
-                                    <td className="py-4 px-4 text-gray-600">
-                                        <div className="flex flex-col gap-1">
-                                            <Tag size="sm" text="Log On" innerText={formatDateTime(sess.created_at)} variant="success" className="w-fit" />
+                                    <td className="py-4 px-6 align-middle">
+                                        <div className="flex flex-col items-center justify-center gap-1">
+                                            <Tag size="xs" text="Log On" innerText={formatDateTime(sess.created_at)} variant="success" className="w-fit" />
                                             {isRevoked && (
-                                                <Tag size="sm" text="Log Off" innerText={formatDateTime(sess.last_active_at)} variant="warning" className="w-fit" />
+                                                <Tag size="xs" text="Log Off" innerText={formatDateTime(sess.last_active_at)} variant="warning" className="w-fit" />
                                             )}
                                         </div>
                                     </td>
-                                    <td className="py-4 px-4">
-                                        <div className="flex items-center gap-3">
-                                            {isRevoked ? (<Tag size="sm" text="Logged Out" variant="secondary" />) : (
+                                    <td className="py-4 px-6 align-middle">
+                                        <div className="flex items-center justify-center gap-3">
+                                            {isRevoked ? (
+                                                <Tag size="sm" text="Logged Out" variant="secondary" />
+                                            ) : (
                                                 <>
-                                                    {isCurrent ? (<Tag size="sm" text="This Device" variant="primary" />) : (<Tag size="sm" text="Active" variant="success" />)}
+                                                    {isCurrent ? (
+                                                        <Tag size="sm" text="This Device" variant="primary" />
+                                                    ) : (
+                                                        <Tag size="sm" text="Active" variant="success" />
+                                                    )}
                                                     {!isCurrent && (
-                                                        <button
+                                                        <Button
+                                                            variant="secondary"
                                                             onClick={() => handleRevoke(sess.session_id)}
-                                                            className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                                                            className="text-gray-400 hover:text-red-600 transition-colors p-1.5 hover:bg-red-50 rounded-full"
                                                             title="Log out this device"
                                                         >
-                                                            <FiLogOut />
-                                                        </button>
+                                                            <FiLogOut className="size-4" />
+                                                        </Button>
                                                     )}
                                                 </>
                                             )}
