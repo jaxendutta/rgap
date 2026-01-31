@@ -48,8 +48,8 @@ interface TrendVisualizerProps {
     showControls?: boolean;
 }
 
-const getGroupingIcon = (dimension: GroupingDimension): React.ElementType => {
-    const iconMap: Record<GroupingDimension, React.ElementType> = {
+const getGroupingIcon = (dimension: GroupingDimension): IconType => {
+    const iconMap: Record<GroupingDimension, IconType> = {
         org: LuLandmark, city: LuGraduationCap, province: LuGraduationCap,
         country: LuGraduationCap, recipient: LuGraduationCap, institute: LuLandmark,
         program: LuBookOpen, year: LuCalendar, amendment: LuActivity,
