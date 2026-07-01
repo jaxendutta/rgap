@@ -10,7 +10,7 @@ import { SITE_NAME } from '@/constants/site';
 import { headers } from 'next/headers';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const emailSender = 'RGAP <rgap@contact.anirban.ca>';
+const emailSender = 'RGAP <verify@rgap.anirban.ca>';
 
 function emailTemplate(title: string, subtitle: string, footer: string, content: string) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://rgap.anirban.ca';
