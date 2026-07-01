@@ -36,8 +36,16 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install Node dependencies
+        run: npm ci
+
       - name: Bump LAST_UPDATED
         run: node scripts/bump-last-updated.mjs
+
+      - name: Update grant count
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/update-grant-count.mjs
 
       - name: Commit and push if changed
         run: |
@@ -47,6 +55,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "chore: bump last data update date"
+            git commit -m "chore: bump last data update date and grant count"
             git push
           fi
