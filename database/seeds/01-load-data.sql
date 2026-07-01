@@ -227,7 +227,25 @@ JOIN organizations o ON tg.org = o.org
 JOIN institutes i ON tg.research_organization_name = i.name AND tg.recipient_city = i.city AND COALESCE(tg.recipient_country, 'CA') = i.country
 JOIN recipients r ON tg.recipient_legal_name = r.legal_name AND r.institute_id = i.institute_id
 LEFT JOIN programs p ON tg.prog_name_en = p.prog_title_en
-WHERE tg.ref_number IS NOT NULL AND r.recipient_id IS NOT NULL;
+WHERE tg.ref_number IS NOT NULL AND r.recipient_id IS NOT NULL
+-- Upsert on the natural key (see migrations/001_add_grants_natural_key.sql) so
+-- re-running this monthly updates amended grants in place instead of
+-- duplicating them or requiring a destructive truncate (which would cascade-
+-- delete user bookmarks tied to grant_id).
+ON CONFLICT (ref_number, recipient_id, (COALESCE(prog_id, -1)), (md5(COALESCE(agreement_title_en, ''))))
+DO UPDATE SET
+    latest_amendment_number = EXCLUDED.latest_amendment_number,
+    amendment_date = EXCLUDED.amendment_date,
+    agreement_number = EXCLUDED.agreement_number,
+    agreement_value = EXCLUDED.agreement_value,
+    foreign_currency_type = EXCLUDED.foreign_currency_type,
+    foreign_currency_value = EXCLUDED.foreign_currency_value,
+    agreement_start_date = EXCLUDED.agreement_start_date,
+    agreement_end_date = EXCLUDED.agreement_end_date,
+    description_en = EXCLUDED.description_en,
+    expected_results_en = EXCLUDED.expected_results_en,
+    additional_information_en = EXCLUDED.additional_information_en,
+    amendments_history = EXCLUDED.amendments_history;
 
 -- Cleanup
 DROP TABLE temp_grants;
