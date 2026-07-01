@@ -43,3 +43,8 @@ next-env.d.ts
 *.swp
 *.swo
 *~
+
+# Python
+__pycache__/
+.venv/
+pipeline/*.csv
