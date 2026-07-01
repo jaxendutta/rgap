@@ -10,25 +10,28 @@ This version represents a complete modernization of the platform, leveraging the
 * **Advanced Analytics**: Visualize funding trends, distribution, and success rates using interactive charts.
 * **Entity Discovery**: Deep dive into profiles for individual **Recipients** (Researchers) and **Institutes**.
 * **User Accounts**: Secure authentication system allowing users to:
-    * Save complex search queries.
-    * Bookmark specific grants, recipients, and institutes.
-    * Add personal notes to bookmarks.
-    * View personalized search history.
+  * Save complex search queries.
+  * Bookmark specific grants, recipients, and institutes.
+  * Add personal notes to bookmarks.
+  * View personalized search history.
 
 ## Tech Stack
 
 ### Core Framework
+
 * **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
 * **Language**: [TypeScript](https://www.typescriptlang.org/)
 * **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
 * **UI Components**: React 19, `react-icons`
 
 ### Data & State
+
 * **Database**: [PostgreSQL 17](https://www.postgresql.org/)
 * **Data Fetching**: [TanStack Query (React Query)](https://tanstack.com/query/latest)
 * **Visualization**: [Recharts](https://recharts.org/)
 
 ### Infrastructure & Tools
+
 * **Database Hosting**: [Supabase](https://supabase.com/) (managed PostgreSQL)
 * **Deployment**: [Vercel](https://vercel.com/)
 * **Authentication**: Iron Session (Stateless session management) + Bcryptjs
