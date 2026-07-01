@@ -29,7 +29,8 @@ This version represents a complete modernization of the platform, leveraging the
 * **Visualization**: [Recharts](https://recharts.org/)
 
 ### Infrastructure & Tools
-* **Containerization**: Docker & Docker Compose
+* **Database Hosting**: [Supabase](https://supabase.com/) (managed PostgreSQL)
+* **Deployment**: [Vercel](https://vercel.com/)
 * **Authentication**: Iron Session (Stateless session management) + Bcryptjs
 * **Linting**: ESLint
 
@@ -37,8 +38,8 @@ This version represents a complete modernization of the platform, leveraging the
 
 ### Prerequisites
 
-* [Docker Desktop](https://www.docker.com/products/docker-desktop)
-* [Node.js 20+](https://nodejs.org/) (if running locally outside Docker)
+* [Node.js 20+](https://nodejs.org/)
+* Access to the project's [Supabase](https://supabase.com/) database (connection string)
 
 ### 1. Environment Setup
 
@@ -51,44 +52,20 @@ cp .env.example .env
 Open `.env` and configure your local variables:
 
 ```bash
-DATABASE_URL=postgresql://rgap_user:rgap_password@localhost:5432/rgap
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@[PROJECT-REF].supabase.co:5432/postgres
 SESSION_SECRET=complex_random_string_at_least_32_chars_long
 RESEND_API_KEY=your_api_key_here
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-### 2. Running with Docker (Recommended)
+### 2. Install & Run
 
-This will spin up the Next.js application, the PostgreSQL database, and PgAdmin.
-
-```bash
-docker-compose up --build
-```
-
-* **App**: [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000)
-* **PgAdmin**: [http://localhost:5050](https://www.google.com/search?q=http://localhost:5050) (Login: `admin@rgap.local` / `admin`)
-
-> [!NOTE]
-> The `docker-compose` setup automatically mounts `database/schema.sql` and `database/seeds/` to initialize the database on the first run.
-
-### 3. Running Locally (Hybrid)
-
-If you prefer to run the app on your host machine while keeping the database in Docker:
-
-1. Start only the database services:
-```bash
-docker-compose up -d postgres
-```
-
-2. Install dependencies:
 ```bash
 npm install
-```
-
-3. Run the development server:
-```bash
 npm run dev
 ```
+
+* **App**: [http://localhost:3000](http://localhost:3000)
 
 ## Database Schema
 

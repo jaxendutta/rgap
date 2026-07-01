@@ -37,9 +37,6 @@ next-env.d.ts
 /database/data
 *.db
 
-# Docker
-docker-compose.override.yml
-
 # IDE
 .vscode/
 .idea/
