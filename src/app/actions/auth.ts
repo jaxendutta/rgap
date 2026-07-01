@@ -192,10 +192,9 @@ export async function authAction(prevState: any, formData: FormData): Promise<Ac
                 subject: 'Verify your RGAP Account',
                 html: emailTemplate(
                     "Welcome to RGAP!",
-                    "We're excited to have you on board.",
+                    `Hi ${getFirstName(name)}, we're excited to have you on board!`,
                     "If you didn't create an account, you can safely ignore this email.",
-                    `<p style="color: #374151; margin-bottom: 20px; font-weight: 600;">Hi ${getFirstName(name)},</p>
-                    <p style="color: #374151; margin-bottom: 20px;">Please verify your email address to get started with your research grant search.</p>
+                    `<p style="color: #374151; margin-bottom: 20px;">Please verify your email address to get started with your research grant search.</p>
                     <a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background-color: black; color: white; text-decoration: none; border-radius: 24px; font-weight: 600; font-size: 16px;">Verify Email Address</a>
                     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">Link expires in 24 hours.</p>`
                 )
@@ -313,10 +312,9 @@ export async function deleteAccountAction(prevState: any, formData: FormData) {
             subject: 'Your RGAP Account has been deleted',
             html: emailTemplate(
                 "Goodbye from RGAP",
-                "We're sorry to see you go.",
+                `We're sorry to see you go, ${getFirstName(session.user.name)}.`,
                 "If you change your mind, you're always welcome back.",
-                `<p style="color: #374151; margin-bottom: 20px; font-weight: 600;">Hi ${getFirstName(session.user.name)},</p>
-                <p style="color: #374151; margin-bottom: 20px;">Your account and all associated data have been successfully deleted. If you have any feedback or questions, feel free to reach out to us.</p>`
+                `<p style="color: #374151; margin-bottom: 20px;">Your account and all associated data have been successfully deleted. If you have any feedback, suggestions, or questions, feel free to reach out to us.</p>`
             )
         });
 
@@ -381,10 +379,9 @@ export async function updateProfileAction(prevState: any, formData: FormData) {
                 subject: 'Verify your new email address',
                 html: emailTemplate(
                     "Verify your new email address",
-                    "We've received a request to change your email address.",
+                    `Hi ${getFirstName(session.user.name)}, we've received a request to change your email address.`,
                     "If you didn't request this change, please secure your account immediately. Make sure to go through your account settings to review any recent activity.",
-                    `<p style="margin-bottom: 20px; font-weight: 600;">Hi ${getFirstName(session.user.name)},</p>
-                    <p>You requested to change your email to this address.</p>
+                    `<p>You requested to change your email to this address.</p>
                     <a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background-color: black; color: white; text-decoration: none; border-radius: 24px; font-weight: 600; font-size: 16px;">Verify New Email Address</a>
                     <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">Link expires in 24 hours.</p>`
                 )
@@ -433,10 +430,9 @@ export async function forgotPasswordAction(prevState: any, formData: FormData) {
                 subject: 'Reset your RGAP Password',
                 html: emailTemplate(
                     "Reset Your Password",
-                    "You requested to reset your password.",
+                    `Hi ${getFirstName(user.name)}, you requested to reset your password.`,
                     "If you didn't request a password reset, you can safely ignore this email.",
-                    `<p style="color: #374151; margin-bottom: 20px; font-weight: 600;">Hi ${getFirstName(user.name)},</p>
-                    <p style="color: #374151; margin-bottom: 20px;">Click the button below to reset your password. This link expires in 1 hour.</p>
+                    `<p style="color: #374151; margin-bottom: 20px;">Click the button below to reset your password. This link expires in 1 hour.</p>
                     <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background-color: black; color: white; text-decoration: none; border-radius: 24px; font-weight: 600; font-size: 16px;">Reset Password</a>`
                 )
             });
