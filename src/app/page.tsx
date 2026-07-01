@@ -8,14 +8,13 @@ import {
     LuChartSpline,
     LuUserPlus,
     LuLogIn,
-    LuTriangleAlert,
-    LuCalendarClock,
+    LuTriangleAlert
 } from "react-icons/lu";
 import PageContainer from "@/components/layout/PageContainer";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { IconType } from "react-icons";
-import { LAST_UPDATED } from "@/constants/data";
+import { LAST_UPDATED, GRANTS_COUNT_APPROX } from "@/constants/data";
 import { formatDate, formatDateDiff } from "@/lib/format";
 import { GiAbstract014 } from "react-icons/gi";
 
@@ -28,7 +27,7 @@ export default function HomePage() {
     ][] = [
             [
                 "Comprehensive Data",
-                "Access and analyze over 193,000 research grants from NSERC, CIHR, and SSHRC.",
+                `Access and analyze over ${GRANTS_COUNT_APPROX.toLocaleString()} research grants from NSERC, CIHR, and SSHRC.`,
                 LuDatabase,
                 "/search",
             ],

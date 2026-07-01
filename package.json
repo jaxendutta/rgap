@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "bump-last-updated": "node scripts/bump-last-updated.mjs"
+    "bump-last-updated": "node scripts/bump-last-updated.mjs",
+    "update-grant-count": "node scripts/update-grant-count.mjs"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
