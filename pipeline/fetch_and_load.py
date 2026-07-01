@@ -81,7 +81,11 @@ def fetch_agency(agency: str, verify_ssl: bool = False) -> list:
     """Fetch every record for one tri-agency via the CKAN datastore_search API."""
     records = []
     offset = 0
-    limit = 1000
+    # CKAN's datastore_search on this instance accepts up to somewhere between
+    # 10,000 and 20,000 per page (10,000 verified reliable; larger values were
+    # rejected). 1,000 meant ~152 sequential requests just for NSERC; this cuts
+    # that to ~16 and each request is also more efficient per-record.
+    limit = 10000
     retries = 0
     while True:
         params = {
