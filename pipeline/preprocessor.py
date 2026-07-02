@@ -1170,18 +1170,30 @@ class ProcessingPipeline:
             
             # Identify which columns to use for creating unique identifiers
             # Check if these key columns exist
-            # NOTE: prog_name_en deliberately excluded. The raw source data
-            # sometimes puts the FRENCH program name in this column for
-            # older amendment records (e.g. one amendment of a grant reads
-            # "Discovery Research", an earlier one for the exact same grant
-            # reads "Recherche axée sur la découverte") -- since this was a
-            # grouping key, that language inconsistency split a single
-            # grant's amendment history into two separate "grants", one of
-            # them missing all its history. recipient_legal_name + org +
-            # agreement_title_en already reliably distinguishes genuinely
-            # different grants that happen to share a ref_number.
+            # NOTE: prog_name_en and agreement_title_en are deliberately
+            # excluded, even though they look like reasonable discriminators
+            # at a glance. Both drift over a single grant's own amendment
+            # history in the raw source data:
+            #  - prog_name_en sometimes flips language entirely between
+            #    amendments (e.g. "Discovery Research" vs "Recherche axée
+            #    sur la découverte" for the same grant).
+            #  - agreement_title_en drifts in wording/capitalization, and
+            #    the *program itself* gets renamed by the agency over time
+            #    (e.g. "Insight Development Grant" -> "Insight research" ->
+            #    "Research Partnerships" is SSHRC's own program
+            #    consolidation history, not a new grant; verified against
+            #    production that every such case shares the same
+            #    ref_number + recipient + an identical or amendment-
+            #    consistent agreement_value).
+            # Using either as a grouping key silently split a single
+            # grant's amendment history into two disconnected "grants",
+            # one of them missing all its history. recipient_legal_name +
+            # org already reliably distinguishes genuinely different
+            # grants that happen to share a ref_number (verified against
+            # the real 5-grants-one-ref_number case found this session,
+            # where each grant has a different recipient).
             discriminator_columns = []
-            potential_discriminators = ['recipient_legal_name', 'org', 'agreement_title_en']
+            potential_discriminators = ['recipient_legal_name', 'org']
             
             for col in potential_discriminators:
                 if col in df.columns:
