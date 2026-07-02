@@ -1170,8 +1170,18 @@ class ProcessingPipeline:
             
             # Identify which columns to use for creating unique identifiers
             # Check if these key columns exist
+            # NOTE: prog_name_en deliberately excluded. The raw source data
+            # sometimes puts the FRENCH program name in this column for
+            # older amendment records (e.g. one amendment of a grant reads
+            # "Discovery Research", an earlier one for the exact same grant
+            # reads "Recherche axée sur la découverte") -- since this was a
+            # grouping key, that language inconsistency split a single
+            # grant's amendment history into two separate "grants", one of
+            # them missing all its history. recipient_legal_name + org +
+            # agreement_title_en already reliably distinguishes genuinely
+            # different grants that happen to share a ref_number.
             discriminator_columns = []
-            potential_discriminators = ['recipient_legal_name', 'org', 'prog_name_en', 'agreement_title_en']
+            potential_discriminators = ['recipient_legal_name', 'org', 'agreement_title_en']
             
             for col in potential_discriminators:
                 if col in df.columns:
