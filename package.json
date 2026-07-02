@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "bump-last-updated": "node scripts/bump-last-updated.mjs",
-    "update-grant-count": "node scripts/update-grant-count.mjs"
+    "update-grant-count": "node scripts/update-grant-count.mjs",
+    "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
@@ -40,6 +41,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
