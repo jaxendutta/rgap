@@ -2,3 +2,4 @@ pandas>=2.2,<3
 requests>=2.31,<3
 psycopg2-binary>=2.9,<3
 tqdm>=4.66,<5
+deep-translator>=1.11,<2
