@@ -23,6 +23,11 @@ const UNICODE_WHITESPACE_CLASS =
 const trimExpr = (col: string) =>
     `regexp_replace(${col}, '^[${UNICODE_WHITESPACE_CLASS}]+|[${UNICODE_WHITESPACE_CLASS}]+$', '', 'g')`;
 
+// "university" and "UNIVERSITY" are the same search to a user -- group and
+// display popular searches case-insensitively so they don't split into
+// separate entries.
+const normalizedExpr = (col: string) => `lower(${trimExpr(col)})`;
+
 /**
  * Fetches popular search terms based on category.
  */
@@ -36,20 +41,23 @@ export const getPopularSearches = async (
                 let query = '';
                 const params: any[] = [limit];
 
-                // trimExpr() in both SELECT and GROUP BY: search terms saved
-                // with incidental surrounding whitespace (e.g. a trailing
-                // space typed into the search bar) would otherwise group as
-                // a separate "popular search" from the identical trimmed
-                // term.
+                // normalizedExpr() in both SELECT and GROUP BY: search terms
+                // saved with incidental surrounding whitespace (e.g. a
+                // trailing space typed into the search bar) or differing
+                // only in case would otherwise group as separate "popular
+                // searches" from the identical term.
                 if (category === 'recipient') {
                     const trimmed = trimExpr(`filters->>'recipient'`);
-                    query = `SELECT ${trimmed} as text, COUNT(*) as count FROM search_history WHERE filters->>'recipient' IS NOT NULL AND ${trimmed} != '' GROUP BY ${trimmed} ORDER BY count DESC LIMIT $1`;
+                    const normalized = normalizedExpr(`filters->>'recipient'`);
+                    query = `SELECT ${normalized} as text, COUNT(*) as count FROM search_history WHERE filters->>'recipient' IS NOT NULL AND ${trimmed} != '' GROUP BY ${normalized} ORDER BY count DESC LIMIT $1`;
                 } else if (category === 'institute') {
                     const trimmed = trimExpr(`filters->>'institute'`);
-                    query = `SELECT ${trimmed} as text, COUNT(*) as count FROM search_history WHERE filters->>'institute' IS NOT NULL AND ${trimmed} != '' GROUP BY ${trimmed} ORDER BY count DESC LIMIT $1`;
+                    const normalized = normalizedExpr(`filters->>'institute'`);
+                    query = `SELECT ${normalized} as text, COUNT(*) as count FROM search_history WHERE filters->>'institute' IS NOT NULL AND ${trimmed} != '' GROUP BY ${normalized} ORDER BY count DESC LIMIT $1`;
                 } else {
                     const trimmed = trimExpr('search_query');
-                    query = `SELECT ${trimmed} as text, COUNT(*) as count FROM search_history WHERE search_query IS NOT NULL AND ${trimmed} != '' GROUP BY ${trimmed} ORDER BY count DESC LIMIT $1`;
+                    const normalized = normalizedExpr('search_query');
+                    query = `SELECT ${normalized} as text, COUNT(*) as count FROM search_history WHERE search_query IS NOT NULL AND ${trimmed} != '' GROUP BY ${normalized} ORDER BY count DESC LIMIT $1`;
                 }
                 const result = await db.query(query, params);
                 return result.rows.map((row) => ({ text: row.text, count: parseInt(row.count), category }));
