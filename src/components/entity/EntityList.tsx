@@ -1,7 +1,7 @@
 // src/components/entity/EntityList.tsx
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn, getSortOptions } from "@/lib/utils";
 import { EntityType } from "@/types/database";
@@ -66,6 +66,8 @@ function EntityList<T>(props: EntityListProps<T>) {
 
     const [layoutVariant, setLayoutVariant] = useState<LayoutVariant>(initialLayoutVariant);
     const [isVisualizationVisible, setIsVisualizationVisible] = useState(false);
+    const [isPending, startTransition] = useTransition();
+    const [pendingField, setPendingField] = useState<string | null>(null);
 
     const currentSortField = searchParams.get('sort') || sortOptions[0]?.field;
     const currentSortDir = (searchParams.get('dir') as 'asc' | 'desc') || 'desc';
@@ -79,13 +81,19 @@ function EntityList<T>(props: EntityListProps<T>) {
             params.set('dir', 'desc');
         }
         params.set('page', '1');
-        router.push(`?${params.toString()}`, { scroll: false });
+        setPendingField(field);
+        startTransition(() => {
+            router.push(`?${params.toString()}`, { scroll: false });
+        });
     };
 
     const handlePageChange = (newPage: number) => {
         const params = new URLSearchParams(searchParams.toString());
         params.set('page', newPage.toString());
-        router.push(`?${params.toString()}`, { scroll: true });
+        setPendingField(null);
+        startTransition(() => {
+            router.push(`?${params.toString()}`, { scroll: true });
+        });
     };
 
     if (isError) return <ErrorState title="Error" message={error instanceof Error ? error.message : "Error"} />;
@@ -104,6 +112,8 @@ function EntityList<T>(props: EntityListProps<T>) {
                     currentSortField={String(currentSortField)}
                     currentSortDir={currentSortDir}
                     onSort={handleSort}
+                    isPending={isPending}
+                    pendingField={pendingField}
 
                     showVisualization={showVisualization}
                     isVisualizationVisible={isVisualizationVisible}
@@ -142,7 +152,8 @@ function EntityList<T>(props: EntityListProps<T>) {
                 className={cn(
                     layoutVariant === "grid"
                         ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 items-start"
-                        : "space-y-4"
+                        : "space-y-4",
+                    isPending && "opacity-50 pointer-events-none transition-opacity duration-200"
                 )}
             >
                 {children}
@@ -153,6 +164,7 @@ function EntityList<T>(props: EntityListProps<T>) {
                 totalCount={totalCount}
                 pageSize={pageSize}
                 onPageChange={handlePageChange}
+                isPending={isPending}
             />
         </div>
     );
