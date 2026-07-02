@@ -11,7 +11,9 @@ export function formatSentenceCase(text: string | null | undefined): string {
 }
 
 // Timezone-safe date diff calculation
-export function formatDateDiff(startDate: Date | string, endDate: Date | string, style: 'long' | 'short' = 'long'): string {
+export function formatDateDiff(startDate: Date | string | null | undefined, endDate: Date | string | null | undefined, style: 'long' | 'short' = 'long'): string {
+    if (!startDate || !endDate) return 'N/A';
+
     // Parse dates safely
     const parseDate = (date: Date | string): Date => {
         if (typeof date === 'string') {
