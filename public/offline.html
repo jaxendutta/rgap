@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>You're offline | RGAP</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            color: #0f172a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            text-align: center;
+            padding: 1.5rem;
+        }
+        .card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 2.5rem 2rem;
+            max-width: 26rem;
+        }
+        h1 {
+            font-size: 1.25rem;
+            margin: 0 0 0.5rem;
+        }
+        p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin: 0 0 1.5rem;
+        }
+        button {
+            background: #0f172a;
+            color: #ffffff;
+            border: none;
+            border-radius: 9999px;
+            padding: 0.6rem 1.5rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>[ RGAP ]</h1>
+        <p>You're offline, and this page hasn't been visited before. Reconnect to keep browsing research grants.</p>
+        <button onclick="location.reload()">Try again</button>
+    </div>
+</body>
+</html>
