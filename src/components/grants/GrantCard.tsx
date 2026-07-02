@@ -184,8 +184,9 @@ const MetadataTags = ({ grant }: { grant: GrantWithDetails }) => {
         },
         {
             icon: LuCalendar1,
-            text: `${formatDate(new Date(grant.agreement_start_date))} → ${grant.agreement_end_date ? formatDate(new Date(grant.agreement_end_date)) : "N/A"
-                }`,
+            text: grant.agreement_end_date
+                ? `${formatDate(new Date(grant.agreement_start_date))} → ${formatDate(new Date(grant.agreement_end_date))}`
+                : formatDate(new Date(grant.agreement_start_date)),
         },
         {
             icon: LuHourglass,

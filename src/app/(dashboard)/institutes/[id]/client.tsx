@@ -86,7 +86,7 @@ export function InstituteDetailClient({
         // Years Active calculation
         const startYear = institute.first_grant_date ? new Date(institute.first_grant_date).getFullYear() : null;
         const endYear = institute.latest_end_date ? new Date(institute.latest_end_date).getFullYear() : (new Date().getFullYear());
-        const duration = formatDateDiff(institute.first_grant_date, institute.latest_end_date, 'short');
+        const duration = formatDateDiff(institute.first_grant_date, institute.latest_end_date || new Date(), 'short');
 
         const yearsActiveText = startYear
             ? [`${startYear} - ${endYear}`, duration]
