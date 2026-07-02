@@ -107,7 +107,7 @@ const GrantHeader = ({
                 <div className="flex items-center justify-between gap-3 mb-1">
                     <Link
                         href={`/recipients/${grant.recipient_id}`}
-                        className="flex text-sm md:text-[16px] lg:text-[18px] items-start font-medium hover:text-blue-700 transition-colors gap-1 group"
+                        className="flex text-sm md:text-[16px] lg:text-[18px] items-start font-medium hover:text-blue-700 transition-colors gap-1 group mb-0.5 md:mb-2 pl-1 md:pl-0"
                         aria-label={`View profile for recipient ${grant.legal_name}`}
                     >
                         <LuGraduationCap className="hidden md:flex md:size-4 lg:size-4.5 mt-0.5 md:mt-0.75 lg:mt-1 align-text-bottom flex-shrink-0" />
@@ -175,13 +175,13 @@ const MetadataTags = ({ grant }: { grant: GrantWithDetails }) => {
     const openCanadaUrl = getOpenCanadaUrl(grant.org, grant.ref_number);
 
     const tags = useMemo(() => [
-        { icon: LuLandmark, text: grant.org },
         {
             icon: LuDatabase,
             text: grant.ref_number,
             variant: openCanadaUrl ? "link" as const : "default" as const,
             onClick: openCanadaUrl ? () => window.open(openCanadaUrl, '_blank', 'noopener,noreferrer') : undefined,
         },
+        { icon: LuLandmark, text: grant.org },
         {
             icon: LuCalendar1,
             text: grant.agreement_end_date
@@ -206,7 +206,7 @@ const MetadataTags = ({ grant }: { grant: GrantWithDetails }) => {
     ].filter((tag) => !tag.hide), [grant, openCanadaUrl]);
 
     return (
-        <div className="mt-1.5">
+        <div className="mt-1.5 px-1">
             <Tags spacing="tightest">
                 {tags.map((tag, index) => (
                     <Tag
