@@ -14,6 +14,8 @@ interface SortButtonProps {
     direction: SortDirection;
     onClick: () => void;
     className?: string;
+    isLoading?: boolean;
+    disabled?: boolean;
 }
 
 export const SortButton = ({
@@ -24,6 +26,8 @@ export const SortButton = ({
     direction,
     onClick,
     className,
+    isLoading,
+    disabled,
 }: SortButtonProps) => {
     const isActive = currentField === field;
 
@@ -33,6 +37,8 @@ export const SortButton = ({
             size="sm"
             leftIcon={Icon}
             onClick={onClick}
+            isLoading={isLoading}
+            disabled={disabled}
             className={cn(
                 "gap-0.5 md:gap-1.5",
                 isActive

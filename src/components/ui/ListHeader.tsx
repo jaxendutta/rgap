@@ -28,6 +28,8 @@ interface ListHeaderProps {
     currentSortField?: string;
     currentSortDir?: 'asc' | 'desc';
     onSort?: (field: string) => void;
+    isPending?: boolean;
+    pendingField?: string | null;
 
     // Visualization Controls
     showVisualization?: boolean;
@@ -51,6 +53,8 @@ export function ListHeader({
     currentSortField,
     currentSortDir,
     onSort,
+    isPending = false,
+    pendingField = null,
     showVisualization = false,
     isVisualizationVisible = false,
     onToggleVisualization,
@@ -80,6 +84,8 @@ export function ListHeader({
                         currentField={String(currentSortField)}
                         direction={currentSortDir || 'desc'}
                         onClick={() => onSort && onSort(String(option.field))}
+                        isLoading={isPending && pendingField === String(option.field)}
+                        disabled={isPending}
                     />
                 ))}
 
