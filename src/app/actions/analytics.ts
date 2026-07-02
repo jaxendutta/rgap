@@ -90,7 +90,7 @@ export async function getAggregatedTrends(
                             COUNT(*) as count
                         FROM grants g
                         JOIN recipients r ON g.recipient_id = r.recipient_id
-                        JOIN institutes i ON r.institute_id = i.institute_id
+                        LEFT JOIN institutes i ON r.institute_id = i.institute_id
                         WHERE ${whereClause}
                         GROUP BY year
                         ORDER BY year ASC
@@ -102,7 +102,7 @@ export async function getAggregatedTrends(
                         SELECT ${groupColumn} as category
                         FROM grants g
                         JOIN recipients r ON g.recipient_id = r.recipient_id
-                        JOIN institutes i ON r.institute_id = i.institute_id
+                        LEFT JOIN institutes i ON r.institute_id = i.institute_id
                         LEFT JOIN programs p ON g.prog_id = p.prog_id
                         WHERE ${whereClause}
                         GROUP BY category
@@ -122,7 +122,7 @@ export async function getAggregatedTrends(
                             COUNT(*) as count
                         FROM grants g
                         JOIN recipients r ON g.recipient_id = r.recipient_id
-                        JOIN institutes i ON r.institute_id = i.institute_id
+                        LEFT JOIN institutes i ON r.institute_id = i.institute_id
                         LEFT JOIN programs p ON g.prog_id = p.prog_id
                         WHERE ${whereClause}
                         GROUP BY 1, 2

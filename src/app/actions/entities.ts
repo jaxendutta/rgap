@@ -97,7 +97,7 @@ export async function getEntityGrants(
       ${bookmarkSelect}
     FROM grants g
     JOIN recipients r ON g.recipient_id = r.recipient_id
-    JOIN institutes i ON r.institute_id = i.institute_id
+    LEFT JOIN institutes i ON r.institute_id = i.institute_id
     LEFT JOIN programs p ON g.prog_id = p.prog_id
     LEFT JOIN organizations o ON g.org = o.org
     ${bookmarkJoin}

@@ -235,7 +235,7 @@ export async function getUserBookmarks(sortConfig?: { field?: string, direction:
             FROM bookmarked_grants bg
             JOIN grants g ON bg.grant_id = g.grant_id
             JOIN recipients r ON g.recipient_id = r.recipient_id
-            JOIN institutes i ON r.institute_id = i.institute_id
+            LEFT JOIN institutes i ON r.institute_id = i.institute_id
             LEFT JOIN organizations org ON g.org = org.org
             LEFT JOIN programs p ON g.prog_id = p.prog_id
             WHERE bg.user_id = $1
@@ -252,7 +252,7 @@ export async function getUserBookmarks(sortConfig?: { field?: string, direction:
                 i.city, i.province, i.country
             FROM bookmarked_recipients br
             JOIN recipients r ON br.recipient_id = r.recipient_id
-            JOIN institutes i ON r.institute_id = i.institute_id
+            LEFT JOIN institutes i ON r.institute_id = i.institute_id
             WHERE br.user_id = $1
             ORDER BY ${getSort('recipient', 'br', sortField)} ${sortDir}
         `, [user.id]);
@@ -294,7 +294,7 @@ export async function getUserBookmarks(sortConfig?: { field?: string, direction:
                     p.prog_title_en
                 FROM grants g
                 JOIN recipients r ON g.recipient_id = r.recipient_id
-                JOIN institutes i ON r.institute_id = i.institute_id
+                LEFT JOIN institutes i ON r.institute_id = i.institute_id
                 LEFT JOIN organizations org ON g.org = org.org
                 LEFT JOIN programs p ON g.prog_id = p.prog_id
                 WHERE r.recipient_id = ANY($1)

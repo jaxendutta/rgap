@@ -238,8 +238,11 @@ export interface RecipientWithStats extends Recipient {
     is_bookmarked?: boolean;
 }
 
-// Grant with full details (joins with recipient, institute, program, org)
-export type GrantWithDetails = Grant & Recipient & Institute & Program & Organization & {
+// Grant with full details (joins with recipient, institute, program, org).
+// Institute is Partial: recipients.institute_id is nullable (some grants'
+// research organization never resolves to a known institute), and the
+// query LEFT JOINs institutes, so every institute field can come back null.
+export type GrantWithDetails = Grant & Recipient & Partial<Institute> & Program & Organization & {
     is_bookmarked?: boolean;
 };
 

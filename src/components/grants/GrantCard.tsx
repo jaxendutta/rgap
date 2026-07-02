@@ -142,7 +142,7 @@ const GrantHeader = ({
                         icon={LuUniversity}
                         size="xs"
                         variant="link"
-                        onClick={() => router.push(`/institutes/${grant.institute_id}`)}
+                        onClick={grant.institute_id ? () => router.push(`/institutes/${grant.institute_id}`) : undefined}
                         text={grant.name || "Unknown Institute"}
                         className="group w-full md:w-auto"
                     />

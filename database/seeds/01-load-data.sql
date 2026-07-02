@@ -204,16 +204,20 @@ ORDER BY research_organization_name, recipient_city, COALESCE(recipient_country,
 ON CONFLICT (name, city, country) DO NOTHING;
 
 -- Recipients (Now handles NULL type)
+-- LEFT JOIN institutes: a recipient whose research_organization_name never
+-- resolved to an institute still gets a row (institute_id NULL) instead of
+-- silently vanishing -- and taking their grants down with them, since the
+-- grants insert below requires a matching recipient row to exist.
 -- Same DISTINCT ON reasoning as institutes above, matching
--- uq_recipient_institute(legal_name, institute_id).
+-- uq_recipient_institute(legal_name, COALESCE(institute_id, -1)).
 INSERT INTO recipients (legal_name, operating_name, type, business_number, institute_id)
 SELECT DISTINCT ON (tg.recipient_legal_name, i.institute_id)
     tg.recipient_legal_name, tg.recipient_operating_name, tg.recipient_type, tg.recipient_business_number, i.institute_id
 FROM temp_grants tg
-JOIN institutes i ON tg.research_organization_name = i.name AND tg.recipient_city = i.city AND COALESCE(tg.recipient_country, 'CA') = i.country
+LEFT JOIN institutes i ON tg.research_organization_name = i.name AND tg.recipient_city = i.city AND COALESCE(tg.recipient_country, 'CA') = i.country
 WHERE tg.recipient_legal_name IS NOT NULL AND tg.recipient_legal_name != ''
 ORDER BY tg.recipient_legal_name, i.institute_id
-ON CONFLICT (legal_name, institute_id) DO NOTHING;
+ON CONFLICT (legal_name, (COALESCE(institute_id, -1))) DO NOTHING;
 
 -- Grants
 INSERT INTO grants (
@@ -252,8 +256,12 @@ SELECT DISTINCT
     END
 FROM temp_grants tg
 JOIN organizations o ON tg.org = o.org
-JOIN institutes i ON tg.research_organization_name = i.name AND tg.recipient_city = i.city AND COALESCE(tg.recipient_country, 'CA') = i.country
-JOIN recipients r ON tg.recipient_legal_name = r.legal_name AND r.institute_id = i.institute_id
+-- Both LEFT JOINs (and IS NOT DISTINCT FROM instead of =, which fails to
+-- match NULL to NULL): a grant whose recipient has no resolvable institute
+-- must still reach this insert instead of being silently dropped, matching
+-- the recipients insert above.
+LEFT JOIN institutes i ON tg.research_organization_name = i.name AND tg.recipient_city = i.city AND COALESCE(tg.recipient_country, 'CA') = i.country
+LEFT JOIN recipients r ON tg.recipient_legal_name = r.legal_name AND r.institute_id IS NOT DISTINCT FROM i.institute_id
 LEFT JOIN programs p ON tg.prog_name_en = p.prog_title_en AND tg.org = p.org
 WHERE tg.ref_number IS NOT NULL AND r.recipient_id IS NOT NULL
 -- Upsert on the natural key (see migrations/001_add_grants_natural_key.sql) so

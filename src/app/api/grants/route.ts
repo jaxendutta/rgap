@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
                     p.prog_title_en
                 FROM grants g
                 JOIN recipients r ON g.recipient_id = r.recipient_id
-                JOIN institutes i ON r.institute_id = i.institute_id
+                LEFT JOIN institutes i ON r.institute_id = i.institute_id
                 LEFT JOIN programs p ON g.prog_id = p.prog_id
                 ${whereClause}
             `;
@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
             SELECT COUNT(*) as total
             FROM grants g
             JOIN recipients r ON g.recipient_id = r.recipient_id
-            JOIN institutes i ON r.institute_id = i.institute_id
+            LEFT JOIN institutes i ON r.institute_id = i.institute_id
             ${whereClause}
         `;
         const countResult = await db.query(countQuery, params);
@@ -257,7 +257,7 @@ export async function POST(request: NextRequest) {
                 ${bookmarkSelect}
             FROM grants g
             JOIN recipients r ON g.recipient_id = r.recipient_id
-            JOIN institutes i ON r.institute_id = i.institute_id
+            LEFT JOIN institutes i ON r.institute_id = i.institute_id
             LEFT JOIN programs p ON g.prog_id = p.prog_id
             LEFT JOIN organizations o ON g.org = o.org
             ${bookmarkJoin}

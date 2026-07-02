@@ -58,11 +58,21 @@ CREATE TABLE IF NOT EXISTS recipients (
     business_number VARCHAR(50),
     legal_name VARCHAR(255) NOT NULL,
     operating_name VARCHAR(255),
-    institute_id INTEGER NOT NULL,
-    
-    FOREIGN KEY (institute_id) REFERENCES institutes(institute_id) ON DELETE RESTRICT,
-    CONSTRAINT uq_recipient_institute UNIQUE (legal_name, institute_id)
+    -- Nullable: some grants' research_organization_name doesn't resolve to
+    -- any institute (missing/unrecognizable in the source data). Those
+    -- recipients still need a row so their grants aren't silently dropped.
+    institute_id INTEGER,
+
+    FOREIGN KEY (institute_id) REFERENCES institutes(institute_id) ON DELETE SET NULL
 );
+
+-- Plain UNIQUE(legal_name, institute_id) would treat every NULL institute_id
+-- as distinct, letting the same unresolved-institute person get re-inserted
+-- as a new row every load. COALESCE gives NULL a single stable value to
+-- de-duplicate against. (Expression-based uniqueness needs CREATE UNIQUE
+-- INDEX -- ALTER TABLE ... ADD CONSTRAINT ... UNIQUE only accepts plain
+-- column references.)
+CREATE UNIQUE INDEX uq_recipient_institute ON recipients (legal_name, (COALESCE(institute_id, -1)));
 
 CREATE INDEX idx_recipients_legal_name ON recipients(legal_name);
 CREATE INDEX idx_recipients_type ON recipients(type);
