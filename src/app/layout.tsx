@@ -3,7 +3,7 @@
 // Users can browse all grants, recipients, institutes without logging in
 // Auth only needed for: bookmarks, saved searches, account features
 
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
@@ -31,6 +31,12 @@ export const metadata: Metadata = {
     title: 'RGAP - Research Grant Analytics Platform',
     description: 'Browse Canadian research grants from NSERC, CIHR, and SSHRC',
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#ffffff',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default async function RootLayout({
