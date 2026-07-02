@@ -18,12 +18,16 @@ export const getPopularSearches = async (
                 let query = '';
                 const params: any[] = [limit];
 
+                // TRIM() in both SELECT and GROUP BY: search terms saved with
+                // incidental surrounding whitespace (e.g. a trailing space
+                // typed into the search bar) would otherwise group as a
+                // separate "popular search" from the identical trimmed term.
                 if (category === 'recipient') {
-                    query = `SELECT filters->>'recipient' as text, COUNT(*) as count FROM search_history WHERE filters->>'recipient' IS NOT NULL AND (filters->>'recipient') != '' GROUP BY filters->>'recipient' ORDER BY count DESC LIMIT $1`;
+                    query = `SELECT TRIM(filters->>'recipient') as text, COUNT(*) as count FROM search_history WHERE filters->>'recipient' IS NOT NULL AND TRIM(filters->>'recipient') != '' GROUP BY TRIM(filters->>'recipient') ORDER BY count DESC LIMIT $1`;
                 } else if (category === 'institute') {
-                    query = `SELECT filters->>'institute' as text, COUNT(*) as count FROM search_history WHERE filters->>'institute' IS NOT NULL AND (filters->>'institute') != '' GROUP BY filters->>'institute' ORDER BY count DESC LIMIT $1`;
+                    query = `SELECT TRIM(filters->>'institute') as text, COUNT(*) as count FROM search_history WHERE filters->>'institute' IS NOT NULL AND TRIM(filters->>'institute') != '' GROUP BY TRIM(filters->>'institute') ORDER BY count DESC LIMIT $1`;
                 } else {
-                    query = `SELECT search_query as text, COUNT(*) as count FROM search_history WHERE search_query IS NOT NULL AND search_query != '' GROUP BY search_query ORDER BY count DESC LIMIT $1`;
+                    query = `SELECT TRIM(search_query) as text, COUNT(*) as count FROM search_history WHERE search_query IS NOT NULL AND TRIM(search_query) != '' GROUP BY TRIM(search_query) ORDER BY count DESC LIMIT $1`;
                 }
                 const result = await db.query(query, params);
                 return result.rows.map((row) => ({ text: row.text, count: parseInt(row.count), category }));

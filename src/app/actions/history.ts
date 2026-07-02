@@ -13,13 +13,13 @@ export async function saveSearchHistory(
 ) {
     try {
         const user = await getCurrentUser();
-        const mainQuery = searchTerms.grant || '';
+        const mainQuery = (searchTerms.grant || '').trim();
 
         // Construct the filters object for the JSONB column
         // We combine specific search fields (recipient/institute) with the sidebar filters
         const filtersToSave = {
-            recipient: searchTerms.recipient || null,
-            institute: searchTerms.institute || null,
+            recipient: searchTerms.recipient?.trim() || null,
+            institute: searchTerms.institute?.trim() || null,
             // Spread the active filters (agencies, dates, etc.)
             ...activeFilters
         };
@@ -71,8 +71,8 @@ export async function importHistory(items: SearchHistoryItem[]) {
 
         items.forEach(item => {
             values.push(
-                user.id, 
-                item.search_query || '',
+                user.id,
+                (item.search_query || '').trim(),
                 JSON.stringify(item.filters) || '{}',
                 item.result_count || 0
             );
