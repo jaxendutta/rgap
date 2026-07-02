@@ -200,12 +200,26 @@ CREATE INDEX idx_search_history_date ON search_history(searched_at DESC);
 -- ============================================================================
 -- Bookmarks
 -- ============================================================================
+-- Every bookmark table below carries a denormalized snapshot of the
+-- bookmarked entity's stable natural-key fields (captured at bookmark
+-- time), alongside the surrogate FK. recipient_id/institute_id/grant_id
+-- are SERIAL surrogate keys built from exact-match fields (e.g. an
+-- institute's name+city+country) -- if the underlying source data shifts
+-- even slightly between pipeline runs (a city gets corrected upstream, a
+-- future cleaning rule changes how a name normalizes), a new row gets
+-- created instead of the old one being updated, and the FK silently
+-- points at nothing meaningful anymore. The snapshot lets a reconciliation
+-- pass re-resolve the FK to whatever row currently matches that identity,
+-- rather than the bookmark just breaking. See scripts/reconcile-bookmarks.mjs.
 CREATE TABLE IF NOT EXISTS bookmarked_grants (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
     grant_id INTEGER NOT NULL,
     bookmarked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     notes TEXT,
+    ref_number VARCHAR(50),
+    recipient_legal_name VARCHAR(255),
+    org VARCHAR(5),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (grant_id) REFERENCES grants(grant_id) ON DELETE CASCADE,
     UNIQUE(user_id, grant_id)
@@ -217,6 +231,10 @@ CREATE TABLE IF NOT EXISTS bookmarked_recipients (
     recipient_id INTEGER NOT NULL,
     bookmarked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     notes TEXT,
+    recipient_legal_name VARCHAR(255),
+    institute_name VARCHAR(255),
+    institute_city VARCHAR(100),
+    institute_country VARCHAR(50),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (recipient_id) REFERENCES recipients(recipient_id) ON DELETE CASCADE,
     UNIQUE(user_id, recipient_id)
@@ -228,6 +246,9 @@ CREATE TABLE IF NOT EXISTS bookmarked_institutes (
     institute_id INTEGER NOT NULL,
     bookmarked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     notes TEXT,
+    institute_name VARCHAR(255),
+    institute_city VARCHAR(100),
+    institute_country VARCHAR(50),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (institute_id) REFERENCES institutes(institute_id) ON DELETE CASCADE,
     UNIQUE(user_id, institute_id)

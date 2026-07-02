@@ -42,7 +42,17 @@ export async function toggleGrantBookmark(grantId: number) {
             revalidatePath('/bookmarks');
             return { success: true, isBookmarked: false };
         } else {
-            await db.query('INSERT INTO bookmarked_grants (grant_id, user_id) VALUES ($1, $2)', [grantId, user.id]);
+            // Snapshot the grant's stable identity (ref_number + recipient +
+            // org) alongside the FK, so a reconciliation pass can re-resolve
+            // this bookmark if grant_id ever changes underneath it -- see
+            // scripts/reconcile-bookmarks.mjs.
+            await db.query(
+                `INSERT INTO bookmarked_grants (grant_id, user_id, ref_number, recipient_legal_name, org)
+                 SELECT $1, $2, g.ref_number, r.legal_name, g.org
+                 FROM grants g JOIN recipients r ON g.recipient_id = r.recipient_id
+                 WHERE g.grant_id = $1`,
+                [grantId, user.id]
+            );
             await logActivity(user.id, 'BOOKMARK_GRANT', null, String(grantId));
 
             revalidatePath('/bookmarks');
@@ -71,7 +81,14 @@ export async function toggleRecipientBookmark(recipientId: number) {
             revalidatePath('/bookmarks');
             return { success: true, isBookmarked: false };
         } else {
-            await db.query('INSERT INTO bookmarked_recipients (recipient_id, user_id) VALUES ($1, $2)', [recipientId, user.id]);
+            // Snapshot identity for reconciliation -- see toggleGrantBookmark.
+            await db.query(
+                `INSERT INTO bookmarked_recipients (recipient_id, user_id, recipient_legal_name, institute_name, institute_city, institute_country)
+                 SELECT $1, $2, r.legal_name, i.name, i.city, i.country
+                 FROM recipients r LEFT JOIN institutes i ON r.institute_id = i.institute_id
+                 WHERE r.recipient_id = $1`,
+                [recipientId, user.id]
+            );
             await logActivity(user.id, 'BOOKMARK_RECIPIENT', null, String(recipientId));
 
             revalidatePath('/bookmarks');
@@ -100,7 +117,13 @@ export async function toggleInstituteBookmark(instituteId: number) {
             revalidatePath('/bookmarks');
             return { success: true, isBookmarked: false };
         } else {
-            await db.query('INSERT INTO bookmarked_institutes (institute_id, user_id) VALUES ($1, $2)', [instituteId, user.id]);
+            // Snapshot identity for reconciliation -- see toggleGrantBookmark.
+            await db.query(
+                `INSERT INTO bookmarked_institutes (institute_id, user_id, institute_name, institute_city, institute_country)
+                 SELECT $1, $2, i.name, i.city, i.country
+                 FROM institutes i WHERE i.institute_id = $1`,
+                [instituteId, user.id]
+            );
             await logActivity(user.id, 'BOOKMARK_INSTITUTE', null, String(instituteId));
 
             revalidatePath('/bookmarks');

@@ -164,6 +164,13 @@ def load_into_postgres(csv_buf: io.StringIO, database_url: str, commit: bool = T
     conn = psycopg2.connect(database_url)
     try:
         with conn.cursor() as cur:
+            # Supabase's connection-level default (2 minutes) is too tight
+            # for a ~199K-row COPY plus the normalize/upsert step under
+            # real-world variable load -- this failed a real run with
+            # QueryCanceled on the COPY alone. 10 minutes leaves comfortable
+            # headroom within the workflow's 30-minute job timeout.
+            cur.execute("SET statement_timeout = '10min'")
+
             for migration_file in migration_files:
                 logger.info(f"Applying migration {migration_file.name} (idempotent)...")
                 cur.execute(migration_file.read_text(encoding="utf-8"))

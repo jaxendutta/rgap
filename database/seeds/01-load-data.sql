@@ -186,22 +186,29 @@ SELECT DISTINCT ON (tg.prog_name_en, tg.org) tg.prog_name_en, tg.prog_purpose_en
 FROM temp_grants tg
 WHERE tg.prog_name_en IS NOT NULL AND tg.prog_name_en != ''
 ORDER BY tg.prog_name_en, tg.org
-ON CONFLICT (prog_title_en, org) DO NOTHING;
+ON CONFLICT (prog_title_en, org) DO UPDATE SET
+    prog_purpose_en = EXCLUDED.prog_purpose_en
+WHERE programs.prog_purpose_en IS DISTINCT FROM EXCLUDED.prog_purpose_en;
 
 -- Institutes
 -- DISTINCT ON (name, city, country) matches the actual unique constraint
 -- uq_institute_location(name, city, country); a bare SELECT DISTINCT over
 -- all 5 columns treats rows with the same (name, city, country) but a
 -- different province/postal_code as separate candidates, most of which
--- get skipped by ON CONFLICT DO NOTHING while still burning a sequence
--- value each.
+-- would otherwise burn a sequence value each on conflict. DO UPDATE (not
+-- DO NOTHING) on the non-key fields so a province/postal_code correction
+-- upstream actually lands instead of being silently dropped every month.
 INSERT INTO institutes (name, city, province, country, postal_code)
 SELECT DISTINCT ON (research_organization_name, recipient_city, COALESCE(recipient_country, 'CA'))
     research_organization_name, recipient_city, recipient_province, COALESCE(recipient_country, 'CA'), recipient_postal_code
 FROM temp_grants
 WHERE research_organization_name IS NOT NULL AND research_organization_name != ''
 ORDER BY research_organization_name, recipient_city, COALESCE(recipient_country, 'CA')
-ON CONFLICT (name, city, country) DO NOTHING;
+ON CONFLICT (name, city, country) DO UPDATE SET
+    province = EXCLUDED.province,
+    postal_code = EXCLUDED.postal_code
+WHERE institutes.province IS DISTINCT FROM EXCLUDED.province
+   OR institutes.postal_code IS DISTINCT FROM EXCLUDED.postal_code;
 
 -- Recipients (Now handles NULL type)
 -- LEFT JOIN institutes: a recipient whose research_organization_name never
@@ -217,7 +224,13 @@ FROM temp_grants tg
 LEFT JOIN institutes i ON tg.research_organization_name = i.name AND tg.recipient_city = i.city AND COALESCE(tg.recipient_country, 'CA') = i.country
 WHERE tg.recipient_legal_name IS NOT NULL AND tg.recipient_legal_name != ''
 ORDER BY tg.recipient_legal_name, i.institute_id
-ON CONFLICT (legal_name, (COALESCE(institute_id, -1))) DO NOTHING;
+ON CONFLICT (legal_name, (COALESCE(institute_id, -1))) DO UPDATE SET
+    operating_name = EXCLUDED.operating_name,
+    type = EXCLUDED.type,
+    business_number = EXCLUDED.business_number
+WHERE recipients.operating_name IS DISTINCT FROM EXCLUDED.operating_name
+   OR recipients.type IS DISTINCT FROM EXCLUDED.type
+   OR recipients.business_number IS DISTINCT FROM EXCLUDED.business_number;
 
 -- Grants
 INSERT INTO grants (

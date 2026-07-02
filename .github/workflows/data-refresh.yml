@@ -47,6 +47,11 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: node scripts/update-grant-count.mjs
 
+      - name: Reconcile bookmarks
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/reconcile-bookmarks.mjs
+
       - name: Commit and push if changed
         run: |
           git config user.name "github-actions[bot]"
