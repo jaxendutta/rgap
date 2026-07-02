@@ -1,16 +1,41 @@
 // src/constants/data.ts
 // Static data used for display
 
-export const ORG_COLORS: Record<string, string> = {
-    NSERC: '#0066CC',
-    CIHR: '#DC3545',
-    SSHRC: '#28A745',
-};
+export interface OrganizationInfo {
+    abbreviation_en: string;
+    abbreviation_fr: string;
+    name_en: string;
+    name_fr: string;
+    // Raw CKAN owner_org slug used by open.canada.ca -- needed to link back
+    // to the original government record, e.g.
+    // https://search.open.canada.ca/grants/record/nserc-crsng,{ref_number},current
+    ckan_slug: string;
+}
 
-export const ORG_NAMES: Record<string, string> = {
-    NSERC: 'Natural Sciences and Engineering Research Council',
-    CIHR: 'Canadian Institutes of Health Research',
-    SSHRC: 'Social Sciences and Humanities Research Council',
+// Matches database/schema.sql's organizations seed data (org, org_fr,
+// org_title_en, org_title_fr).
+export const ORGANIZATIONS: Record<string, OrganizationInfo> = {
+    NSERC: {
+        abbreviation_en: 'NSERC',
+        abbreviation_fr: 'CRSNG',
+        name_en: 'Natural Sciences and Engineering Research Council',
+        name_fr: 'Conseil de recherches en sciences naturelles et en génie du Canada',
+        ckan_slug: 'nserc-crsng',
+    },
+    CIHR: {
+        abbreviation_en: 'CIHR',
+        abbreviation_fr: 'IRSC',
+        name_en: 'Canadian Institutes of Health Research',
+        name_fr: 'Instituts de recherche en santé du Canada',
+        ckan_slug: 'cihr-irsc',
+    },
+    SSHRC: {
+        abbreviation_en: 'SSHRC',
+        abbreviation_fr: 'CRSH',
+        name_en: 'Social Sciences and Humanities Research Council',
+        name_fr: 'Conseil de recherches en sciences humaines du Canada',
+        ckan_slug: 'sshrc-crsh',
+    },
 };
 
 export const RECIPIENT_TYPE_LABELS: Record<string, string> = {

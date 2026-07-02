@@ -29,6 +29,7 @@ import {
     LuBookmarkCheck
 } from "react-icons/lu";
 import { GrantAmendment, GrantWithDetails } from "@/types/database";
+import { ORGANIZATIONS } from "@/constants/data";
 import { Card } from "@/components/ui/Card";
 import Tag, { Tags } from "@/components/ui/Tag";
 import BookmarkButton from "@/components/bookmarks/BookmarkButton";
@@ -58,6 +59,14 @@ type TabId = "details" | "timeline" | "trend";
 
 const hasValue = (value: unknown): boolean => {
     return !!value && String(value).trim() !== "";
+};
+
+// Links back to the original record on the government's open data portal,
+// e.g. https://search.open.canada.ca/grants/record/nserc-crsng,{ref_number},current
+const getOpenCanadaUrl = (org: string | null | undefined, refNumber: string | null | undefined): string | undefined => {
+    const slug = org ? ORGANIZATIONS[org]?.ckan_slug : undefined;
+    if (!slug || !refNumber) return undefined;
+    return `https://search.open.canada.ca/grants/record/${encodeURIComponent(`${slug},${refNumber},current`)}`;
 };
 
 const RenderChangeIndicator = ({ current, previous }: { current: number; previous: number }) => {
@@ -163,9 +172,16 @@ const GrantHeader = ({
 };
 
 const MetadataTags = ({ grant }: { grant: GrantWithDetails }) => {
+    const openCanadaUrl = getOpenCanadaUrl(grant.org, grant.ref_number);
+
     const tags = useMemo(() => [
         { icon: LuLandmark, text: grant.org },
-        { icon: LuDatabase, text: grant.ref_number },
+        {
+            icon: LuDatabase,
+            text: grant.ref_number,
+            variant: openCanadaUrl ? "link" as const : "default" as const,
+            onClick: openCanadaUrl ? () => window.open(openCanadaUrl, '_blank', 'noopener,noreferrer') : undefined,
+        },
         {
             icon: LuCalendar1,
             text: `${formatDate(new Date(grant.agreement_start_date))} → ${grant.agreement_end_date ? formatDate(new Date(grant.agreement_end_date)) : "N/A"
@@ -186,13 +202,20 @@ const MetadataTags = ({ grant }: { grant: GrantWithDetails }) => {
                 (grant.country && grant.country.toUpperCase() !== "N/A")
             ),
         },
-    ].filter((tag) => !tag.hide), [grant]);
+    ].filter((tag) => !tag.hide), [grant, openCanadaUrl]);
 
     return (
         <div className="mt-1.5">
             <Tags spacing="tightest">
                 {tags.map((tag, index) => (
-                    <Tag key={index} icon={tag.icon} size="xs" variant="default" text={tag.text} />
+                    <Tag
+                        key={index}
+                        icon={tag.icon}
+                        size="xs"
+                        variant={tag.variant ?? "default"}
+                        text={tag.text}
+                        onClick={tag.onClick}
+                    />
                 ))}
             </Tags>
         </div>
@@ -503,7 +526,22 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
                                 <Card>
                                     <Card.Header title="Grant Information" icon={LuDatabase} size="sm" />
                                     <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700 space-y-1">
-                                        <InfoRow label="Reference Number" value={grant.ref_number} />
+                                        <InfoRow
+                                            label="Reference Number"
+                                            value={
+                                                getOpenCanadaUrl(grant.org, grant.ref_number) ? (
+                                                    <a
+                                                        href={getOpenCanadaUrl(grant.org, grant.ref_number)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-700 hover:underline inline-flex items-center gap-0.5"
+                                                    >
+                                                        {grant.ref_number}
+                                                        <LuArrowUpRight className="size-3 flex-shrink-0" />
+                                                    </a>
+                                                ) : grant.ref_number
+                                            }
+                                        />
                                         <InfoRow label="Program" value={grant.prog_title_en} placeholder="Not specified" />
                                         <InfoRow label="Agreement Title" value={grant.agreement_title_en || "No Agreement Title Record Found"} placeholder="Not specified" />
                                         {grant.amendment_date && <InfoRow label="Amendment Date" value={formatDate(grant.amendment_date)} />}
