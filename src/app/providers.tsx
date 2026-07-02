@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { NotificationProvider } from '@/providers/NotificationProvider';
-import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 import { User } from '@/types/database';
 
 export function Providers({
@@ -29,7 +28,6 @@ export function Providers({
             <AuthProvider initialUser={initialUser}>
                 {/* 2. NotificationProvider sits inside AuthProvider */}
                 <NotificationProvider>
-                    <ServiceWorkerRegistration />
                     {children}
                 </NotificationProvider>
             </AuthProvider>

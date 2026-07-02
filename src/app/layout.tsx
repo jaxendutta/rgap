@@ -5,6 +5,7 @@
 
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { Providers } from './providers';
 import { getCurrentUser } from '@/lib/session';
@@ -49,6 +50,13 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        {/* beforeInteractive so registration fires as soon as the browser
+            parses this tag, not after React hydrates -- PWA crawlers
+            (e.g. PWABuilder) check for a service worker before hydration
+            completes and won't see a registration made from a useEffect. */}
+        <Script id="register-sw" strategy="beforeInteractive">
+          {`if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }`}
+        </Script>
         <Providers initialUser={user} key={user?.id || 'anonymous'}>
           <MainLayout>
             {children}
