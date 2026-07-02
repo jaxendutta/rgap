@@ -5,6 +5,24 @@ import { db } from '@/lib/db';
 import { unstable_cache } from 'next/cache';
 import { SearchCategory, PopularSearch } from '@/types/search';
 
+// Plain SQL TRIM() only strips literal ASCII space (U+0020). Search terms
+// typed via an East-Asian IME can end up with a full-width space
+// (U+3000, IDEOGRAPHIC SPACE) or another Unicode space separator instead,
+// which TRIM() leaves untouched -- "university" and "university" with a
+// trailing U+3000 would otherwise group as two different popular
+// searches. JS's .trim() already handles this range for new saves
+// (history.ts); this covers aggregating whatever's already in the table.
+//
+// Built from Postgres's own \uXXXX regex escapes (parsed by Postgres's
+// regex engine, not JavaScript -- the double backslash below sends the
+// literal four characters "\", "u", "3", "0", "0", "0" etc. to Postgres,
+// not a JS Unicode escape) so the source file only ever contains plain
+// ASCII, never an actual invisible character.
+const UNICODE_WHITESPACE_CLASS =
+    '\\s\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF';
+const trimExpr = (col: string) =>
+    `regexp_replace(${col}, '^[${UNICODE_WHITESPACE_CLASS}]+|[${UNICODE_WHITESPACE_CLASS}]+$', '', 'g')`;
+
 /**
  * Fetches popular search terms based on category.
  */
@@ -18,16 +36,20 @@ export const getPopularSearches = async (
                 let query = '';
                 const params: any[] = [limit];
 
-                // TRIM() in both SELECT and GROUP BY: search terms saved with
-                // incidental surrounding whitespace (e.g. a trailing space
-                // typed into the search bar) would otherwise group as a
-                // separate "popular search" from the identical trimmed term.
+                // trimExpr() in both SELECT and GROUP BY: search terms saved
+                // with incidental surrounding whitespace (e.g. a trailing
+                // space typed into the search bar) would otherwise group as
+                // a separate "popular search" from the identical trimmed
+                // term.
                 if (category === 'recipient') {
-                    query = `SELECT TRIM(filters->>'recipient') as text, COUNT(*) as count FROM search_history WHERE filters->>'recipient' IS NOT NULL AND TRIM(filters->>'recipient') != '' GROUP BY TRIM(filters->>'recipient') ORDER BY count DESC LIMIT $1`;
+                    const trimmed = trimExpr(`filters->>'recipient'`);
+                    query = `SELECT ${trimmed} as text, COUNT(*) as count FROM search_history WHERE filters->>'recipient' IS NOT NULL AND ${trimmed} != '' GROUP BY ${trimmed} ORDER BY count DESC LIMIT $1`;
                 } else if (category === 'institute') {
-                    query = `SELECT TRIM(filters->>'institute') as text, COUNT(*) as count FROM search_history WHERE filters->>'institute' IS NOT NULL AND TRIM(filters->>'institute') != '' GROUP BY TRIM(filters->>'institute') ORDER BY count DESC LIMIT $1`;
+                    const trimmed = trimExpr(`filters->>'institute'`);
+                    query = `SELECT ${trimmed} as text, COUNT(*) as count FROM search_history WHERE filters->>'institute' IS NOT NULL AND ${trimmed} != '' GROUP BY ${trimmed} ORDER BY count DESC LIMIT $1`;
                 } else {
-                    query = `SELECT TRIM(search_query) as text, COUNT(*) as count FROM search_history WHERE search_query IS NOT NULL AND TRIM(search_query) != '' GROUP BY TRIM(search_query) ORDER BY count DESC LIMIT $1`;
+                    const trimmed = trimExpr('search_query');
+                    query = `SELECT ${trimmed} as text, COUNT(*) as count FROM search_history WHERE search_query IS NOT NULL AND ${trimmed} != '' GROUP BY ${trimmed} ORDER BY count DESC LIMIT $1`;
                 }
                 const result = await db.query(query, params);
                 return result.rows.map((row) => ({ text: row.text, count: parseInt(row.count), category }));
@@ -87,7 +109,7 @@ export async function getAggregatedTrends(
                 // OPTIMIZATION: If grouping by Year only, we don't need the Top 50 calculation
                 if (groupBy === 'year') {
                     query = `
-                        SELECT 
+                        SELECT
                             EXTRACT(YEAR FROM g.agreement_start_date)::int as year,
                             'Total' as category,
                             SUM(g.agreement_value) as funding,
@@ -116,11 +138,11 @@ export async function getAggregatedTrends(
 
                     query = `
                         WITH TopCategories AS (${topCatsQuery})
-                        SELECT 
+                        SELECT
                             EXTRACT(YEAR FROM g.agreement_start_date)::int as year,
-                            CASE 
+                            CASE
                                 WHEN ${groupColumn} IN (SELECT category FROM TopCategories) THEN COALESCE(${groupColumn}, 'Unknown')
-                                ELSE 'Other' 
+                                ELSE 'Other'
                             END as category,
                             SUM(g.agreement_value) as funding,
                             COUNT(*) as count
