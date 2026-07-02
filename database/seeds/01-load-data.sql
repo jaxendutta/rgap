@@ -167,24 +167,46 @@ DO $$ BEGIN RAISE NOTICE 'Inserting normalized data...'; END $$;
 -- Already there from schema.sql
 
 -- Programs
+-- DISTINCT ON (not a bare SELECT DISTINCT + a `temp_grants, organizations`
+-- cross join) for two reasons: the cross join paired every program with
+-- all 3 organizations and let ON CONFLICT DO NOTHING keep whichever one
+-- happened to insert first, silently assigning some programs to the wrong
+-- funding agency; and de-duplicating on exactly the unique-constraint
+-- column (prog_title_en) instead of all 3 columns means every candidate
+-- row is already unique before insertion, so ON CONFLICT rarely fires and
+-- the prog_id sequence doesn't burn values on skipped near-duplicates.
 INSERT INTO programs (prog_title_en, prog_purpose_en, org)
-SELECT DISTINCT tg.prog_name_en, tg.prog_purpose_en, o.org
-FROM temp_grants tg, organizations o
+SELECT DISTINCT ON (tg.prog_name_en) tg.prog_name_en, tg.prog_purpose_en, tg.org
+FROM temp_grants tg
 WHERE tg.prog_name_en IS NOT NULL AND tg.prog_name_en != ''
+ORDER BY tg.prog_name_en, tg.org
 ON CONFLICT (prog_title_en) DO NOTHING;
 
 -- Institutes
+-- DISTINCT ON (name, city, country) matches the actual unique constraint
+-- uq_institute_location(name, city, country); a bare SELECT DISTINCT over
+-- all 5 columns treats rows with the same (name, city, country) but a
+-- different province/postal_code as separate candidates, most of which
+-- get skipped by ON CONFLICT DO NOTHING while still burning a sequence
+-- value each.
 INSERT INTO institutes (name, city, province, country, postal_code)
-SELECT DISTINCT research_organization_name, recipient_city, recipient_province, COALESCE(recipient_country, 'CA'), recipient_postal_code
-FROM temp_grants WHERE research_organization_name IS NOT NULL AND research_organization_name != ''
+SELECT DISTINCT ON (research_organization_name, recipient_city, COALESCE(recipient_country, 'CA'))
+    research_organization_name, recipient_city, recipient_province, COALESCE(recipient_country, 'CA'), recipient_postal_code
+FROM temp_grants
+WHERE research_organization_name IS NOT NULL AND research_organization_name != ''
+ORDER BY research_organization_name, recipient_city, COALESCE(recipient_country, 'CA')
 ON CONFLICT (name, city, country) DO NOTHING;
 
 -- Recipients (Now handles NULL type)
+-- Same DISTINCT ON reasoning as institutes above, matching
+-- uq_recipient_institute(legal_name, institute_id).
 INSERT INTO recipients (legal_name, operating_name, type, business_number, institute_id)
-SELECT DISTINCT tg.recipient_legal_name, tg.recipient_operating_name, tg.recipient_type, tg.recipient_business_number, i.institute_id
+SELECT DISTINCT ON (tg.recipient_legal_name, i.institute_id)
+    tg.recipient_legal_name, tg.recipient_operating_name, tg.recipient_type, tg.recipient_business_number, i.institute_id
 FROM temp_grants tg
 JOIN institutes i ON tg.research_organization_name = i.name AND tg.recipient_city = i.city AND COALESCE(tg.recipient_country, 'CA') = i.country
 WHERE tg.recipient_legal_name IS NOT NULL AND tg.recipient_legal_name != ''
+ORDER BY tg.recipient_legal_name, i.institute_id
 ON CONFLICT (legal_name, institute_id) DO NOTHING;
 
 -- Grants
