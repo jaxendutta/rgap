@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
     LuSearch,
@@ -139,6 +140,13 @@ export default function HomePage() {
                     );
                 })}
             </div>
+
+            <footer className="flex flex-col items-center justify-center gap-2 border-t border-gray-200 pt-4 text-center text-xs md:text-sm text-gray-500">
+                <span>© 2026 RGAP</span>
+                <Link href="/privacy" className="font-medium text-gray-700 underline decoration-gray-300 underline-offset-4 hover:text-blue-600 hover:decoration-blue-500 transition-colors">
+                    Privacy Policy
+                </Link>
+            </footer>
         </PageContainer>
     );
 }
