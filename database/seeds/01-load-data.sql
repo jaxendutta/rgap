@@ -245,7 +245,24 @@ DO UPDATE SET
     description_en = EXCLUDED.description_en,
     expected_results_en = EXCLUDED.expected_results_en,
     additional_information_en = EXCLUDED.additional_information_en,
-    amendments_history = EXCLUDED.amendments_history;
+    amendments_history = EXCLUDED.amendments_history
+-- Without this guard, every conflicting row gets rewritten every month
+-- regardless of whether anything actually changed -- Postgres creates a new
+-- row version on every UPDATE, so a full monthly no-op rewrite of ~190K+
+-- rows leaves that many dead tuples behind every single run. Only write
+-- when something is actually different.
+WHERE grants.latest_amendment_number IS DISTINCT FROM EXCLUDED.latest_amendment_number
+   OR grants.amendment_date IS DISTINCT FROM EXCLUDED.amendment_date
+   OR grants.agreement_number IS DISTINCT FROM EXCLUDED.agreement_number
+   OR grants.agreement_value IS DISTINCT FROM EXCLUDED.agreement_value
+   OR grants.foreign_currency_type IS DISTINCT FROM EXCLUDED.foreign_currency_type
+   OR grants.foreign_currency_value IS DISTINCT FROM EXCLUDED.foreign_currency_value
+   OR grants.agreement_start_date IS DISTINCT FROM EXCLUDED.agreement_start_date
+   OR grants.agreement_end_date IS DISTINCT FROM EXCLUDED.agreement_end_date
+   OR grants.description_en IS DISTINCT FROM EXCLUDED.description_en
+   OR grants.expected_results_en IS DISTINCT FROM EXCLUDED.expected_results_en
+   OR grants.additional_information_en IS DISTINCT FROM EXCLUDED.additional_information_en
+   OR grants.amendments_history IS DISTINCT FROM EXCLUDED.amendments_history;
 
 -- Cleanup
 DROP TABLE temp_grants;

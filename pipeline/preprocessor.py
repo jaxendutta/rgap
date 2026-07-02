@@ -276,6 +276,18 @@ class ProcessingPipeline:
             "Normalize date fields to consistent format"
         )
         
+        self.registry.register(
+            "split_recipient_institution_suffix",
+            self._split_recipient_institution_suffix,
+            "Split 'Lastname, Firstname-Institution' recipient names into just the person's name"
+        )
+
+        self.registry.register(
+            "collapse_self_duplicate_names",
+            self._collapse_self_duplicate_names,
+            "Collapse 'X - X' self-duplicated names down to 'X'"
+        )
+
         # Advanced processors
         self.registry.register(
             "process_amendments",
@@ -381,11 +393,16 @@ class ProcessingPipeline:
         return (self
             .add_stage("clean_column_names")
             .add_stage("map_organization_codes")
+            # Must run before any delimiter-based splitting below: embedded
+            # newlines break the '.'-based regexes used to detect pipe/slash/
+            # dash delimiters (see _clean_encoded_characters docstring).
+            .add_stage("clean_encoded_characters")
             .add_stage("clean_research_organization_names")
             .add_stage("standardize_city_names")
             .add_stage("extract_year_from_date")
             .add_stage("fix_research_organizations")
-            .add_stage("clean_encoded_characters")
+            .add_stage("split_recipient_institution_suffix")
+            .add_stage("collapse_self_duplicate_names")
             .add_stage("ensure_numeric_values")
             .add_stage("normalize_date_fields")
             .add_stage("process_amendments")
@@ -561,10 +578,19 @@ class ProcessingPipeline:
         """Check if a recipient name likely refers to an institution based on keywords."""
         if not name or not isinstance(name, str):
             return False
-            
+
+        # "Surname, Firstname ..." is a person-name shape, not an institution
+        # -- even when it happens to mention an institution keyword later,
+        # e.g. "St-Pierre, Julie (University of Ottawa)". Institution names
+        # in this dataset don't start with a short comma-separated pair like
+        # this, so treat it as a strong override: never misclassify a person
+        # name as an institution just because it names their affiliation.
+        if re.match(r"^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ\-'. ]{0,40},\s*[A-Za-zÀ-ÿ]", name):
+            return False
+
         # Convert to lowercase for case-insensitive matching
         name_lower = name.lower()
-        
+
         # English and French keywords that suggest an institution
         institution_keywords = [
             'university', 'université', 'univ.', 'univ ',
@@ -926,7 +952,65 @@ class ProcessingPipeline:
                 self.quality_report.record_fix(fix_type, f"{recipient_col}/{research_org_col}", count)
         
         return result_df
-    
+
+    def _split_recipient_institution_suffix(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Split recipient names that have an institution name glued on with a
+        hyphen, e.g. "Abdel-Qadir, Husam-University of Toronto" ->
+        "Abdel-Qadir, Husam". Splits on the first hyphen that appears AFTER
+        the first comma, so hyphenated surnames before the comma (e.g.
+        "Abdel-Qadir", "Aspuru-Guzik", "Iorio-Morin") are preserved -- only
+        a hyphen appearing after "Lastname, Firstname" is treated as the
+        person/institution boundary.
+
+        research_organization_name is derived independently (from a
+        separate raw CSV column, already correctly resolved to the
+        recipient's institute), so the institution text discarded here is
+        redundant, not lost information.
+        """
+        recipient_col = 'recipient_legal_name'
+        if recipient_col not in df.columns:
+            return df
+
+        result_df = df.copy()
+        pattern = r'^([^,]+,\s*[^-]+)-(.+)$'
+        mask = result_df[recipient_col].str.match(pattern, na=False)
+
+        if mask.any():
+            cleaned = result_df.loc[mask, recipient_col].str.extract(pattern)[0].str.strip()
+            result_df.loc[mask, recipient_col] = cleaned
+
+            count = mask.sum()
+            self.quality_report.record_fix("inconsistencies_resolved", recipient_col, count)
+            logger.info(f"Split institution suffix off {count:,} recipient names")
+
+        return result_df
+
+    def _collapse_self_duplicate_names(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Collapse self-duplicated names like "Acadia University - Acadia
+        University" down to "Acadia University". Happens when an
+        institution is itself the grant recipient and the source data
+        pairs an English/French name where no French variant exists, so
+        both halves end up identical.
+        """
+        result_df = df.copy()
+        pattern = r'^(.+) - \1$'
+
+        for col in ['recipient_legal_name', 'research_organization_name']:
+            if col not in result_df.columns:
+                continue
+            mask = result_df[col].str.match(pattern, na=False)
+            if mask.any():
+                cleaned = result_df.loc[mask, col].str.extract(pattern)[0]
+                result_df.loc[mask, col] = cleaned
+
+                count = mask.sum()
+                self.quality_report.record_fix("inconsistencies_resolved", col, count)
+                logger.info(f"Collapsed {count:,} self-duplicated names in column '{col}'")
+
+        return result_df
+
     def _ensure_numeric_values(self, df: pd.DataFrame, numeric_columns: List[str] = None) -> pd.DataFrame:
         """Ensure specified columns are properly formatted as numeric values."""
         # Make a copy to avoid modifying the input
@@ -1004,49 +1088,69 @@ class ProcessingPipeline:
         return result_df
 
     def _clean_encoded_characters(self, df: pd.DataFrame, columns_to_clean: List[str] = None) -> pd.DataFrame:
-        """Clean encoded characters like _x000D_ and _x000B_ in text fields."""
+        """Clean encoded characters like _x000D_ and _x000B_, and literal
+        embedded newlines, in text fields.
+
+        This must run before any delimiter-based splitting (pipe/slash/dash
+        parsing of bilingual EN|FR fields, "Name-Institution" splitting,
+        etc.). Python regex '.' does not match '\\n' without re.DOTALL, and
+        these str.contains/str.extract calls don't set DOTALL, so a field
+        with a literal embedded newline before the delimiter silently fails
+        to match at all -- the raw, uncleaned text (with both languages and
+        the newline still in it) passes straight through undetected. Since
+        the raw government data has newlines embedded well before the
+        _x000D_/_x000B_ markers get cleaned (which used to run near the end
+        of the pipeline), this was letting garbage like a person's
+        "Name (English Institution)|Name (French Institution)" string slip
+        past every downstream cleaning step untouched.
+        """
         # Make a copy to avoid modifying the input
         result_df = df.copy()
-        
+
         # If no specific columns are provided, check all object (string) columns
         if columns_to_clean is None:
             columns_to_clean = result_df.select_dtypes(include=['object']).columns.tolist()
         else:
             # Filter to only include columns that actually exist in the DataFrame
             columns_to_clean = [col for col in columns_to_clean if col in result_df.columns]
-        
+
         for col in columns_to_clean:
             # Skip non-object columns
             if result_df[col].dtype != 'object':
                 continue
-                
+
             # Create mask for non-null values
             mask = result_df[col].notna()
-            
+
             if mask.sum() == 0:
                 continue
-                
-            # Count occurrences of _x000D_ before cleaning
+
+            # Count occurrences of _x000D_/_x000B_ markers and literal newlines before cleaning
             encoded_cr_count = result_df.loc[mask & result_df[col].str.contains('_x000D_', regex=False), col].shape[0]
             encoded_cr_count += result_df.loc[mask & result_df[col].str.contains('_x000B_', regex=False), col].shape[0]
-            
+            encoded_cr_count += result_df.loc[mask & result_df[col].str.contains(r'[\r\n]', regex=True, na=False), col].shape[0]
+
             if encoded_cr_count > 0:
                 self.quality_report.record_issue("invalid_formats", col, encoded_cr_count)
-                
+
                 # Replace _x000D_ with a space
                 result_df.loc[mask, col] = result_df.loc[mask, col].str.replace('_x000D_', ' ', regex=False)
 
                 # Replace _x000B_ with a space
                 result_df.loc[mask, col] = result_df.loc[mask, col].str.replace('_x000B_', ' ', regex=False)
-                
+
+                # Replace literal embedded carriage returns/newlines with a space
+                result_df.loc[mask, col] = result_df.loc[mask, col].str.replace(r'[\r\n]+', ' ', regex=True)
+
                 # Clean up any double spaces that might have been created
                 result_df.loc[mask, col] = result_df.loc[mask, col].str.replace(r'\s{2,}', ' ', regex=True)
-                
+                result_df.loc[mask, col] = result_df.loc[mask, col].str.strip()
+
                 # Record the fix
                 self.quality_report.record_fix("formats_corrected", col, encoded_cr_count)
-                
-                logger.info(f"Cleaned {encoded_cr_count:,} encoded carriage returns in column '{col}'")
-        
+
+                logger.info(f"Cleaned {encoded_cr_count:,} encoded/embedded line breaks in column '{col}'")
+
         return result_df
     
     def _process_amendments(self, df: pd.DataFrame) -> pd.DataFrame:
