@@ -1,7 +1,4 @@
 "use client";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-// src/app/(dashboard)/loading.tsx
-import LoadingState from "@/components/ui/LoadingState";
 import { cn } from "@/lib/format";
 import { GiAbstract014 } from "react-icons/gi";
 import { useEffect, useState } from "react";
@@ -25,7 +22,6 @@ export default function DashboardLoading() {
         "Time-traveling through fiscal years...",
         "Consulting the research funding crystal ball...",
         "Asking the RGAP overlords very nicely...",
-        "Downloading the latest conspiracy theories... wait, wrong app...",
         "Calculating how many PhDs this could fund...",
         "Pretending we understand these numbers...",
         "Loading... (yes, still loading)...",
