@@ -534,7 +534,7 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
                                                         href={getOpenCanadaUrl(grant.org, grant.ref_number)}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="text-blue-700 hover:underline inline-flex items-center gap-0.5"
+                                                        className="text-blue-700 inline-flex items-center gap-0.5"
                                                     >
                                                         {grant.ref_number}
                                                         <LuArrowUpRight className="size-3 flex-shrink-0" />
