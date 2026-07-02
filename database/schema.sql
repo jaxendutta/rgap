@@ -20,10 +20,14 @@ INSERT INTO organizations (org, org_fr, org_title_en, org_title_fr) VALUES
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS programs (
     prog_id SERIAL PRIMARY KEY,
-    prog_title_en VARCHAR(255) UNIQUE NOT NULL,
+    -- Program names aren't unique per agency -- e.g. "Research Partnerships"
+    -- is a distinct program under both NSERC and SSHRC -- so the natural key
+    -- is the (title, org) pair, not the title alone.
+    prog_title_en VARCHAR(255) NOT NULL,
     prog_purpose_en TEXT,
     org VARCHAR(5),
-    FOREIGN KEY (org) REFERENCES organizations(org) ON DELETE SET NULL
+    FOREIGN KEY (org) REFERENCES organizations(org) ON DELETE SET NULL,
+    CONSTRAINT uq_programs_title_org UNIQUE (prog_title_en, org)
 );
 
 CREATE INDEX idx_programs_org ON programs(org);

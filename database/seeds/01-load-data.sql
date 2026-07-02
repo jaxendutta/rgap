@@ -172,15 +172,21 @@ DO $$ BEGIN RAISE NOTICE 'Inserting normalized data...'; END $$;
 -- all 3 organizations and let ON CONFLICT DO NOTHING keep whichever one
 -- happened to insert first, silently assigning some programs to the wrong
 -- funding agency; and de-duplicating on exactly the unique-constraint
--- column (prog_title_en) instead of all 3 columns means every candidate
--- row is already unique before insertion, so ON CONFLICT rarely fires and
--- the prog_id sequence doesn't burn values on skipped near-duplicates.
+-- columns instead of just prog_purpose_en means every candidate row is
+-- already unique before insertion, so ON CONFLICT rarely fires and the
+-- prog_id sequence doesn't burn values on skipped near-duplicates.
+--
+-- The constraint is (prog_title_en, org), not prog_title_en alone: program
+-- names aren't unique per agency -- e.g. "Research Partnerships" is a
+-- distinct program under both NSERC and SSHRC, and collapsing them to one
+-- row under prog_title_en-only uniqueness silently misattributed ~30,800
+-- grants' org.
 INSERT INTO programs (prog_title_en, prog_purpose_en, org)
-SELECT DISTINCT ON (tg.prog_name_en) tg.prog_name_en, tg.prog_purpose_en, tg.org
+SELECT DISTINCT ON (tg.prog_name_en, tg.org) tg.prog_name_en, tg.prog_purpose_en, tg.org
 FROM temp_grants tg
 WHERE tg.prog_name_en IS NOT NULL AND tg.prog_name_en != ''
 ORDER BY tg.prog_name_en, tg.org
-ON CONFLICT (prog_title_en) DO NOTHING;
+ON CONFLICT (prog_title_en, org) DO NOTHING;
 
 -- Institutes
 -- DISTINCT ON (name, city, country) matches the actual unique constraint
@@ -248,7 +254,7 @@ FROM temp_grants tg
 JOIN organizations o ON tg.org = o.org
 JOIN institutes i ON tg.research_organization_name = i.name AND tg.recipient_city = i.city AND COALESCE(tg.recipient_country, 'CA') = i.country
 JOIN recipients r ON tg.recipient_legal_name = r.legal_name AND r.institute_id = i.institute_id
-LEFT JOIN programs p ON tg.prog_name_en = p.prog_title_en
+LEFT JOIN programs p ON tg.prog_name_en = p.prog_title_en AND tg.org = p.org
 WHERE tg.ref_number IS NOT NULL AND r.recipient_id IS NOT NULL
 -- Upsert on the natural key (see migrations/001_add_grants_natural_key.sql) so
 -- re-running this monthly updates amended grants in place instead of
