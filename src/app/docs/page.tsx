@@ -16,38 +16,67 @@ export default function DocsHomePage() {
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <DocCard 
-                    href="/docs/intro"
-                    title="Introduction"
-                    description="The philosophy behind RGAP and data sources."
-                    icon={LuBookOpen}
-                />
-                <DocCard 
-                    href="/docs/account-setup"
-                    title="Account & Security"
-                    description="Setting up your profile and understanding privacy."
-                    icon={LuShieldCheck}
-                />
-                <DocCard 
-                    href="/docs/search"
-                    title="Search Engine"
-                    description="Mastering filters, keywords, and deep queries."
-                    icon={LuSearch}
-                />
-                <DocCard 
-                    href="/docs/analytics"
-                    title="Analytics"
-                    description="How to read the trends and funding charts."
-                    icon={LuChartBar}
-                />
-                <DocCard 
-                    href="/docs/bookmarks"
-                    title="Bookmarks"
-                    description="Curating your personal lists and notes."
-                    icon={LuBookmark}
-                />
-            </div>
+            <section className="space-y-4 md:space-y-5">
+                <div>
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+                        Getting Started
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <DocCard 
+                            href="/docs/intro"
+                            title="Introduction"
+                            description="The philosophy behind RGAP and data sources."
+                            icon={LuBookOpen}
+                        />
+                        <DocCard 
+                            href="/docs/account-setup"
+                            title="Account & Security"
+                            description="Setting up your profile and understanding privacy."
+                            icon={LuShieldCheck}
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+                        Platform Features
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <DocCard 
+                            href="/docs/search"
+                            title="Search Engine"
+                            description="Mastering filters, keywords, and deep queries."
+                            icon={LuSearch}
+                        />
+                        <DocCard 
+                            href="/docs/analytics"
+                            title="Analytics"
+                            description="How to read the trends and funding charts."
+                            icon={LuChartBar}
+                        />
+                        <DocCard 
+                            href="/docs/bookmarks"
+                            title="Bookmarks"
+                            description="Curating your personal lists and notes."
+                            icon={LuBookmark}
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+                        Legal
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <DocCard 
+                            href="/docs/privacy"
+                            title="Privacy Policy"
+                            description="How RGAP handles account data, cookies, and retention."
+                            icon={LuShieldCheck}
+                        />
+                    </div>
+                </div>
+            </section>
         </div>
     );
 }

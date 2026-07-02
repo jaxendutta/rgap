@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
     LuSearch,
     LuGraduationCap,
@@ -12,7 +9,6 @@ import {
     LuTriangleAlert
 } from "react-icons/lu";
 import PageContainer from "@/components/layout/PageContainer";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { IconType } from "react-icons";
 import { LAST_UPDATED, GRANTS_COUNT_APPROX } from "@/constants/data";
@@ -51,15 +47,15 @@ export default function HomePage() {
             ],
         ];
 
-    const router = useRouter();
+    const actionLinkClasses = "inline-flex items-center justify-center gap-2 rounded-full px-3 py-2.5 text-sm md:text-base font-medium transition-colors duration-300 ease-in-out shadow-xs hover:shadow-md";
 
     return (
-        <PageContainer className="flex flex-col justify-between md:justify-center gap-3 md:gap-6">
+        <PageContainer className="flex min-h-full flex-1 flex-col gap-3 md:gap-6">
             {/* Hero Section */}
-            <Card className="relative px-6 lg:px-8 py-14 lg:py-24 hover:border-gray-300 transition-all duration-200 rounded-3xl">
+            <Card className="relative flex min-h-0 flex-1 items-center px-6 lg:px-8 py-14 lg:py-24 hover:border-gray-300 transition-all duration-200 rounded-3xl">
                 <GiAbstract014 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-72 md:size-80 text-gray-700 opacity-10 animate-spin-slow pointer-events-none" />
 
-                <div className="text-center">
+                <div className="flex h-full w-full flex-col justify-center text-center">
                     <p className="text-5xl font-bold text-gray-900 leading-tight flex justify-center items-center">
                         <span className="inline-block px-2">[</span>
                         <span className="inline-block">RGAP</span>
@@ -77,25 +73,21 @@ export default function HomePage() {
 
                     <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
                         <div className="flex flex-wrap justify-center sm:flex-row gap-3">
-                            <Button
-                                variant="primary"
-                                size="md"
-                                leftIcon={LuSearch}
-                                className="text-sm md:text-base"
-                                onClick={() => router.push("/search")}
+                            <Link
+                                href="/search"
+                                className={`${actionLinkClasses} bg-gray-900 text-white hover:bg-black`}
                             >
-                                Explore
-                            </Button>
+                                <LuSearch className="size-3.5 md:size-4 flex-shrink-0" />
+                                <span>Explore</span>
+                            </Link>
 
-                            <Button
-                                variant="secondary"
-                                size="md"
-                                rightIcon={LuLogIn}
-                                className="text-sm md:text-base"
-                                onClick={() => router.push("/login")}
+                            <Link
+                                href="/login"
+                                className={`${actionLinkClasses} bg-gray-100 text-gray-700 hover:bg-gray-200`}
                             >
-                                Sign In
-                            </Button>
+                                <span>Sign In</span>
+                                <LuLogIn className="size-3.5 md:size-4 flex-shrink-0" />
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -120,12 +112,9 @@ export default function HomePage() {
             {/* Features Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
                 {features.map(([title, description, Icon, link], index) => {
-                    return (
+                    const card = (
                         <Card
-                            key={index}
-                            className="relative overflow-hidden p-4 md:p-6 flex flex-col justify-center gap-1 hover:border-gray-300 hover:shadow-md transition-all duration-200 rounded-3xl"
-                            isInteractive
-                            onClick={link ? () => router.push(link) : undefined}
+                            className="relative overflow-hidden p-4 md:p-6 flex flex-col justify-center gap-1 hover:border-gray-300 hover:shadow-md transition-all duration-200 rounded-3xl h-full"
                         >
                             <Icon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-24 md:size-32 text-gray-700 opacity-10 animate-spin-slow" />
                             <div className="z-10 justify-between flex flex-col h-full">
@@ -138,15 +127,23 @@ export default function HomePage() {
                             </div>
                         </Card>
                     );
+
+                    if (link) {
+                        return (
+                            <Link key={index} href={link} className="block h-full">
+                                {card}
+                            </Link>
+                        );
+                    }
+
+                    return (
+                        <div key={index} className="h-full">
+                            {card}
+                        </div>
+                    );
                 })}
             </div>
 
-            <footer className="flex flex-col items-center justify-center gap-2 border-t border-gray-200 pt-4 text-center text-xs md:text-sm text-gray-500">
-                <span>© 2026 RGAP</span>
-                <Link href="/privacy" className="font-medium text-gray-700 underline decoration-gray-300 underline-offset-4 hover:text-blue-600 hover:decoration-blue-500 transition-colors">
-                    Privacy Policy
-                </Link>
-            </footer>
         </PageContainer>
     );
 }

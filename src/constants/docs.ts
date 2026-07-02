@@ -1,5 +1,5 @@
 import { IconType } from "react-icons";
-import { LuBookmark, LuChartLine, LuInfo, LuSearch, LuUser } from "react-icons/lu";
+import { LuBookmark, LuChartLine, LuInfo, LuSearch, LuShieldCheck, LuUser } from "react-icons/lu";
 
 interface DocNavItem {
     title: string;
@@ -21,6 +21,12 @@ export const DOCS_NAV_ITEMS: { title: string; items: DocNavItem[] }[] = [
             { title: "Search & Filters", href: "/docs/search", icon: LuSearch },
             { title: "Analytics Engine", href: "/docs/analytics", icon: LuChartLine },
             { title: "Bookmarks", href: "/docs/bookmarks", icon: LuBookmark },
+        ]
+    },
+    {
+        title: "Legal",
+        items: [
+            { title: "Privacy Policy", href: "/docs/privacy", icon: LuShieldCheck },
         ]
     }
 ];

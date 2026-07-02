@@ -10,7 +10,6 @@ import {
     LuGraduationCap,
     LuBookmark,
     LuUser,
-    LuSun,
     LuLogIn,
     LuBookOpen
 } from "react-icons/lu";
