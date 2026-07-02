@@ -124,9 +124,9 @@ export const PopularSearchesPanel = ({
                     variant="ghost"
                     size="sm"
                     className="w-full text-xs text-gray-500 hover:text-gray-900 mt-2"
-                    onClick={() => router.push(`/search`)}
+                    onClick={() => router.push(`/search/popular`)}
                 >
-                    View All Categories
+                    View All
                     <LuChevronRight className="w-3 h-3 ml-1" />
                 </Button>
             </div>
