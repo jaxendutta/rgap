@@ -12,7 +12,7 @@ export default function DocsHomePage() {
                     Documentation
                 </h1>
                 <p className="text-sm md:text-lg text-gray-500 leading-relaxed">
-                    Guides and references to help you navigate the Research Grant Analytics Platform.
+                    Guides and references to help you navigate the Research Grants Analytics Platform.
                 </p>
             </div>
 

@@ -3,7 +3,7 @@ import type { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
     return {
         id: '/',
-        name: '[ RGAP ] Research Grant Analytics Platform',
+        name: '[ RGAP ] Research Grants Analytics Platform',
         short_name: 'RGAP',
         description: 'Browse Canadian Tri-Agency Council research grants from NSERC, CIHR, and SSHRC',
         start_url: '/',
