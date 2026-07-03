@@ -14,7 +14,7 @@ import ServiceWorkerRegistration from '@/components/layout/ServiceWorkerRegistra
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: '[ RGAP ] Research Grant Analytics Platform',
+  title: '[ RGAP ] Research Grants Analytics Platform',
   description: 'Browse Canadian Tri-Agency Council research grants from NSERC, CIHR, and SSHRC',
   keywords: ['research grants', 'NSERC', 'CIHR', 'SSHRC', 'Canada'],
   icons: {
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_CA',
     url: 'https://rgap.anirban.ca',
-    title: '[ RGAP ] Research Grant Analytics Platform',
+    title: '[ RGAP ] Research Grants Analytics Platform',
     description: 'Browse Canadian Tri-Agency Council research grants from NSERC, CIHR, and SSHRC',
   },
 };

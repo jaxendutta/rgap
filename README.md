@@ -1,4 +1,4 @@
-# [ RGAP ] Research Grant Analytics Platform
+# [ RGAP ] Research Grants Analytics Platform
 
 [ RGAP ] is a modern analytics platform designed to explore, visualize, and track research funding data from Canada's three major federal research funding agencies: **NSERC** (Natural Sciences and Engineering), **CIHR** (Health), and **SSHRC** (Social Sciences and Humanities).
 
