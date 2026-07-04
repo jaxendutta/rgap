@@ -14,14 +14,6 @@ import { IconType } from "react-icons";
 import { LAST_UPDATED, GRANTS_COUNT_APPROX } from "@/constants/data";
 import { formatDate, formatDateDiff } from "@/lib/format";
 import { GiAbstract014 } from "react-icons/gi";
-import { Zen_Dots } from "next/font/google";
-
-const zenDots = Zen_Dots({ 
-    subsets: ["latin", "latin-ext"], 
-    style: "normal", 
-    weight: ["400"],
-    display: "swap"
-});
 
 export default function HomePage() {
     const features: [
@@ -64,10 +56,10 @@ export default function HomePage() {
                 <GiAbstract014 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-72 md:size-80 text-gray-700 opacity-10 animate-spin-slow pointer-events-none" />
 
                 <div className="flex h-full w-full flex-col justify-center text-center">
-                    <div className={`${zenDots.className} font-bold text-gray-900 leading-tight flex justify-center items-center pb-2`}>
-                        <span className="px-2 text-5xl md:text-9xl xl:text-[10rem]">[</span>
-                        <span className="text-4xl sm:text-5xl xl:text-8xl mt-2">RGAP</span>
-                        <span className="px-2 text-5xl md:text-9xl xl:text-[10rem]">]</span>
+                    <div className={`font-bold text-gray-900 leading-tight flex justify-center items-center pb-2 sm:pb-3 md:pb-4`}>
+                        <span className="px-2 text-5xl sm:text-6xl md:text-7xl lg:text-8xl">[</span>
+                        <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl mt-2">RGAP</span>
+                        <span className="px-2 text-5xl sm:text-6xl md:text-7xl lg:text-8xl">]</span>
                     </div>
 
                     <span className="mt-1 text-xs sm:text-base md:text-xl text-gray-600 block uppercase tracking-widest font-semibold border-b border-gray-300 pb-1 md:pb-2">

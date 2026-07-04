@@ -4,14 +4,15 @@
 // Auth only needed for: bookmarks, saved searches, account features
 
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Roboto, Stack_Sans_Notch } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { getCurrentUser } from '@/lib/session';
 import MainLayout from '@/components/layout/MainLayout';
 import ServiceWorkerRegistration from '@/components/layout/ServiceWorkerRegistration';
 
-const inter = Inter({ subsets: ['latin'] });
+const roboto = Roboto({ subsets: ['latin'] });
+const stack = Stack_Sans_Notch({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: '[ RGAP ] Research Grants Analytics Platform',
@@ -49,7 +50,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={stack.className}>
         <ServiceWorkerRegistration />
         <Providers initialUser={user} key={user?.id || 'anonymous'}>
           <MainLayout>
