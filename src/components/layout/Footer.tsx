@@ -14,6 +14,12 @@ const Footer = () => {
                 >
                     Privacy Policy
                 </Link>
+                <Link
+                    href="/docs/terms"
+                    className="font-medium text-gray-700 underline decoration-gray-300 underline-offset-4 transition-colors hover:text-blue-600 hover:decoration-blue-500"
+                >
+                    Terms & Conditions
+                </Link>
             </div>
         </footer>
     );

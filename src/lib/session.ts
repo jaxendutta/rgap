@@ -2,6 +2,7 @@ import { getIronSession, IronSession } from 'iron-session';
 import { cookies, headers } from 'next/headers';
 import { db } from './db';
 import { cache } from 'react';
+import crypto from 'crypto';
 
 export interface SessionUser {
     id: number;
@@ -43,6 +44,61 @@ export async function getClientIp(): Promise<string> {
     
     // Fallback for local development or direct connection
     return '127.0.0.1';
+}
+
+// Helper: Estimate Location
+export async function getLocationFromIP(ip: string): Promise<string> {
+    if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('::ffff:') || ip.startsWith('172.') || ip.startsWith('192.168.')) {
+        return 'Local Network (Dev)';
+    }
+
+    try {
+        // ipinfo.io/json works without token for low volume, supports HTTPS
+        const response = await fetch(`https://ipinfo.io/${ip}/json`);
+        const data = await response.json();
+
+        if (data.city && data.country) {
+            return `${data.city}, ${data.country}`;
+        }
+        return 'Unknown Location';
+    } catch (error) {
+        return 'Unknown Location';
+    }
+}
+
+// Create a DB-backed session + audit log entry and persist the iron-session
+// cookie. Shared by password login and OAuth sign-in.
+export async function createAuthenticatedSession(
+    user: SessionUser,
+    options: { userAgent: string; ip: string; rememberMe?: boolean }
+): Promise<void> {
+    const sessionId = crypto.randomUUID();
+    const location = await getLocationFromIP(options.ip);
+
+    await db.query(
+        `INSERT INTO sessions (session_id, user_id, user_agent, ip_address, location) VALUES ($1, $2, $3, $4, $5)`,
+        [sessionId, user.id, options.userAgent, options.ip, location]
+    );
+
+    await db.query(
+        `INSERT INTO user_audit_logs (user_id, event_type, ip_address) VALUES ($1, 'LOGIN', $2)`,
+        [user.id, options.ip]
+    );
+
+    const session = await getSession();
+    session.user = user;
+    session.sessionId = sessionId;
+    session.isLoggedIn = true;
+
+    if (options.rememberMe) {
+        const thirtyDays = 60 * 60 * 24 * 30;
+        session.updateConfig({
+            ...sessionOptions,
+            cookieOptions: { ...sessionOptions.cookieOptions, maxAge: thirtyDays }
+        });
+    }
+
+    await session.save();
 }
 
 // 1. Wrap in React cache() so it only runs once per server request

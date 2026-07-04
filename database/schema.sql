@@ -143,13 +143,25 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255),
     email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255), -- NULL for accounts created via OAuth sign-in
     email_verified_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     pending_email VARCHAR(100)
 );
 
 CREATE INDEX idx_users_email ON users(email);
+
+-- External identity providers linked to a user ('google', 'github', 'microsoft')
+CREATE TABLE IF NOT EXISTS oauth_accounts (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider VARCHAR(20) NOT NULL,
+    provider_account_id VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (provider, provider_account_id)
+);
+
+CREATE INDEX idx_oauth_accounts_user_id ON oauth_accounts(user_id);
 
 -- ============================================================================
 -- Session & Security
