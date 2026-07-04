@@ -1,5 +1,5 @@
 import { IconType } from "react-icons";
-import { LuBookmark, LuChartLine, LuInfo, LuSearch, LuShieldCheck, LuUser } from "react-icons/lu";
+import { LuBookmark, LuChartLine, LuInfo, LuScale, LuSearch, LuShieldCheck, LuUser } from "react-icons/lu";
 
 interface DocNavItem {
     title: string;
@@ -27,6 +27,7 @@ export const DOCS_NAV_ITEMS: { title: string; items: DocNavItem[] }[] = [
         title: "Legal",
         items: [
             { title: "Privacy Policy", href: "/docs/privacy", icon: LuShieldCheck },
+            { title: "Terms & Conditions", href: "/docs/terms", icon: LuScale },
         ]
     }
 ];

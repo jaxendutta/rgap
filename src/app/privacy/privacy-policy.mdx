@@ -1,55 +1,121 @@
 # Privacy Policy
 
-Last Updated: July 2, 2026
+Last Updated: July 4, 2026
 
 ## Overview
 
-**[ RGAP ] Research Grants Analytics Platform** *(referred to as RGAP in this document)* lets you browse and analyze publicly available Canadian federal research grant data from NSERC, CIHR, and SSHRC. You can search, filter, and explore all of this grant data without creating an account. An account is only needed if you want to save searches, bookmark grants, or access other personalized features. This page explains what data we collect when you use RGAP, and how it&apos;s used.
+**[ RGAP ] Research Grants Analytics Platform** *(referred to as RGAP, "we", or "us" in this document)* lets you browse and analyze publicly available Canadian federal research grant data from NSERC, CIHR, and SSHRC. You can search, filter, and explore all of this grant data without creating an account. An account is only needed if you want to save searches, bookmark grants, or access other personalized features.
+
+This page explains what data we collect when you use RGAP, how it&apos;s used, who it&apos;s shared with, how long it&apos;s kept, and the choices you have. The short version: we collect the minimum needed to run the service, we don&apos;t run ads or analytics trackers, and we never sell your data.
 
 ## Grant, recipient, and institute data
 
-The grant, recipient, and institute records shown throughout RGAP are public open data published by the Government of Canada&apos;s research funding agencies. This is not personal data collected by RGAP. It is sourced directly from official government datasets and refreshed periodically. If you believe a record about you is inaccurate, the correction needs to be made at the source (the relevant funding agency), not through RGAP.
+The grant, recipient, and institute records shown throughout RGAP are public open data published by the Government of Canada&apos;s research funding agencies under the Open Government Licence – Canada. This is not personal data collected by RGAP. It is sourced directly from official government datasets and refreshed periodically. If you believe a record about you is inaccurate, the correction needs to be made at the source (the relevant funding agency), not through RGAP — we display what the agencies publish.
 
 ## Information you provide when creating an account
 
-If you choose to create an account, we collect and store:
+If you register with an email address and password, we collect and store:
 
 - Your name and email address
-- A securely hashed version of your password (we never store your password itself)
+- A securely hashed version of your password (using bcrypt — we never store or see your password itself)
 
 We use your email address to verify your account, send password reset links if you request one, and confirm changes to your name, email, or password. We do not send marketing emails and do not share your email address with third parties for advertising purposes.
 
-## Sessions and security
+## Signing in with Google, GitHub, or Microsoft
 
-When you sign in, we set a single encrypted, HTTP-only session cookie to keep you logged in. This cookie is not used for advertising or cross-site tracking. For security purposes (for example, letting you review or revoke active sessions and detecting suspicious activity), we also log your approximate location (city/country, derived from IP address), browser/device information, and timestamps of security-relevant events such as sign-ins and password changes.
+You can also create an account or sign in using Google, GitHub, or Microsoft. If you do, the provider shares a small amount of profile information with us after you approve the sign-in:
+
+- Your name (as set on your provider profile)
+- Your verified email address
+- A stable account identifier issued by the provider (a random ID, not your password)
+
+That&apos;s all we store. We never receive or see your password for these providers, and we do not request access to your files, contacts, calendars, repositories, or anything else on those accounts. We do not post anything on your behalf.
+
+If you sign in with a provider whose email matches an existing RGAP account, we link the two so you end up in the same account. Accounts created this way have no RGAP password; you can add one later using the password reset flow if you wish.
+
+Your use of these providers is governed by their own privacy policies: [Google](https://policies.google.com/privacy), [GitHub](https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement), and [Microsoft](https://privacy.microsoft.com/privacystatement). Each provider will know that you use RGAP.
+
+## Sessions and security data
+
+When you sign in, we set a single encrypted, HTTP-only session cookie to keep you logged in. This cookie is not used for advertising or cross-site tracking.
+
+For security purposes — letting you review and revoke your active sessions, and helping you spot suspicious activity — we record the following for each sign-in:
+
+- The IP address the sign-in came from
+- An approximate location (city and country) derived from that IP address
+- Your browser and device information (the user-agent string)
+- Timestamps of security-relevant events (sign-ins, password changes, email changes, name changes)
+
+To derive the approximate location, your IP address is sent to [ipinfo.io](https://ipinfo.io/privacy-policy), a geolocation service. This is the only purpose it&apos;s used for, and no other account information is sent with it.
+
+You can view your active sessions and this security history in your account settings at any time, and revoke any session you don&apos;t recognize.
 
 ## Bookmarks and search history
 
-If you&apos;re signed in, RGAP lets you bookmark grants, recipients, institutes, and searches, optionally with your own free-text notes attached. We also keep a history of your searches so you can revisit them later. None of this is shared with other users or used for anything beyond providing these features back to you. Aggregate, anonymized search counts (not tied to any individual) are used to power the "Popular Searches" feature shown to all visitors.
+If you&apos;re signed in, RGAP lets you bookmark grants, recipients, institutes, and searches, optionally with your own free-text notes attached. We also keep a history of your searches so you can revisit them later. None of this is shared with other users or used for anything beyond providing these features back to you.
+
+Aggregate, anonymized search counts (not tied to any individual account) are used to power the &quot;Popular Searches&quot; feature shown to all visitors. Nothing in that feature can be traced back to you.
 
 ## Cookies
 
-RGAP uses one essential cookie to keep you signed in. We do not use advertising cookies, third-party analytics cookies, or cross-site tracking cookies of any kind.
+RGAP uses only essential cookies:
+
+- **rgap_session** — the encrypted session cookie that keeps you signed in. It lasts until you close your browser, or 30 days if you chose &quot;Remember me&quot; or signed in with Google, GitHub, or Microsoft.
+- **rgap_oauth_state** — a short-lived (10 minute) cookie set only while a Google/GitHub/Microsoft sign-in is in progress, used to protect the sign-in against forgery. It&apos;s deleted as soon as the sign-in completes.
+
+We do not use advertising cookies, third-party analytics cookies, or cross-site tracking cookies of any kind.
 
 ## Who we share data with
 
-We don&apos;t sell or share your personal data with advertisers. RGAP relies on a small number of infrastructure providers to operate:
+We don&apos;t sell your personal data, and we don&apos;t share it with advertisers or data brokers. RGAP relies on a small number of infrastructure providers to operate:
 
-- **Supabase** hosts our database, where account and activity data described above is stored.
+- **Supabase** hosts our database, where the account and activity data described above is stored.
 - **Vercel** hosts the website itself and may log standard web server request data (for example, IP address and timestamps) for operating and securing the service.
-- **Resend** delivers the transactional emails described above (verification, password reset, account notices).
+- **Resend** delivers our transactional emails (verification, password reset, account notices).
+- **ipinfo.io** receives your IP address at sign-in solely to derive the approximate location shown in your session list.
+- **Google, GitHub, and Microsoft** are involved only if you choose to sign in with them, as described above.
+
+These providers process data on our behalf to run the service and are not permitted to use it for their own advertising. Some of them store or process data on servers located outside Canada (primarily in the United States), which means your data may be subject to the laws of those jurisdictions while it&apos;s there.
+
+Beyond these providers, we would only disclose personal data if required to by law.
+
+## How we protect your data
+
+- Passwords are hashed with bcrypt and are never stored or logged in plain text.
+- Session cookies are encrypted, HTTP-only, and marked secure in production.
+- All traffic to RGAP is served over HTTPS.
+- Sign-ins with Google, GitHub, and Microsoft use the industry-standard OAuth 2.0 / OpenID Connect protocols with anti-forgery protections.
+- You can revoke any active session from your account settings, and every security-relevant change to your account is logged so you can review it.
+
+No online service can promise perfect security, but we deliberately keep the amount of personal data we hold small so there is little to lose in the worst case.
 
 ## Data retention and deletion
 
-We keep your account data for as long as your account exists. You can permanently delete your account at any time from your account settings. This immediately and permanently removes your account, sessions, bookmarks, and search history from our database. This action cannot be undone.
+- **Account data** (name, email, linked sign-in providers) is kept for as long as your account exists.
+- **Bookmarks and search history** are kept until you delete them or your account.
+- **Sessions** can be revoked by you at any time and are removed when your account is deleted.
+- **Email verification and password reset tokens** expire automatically (24 hours and 1 hour respectively) and are deleted once used.
 
-## Children's privacy
+You can permanently delete your account at any time from your account settings. This immediately and permanently removes your account, linked sign-in providers, sessions, security logs, bookmarks, and search history from our database. This action cannot be undone. Backups maintained by our database host age out on their own schedule shortly afterwards.
 
-RGAP is not directed at children and we do not knowingly collect data from children under 13.
+## Your rights and choices
+
+You don&apos;t need an account to use RGAP, and everything we collect beyond basic server logs is tied to features you opt into. If you do have an account, you can:
+
+- **Access and update** your name and email directly in account settings.
+- **Review** your active sessions and security history in account settings.
+- **Delete** individual bookmarks and searches, or your entire account, yourself — no need to ask us.
+- **Request a copy** of the data we hold about you by contacting us at the address below.
+
+RGAP is operated from Canada and we handle personal information in line with Canada&apos;s federal privacy law (PIPEDA). If you have a concern we can&apos;t resolve, you have the right to complain to the Office of the Privacy Commissioner of Canada.
+
+## Children&apos;s privacy
+
+RGAP is not directed at children and we do not knowingly collect data from children under 13. If you believe a child has created an account, contact us and we&apos;ll delete it.
 
 ## Changes to this policy
 
-If this policy changes, we will update the "Last updated" date at the top of this page.
+If this policy changes, we will update the &quot;Last updated&quot; date at the top of this page. For significant changes, we&apos;ll add a notice on the site or email account holders.
 
 ## Contact
 

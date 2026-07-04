@@ -1,26 +1,26 @@
-// src/app/privacy/page.tsx
+// src/app/terms/page.tsx
 import { Metadata } from 'next';
 import PageContainer from '@/components/layout/PageContainer';
 import PageHeader from '@/components/layout/PageHeader';
 import { Card } from '@/components/ui/Card';
-import PrivacyPolicyContent from './privacy-policy.mdx';
+import TermsAndConditionsContent from './terms-and-conditions.mdx';
 
 export const metadata: Metadata = {
-    title: 'Privacy Policy | RGAP',
-    description: 'How RGAP collects, uses, and protects your data.',
+    title: 'Terms & Conditions | RGAP',
+    description: 'The terms that govern your use of RGAP.',
 };
 
-export default function PrivacyPolicyPage() {
+export default function TermsAndConditionsPage() {
     return (
         <PageContainer>
             <PageHeader
-                title="Privacy Policy"
+                title="Terms & Conditions"
                 subtitle="Last updated July 4, 2026"
             />
 
             <Card>
                 <Card.Content className="space-y-8">
-                    <PrivacyPolicyContent />
+                    <TermsAndConditionsContent />
                 </Card.Content>
             </Card>
         </PageContainer>

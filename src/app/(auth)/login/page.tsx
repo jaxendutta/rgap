@@ -10,8 +10,16 @@ import Tabs from '@/components/ui/Tabs';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import { FaGoogle, FaGithub, FaMicrosoft } from 'react-icons/fa';
 
 const initialState = { message: '', success: false };
+
+const oauthProviders = [
+    { id: 'google', label: 'Google', icon: FaGoogle },
+    { id: 'github', label: 'GitHub', icon: FaGithub },
+    { id: 'microsoft', label: 'Microsoft', icon: FaMicrosoft },
+] as const;
 
 export default function AuthPage() {
     const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -29,6 +37,12 @@ export default function AuthPage() {
     useEffect(() => {
         setDisplayMessage(state?.message || '');
     }, [state]);
+
+    // Surface errors passed back via redirects (email verification, OAuth sign-in)
+    useEffect(() => {
+        const error = new URLSearchParams(window.location.search).get('error');
+        if (error) setDisplayMessage(error);
+    }, []);
 
     useEffect(() => {
         setDisplayMessage('');
@@ -222,12 +236,44 @@ export default function AuthPage() {
                                 </label>
                             </div>
 
-                            <motion.div layout className="pt-4">
+                            <motion.div layout>
                                 <Button type="submit" className="w-full" isLoading={isPending}>
                                     {mode === 'login' ? 'Sign In' : 'Create Account'}
                                 </Button>
                             </motion.div>
                         </form>
+                    )}
+
+                    {/* Social Sign-In */}
+                    {!isVerifying && (
+                        <motion.div layout className="space-y-3">
+                            <div className="flex items-center gap-3 py-2">
+                                <div className="flex-1 border-t border-gray-200" />
+                                <span className="text-xs text-gray-400 uppercase tracking-wide">
+                                    or continue with
+                                </span>
+                                <div className="flex-1 border-t border-gray-200" />
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-2">
+                                {oauthProviders.map(({ id, label, icon: Icon }) => (
+                                    <a
+                                        key={id}
+                                        href={`/api/auth/oauth/${id}`}
+                                        title={`Continue with ${label}`}
+                                        className={cn(
+                                            "flex items-center justify-center gap-2 font-medium cursor-pointer",
+                                            "transition-colors duration-300 ease-in-out rounded-full",
+                                            "bg-transparent text-gray-700 border border-gray-300 hover:bg-gray-50",
+                                            "shadow-xs hover:shadow-md px-3 py-2.5 text-sm"
+                                        )}
+                                    >
+                                        <Icon className="size-4 flex-shrink-0" />
+                                        <span className="hidden md:inline text-sm">{label}</span>
+                                    </a>
+                                ))}
+                            </div>
+                        </motion.div>
                     )}
                 </motion.div>
             </Card>

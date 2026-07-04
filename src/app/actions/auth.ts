@@ -1,6 +1,6 @@
 'use server';
 
-import { getSession, getCurrentUser, sessionOptions, getClientIp } from '@/lib/session';
+import { getSession, getCurrentUser, getClientIp, createAuthenticatedSession } from '@/lib/session';
 import { db } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
@@ -71,24 +71,12 @@ function validatePassword(password: string): string | null {
     return null;
 }
 
-// Helper: Estimate Location
-async function getLocationFromIP(ip: string): Promise<string> {
-    if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('::ffff:') || ip.startsWith('172.') || ip.startsWith('192.168.')) {
-        return 'Local Network (Dev)';
-    }
-
-    try {
-        // ipinfo.io/json works without token for low volume, supports HTTPS
-        const response = await fetch(`https://ipinfo.io/${ip}/json`);
-        const data = await response.json();
-
-        if (data.city && data.country) {
-            return `${data.city}, ${data.country}`;
-        }
-        return 'Unknown Location';
-    } catch (error) {
-        return 'Unknown Location';
-    }
+// Helper: Friendly hint for accounts that sign in via an OAuth provider
+async function getLinkedProvidersHint(userId: number): Promise<string> {
+    const result = await db.query('SELECT provider FROM oauth_accounts WHERE user_id = $1', [userId]);
+    const labels: Record<string, string> = { google: 'Google', github: 'GitHub', microsoft: 'Microsoft' };
+    const names = result.rows.map((r: { provider: string }) => labels[r.provider] || r.provider);
+    return names.length > 0 ? names.join(' or ') : 'a social provider';
 }
 
 export async function authAction(prevState: any, formData: FormData): Promise<ActionState> {
@@ -113,6 +101,12 @@ export async function authAction(prevState: any, formData: FormData): Promise<Ac
 
             if (!user) return { message: 'We could not find an account with that email.' };
 
+            // OAuth-only accounts have no password
+            if (!user.password_hash) {
+                const providers = await getLinkedProvidersHint(user.id);
+                return { message: `This account uses ${providers} to sign in. Please use the buttons below.` };
+            }
+
             if (!(await bcrypt.compare(password, user.password_hash))) {
                 return { message: 'Incorrect password. Please try again.' };
             }
@@ -123,35 +117,10 @@ export async function authAction(prevState: any, formData: FormData): Promise<Ac
                 return { message: 'Your email hasn\'t been verified yet! Please check your inbox for the verification link.' };
             }
 
-            // Create Session
-            const sessionId = crypto.randomUUID();
-            const location = await getLocationFromIP(ip);
-
-            await db.query(
-                `INSERT INTO sessions (session_id, user_id, user_agent, ip_address, location) VALUES ($1, $2, $3, $4, $5)`,
-                [sessionId, user.id, userAgent, ip, location]
+            await createAuthenticatedSession(
+                { id: user.id, name: user.name, email: user.email },
+                { userAgent, ip, rememberMe }
             );
-
-            // Log Login Event
-            await db.query(
-                `INSERT INTO user_audit_logs (user_id, event_type, ip_address) VALUES ($1, 'LOGIN', $2)`,
-                [user.id, ip]
-            );
-
-            const session = await getSession();
-            session.user = { id: user.id, name: user.name, email: user.email };
-            session.sessionId = sessionId;
-            session.isLoggedIn = true;
-
-            if (rememberMe) {
-                const thirtyDays = 60 * 60 * 24 * 30;
-                session.updateConfig({
-                    ...sessionOptions,
-                    cookieOptions: { ...sessionOptions.cookieOptions, maxAge: thirtyDays }
-                });
-            }
-
-            await session.save();
         }
         // ======================== REGISTER ========================
         else {
@@ -230,7 +199,14 @@ export async function changePasswordAction(prevState: any, formData: FormData) {
         const result = await db.query('SELECT password_hash FROM users WHERE id = $1', [session.user.id]);
         const user = result.rows[0];
 
-        if (!user || !(await bcrypt.compare(currentPassword, user.password_hash))) {
+        if (!user) return { message: "Account not found.", success: false };
+
+        if (!user.password_hash) {
+            const providers = await getLinkedProvidersHint(session.user.id);
+            return { message: `Your account doesn't have a password — you sign in with ${providers}.`, success: false };
+        }
+
+        if (!(await bcrypt.compare(currentPassword, user.password_hash))) {
             return { message: "Incorrect current password.", success: false };
         }
 
@@ -298,7 +274,11 @@ export async function deleteAccountAction(prevState: any, formData: FormData) {
         const result = await db.query('SELECT password_hash FROM users WHERE id = $1', [session.user.id]);
         const user = result.rows[0];
 
-        if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+        if (!user) return { success: false, message: "Account not found." };
+
+        // OAuth-only accounts have no password to verify; the email match and
+        // typed confirmation above still gate the deletion.
+        if (user.password_hash && !(await bcrypt.compare(password, user.password_hash))) {
             return { success: false, message: "Incorrect password." };
         }
 

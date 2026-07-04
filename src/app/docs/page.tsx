@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { IconType } from 'react-icons';
-import { LuSearch, LuChartBar, LuBookmark, LuShieldCheck, LuBookOpen } from 'react-icons/lu';
+import { LuSearch, LuChartBar, LuBookmark, LuShieldCheck, LuBookOpen, LuScale } from 'react-icons/lu';
 
 export default function DocsHomePage() {
     return (
@@ -68,11 +68,17 @@ export default function DocsHomePage() {
                         Legal
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <DocCard 
+                        <DocCard
                             href="/docs/privacy"
                             title="Privacy Policy"
                             description="How RGAP handles account data, cookies, and retention."
                             icon={LuShieldCheck}
+                        />
+                        <DocCard
+                            href="/docs/terms"
+                            title="Terms & Conditions"
+                            description="The rules that govern your use of the platform."
+                            icon={LuScale}
                         />
                     </div>
                 </div>

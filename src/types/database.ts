@@ -14,6 +14,15 @@ export interface User {
     created_at: Date;
 }
 
+// External identity provider linked to a user (Google / GitHub / Microsoft)
+export interface OAuthAccount {
+    id: number;
+    user_id: number;
+    provider: 'google' | 'github' | 'microsoft';
+    provider_account_id: string;
+    created_at: Date;
+}
+
 export interface Session {
     session_id: string;
     user_id: number;
