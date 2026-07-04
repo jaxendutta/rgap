@@ -94,18 +94,14 @@ export default function HomePage() {
             </Card>
 
             {/* Last Updated Date */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4 w-full bg-gray-900 text-white py-3 px-4 md:p-4 rounded-2xl shadow-lg border border-gray-700">
-                <div className="flex gap-2 w-full">
-                    <LuTriangleAlert className="flex size-6 md:size-9 border border-gray-200 text-gray-200 rounded-full p-1 md:p-2 flex-shrink-0" />
-
-                    <div className="flex items-center justify-center gap-3 w-full text-gray-900 rounded-3xl p-0 border border-white">
-                        <span className="text-xs md:text-sm text-white">Last Data Update</span>
-                    </div>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4 w-full bg-gray-900 text-white py-2 px-4 md:p-4 rounded-4xl shadow-lg border border-gray-700">
+                <div className="flex w-full items-center justify-center gap-3 w-full text-gray-900 rounded-3xl py-2 bg-gray-100">
+                    <span className="text-xs md:text-sm lg:text-base">Last Data Update</span>
                 </div>
-                <div className="flex w-full flex-grow items-center justify-between gap-3 text-gray-200 md:gap-4">
-                    <span className="text-xs md:text-sm">{formatDate(LAST_UPDATED, "long")}</span>
+                <div className="flex w-full flex-grow items-center justify-between gap-3 text-gray-200 md:gap-4 text-xs md:text-sm lg:text-base font-medium">
+                    <span>{formatDate(LAST_UPDATED, "long")}</span>
                     <div className="h-px flex-grow bg-gray-100 mx-1" />
-                    <span className="italic text-xs md:text-sm">{formatDateDiff(LAST_UPDATED, new Date(), "long")} ago</span>
+                    <span>{formatDateDiff(LAST_UPDATED, new Date(), "long")} ago</span>
                 </div>
             </div>
 
