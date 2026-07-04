@@ -60,7 +60,7 @@ const Header = ({ docsMode }: HeaderProps) => {
                     <Link href="/" className="flex items-center gap-1.5">
                         <GiAbstract014 className="h-4.5 w-4.5 text-gray-900" />
                         <span className="text-lg font-semibold text-gray-900">{SITE_NAME}</span>
-                        {docsMode && (<span className="font-medium"> Docs</span>)}
+                        {docsMode && (<span className="font-medium text-sm"> Docs</span>)}
                     </Link>
                 </div>
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { IconType } from 'react-icons';
-import { LuSearch, LuChartBar, LuBookmark, LuShieldCheck, LuBookOpen, LuScale } from 'react-icons/lu';
+import { LuSearch, LuBookmark, LuShieldCheck, LuBookOpen, LuScale, LuChartSpline, LuShieldHalf } from 'react-icons/lu';
 
 export default function DocsHomePage() {
     return (
@@ -52,7 +52,7 @@ export default function DocsHomePage() {
                             href="/docs/analytics"
                             title="Analytics"
                             description="How to read the trends and funding charts."
-                            icon={LuChartBar}
+                            icon={LuChartSpline}
                         />
                         <DocCard 
                             href="/docs/bookmarks"
@@ -72,7 +72,7 @@ export default function DocsHomePage() {
                             href="/docs/privacy"
                             title="Privacy Policy"
                             description="How RGAP handles account data, cookies, and retention."
-                            icon={LuShieldCheck}
+                            icon={LuShieldHalf}
                         />
                         <DocCard
                             href="/docs/terms"
@@ -93,9 +93,9 @@ function DocCard({ href, title, description, icon: Icon }: { href: string; title
             href={href}
             className="group flex flex-col p-3 md:p-5 rounded-2xl border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm transition-all duration-200"
         >
-            <div className="flex items-center gap-2 md:gap-3 mb-2">
+            <div className="flex items-center gap-1.5 md:gap-3 mb-2">
                 <div className="text-gray-400 group-hover:text-gray-900 transition-colors">
-                    <Icon className="size-4 md:size-4.5" />
+                    <Icon className="size-3.75 md:size-4.5" />
                 </div>
                 <h3 className="text-sm md:text-base font-semibold text-gray-900">{title}</h3>
             </div>
