@@ -14,6 +14,14 @@ import { IconType } from "react-icons";
 import { LAST_UPDATED, GRANTS_COUNT_APPROX } from "@/constants/data";
 import { formatDate, formatDateDiff } from "@/lib/format";
 import { GiAbstract014 } from "react-icons/gi";
+import { Zen_Dots } from "next/font/google";
+
+const zenDots = Zen_Dots({ 
+    subsets: ["latin", "latin-ext"], 
+    style: "normal", 
+    weight: ["400"],
+    display: "swap"
+});
 
 export default function HomePage() {
     const features: [
@@ -35,41 +43,41 @@ export default function HomePage() {
             ],
             [
                 "Recipients + Institutes",
-                "Discover researchers and institutes behind the grants.",
+                "Discover the personalized profiles of researchers and institutes behind the grants.",
                 LuGraduationCap,
                 "/recipients",
             ],
             [
                 "Create Account",
-                "Sign up to save searches, bookmark grants, have customized dashboards, and more.",
+                "Sign up to bookmark grants, save searches, customize dashboards + more.",
                 LuUserPlus,
                 "/login",
             ],
         ];
 
-    const actionLinkClasses = "inline-flex items-center justify-center gap-2 rounded-full px-3 py-2.5 text-sm md:text-base font-medium transition-colors duration-300 ease-in-out shadow-xs hover:shadow-md";
+    const actionLinkClasses = "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm md:text-base font-medium transition-colors duration-300 ease-in-out shadow-xs hover:shadow-sm";
 
     return (
         <PageContainer className="flex min-h-full flex-1 flex-col gap-3 md:gap-6">
             {/* Hero Section */}
-            <Card className="relative flex min-h-0 flex-1 items-center px-6 lg:px-8 py-14 lg:py-24 hover:border-gray-300 transition-all duration-200 rounded-3xl">
+            <Card className="relative flex flex-1 items-center px-6 lg:px-8 py-10 md:py-14 lg:py-24 hover:border-gray-300 transition-all duration-200 rounded-3xl">
                 <GiAbstract014 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-72 md:size-80 text-gray-700 opacity-10 animate-spin-slow pointer-events-none" />
 
                 <div className="flex h-full w-full flex-col justify-center text-center">
-                    <p className="text-5xl font-bold text-gray-900 leading-tight flex justify-center items-center">
-                        <span className="inline-block px-2">[</span>
-                        <span className="inline-block">RGAP</span>
-                        <span className="inline-block px-2">]</span>
-                    </p>
+                    <div className={`${zenDots.className} font-bold text-gray-900 leading-tight flex justify-center items-center pb-2`}>
+                        <span className="px-2 text-5xl md:text-9xl xl:text-[10rem]">[</span>
+                        <span className="text-4xl sm:text-5xl xl:text-8xl mt-2">RGAP</span>
+                        <span className="px-2 text-5xl md:text-9xl xl:text-[10rem]">]</span>
+                    </div>
 
-                    <span className="mt-1 text-base md:text-xl text-gray-600 block italic">
+                    <span className="mt-1 text-xs sm:text-base md:text-xl text-gray-600 block uppercase tracking-widest font-semibold border-b border-gray-300 pb-1 md:pb-2">
                         Research Grants Analytics Platform
                     </span>
-                    <p className="mt-3 md:mt-5 max-w-md mx-auto text-sm md:text-base text-gray-500 md:max-w-3xl">
+                    <div className="mt-3 md:mt-5 max-w-md mx-auto text-sm md:text-base text-gray-500 md:max-w-3xl">
                         Explore and analyze research funding data from Canada&apos;s
                         three major research funding agencies: NSERC, CIHR, and
                         SSHRC.
-                    </p>
+                    </div>
 
                     <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
                         <div className="flex flex-wrap justify-center sm:flex-row gap-3">
@@ -83,7 +91,7 @@ export default function HomePage() {
 
                             <Link
                                 href="/login"
-                                className={`${actionLinkClasses} bg-gray-100 text-gray-700 hover:bg-gray-200`}
+                                className={`${actionLinkClasses} bg-gray-200 text-gray-700 hover:bg-gray-300`}
                             >
                                 <span>Sign In</span>
                                 <LuLogIn className="size-3.5 md:size-4 flex-shrink-0" />
@@ -117,11 +125,11 @@ export default function HomePage() {
                             className="relative overflow-hidden p-4 md:p-6 flex flex-col justify-center gap-1 hover:border-gray-300 hover:shadow-md transition-all duration-200 rounded-3xl h-full"
                         >
                             <Icon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-24 md:size-32 text-gray-700 opacity-10 animate-spin-slow" />
-                            <div className="z-10 justify-between flex flex-col h-full">
-                                <h3 className="font-semibold text-sm md:text-base text-gray-900">
+                            <div className="z-10 justify-between flex flex-col h-full gap-1">
+                                <h3 className="font-semibold text-[13px] sm:text-sm md:text-base text-gray-900 leading-tight">
                                     {title}
                                 </h3>
-                                <p className="text-xs md:text-sm text-gray-500">
+                                <p className="text-[11px] sm:text-xs md:text-sm text-gray-500">
                                     {description}
                                 </p>
                             </div>
