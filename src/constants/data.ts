@@ -12,8 +12,8 @@ export interface OrganizationInfo {
     ckan_slug: string;
 }
 
-// Matches database/schema.sql's organizations seed data (org, org_fr,
-// org_title_en, org_title_fr).
+// Matches supabase/migrations/20260708140000_baseline_schema.sql's
+// organizations seed data (org, org_fr, org_title_en, org_title_fr).
 export const ORGANIZATIONS: Record<string, OrganizationInfo> = {
     NSERC: {
         abbreviation_en: 'NSERC',

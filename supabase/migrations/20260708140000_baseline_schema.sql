@@ -1,4 +1,15 @@
--- database/schema.sql
+-- Baseline migration: captures the schema as it actually existed in
+-- production at the time this project adopted the Supabase CLI. Recorded
+-- via `supabase migration repair --status applied` rather than executed,
+-- since every object below already exists.
+--
+-- Reconciled against a live introspection of production (pg_tables /
+-- information_schema / pg_indexes) rather than the old database/schema.sql,
+-- because that file had drifted from reality: it was missing the
+-- password_reset_tokens table, the uq_grants_natural_key index (previously
+-- tracked in database/migrations/001, never folded back into schema.sql),
+-- and idx_institutes_name_fts -- all of which had been applied directly
+-- against Supabase at some point outside of any tracked migration file.
 
 -- ============================================================================
 -- Organizations Table (Static Reference Data)
@@ -13,7 +24,8 @@ CREATE TABLE IF NOT EXISTS organizations (
 INSERT INTO organizations (org, org_fr, org_title_en, org_title_fr) VALUES
     ('NSERC', 'CRSNG', 'Natural Sciences and Engineering Research Council', 'Conseil de recherches en sciences naturelles et en génie du Canada'),
     ('CIHR', 'IRSC', 'Canadian Institutes of Health Research', 'Instituts de recherche en santé du Canada'),
-    ('SSHRC', 'CRSH', 'Social Sciences and Humanities Research Council', 'Conseil de recherches en sciences humaines du Canada');
+    ('SSHRC', 'CRSH', 'Social Sciences and Humanities Research Council', 'Conseil de recherches en sciences humaines du Canada')
+ON CONFLICT (org) DO NOTHING;
 
 -- ============================================================================
 -- Programs Table
@@ -30,8 +42,8 @@ CREATE TABLE IF NOT EXISTS programs (
     CONSTRAINT uq_programs_title_org UNIQUE (prog_title_en, org)
 );
 
-CREATE INDEX idx_programs_org ON programs(org);
-CREATE INDEX idx_programs_title ON programs(prog_title_en);
+CREATE INDEX IF NOT EXISTS idx_programs_org ON programs(org);
+CREATE INDEX IF NOT EXISTS idx_programs_title ON programs(prog_title_en);
 
 -- ============================================================================
 -- Institutes Table (RELAXED)
@@ -46,8 +58,8 @@ CREATE TABLE IF NOT EXISTS institutes (
     CONSTRAINT uq_institute_location UNIQUE (name, city, country)
 );
 
-CREATE INDEX idx_institutes_name ON institutes(name);
-CREATE INDEX idx_institutes_location ON institutes(province, city);
+CREATE INDEX IF NOT EXISTS idx_institutes_name ON institutes(name);
+CREATE INDEX IF NOT EXISTS idx_institutes_location ON institutes(province, city);
 
 -- ============================================================================
 -- Recipients Table (RELAXED)
@@ -72,11 +84,11 @@ CREATE TABLE IF NOT EXISTS recipients (
 -- de-duplicate against. (Expression-based uniqueness needs CREATE UNIQUE
 -- INDEX -- ALTER TABLE ... ADD CONSTRAINT ... UNIQUE only accepts plain
 -- column references.)
-CREATE UNIQUE INDEX uq_recipient_institute ON recipients (legal_name, (COALESCE(institute_id, -1)));
+CREATE UNIQUE INDEX IF NOT EXISTS uq_recipient_institute ON recipients (legal_name, (COALESCE(institute_id, -1)));
 
-CREATE INDEX idx_recipients_legal_name ON recipients(legal_name);
-CREATE INDEX idx_recipients_type ON recipients(type);
-CREATE INDEX idx_recipients_institute ON recipients(institute_id);
+CREATE INDEX IF NOT EXISTS idx_recipients_legal_name ON recipients(legal_name);
+CREATE INDEX IF NOT EXISTS idx_recipients_type ON recipients(type);
+CREATE INDEX IF NOT EXISTS idx_recipients_institute ON recipients(institute_id);
 
 -- ============================================================================
 -- Grants Table
@@ -96,33 +108,56 @@ CREATE TABLE IF NOT EXISTS grants (
     description_en TEXT,
     expected_results_en TEXT,
     additional_information_en TEXT,
-    
+
     -- Foreign keys
     recipient_id INTEGER NOT NULL,
     prog_id INTEGER,
     org VARCHAR(5),
-    
+
     -- Amendments history as JSONB
     amendments_history JSONB,
-    
+
     FOREIGN KEY (recipient_id) REFERENCES recipients(recipient_id) ON DELETE RESTRICT,
     FOREIGN KEY (prog_id) REFERENCES programs(prog_id) ON DELETE SET NULL,
     FOREIGN KEY (org) REFERENCES organizations(org) ON DELETE SET NULL
 );
 
-CREATE INDEX idx_grants_recipient ON grants(recipient_id);
-CREATE INDEX idx_grants_program ON grants(prog_id);
-CREATE INDEX idx_grants_org ON grants(org);
-CREATE INDEX idx_grants_date ON grants(agreement_start_date DESC);
-CREATE INDEX idx_grants_value ON grants(agreement_value DESC);
-CREATE INDEX idx_grants_ref ON grants(ref_number);
+CREATE INDEX IF NOT EXISTS idx_grants_recipient ON grants(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_grants_program ON grants(prog_id);
+CREATE INDEX IF NOT EXISTS idx_grants_org ON grants(org);
+CREATE INDEX IF NOT EXISTS idx_grants_date ON grants(agreement_start_date DESC);
+CREATE INDEX IF NOT EXISTS idx_grants_value ON grants(agreement_value DESC);
+CREATE INDEX IF NOT EXISTS idx_grants_ref ON grants(ref_number);
+
+-- Natural key for the monthly upsert (INSERT ... ON CONFLICT DO UPDATE).
+-- ref_number alone isn't unique -- the source data legitimately reuses one
+-- ref_number across several distinct grants (e.g. a batch of scholarships
+-- filed under one umbrella number) -- so the real natural key is
+-- ref_number + recipient + program + title. agreement_title_en is hashed
+-- (md5) because it's unbounded TEXT and a raw text column can exceed
+-- Postgres's btree index row-size limit.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_grants_natural_key
+ON grants (
+    ref_number,
+    recipient_id,
+    (COALESCE(prog_id, -1)),
+    (md5(COALESCE(agreement_title_en, '')))
+);
 
 -- Full text search
-CREATE INDEX idx_grants_title_search ON grants USING GIN (to_tsvector('english', COALESCE(agreement_title_en, '')));
-CREATE INDEX idx_grants_amendments ON grants USING GIN (amendments_history);
+CREATE INDEX IF NOT EXISTS idx_grants_title_search ON grants USING GIN (to_tsvector('english', COALESCE(agreement_title_en, '')));
+CREATE INDEX IF NOT EXISTS idx_grants_amendments ON grants USING GIN (amendments_history);
 -- Full Text Search index for recipients (handles "John Doe" == "Doe, John")
-CREATE INDEX IF NOT EXISTS idx_recipients_name_search 
+CREATE INDEX IF NOT EXISTS idx_recipients_name_search
 ON recipients USING GIN (to_tsvector('english', legal_name));
+-- Duplicate of idx_recipients_name_search (identical definition, applied
+-- directly against Supabase under a second name) -- kept here to match
+-- production exactly; worth dropping one of the two in a follow-up cleanup
+-- migration.
+CREATE INDEX IF NOT EXISTS idx_recipients_name_fts
+ON recipients USING GIN (to_tsvector('english', legal_name));
+CREATE INDEX IF NOT EXISTS idx_institutes_name_fts
+ON institutes USING GIN (to_tsvector('english', name));
 
 -- Enable Trigram extension (required for text search)
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -131,10 +166,6 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE INDEX IF NOT EXISTS idx_grants_title_trgm ON grants USING gin (agreement_title_en gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_recipients_name_trgm ON recipients USING gin (legal_name gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_institutes_name_trgm ON institutes USING gin (name gin_trgm_ops);
-
--- Index for filtering
-CREATE INDEX IF NOT EXISTS idx_grants_date ON grants (agreement_start_date);
-CREATE INDEX IF NOT EXISTS idx_grants_value ON grants (agreement_value);
 
 -- ============================================================================
 -- Users & Authentication
@@ -149,7 +180,7 @@ CREATE TABLE IF NOT EXISTS users (
     pending_email VARCHAR(100)
 );
 
-CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 -- External identity providers linked to a user ('google', 'github', 'microsoft')
 CREATE TABLE IF NOT EXISTS oauth_accounts (
@@ -161,7 +192,7 @@ CREATE TABLE IF NOT EXISTS oauth_accounts (
     UNIQUE (provider, provider_account_id)
 );
 
-CREATE INDEX idx_oauth_accounts_user_id ON oauth_accounts(user_id);
+CREATE INDEX IF NOT EXISTS idx_oauth_accounts_user_id ON oauth_accounts(user_id);
 
 -- ============================================================================
 -- Session & Security
@@ -193,6 +224,18 @@ CREATE TABLE IF NOT EXISTS verification_tokens (
     expires TIMESTAMP NOT NULL
 );
 
+-- Applied directly against Supabase for the password-reset flow
+-- (src/app/actions/auth.ts) -- never tracked in a migration file before now.
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    token VARCHAR(255) PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_pwd_reset_email ON password_reset_tokens(email);
+CREATE INDEX IF NOT EXISTS idx_pwd_reset_token ON password_reset_tokens(token);
+
 -- ============================================================================
 -- Search History
 -- ============================================================================
@@ -206,8 +249,8 @@ CREATE TABLE IF NOT EXISTS search_history (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_search_history_user ON search_history(user_id);
-CREATE INDEX idx_search_history_date ON search_history(searched_at DESC);
+CREATE INDEX IF NOT EXISTS idx_search_history_user ON search_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_search_history_date ON search_history(searched_at DESC);
 
 -- ============================================================================
 -- Bookmarks

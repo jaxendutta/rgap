@@ -82,6 +82,20 @@ The PostgreSQL database relies on a relational schema connecting:
 
 *Search is powered by PostgreSQL's Full Text Search (GIN indexes) and Trigram extensions (`pg_trgm`) for fuzzy matching.*
 
+Schema changes are tracked as versioned migrations in [`supabase/migrations/`](supabase/migrations/) using the [Supabase CLI](https://supabase.com/docs/guides/cli), rather than applied ad hoc through the Supabase dashboard's SQL editor. To make a schema change:
+
+```bash
+npx supabase migration new some_change_name   # creates supabase/migrations/<timestamp>_some_change_name.sql
+# edit the generated file
+npx supabase db push --db-url "$DATABASE_URL" # applies it to the linked project
+```
+
+(`npx supabase db pull` / `db diff` / local dev via `supabase start` additionally require [Docker](https://docs.docker.com/desktop/).)
+
+Row-Level Security is enabled on every table (see `supabase/migrations/20260708150000_enable_rls.sql`). This app connects directly as the Postgres table owner, which bypasses RLS by default, so this only blocks Supabase's PostgREST/GraphQL Data API -- which this app doesn't use.
+
+The monthly data-refresh pipeline (`pipeline/fetch_and_load.py`) is separate from schema migrations: it re-runs `pipeline/reset_sequences.sql` (idempotent sequence sync) on every execution and loads data via `pipeline/01-load-data.sql`.
+
 ## Contributing
 
 1. Create a feature branch (`git checkout -b feature/amazing-feature`).
