@@ -23,18 +23,14 @@ const Header = ({ docsMode }: HeaderProps) => {
 
     useEffect(() => {
         const handleScroll = () => {
-            const mainContent = document.getElementById("main-content");
-            if (mainContent) {
-                setShowScrollTop(mainContent.scrollTop > 200);
-            }
+            setShowScrollTop(window.scrollY > 200);
         };
 
-        const mainContent = document.getElementById("main-content");
-        mainContent?.addEventListener("scroll", handleScroll);
+        window.addEventListener("scroll", handleScroll, { passive: true });
         handleScroll();
 
         return () => {
-            mainContent?.removeEventListener("scroll", handleScroll);
+            window.removeEventListener("scroll", handleScroll);
         };
     }, []);
 
@@ -43,13 +39,10 @@ const Header = ({ docsMode }: HeaderProps) => {
         docsMode = true;
 
     const scrollToTop = () => {
-        const mainContent = document.getElementById("main-content");
-        if (mainContent) {
-            mainContent.scrollTo({
-                top: 0,
-                behavior: "smooth",
-            });
-        }
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
     };
 
     return (
