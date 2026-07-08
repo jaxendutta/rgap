@@ -13,6 +13,7 @@ import { IconType } from "react-icons";
 import { LAST_UPDATED, GRANTS_COUNT_APPROX } from "@/constants/data";
 import { formatDate, formatDateDiff, getNextDataUpdate } from "@/lib/format";
 import { GiAbstract014 } from "react-icons/gi";
+import UpdateCountdown from "@/components/home/UpdateCountdown";
 
 export default function HomePage() {
     const features: [
@@ -46,22 +47,18 @@ export default function HomePage() {
             ],
         ];
 
-    const updates = [
+    const nextUpdate = getNextDataUpdate();
+
+    const updates: { label: string; dateValue: Date; diff: React.ReactNode }[] = [
         {
             label: "Last Update",
             dateValue: LAST_UPDATED,
-            dateDiffFrom: LAST_UPDATED,
-            dateDiffTo: new Date(),
-            diffPrefix: "",
-            diffSuffix: " ago",
+            diff: `${formatDateDiff(LAST_UPDATED, new Date(), "long")} ago`,
         },
         {
             label: "Next Update",
-            dateValue: getNextDataUpdate(),
-            dateDiffFrom: new Date(),
-            dateDiffTo: getNextDataUpdate(),
-            diffPrefix: "in ",
-            diffSuffix: "",
+            dateValue: nextUpdate,
+            diff: <UpdateCountdown target={nextUpdate.toISOString()} />,
         },
     ];
 
@@ -113,15 +110,15 @@ export default function HomePage() {
 
             {/* Last / Next Data Update */}
             <div className="flex items-stretch justify-between gap-3 md:gap-4 w-full">
-                {updates.map((update, index) => (
-                    <div key={index} className="flex flex-col md:flex-row items-center gap-2 md:gap-3 w-full md:flex-1 min-w-0 bg-gray-900 p-1.5 sm:p-2 md:p-3 rounded-[18] md:rounded-[22] lg:rounded-[28]">
+                {updates.map(({ label, dateValue, diff }) => (
+                    <div key={label} className="flex flex-col md:flex-row items-center gap-2 md:gap-3 w-full md:flex-1 min-w-0 bg-gray-900 p-1.5 sm:p-2 md:p-3 rounded-[18] md:rounded-[22] lg:rounded-[28]">
                         <div className="flex flex-wrap w-full md:w-auto items-center justify-center gap-3 text-gray-900 rounded-xl lg:rounded-2xl p-1 md:py-2 md:px-4 bg-gray-100">
-                            <span className="text-sm lg:text-base whitespace-nowrap">{update.label}</span>
+                            <span className="text-[12px] md:text-sm lg:text-base whitespace-nowrap">{label}</span>
                         </div>
-                        <div className="flex w-full flex-grow items-center justify-between gap-1 text-gray-200 md:gap-4 text-[12px] md:text-sm lg:text-base font-medium px-2 sm:px-0.5  md:pr-2 min-w-0">
-                            <span>{formatDate(update.dateValue, "long")}</span>
-                            <div className="hidden md:flex h-px flex-grow bg-gray-100" />
-                            <span className="text-end">{update.diffPrefix}{formatDateDiff(update.dateDiffFrom, update.dateDiffTo, "long")}{update.diffSuffix}</span>
+                        <div className="flex flex-col md:flex-row w-full flex-grow items-center justify-center md:justify-between gap-1 text-gray-200 md:gap-4 text-[12px] md:text-sm lg:text-base font-medium px-2 sm:px-0.5 md:pr-2 min-w-0">
+                            <span>{formatDate(dateValue, "long")}</span>
+                            <div className="w-full h-px md:w-auto md:flex-grow bg-gray-100/50" />
+                            <span className="text-center md:text-end">{diff}</span>
                         </div>
                     </div>
                 ))}
