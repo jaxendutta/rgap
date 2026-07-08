@@ -9,7 +9,7 @@
 @layer base {
     html,
     body {
-        @apply min-h-screen bg-slate-100 text-black;
+        @apply min-h-dvh bg-slate-100 text-black;
     }
 }
 
