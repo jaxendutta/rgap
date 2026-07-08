@@ -1,4 +1,4 @@
--- database/migrations/002_fix_sequence_drift.sql
+-- pipeline/reset_sequences.sql
 --
 -- Keeps the institutes/recipients/programs/grants SERIAL sequences in sync
 -- with the actual max id in each table. Originally written for sequences
@@ -17,6 +17,9 @@
 -- returns the seed value itself instead of skipping past it.
 --
 -- Safe to run repeatedly: setval to the current max is a no-op once caught up.
+-- Unlike supabase/migrations (one-time, tracked by the Supabase CLI), this
+-- script is run unconditionally on every pipeline execution -- see
+-- fetch_and_load.py.
 SELECT setval('institutes_institute_id_seq',
     COALESCE((SELECT MAX(institute_id) FROM institutes), 1),
     (SELECT MAX(institute_id) FROM institutes) IS NOT NULL);

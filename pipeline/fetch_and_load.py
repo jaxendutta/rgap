@@ -49,8 +49,8 @@ TRI_AGENCIES = {
 }
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SEED_SQL_PATH = REPO_ROOT / "database" / "seeds" / "01-load-data.sql"
-MIGRATIONS_DIR = REPO_ROOT / "database" / "migrations"
+SEED_SQL_PATH = REPO_ROOT / "pipeline" / "01-load-data.sql"
+RESET_SEQUENCES_SQL_PATH = REPO_ROOT / "pipeline" / "reset_sequences.sql"
 
 # The exact \copy line in 01-load-data.sql. We split the script on this marker:
 # everything before it creates the staging table (run as-is), then we load the
@@ -59,7 +59,7 @@ MIGRATIONS_DIR = REPO_ROOT / "database" / "migrations"
 # it does the cleanup/normalization/upsert (also run as-is).
 COPY_MARKER = "\\copy temp_grants FROM '/data/grants.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',', NULL '');"
 
-# Column order must match database/seeds/01-load-data.sql's temp_grants table
+# Column order must match pipeline/01-load-data.sql's temp_grants table
 # exactly -- COPY matches columns positionally, not by name.
 TEMP_GRANTS_COLUMNS = [
     "id", "ref_number", "latest_amendment_number", "amendment_date", "agreement_type",
@@ -159,8 +159,6 @@ def load_into_postgres(csv_buf: io.StringIO, database_url: str, commit: bool = T
         )
     pre_sql, post_sql = sql_text.split(COPY_MARKER, 1)
 
-    migration_files = sorted(MIGRATIONS_DIR.glob("*.sql"))
-
     conn = psycopg2.connect(database_url)
     try:
         with conn.cursor() as cur:
@@ -171,9 +169,8 @@ def load_into_postgres(csv_buf: io.StringIO, database_url: str, commit: bool = T
             # headroom within the workflow's 30-minute job timeout.
             cur.execute("SET statement_timeout = '10min'")
 
-            for migration_file in migration_files:
-                logger.info(f"Applying migration {migration_file.name} (idempotent)...")
-                cur.execute(migration_file.read_text(encoding="utf-8"))
+            logger.info("Resetting sequences (idempotent)...")
+            cur.execute(RESET_SEQUENCES_SQL_PATH.read_text(encoding="utf-8"))
 
             logger.info("Creating staging table...")
             cur.execute(pre_sql)

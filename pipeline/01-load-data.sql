@@ -1,4 +1,4 @@
--- database/seeds/01-load-data.sql
+-- pipeline/01-load-data.sql
 -- RGAP v2 Data Loader
 -- Optimized ELT Strategy: Load Raw -> Clean -> Normalize
 

@@ -34,7 +34,6 @@ yarn-error.log*
 next-env.d.ts
 
 # database
-/database/data
 *.db
 
 # IDE
