@@ -67,5 +67,16 @@ export function formatDateDiff(startDate: Date | string | null | undefined, endD
     return [monthPart, dayPart].filter(Boolean).join(' ') || '0 days';
 }
 
+// The monthly data-refresh workflow runs on the 15th of each month (UTC) --
+// see .github/workflows/data-refresh.yml. Mirrors that schedule to compute
+// the next upcoming refresh date without needing its own stored/bumped value.
+export function getNextDataUpdate(from: Date = new Date()): Date {
+    const year = from.getUTCFullYear();
+    const month = from.getUTCMonth();
+    const day = from.getUTCDate();
+    const targetMonth = day < 15 ? month : month + 1;
+    return new Date(Date.UTC(year, targetMonth, 15));
+}
+
 // Re-export common utils so you can import everything from one place if needed
 export { cn, formatCurrency, formatDate, formatNumber, truncate } from './utils';

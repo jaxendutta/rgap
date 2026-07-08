@@ -37,39 +37,6 @@ This version represents a complete modernization of the platform, leveraging the
 * **Authentication**: Iron Session (Stateless session management) + Bcryptjs
 * **Linting**: ESLint
 
-## Getting Started
-
-### Prerequisites
-
-* [Node.js 20+](https://nodejs.org/)
-* Access to the project's [Supabase](https://supabase.com/) database (connection string)
-
-### 1. Environment Setup
-
-Clone the repository and create your environment file:
-
-```bash
-cp .env.example .env
-```
-
-Open `.env` and configure your local variables:
-
-```bash
-DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@[PROJECT-REF].supabase.co:5432/postgres
-SESSION_SECRET=complex_random_string_at_least_32_chars_long
-RESEND_API_KEY=your_api_key_here
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
-
-### 2. Install & Run
-
-```bash
-npm install
-npm run dev
-```
-
-* **App**: [http://localhost:3000](http://localhost:3000)
-
 ## Database Schema
 
 The PostgreSQL database relies on a relational schema connecting:
@@ -97,6 +64,31 @@ Row-Level Security is enabled on every table (see `supabase/migrations/202607081
 The monthly data-refresh pipeline (`pipeline/fetch_and_load.py`) is separate from schema migrations: it re-runs `pipeline/reset_sequences.sql` (idempotent sequence sync) on every execution and loads data via `pipeline/01-load-data.sql`.
 
 ## Contributing
+
+Contributions are welcome. This isn't set up as a self-hostable, drop-in-your-own-database product — the app connects to a single shared Supabase project — so to run it locally you'll need dev access to that project. Open an issue or reach out before starting work on anything non-trivial, then:
+
+### Local dev environment
+
+Requires [Node.js 20+](https://nodejs.org/).
+
+```bash
+cp .env.example .env
+```
+
+Fill in `.env` with the dev database connection string and other secrets (ask a maintainer for access), then:
+
+```bash
+npm install
+npm run dev
+```
+
+The app runs at [http://localhost:3000](http://localhost:3000).
+
+### Making a schema change
+
+See [Database Schema](#database-schema) above — write it as a `supabase/migrations/` file, don't apply it through the Supabase dashboard directly.
+
+### Submitting a change
 
 1. Create a feature branch (`git checkout -b feature/amazing-feature`).
 2. Commit your changes.

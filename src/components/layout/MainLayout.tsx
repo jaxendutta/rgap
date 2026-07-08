@@ -18,7 +18,9 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                     id="main-content"
                     className="flex-1 min-h-0 overflow-auto px-3 lg:px-6 pt-16 pb-16 md:pt-12 lg:mt-0 md:pb-0 bg-slate-100 flex flex-col"
                 >
-                    {children}
+                    <div className="flex-1 flex flex-col">
+                        {children}
+                    </div>
                     <Footer />
                 </main>
             </div>

@@ -5,14 +5,13 @@ import {
     LuDatabase,
     LuChartSpline,
     LuUserPlus,
-    LuLogIn,
-    LuTriangleAlert
+    LuLogIn
 } from "react-icons/lu";
 import PageContainer from "@/components/layout/PageContainer";
 import { Card } from "@/components/ui/Card";
 import { IconType } from "react-icons";
 import { LAST_UPDATED, GRANTS_COUNT_APPROX } from "@/constants/data";
-import { formatDate, formatDateDiff } from "@/lib/format";
+import { formatDate, formatDateDiff, getNextDataUpdate } from "@/lib/format";
 import { GiAbstract014 } from "react-icons/gi";
 
 export default function HomePage() {
@@ -46,6 +45,25 @@ export default function HomePage() {
                 "/login",
             ],
         ];
+
+    const updates = [
+        {
+            label: "Last Update",
+            dateValue: LAST_UPDATED,
+            dateDiffFrom: LAST_UPDATED,
+            dateDiffTo: new Date(),
+            diffPrefix: "",
+            diffSuffix: " ago",
+        },
+        {
+            label: "Next Update",
+            dateValue: getNextDataUpdate(),
+            dateDiffFrom: new Date(),
+            dateDiffTo: getNextDataUpdate(),
+            diffPrefix: "in ",
+            diffSuffix: "",
+        },
+    ];
 
     const actionLinkClasses = "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm md:text-base font-medium transition-colors duration-300 ease-in-out shadow-xs hover:shadow-sm";
 
@@ -93,16 +111,20 @@ export default function HomePage() {
                 </div>
             </Card>
 
-            {/* Last Updated Date */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4 w-full bg-gray-900 text-white py-2 px-2 md:px-4 md:p-4 rounded-[20px] md:rounded-4xl shadow-lg border border-gray-700">
-                <div className="flex w-full items-center justify-center gap-3 w-full text-gray-900 rounded-3xl py-2 bg-gray-100">
-                    <span className="text-xs md:text-sm lg:text-base">Last Data Update</span>
-                </div>
-                <div className="flex w-full flex-grow items-center justify-between gap-3 text-gray-200 md:gap-4 text-xs md:text-sm lg:text-base font-medium px-2">
-                    <span>{formatDate(LAST_UPDATED, "long")}</span>
-                    <div className="h-px flex-grow bg-gray-100 mx-1" />
-                    <span>{formatDateDiff(LAST_UPDATED, new Date(), "long")} ago</span>
-                </div>
+            {/* Last / Next Data Update */}
+            <div className="flex items-stretch justify-between gap-3 md:gap-4 w-full">
+                {updates.map((update, index) => (
+                    <div key={index} className="flex flex-col md:flex-row items-center gap-2 md:gap-3 w-full md:flex-1 min-w-0 bg-gray-900 p-1.5 sm:p-2 md:p-3 rounded-[18] md:rounded-[22] lg:rounded-[28]">
+                        <div className="flex flex-wrap w-full md:w-auto items-center justify-center gap-3 text-gray-900 rounded-xl lg:rounded-2xl p-1 md:py-2 md:px-4 bg-gray-100">
+                            <span className="text-sm lg:text-base whitespace-nowrap">{update.label}</span>
+                        </div>
+                        <div className="flex w-full flex-grow items-center justify-between gap-1 text-gray-200 md:gap-4 text-[12px] md:text-sm lg:text-base font-medium px-2 sm:px-0.5  md:pr-2 min-w-0">
+                            <span>{formatDate(update.dateValue, "long")}</span>
+                            <div className="hidden md:flex h-px flex-grow bg-gray-100" />
+                            <span className="text-end">{update.diffPrefix}{formatDateDiff(update.dateDiffFrom, update.dateDiffTo, "long")}{update.diffSuffix}</span>
+                        </div>
+                    </div>
+                ))}
             </div>
 
             {/* Features Grid */}
