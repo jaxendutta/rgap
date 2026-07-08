@@ -10,13 +10,13 @@ interface MainLayoutProps {
 
 const MainLayout = ({ children }: MainLayoutProps) => {
     return (
-        <div className="h-dvh flex flex-col bg-slate-100">
+        <div className="min-h-screen flex flex-col bg-slate-100">
             <Header />
-            <div className="flex-1 min-h-0 flex overflow-hidden">
+            <div className="flex flex-1">
                 <Sidebar />
                 <main
                     id="main-content"
-                    className="flex-1 min-h-0 overflow-auto px-3 lg:px-6 pt-16 pb-16 md:pt-12 lg:mt-0 md:pb-0 bg-slate-100 flex flex-col"
+                    className="flex-1 min-w-0 px-3 lg:px-6 pt-16 pb-20 md:pt-12 lg:mt-0 lg:pb-0 bg-slate-100 flex flex-col"
                 >
                     <div className="flex-1 flex flex-col">
                         {children}

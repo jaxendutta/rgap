@@ -9,7 +9,7 @@
 @layer base {
     html,
     body {
-        @apply h-dvh overflow-hidden overscroll-none bg-slate-100 text-black;
+        @apply min-h-screen bg-slate-100 text-black;
     }
 }
 
