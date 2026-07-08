@@ -158,7 +158,6 @@ export default function HomePage() {
                     );
                 })}
             </div>
-
         </PageContainer>
     );
 }

@@ -141,7 +141,7 @@ const Sidebar = () => {
             {/* Mobile Bottom Navigation */}
             <div
                 className={cn(
-                    "lg:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe mx-3 mb-2",
+                    "lg:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe mb-2 px-3",
                 )}
             >
                 <Tabs
@@ -156,9 +156,8 @@ const Sidebar = () => {
                     }}
                     variant="pills"
                     size="sm"
-                    fullWidth
                     tabClassName="flex-col !py-1 !px-1"
-                    className="border-1 border-white"
+                    className="w-fit mx-auto border-1 border-white"
                 />
             </div>
         </>

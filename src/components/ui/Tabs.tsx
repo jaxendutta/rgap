@@ -134,7 +134,7 @@ const Tabs: React.FC<TabsProps> = ({
             ? "flex flex-col"
             : "flex flex-row items-center justify-center",
         variant !== "pills" && "border-b border-gray-200",
-        variant === "pills" && "bg-white/60 backdrop-blur-xs p-1 rounded-3xl relative border border-gray-200",
+        variant === "pills" && "gap-1 bg-white/60 backdrop-blur-xs p-1 rounded-3xl relative border border-gray-200",
     );
 
     const manyTabs = tabs.length > 3;
@@ -198,11 +198,11 @@ const Tabs: React.FC<TabsProps> = ({
                                 )}
                             />
                         )}
-                        <span className={manyTabs ? "text-[10px] md:text-sm" : sizeClasses[size]}>{tab.label}</span>
+                        <span className={cn("whitespace-nowrap", manyTabs ? "text-[10px] md:text-sm" : sizeClasses[size])}>{tab.label}</span>
                         {showCounts && tab.count !== undefined && (
                             <span
                                 className={cn(
-                                    "rounded-full px-2 py-0.5 text-xs",
+                                    "rounded-full px-4 py-0.5 text-xs",
                                     isActive
                                         ? variant === "pills"
                                             ? "bg-white/80 text-gray-900"
