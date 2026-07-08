@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
     return {
         id: '/',
         name: '[ RGAP ] Research Grants Analytics Platform',
-        short_name: 'RGAP',
+        short_name: '[ RGAP ]',
         description: 'Browse Canadian Tri-Agency Council research grants from NSERC, CIHR, and SSHRC',
         start_url: '/',
         display: 'standalone',
