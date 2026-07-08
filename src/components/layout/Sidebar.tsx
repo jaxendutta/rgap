@@ -156,7 +156,7 @@ const Sidebar = () => {
                     }}
                     variant="pills"
                     size="sm"
-                    tabClassName="flex-col !py-1 !px-1"
+                    tabClassName="flex-col py-1 px-3 sm:px-5"
                     className="w-fit mx-auto border-1 border-white"
                 />
             </div>
