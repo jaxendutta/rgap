@@ -141,7 +141,7 @@ const Sidebar = () => {
             {/* Mobile Bottom Navigation */}
             <div
                 className={cn(
-                    "lg:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe mb-2 px-3",
+                    "lg:hidden fixed bottom-0 left-0 right-0 z-50 mb-2 px-3",
                 )}
             >
                 <Tabs

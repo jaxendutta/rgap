@@ -5,7 +5,7 @@ import {
     LuDatabase,
     LuChartSpline,
     LuUserPlus,
-    LuLogIn
+    LuLogIn,
 } from "react-icons/lu";
 import PageContainer from "@/components/layout/PageContainer";
 import { Card } from "@/components/ui/Card";
@@ -20,70 +20,83 @@ export default function HomePage() {
         title: string,
         description: string,
         icon: IconType,
-        link?: string
+        link?: string,
     ][] = [
-            [
-                "Comprehensive Data",
-                `Access and analyze over ${GRANTS_COUNT_APPROX.toLocaleString()} research grants from NSERC, CIHR, and SSHRC.`,
-                LuDatabase,
-                "/search",
-            ],
-            [
-                "Advanced Analytics",
-                "Visualize funding trends, analyze success rates, and track research investments.",
-                LuChartSpline,
-            ],
-            [
-                "Recipients + Institutes",
-                "Discover the personalized profiles of researchers and institutes behind the grants.",
-                LuGraduationCap,
-                "/recipients",
-            ],
-            [
-                "Create Account",
-                "Sign up to bookmark grants, save searches, customize dashboards + more.",
-                LuUserPlus,
-                "/login",
-            ],
-        ];
+        [
+            "Comprehensive Data",
+            `Access and analyze over ${GRANTS_COUNT_APPROX.toLocaleString()} research grants from NSERC, CIHR, SSHRC.`,
+            LuDatabase,
+            "/search",
+        ],
+        [
+            "Advanced Analytics",
+            "Visualize funding trends, analyze success rates, and track research investments.",
+            LuChartSpline,
+        ],
+        [
+            "Recipients + Institutes",
+            "Discover the personalized profiles of researchers and institutes behind the grants.",
+            LuGraduationCap,
+            "/recipients",
+        ],
+        [
+            "Create Account",
+            "Sign up to bookmark grants, save searches, customize dashboards + more.",
+            LuUserPlus,
+            "/login",
+        ],
+    ];
 
     const nextUpdate = getNextDataUpdate();
 
-    const updates: { label: string; dateValue: Date; diff: React.ReactNode }[] = [
-        {
-            label: "Last Update",
-            dateValue: LAST_UPDATED,
-            diff: `${formatDateDiff(LAST_UPDATED, new Date(), "long")} ago`,
-        },
-        {
-            label: "Next Update",
-            dateValue: nextUpdate,
-            diff: <UpdateCountdown target={nextUpdate.toISOString()} />,
-        },
-    ];
+    const updates: { label: string; dateValue: Date; diff: React.ReactNode }[] =
+        [
+            {
+                label: "Last Update",
+                dateValue: LAST_UPDATED,
+                diff: `${formatDateDiff(LAST_UPDATED, new Date(), "long")} ago`,
+            },
+            {
+                label: "Next Update",
+                dateValue: nextUpdate,
+                diff: <UpdateCountdown target={nextUpdate.toISOString()} />,
+            },
+        ];
 
-    const actionLinkClasses = "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm md:text-base font-medium transition-colors duration-300 ease-in-out shadow-xs hover:shadow-sm";
+    const actionLinkClasses =
+        "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm md:text-base font-medium transition-colors duration-300 ease-in-out shadow-xs hover:shadow-sm";
 
     return (
         <PageContainer className="flex min-h-full flex-1 flex-col gap-3 md:gap-6">
             {/* Hero Section */}
-            <Card disableOverflow className="relative flex flex-1 items-center px-6 lg:px-8 py-10 md:py-14 lg:py-24 hover:border-gray-300 transition-all duration-200 rounded-3xl">
+            <Card
+                disableOverflow
+                className="relative flex flex-1 items-center px-6 lg:px-8 py-10 md:py-14 lg:py-24 hover:border-gray-300 transition-all duration-200 rounded-3xl"
+            >
                 <GiAbstract014 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-72 md:size-80 text-gray-700 opacity-10 animate-spin-slow pointer-events-none" />
 
                 <div className="flex h-full w-full flex-col justify-center text-center">
-                    <div className={`font-semibold text-gray-900 leading-tight flex justify-center items-center pb-2 sm:pb-3 md:pb-4`}>
-                        <span className="px-2 text-6xl md:text-7xl lg:text-8xl xl:text-9xl">[</span>
-                        <span className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl mt-2 md:mt-3 lg:mt-4 xl:mt-5">RGAP</span>
-                        <span className="px-2 text-6xl md:text-7xl lg:text-8xl xl:text-9xl">]</span>
+                    <div
+                        className={`font-semibold text-gray-900 leading-tight flex justify-center items-center pb-2 sm:pb-3 md:pb-4`}
+                    >
+                        <span className="px-2 text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
+                            [
+                        </span>
+                        <span className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl mt-2 md:mt-3 lg:mt-4 xl:mt-5">
+                            RGAP
+                        </span>
+                        <span className="px-2 text-6xl md:text-7xl lg:text-8xl xl:text-9xl">
+                            ]
+                        </span>
                     </div>
 
                     <span className="mt-1 text-xs sm:text-base md:text-xl text-gray-600 block uppercase tracking-widest font-semibold border-b border-gray-300 pb-1 md:pb-2">
                         Research Grants Analytics Platform
                     </span>
                     <div className="mt-3 md:mt-5 max-w-md mx-auto text-sm md:text-base text-gray-500 md:max-w-3xl">
-                        Explore and analyze research funding data from Canada&apos;s
-                        three major research funding agencies: NSERC, CIHR, and
-                        SSHRC.
+                        Explore and analyze research funding data from
+                        Canada&apos;s three major research funding agencies:
+                        NSERC, CIHR, and SSHRC.
                     </div>
 
                     <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
@@ -111,14 +124,21 @@ export default function HomePage() {
             {/* Last / Next Data Update */}
             <div className="flex items-stretch justify-between gap-3 md:gap-4 w-full">
                 {updates.map(({ label, dateValue, diff }) => (
-                    <div key={label} className="flex flex-col md:flex-row items-center gap-2 md:gap-3 w-full md:flex-1 min-w-0 bg-gray-900 p-1.5 sm:p-2 md:p-3 rounded-[18] md:rounded-[22] lg:rounded-[28]">
+                    <div
+                        key={label}
+                        className="flex flex-col md:flex-row items-center gap-2 md:gap-3 w-full md:flex-1 min-w-0 bg-gray-900 p-1.5 sm:p-2 md:p-3 rounded-[18] md:rounded-[22] lg:rounded-[28]"
+                    >
                         <div className="flex flex-wrap w-full md:w-auto items-center justify-center gap-3 text-gray-900 rounded-xl lg:rounded-2xl p-1 md:py-2 md:px-4 bg-gray-100">
-                            <span className="text-[12px] md:text-sm lg:text-base whitespace-nowrap">{label}</span>
+                            <span className="text-[12px] md:text-sm lg:text-base whitespace-nowrap">
+                                {label}
+                            </span>
                         </div>
                         <div className="flex flex-col md:flex-row w-full flex-grow items-center justify-center md:justify-between gap-1 text-gray-200 md:gap-4 text-[12px] md:text-sm lg:text-base font-medium px-2 sm:px-0.5 md:pr-2 min-w-0">
                             <span>{formatDate(dateValue, "long")}</span>
                             <div className="w-full h-px md:w-auto md:flex-grow bg-gray-100/50" />
-                            <span className="text-center md:text-end">{diff}</span>
+                            <span className="text-center md:text-end">
+                                {diff}
+                            </span>
                         </div>
                     </div>
                 ))}
@@ -128,9 +148,7 @@ export default function HomePage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
                 {features.map(([title, description, Icon, link], index) => {
                     const card = (
-                        <Card
-                            className="relative overflow-hidden p-4 md:p-6 flex flex-col justify-center gap-1 hover:border-gray-300 hover:shadow-md transition-all duration-200 rounded-3xl h-full"
-                        >
+                        <Card className="relative overflow-hidden p-4 md:p-6 flex flex-col justify-center gap-1 hover:border-gray-300 hover:shadow-md transition-all duration-200 rounded-3xl h-full">
                             <Icon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-24 md:size-32 text-gray-700 opacity-10 animate-spin-slow" />
                             <div className="z-10 justify-between flex flex-col h-full gap-1">
                                 <h3 className="font-semibold text-[13px] sm:text-sm md:text-base text-gray-900 leading-tight">
@@ -145,7 +163,11 @@ export default function HomePage() {
 
                     if (link) {
                         return (
-                            <Link key={index} href={link} className="block h-full">
+                            <Link
+                                key={index}
+                                href={link}
+                                className="block h-full"
+                            >
                                 {card}
                             </Link>
                         );
