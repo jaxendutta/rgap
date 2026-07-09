@@ -69,8 +69,12 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
         // Count must also respect the search filter!
         db.query(`SELECT COUNT(*) as total FROM recipients r ${whereClause}`, query ? [`%${query}%`] : []),
 
+        // Stats come from the recipient_stats materialized view (refreshed by
+        // the monthly pipeline) instead of aggregating the whole grants table
+        // on every request. INNER JOIN is safe: recipient_stats has exactly
+        // one row per recipient, so every recipient still appears.
         db.query<RecipientWithStats>(`
-            SELECT 
+            SELECT
             r.recipient_id,
             r.legal_name,
             r.type,
@@ -79,17 +83,16 @@ export default async function RecipientsPage({ searchParams }: PageProps) {
             i.city,
             i.province,
             i.country,
-            COUNT(DISTINCT g.grant_id) as grant_count,
-            SUM(g.agreement_value) as total_funding,
-            AVG(g.agreement_value) as avg_funding,
-            MIN(g.agreement_start_date::date) as first_grant_date,
-            MAX(g.agreement_start_date::date) as latest_grant_date,
+            s.grant_count,
+            s.total_funding,
+            s.avg_funding,
+            s.first_grant_date,
+            s.latest_grant_date,
             ${bookmarkSelection}
             FROM recipients r
+            JOIN recipient_stats s ON s.recipient_id = r.recipient_id
             LEFT JOIN institutes i ON r.institute_id = i.institute_id
-            LEFT JOIN grants g ON r.recipient_id = g.recipient_id
-            ${whereClause} -- [FIX] Applied filter here
-            GROUP BY r.recipient_id, i.name, i.city, i.province, i.country
+            ${whereClause}
             ORDER BY ${sortField} ${sortDir} NULLS LAST
             LIMIT $${limitIndex} OFFSET $${offsetIndex}
         `, queryParams)
