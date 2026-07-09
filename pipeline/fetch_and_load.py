@@ -196,6 +196,31 @@ def load_into_postgres(csv_buf: io.StringIO, database_url: str, commit: bool = T
     finally:
         conn.close()
 
+    if commit:
+        refresh_stats_matviews(database_url)
+
+
+def refresh_stats_matviews(database_url: str) -> None:
+    """Refresh the per-entity stats materialized views the /recipients and
+    /institutes list pages read from (see the 20260708160000 migration).
+
+    REFRESH MATERIALIZED VIEW CONCURRENTLY cannot run inside a transaction
+    block and requires each view's unique index, so this uses a separate
+    autocommit connection after the main load has committed. CONCURRENTLY
+    keeps the views readable (no ACCESS EXCLUSIVE lock) while they rebuild, so
+    the live app never sees them disappear mid-refresh."""
+    conn = psycopg2.connect(database_url)
+    try:
+        conn.autocommit = True
+        with conn.cursor() as cur:
+            cur.execute("SET statement_timeout = '10min'")
+            for view in ("recipient_stats", "institute_stats"):
+                logger.info(f"Refreshing {view} (concurrently)...")
+                cur.execute(f"REFRESH MATERIALIZED VIEW CONCURRENTLY {view}")
+        logger.info("Stats materialized views refreshed.")
+    finally:
+        conn.close()
+
 
 def main():
     parser = argparse.ArgumentParser(description="Fetch, preprocess, and load the latest tri-agency grants dataset")

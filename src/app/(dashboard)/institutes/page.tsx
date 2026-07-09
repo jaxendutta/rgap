@@ -69,25 +69,28 @@ export default async function InstitutesPage({ searchParams }: PageProps) {
         // [FIX] Count must also respect the search filter!
         db.query(`SELECT COUNT(*) as total FROM institutes i ${whereClause}`, query ? [`%${query}%`] : []),
 
+        // Stats come from the institute_stats materialized view (refreshed by
+        // the monthly pipeline) instead of aggregating the whole grants table
+        // on every request. INNER JOIN is safe: institute_stats has exactly
+        // one row per institute (built with LEFT JOINs), so every institute
+        // still appears -- with zero counts / NULL funding where it has none.
         db.query<InstituteWithStats>(`
-            SELECT 
+            SELECT
             i.institute_id,
             i.name,
             i.city,
             i.province,
             i.country,
-            COUNT(DISTINCT r.recipient_id) as recipient_count,
-            COUNT(DISTINCT g.grant_id) as grant_count,
-            SUM(g.agreement_value) as total_funding,
-            AVG(g.agreement_value) as avg_funding,
-            MIN(g.agreement_start_date::date) as first_grant_date,
-            MAX(g.agreement_start_date::date) as latest_grant_date,
+            s.recipient_count,
+            s.grant_count,
+            s.total_funding,
+            s.avg_funding,
+            s.first_grant_date,
+            s.latest_grant_date,
             ${bookmarkSelection}
             FROM institutes i
-            LEFT JOIN recipients r ON i.institute_id = r.institute_id
-            LEFT JOIN grants g ON r.recipient_id = g.recipient_id
-            ${whereClause} -- [FIX] Applied filter here
-            GROUP BY i.institute_id
+            JOIN institute_stats s ON s.institute_id = i.institute_id
+            ${whereClause}
             ORDER BY ${sortField} ${sortDir} NULLS LAST
             LIMIT $${limitIndex} OFFSET $${offsetIndex}
         `, queryParams)
