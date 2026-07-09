@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LuBookOpen, LuCircleArrowUp, LuHouse } from "react-icons/lu";
+import { LuBookOpen, LuCircleArrowUp, LuHouse, LuLogIn, LuUser } from "react-icons/lu";
 import { GiAbstract014 } from "react-icons/gi";
 import { AnimatePresence, motion } from "framer-motion";
 import { SITE_NAME } from "@/constants/site";
 import { DOCS_NAV_ITEMS } from "@/constants/docs";
 import Dropdown from "@/components/ui/Dropdown";
 import { VscLibrary } from "react-icons/vsc";
+import { useAuth } from "@/providers/AuthProvider";
 
 interface HeaderProps {
     docsMode?: boolean;
@@ -18,6 +19,7 @@ interface HeaderProps {
 const Header = ({ docsMode }: HeaderProps) => {
     const router = useRouter();
     const pathname = usePathname();
+    const { user } = useAuth();
 
     const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -83,16 +85,18 @@ const Header = ({ docsMode }: HeaderProps) => {
                         )}
                     </AnimatePresence>
 
-                    <div className="p-2 px-3 flex-shrink-0">
+                    {/* Sign In (signed out) / Account (signed in) */}
+                    <div className="pl-2 pr-4 pb-0.5 flex-shrink-0 border-l border-gray-200/50">
                         <Link
-                            href={docsMode ? "/" : "/docs"}
-                            className="text-gray-600 hover:text-blue-600 transition-colors block"
-                            aria-label={docsMode ? "Home" : "About & Documentation"}
+                            href={user ? "/account" : "/login"}
+                            className="flex items-center gap-1.5 text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap"
+                            aria-label={user ? "Account" : "Sign In"}
                         >
-                            {docsMode
-                                ? <LuHouse className="size-5" />
-                                : <LuBookOpen className="size-5" />
+                            {user
+                                ? <LuUser className="size-4.75" />
+                                : <LuLogIn className="size-4.75" />
                             }
+                            <span className="text-sm">{user ? "Account" : "Sign In"}</span>
                         </Link>
                     </div>
                 </motion.div>

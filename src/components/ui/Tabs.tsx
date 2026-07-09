@@ -60,7 +60,7 @@ const Tabs: React.FC<TabsProps> = ({
     };
 
     const paddingClasses = {
-        sm: " py-1 md:py-1.5 px-2 md:px-3",
+        sm: "py-1 md:py-1.5 px-3",
         md: "py-1.5 px-4 gap-1.75",
         lg: "py-2 px-5",
     };
@@ -110,9 +110,9 @@ const Tabs: React.FC<TabsProps> = ({
 
         if (parentRect) {
             setPillStyle({
-                left: orientation === "horizontal" ? activeTabElement.offsetLeft : 0,
+                left: orientation === "horizontal" ? activeTabElement.offsetLeft - 8 : 0,
                 top: orientation === "vertical" ? activeTabElement.offsetTop : 0,
-                width: orientation === "horizontal" ? rect.width : parentRect.width,
+                width: orientation === "horizontal" ? rect.width + 16 : parentRect.width,
                 height: orientation === "vertical" ? rect.height : parentRect.height,
                 opacity: 1, // Make visible when a valid tab is found
             });
@@ -134,7 +134,7 @@ const Tabs: React.FC<TabsProps> = ({
             ? "flex flex-col"
             : "flex flex-row items-center justify-center",
         variant !== "pills" && "border-b border-gray-200",
-        variant === "pills" && "gap-1 bg-white/60 backdrop-blur-xs p-1 rounded-3xl relative border border-gray-200",
+        variant === "pills" && "gap-1 bg-white/60 backdrop-blur-xs px-2 py-1 rounded-3xl relative border border-gray-200",
     );
 
     const manyTabs = tabs.length > 3;

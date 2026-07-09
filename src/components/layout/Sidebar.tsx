@@ -40,7 +40,7 @@ const Sidebar = () => {
         { name: "Recipients", icon: LuGraduationCap, href: "/recipients" },
         { name: "Search", icon: LuSearch, href: "/search" },
         { name: "Bookmarks", icon: LuBookmark, href: "/bookmarks" },
-        accountItem,
+        { name: "Docs", icon: LuBookOpen, href: "/docs" },
     ];
 
     const desktopNavigation = [
@@ -156,8 +156,7 @@ const Sidebar = () => {
                     }}
                     variant="pills"
                     size="sm"
-                    tabClassName="flex-col py-1 px-3 sm:px-5"
-                    className="w-fit mx-auto border-1 border-white"
+                    className="w-fit mx-auto bg-white border border-gray-200 shadow-xs"
                 />
             </div>
         </>
