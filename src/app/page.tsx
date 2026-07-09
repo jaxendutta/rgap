@@ -43,7 +43,7 @@ export default function HomePage() {
             "Create Account",
             "Sign up to bookmark grants, save searches, customize dashboards + more.",
             LuUserPlus,
-            "/login",
+            "/auth",
         ],
     ];
 
@@ -110,7 +110,7 @@ export default function HomePage() {
                             </Link>
 
                             <Link
-                                href="/login"
+                                href="/auth"
                                 className={`${actionLinkClasses} bg-gray-200 text-gray-700 hover:bg-gray-300`}
                             >
                                 <span>Sign In</span>

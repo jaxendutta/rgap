@@ -51,7 +51,7 @@ export function BookmarkButton({
         if (!user) {
             notify(
                 <span>
-                    Please <Link href={`/login?redirect=${pathname}`} className="underline font-bold">sign in</Link> to bookmark items.
+                    Please <Link href={`/auth?redirect=${pathname}`} className="underline font-bold">sign in</Link> to bookmark items.
                 </span>,
                 "info"
             );

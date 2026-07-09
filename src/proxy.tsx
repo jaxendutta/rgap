@@ -12,7 +12,7 @@ export function proxy(request: NextRequest) {
         const hasSession = request.cookies.has('rgap_session');
 
         if (!hasSession) {
-            const loginUrl = new URL('/login', request.url);
+            const loginUrl = new URL('/auth', request.url);
             return NextResponse.redirect(loginUrl);
         }
     }

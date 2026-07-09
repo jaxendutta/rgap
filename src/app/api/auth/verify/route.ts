@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const token = searchParams.get('token');
 
-    if (!token) return redirect('/login?error=Invalid token');
+    if (!token) return redirect('/auth?error=Invalid token');
 
     try {
         // 1. Find Token
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
         const record = result.rows[0];
 
         if (!record || new Date(record.expires) < new Date()) {
-            return redirect('/login?error=Invalid or expired token');
+            return redirect('/auth?error=Invalid or expired token');
         }
 
         // 2. CHECK: Is this a Registration or an Email Change?
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
             // (Existing logic: find by email, set verified, auto-login)
             const regUser = await db.query('SELECT id, name, email FROM users WHERE email = $1', [record.identifier]);
 
-            if (regUser.rows.length === 0) return redirect('/login?error=User not found');
+            if (regUser.rows.length === 0) return redirect('/auth?error=User not found');
 
             const user = regUser.rows[0];
             await db.query('UPDATE users SET email_verified_at = NOW() WHERE id = $1', [user.id]);
@@ -81,6 +81,6 @@ export async function GET(request: NextRequest) {
 
     } catch (error) {
         console.error(error);
-        return redirect('/login?error=Verification failed');
+        return redirect('/auth?error=Verification failed');
     }
 }

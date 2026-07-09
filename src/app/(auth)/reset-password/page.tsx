@@ -20,7 +20,7 @@ export default function ResetPasswordPage() {
     useEffect(() => {
         if (state?.success) {
             // Optional: Redirect after delay
-            const timer = setTimeout(() => router.push('/login'), 3000);
+            const timer = setTimeout(() => router.push('/auth'), 3000);
             return () => clearTimeout(timer);
         }
     }, [state, router]);
@@ -31,7 +31,7 @@ export default function ResetPasswordPage() {
                 <Card className="p-8 text-center text-red-600">
                     Missing or invalid reset token.
                     <div className="mt-4">
-                        <Link href="/login" className="text-blue-600 hover:underline text-sm">Return to login</Link>
+                        <Link href="/auth" className="text-blue-600 hover:underline text-sm">Return to login</Link>
                     </div>
                 </Card>
             </div>

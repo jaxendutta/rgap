@@ -31,7 +31,7 @@ const Sidebar = () => {
     const accountItem = {
         name: user ? "Account" : "Sign In",
         icon: user ? LuUser : LuLogIn,
-        href: user ? "/account" : "/login"
+        href: user ? "/account" : "/auth"
     };
 
     // Navigation config

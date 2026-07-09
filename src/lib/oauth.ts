@@ -74,9 +74,26 @@ function getCredentials(provider: OAuthProviderId) {
     return { clientId, clientSecret };
 }
 
-export function getRedirectUri(provider: OAuthProviderId): string {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    return `${baseUrl}/api/auth/oauth/${provider}/callback`;
+// Resolve the public base URL for this deployment. Prefer an explicitly
+// configured canonical URL (keeps redirect_uri stable and easy to register with
+// each provider), but fall back to the real request origin so production still
+// works when NEXT_PUBLIC_APP_URL is unset — the previous localhost fallback
+// silently broke OAuth in prod. Honors reverse-proxy forwarded headers.
+export function getRequestBaseUrl(request: Request): string {
+    const configured = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, '');
+    if (configured && !configured.includes('localhost')) return configured;
+
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+    if (host) {
+        const proto = request.headers.get('x-forwarded-proto') || (host.startsWith('localhost') ? 'http' : 'https');
+        return `${proto}://${host}`;
+    }
+
+    return configured || 'http://localhost:3000';
+}
+
+export function getRedirectUri(provider: OAuthProviderId, baseUrl: string): string {
+    return `${baseUrl.replace(/\/+$/, '')}/api/auth/oauth/${provider}/callback`;
 }
 
 function base64UrlEncode(buffer: Buffer): string {
@@ -86,7 +103,7 @@ function base64UrlEncode(buffer: Buffer): string {
 // ============================================================================
 // Step 1: Build the authorization URL (+ the transient values to remember)
 // ============================================================================
-export function buildAuthorizationRequest(provider: OAuthProviderId) {
+export function buildAuthorizationRequest(provider: OAuthProviderId, baseUrl: string) {
     const config = OAUTH_PROVIDERS[provider];
     const { clientId } = getCredentials(provider);
 
@@ -95,7 +112,7 @@ export function buildAuthorizationRequest(provider: OAuthProviderId) {
 
     const url = new URL(config.authorizeUrl);
     url.searchParams.set('client_id', clientId);
-    url.searchParams.set('redirect_uri', getRedirectUri(provider));
+    url.searchParams.set('redirect_uri', getRedirectUri(provider, baseUrl));
     url.searchParams.set('response_type', 'code');
     url.searchParams.set('scope', config.scope);
     url.searchParams.set('state', state);
@@ -112,7 +129,7 @@ export function buildAuthorizationRequest(provider: OAuthProviderId) {
 // ============================================================================
 // Step 2: Exchange the authorization code for tokens
 // ============================================================================
-async function exchangeCode(provider: OAuthProviderId, code: string, codeVerifier: string) {
+async function exchangeCode(provider: OAuthProviderId, code: string, codeVerifier: string, baseUrl: string) {
     const config = OAUTH_PROVIDERS[provider];
     const { clientId, clientSecret } = getCredentials(provider);
 
@@ -121,7 +138,7 @@ async function exchangeCode(provider: OAuthProviderId, code: string, codeVerifie
         code,
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: getRedirectUri(provider),
+        redirect_uri: getRedirectUri(provider, baseUrl),
     });
     if (config.pkce) body.set('code_verifier', codeVerifier);
 
@@ -197,9 +214,10 @@ async function fetchGitHubProfile(accessToken: string): Promise<OAuthProfile> {
 export async function getOAuthProfile(
     provider: OAuthProviderId,
     code: string,
-    codeVerifier: string
+    codeVerifier: string,
+    baseUrl: string
 ): Promise<OAuthProfile> {
-    const tokens = await exchangeCode(provider, code, codeVerifier);
+    const tokens = await exchangeCode(provider, code, codeVerifier, baseUrl);
 
     if (provider === 'github') {
         if (!tokens.access_token) throw new Error('GitHub did not return an access token');

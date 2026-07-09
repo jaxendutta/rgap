@@ -30,7 +30,7 @@ interface AccountPageProps {
 
 export default async function AccountPage({ searchParams }: AccountPageProps) {
     const user = await getCurrentUser();
-    if (!user) redirect('/login');
+    if (!user) redirect('/auth');
 
     const params = await searchParams;
     const session = await getSession();

@@ -125,6 +125,20 @@ export default function SearchInterface({
         setShowBanner(termsChanged || filtersChanged);
     }, [searchTerms, filters, lastSearchedTerms, lastSearchedFilters, isInitialState]);
 
+    // Sync inputs when the parent changes initialValues out-of-band — e.g.
+    // applying a "Did you mean" suggestion rewrites the URL, which flows back
+    // here as new initialValues. Keyed on the values so ordinary typing (which
+    // doesn't touch initialValues) is never clobbered.
+    useEffect(() => {
+        const next = fields.reduce((acc, field) => {
+            acc[field.key] = initialValues[field.key] || '';
+            return acc;
+        }, {} as Record<string, string>);
+        setSearchTerms(next);
+        setLastSearchedTerms(next);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [JSON.stringify(initialValues)]);
+
     // Handlers
     const handleInputChange = (field: string, value: string) => {
         setSearchTerms(prev => ({ ...prev, [field]: value }));

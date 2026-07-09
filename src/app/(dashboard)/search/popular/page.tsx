@@ -38,7 +38,7 @@ export default async function PopularSearchesPage() {
                     <p className="text-gray-500 mb-8">
                         See the most frequently searched recipients, institutes, and grants across RGAP.
                     </p>
-                    <Link href="/login" className="block w-full">
+                    <Link href="/auth" className="block w-full">
                         <Button size="lg" className="w-full shadow-md hover:shadow-lg transition-all">
                             Sign In to RGAP
                         </Button>

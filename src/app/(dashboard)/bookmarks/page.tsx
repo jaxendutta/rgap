@@ -33,7 +33,7 @@ export default async function BookmarksPage(props: Props) {
                     <p className="text-gray-500 mb-8">
                         Your saved grants, researchers, and institutes are stored securely in your account.
                     </p>
-                    <Link href="/login" className="block w-full">
+                    <Link href="/auth" className="block w-full">
                         <Button size="lg" className="w-full shadow-md hover:shadow-lg transition-all">
                             Sign In to RGAP
                         </Button>

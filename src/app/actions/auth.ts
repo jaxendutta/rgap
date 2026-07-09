@@ -183,7 +183,7 @@ export async function authAction(prevState: any, formData: FormData): Promise<Ac
 // ======================== CHANGE PASSWORD ========================
 export async function changePasswordAction(prevState: any, formData: FormData) {
     const session = await getSession();
-    if (!session.user) redirect('/login');
+    if (!session.user) redirect('/auth');
 
     const currentPassword = formData.get('currentPassword') as string;
     const newPassword = formData.get('newPassword') as string;
@@ -233,7 +233,7 @@ export async function logoutAction() {
         await db.query('UPDATE sessions SET is_revoked = TRUE WHERE session_id = $1', [session.sessionId]);
     }
     session.destroy();
-    redirect('/login');
+    redirect('/auth');
 }
 
 // Revoke a specific session
@@ -256,7 +256,7 @@ export async function revokeSessionAction(sessionId: string) {
 // Delete Account
 export async function deleteAccountAction(prevState: any, formData: FormData) {
     const session = await getSession();
-    if (!session.user) redirect('/login');
+    if (!session.user) redirect('/auth');
 
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
@@ -303,7 +303,7 @@ export async function deleteAccountAction(prevState: any, formData: FormData) {
         return { success: false, message: "Failed to delete account." };
     }
 
-    redirect('/login?deleted=true');
+    redirect('/auth?deleted=true');
 }
 
 export async function checkAuth() {
@@ -313,7 +313,7 @@ export async function checkAuth() {
 
 export async function updateProfileAction(prevState: any, formData: FormData) {
     const session = await getSession();
-    if (!session.user) redirect('/login');
+    if (!session.user) redirect('/auth');
 
     const newName = formData.get('name') as string;
     const newEmail = formData.get('email') as string;

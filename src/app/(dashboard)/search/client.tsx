@@ -14,6 +14,7 @@ import { LuSearch, LuGraduationCap, LuUniversity, LuBookMarked } from 'react-ico
 import type { GrantWithDetails } from '@/types/database';
 import { DEFAULT_FILTER_STATE } from '@/constants/filters';
 import { saveSearchHistory } from '@/app/actions/history';
+import { getSearchSuggestion, type SearchSuggestion } from '@/app/actions/search';
 import { getSortOptions } from '@/lib/utils';
 import { DEFAULT_ITEM_PER_PAGE } from '@/constants/data';
 
@@ -44,8 +45,18 @@ export default function SearchPageClient({
     const [isLoading, setIsLoading] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
     const [totalResults, setTotalResults] = useState(0);
+    const [suggestion, setSuggestion] = useState<SearchSuggestion | null>(null);
 
     const currentPage = Number(searchParams.get('page')) || 1;
+
+    // Terms reflected in the URL — kept reactive so the search inputs stay in
+    // sync when we change them programmatically (e.g. applying a "Did you mean"
+    // suggestion), not just on the initial server render.
+    const activeSearchTerms = {
+        recipient: searchParams.get('recipient') || initialSearchTerms.recipient || '',
+        institute: searchParams.get('institute') || initialSearchTerms.institute || '',
+        grant: searchParams.get('grant') || initialSearchTerms.grant || '',
+    };
 
     // Effect triggers when URL string changes
     useEffect(() => {
@@ -128,11 +139,19 @@ export default function SearchPageClient({
                 );
             }
 
+            // No hits? Offer the closest existing name as a "Did you mean".
+            if (count === 0) {
+                setSuggestion(await getSearchSuggestion(params.searchTerms));
+            } else {
+                setSuggestion(null);
+            }
+
         } catch (error) {
             console.error('Search error:', error);
             setGrants([]);
             setTotalResults(0);
             setVisualizationData([]);
+            setSuggestion(null);
         } finally {
             setIsLoading(false);
         }
@@ -179,6 +198,15 @@ export default function SearchPageClient({
         router.replace(`${pathname}?${urlParams.toString()}`, { scroll: false });
     };
 
+    // Apply a "Did you mean" suggestion: swap the term into the URL, which
+    // re-runs the search and (via activeSearchTerms) updates the input.
+    const applySuggestion = (s: SearchSuggestion) => {
+        const urlParams = new URLSearchParams(searchParams.toString());
+        urlParams.set(s.field, s.suggestion);
+        urlParams.set('page', '1');
+        router.replace(`${pathname}?${urlParams.toString()}`, { scroll: false });
+    };
+
     return (
         <PageContainer>
             <PageHeader
@@ -193,7 +221,7 @@ export default function SearchPageClient({
                     { key: 'grant', icon: LuBookMarked, placeholder: 'Search by grant title...' },
                 ]}
                 filterOptions={filterOptions}
-                initialValues={initialSearchTerms}
+                initialValues={activeSearchTerms}
                 initialFilters={initialFilters}
                 onSearch={handleSearchUpdate}
                 showPopularSearches={true}
@@ -208,6 +236,27 @@ export default function SearchPageClient({
                         title="Start Your Search"
                         message="Enter search terms or use filters to find grants"
                     />
+                ) : grants.length === 0 ? (
+                    <div className="space-y-4">
+                        <EmptyState
+                            icon={LuSearch}
+                            title="No results found"
+                            message="Try adjusting your search terms or filters"
+                        />
+                        {suggestion && (
+                            <p className="text-center text-sm text-gray-600">
+                                Did you mean{' '}
+                                <button
+                                    type="button"
+                                    onClick={() => applySuggestion(suggestion)}
+                                    className="font-semibold text-blue-600 hover:underline"
+                                >
+                                    {suggestion.suggestion}
+                                </button>
+                                ?
+                            </p>
+                        )}
+                    </div>
                 ) : (
                     <EntityList
                         entityType="grant"

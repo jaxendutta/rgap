@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { sealData } from 'iron-session';
-import { buildAuthorizationRequest, isOAuthProvider, OAUTH_STATE_COOKIE } from '@/lib/oauth';
+import { buildAuthorizationRequest, getRequestBaseUrl, isOAuthProvider, OAUTH_STATE_COOKIE } from '@/lib/oauth';
 import { sessionOptions } from '@/lib/session';
 
 // Starts the OAuth flow: remembers state + PKCE verifier in a short-lived
@@ -14,12 +14,12 @@ export async function GET(
 
     if (!isOAuthProvider(provider)) {
         return NextResponse.redirect(
-            new URL(`/login?error=${encodeURIComponent('Unknown sign-in provider.')}`, request.url)
+            new URL(`/auth?error=${encodeURIComponent('Unknown sign-in provider.')}`, request.url)
         );
     }
 
     try {
-        const { url, state, codeVerifier } = buildAuthorizationRequest(provider);
+        const { url, state, codeVerifier } = buildAuthorizationRequest(provider, getRequestBaseUrl(request));
 
         const callbackUrl = request.nextUrl.searchParams.get('callbackUrl') || '/account?welcome=true';
 
@@ -41,7 +41,7 @@ export async function GET(
     } catch (error) {
         console.error(`OAuth start error (${provider}):`, error);
         return NextResponse.redirect(
-            new URL(`/login?error=${encodeURIComponent('Sign-in with this provider is not available right now.')}`, request.url)
+            new URL(`/auth?error=${encodeURIComponent('Sign-in with this provider is not available right now.')}`, request.url)
         );
     }
 }

@@ -88,7 +88,7 @@ const Header = ({ docsMode }: HeaderProps) => {
                     {/* Sign In (signed out) / Account (signed in) */}
                     <div className="pl-2 pr-4 pb-0.5 flex-shrink-0 border-l border-gray-200/50">
                         <Link
-                            href={user ? "/account" : "/login"}
+                            href={user ? "/account" : "/auth"}
                             className="flex items-center gap-1.5 text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap"
                             aria-label={user ? "Account" : "Sign In"}
                         >

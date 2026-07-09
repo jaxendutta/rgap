@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { unsealData } from 'iron-session';
 import { db } from '@/lib/db';
 import { createAuthenticatedSession, getClientIp, sessionOptions } from '@/lib/session';
-import { getOAuthProfile, isOAuthProvider, OAUTH_PROVIDERS, OAUTH_STATE_COOKIE } from '@/lib/oauth';
+import { getOAuthProfile, getRequestBaseUrl, isOAuthProvider, OAUTH_PROVIDERS, OAUTH_STATE_COOKIE } from '@/lib/oauth';
 
 interface OAuthStatePayload {
     state: string;
@@ -20,7 +20,7 @@ export async function GET(
     const { provider } = await params;
 
     const fail = (message: string) =>
-        NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(message)}`, request.url));
+        NextResponse.redirect(new URL(`/auth?error=${encodeURIComponent(message)}`, request.url));
 
     if (!isOAuthProvider(provider)) {
         return fail('Unknown sign-in provider.');
@@ -53,7 +53,7 @@ export async function GET(
     }
 
     try {
-        const profile = await getOAuthProfile(provider, code, stored.codeVerifier);
+        const profile = await getOAuthProfile(provider, code, stored.codeVerifier, getRequestBaseUrl(request));
 
         if (!profile.email || !profile.emailVerified) {
             return fail(`We couldn't get a verified email address from ${providerLabel}. Please verify your email with ${providerLabel} first, or register with email and password.`);
