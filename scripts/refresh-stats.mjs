@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Refreshes the recipient_stats / institute_stats materialized views that the
-// /recipients and /institutes list + detail pages read from.
+// Refreshes the recipient_stats / institute_stats / global_trend_stats
+// materialized views that the /recipients and /institutes list + detail pages
+// (and their funding-trend charts) read from.
 //
 // The monthly pipeline (pipeline/fetch_and_load.py) already refreshes these
 // after each load, so you normally don't need this. Run it for an ad-hoc data
@@ -22,7 +23,7 @@ const client = new pg.Client({ connectionString: databaseUrl });
 await client.connect();
 try {
     await client.query("SET statement_timeout = '10min'");
-    for (const view of ["recipient_stats", "institute_stats"]) {
+    for (const view of ["recipient_stats", "institute_stats", "global_trend_stats"]) {
         const start = Date.now();
         process.stdout.write(`Refreshing ${view} (concurrently)... `);
         await client.query(`REFRESH MATERIALIZED VIEW CONCURRENTLY ${view}`);

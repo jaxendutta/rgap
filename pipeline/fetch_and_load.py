@@ -214,7 +214,7 @@ def refresh_stats_matviews(database_url: str) -> None:
         conn.autocommit = True
         with conn.cursor() as cur:
             cur.execute("SET statement_timeout = '10min'")
-            for view in ("recipient_stats", "institute_stats"):
+            for view in ("recipient_stats", "institute_stats", "global_trend_stats"):
                 logger.info(f"Refreshing {view} (concurrently)...")
                 cur.execute(f"REFRESH MATERIALIZED VIEW CONCURRENTLY {view}")
         logger.info("Stats materialized views refreshed.")
