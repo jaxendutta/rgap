@@ -1,25 +1,28 @@
 // src/components/entity/EntityAnalytics.tsx
-'use client';
+"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { GrantWithDetails, InstituteWithStats, RecipientWithStats } from "@/types/database";
+import {
+    GrantWithDetails,
+    InstituteWithStats,
+    RecipientWithStats,
+} from "@/types/database";
 import { Card } from "@/components/ui/Card";
 import { TrendVisualizer } from "@/components/visualizations/TrendVisualizer";
+import { KPICard } from "@/components/entity/KPICard";
 import {
     LuTrendingUp,
     LuTrendingDown,
     LuMoveRight,
     LuGraduationCap,
-    LuCalendar,
-    LuAward,
     LuCalendarClock,
+    LuCalendarFold,
 } from "react-icons/lu";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { IconType } from "react-icons";
 import { getCategoryColor } from "@/lib/chartColors";
-import { MdAccountBalance, MdOutlineSsidChart } from "react-icons/md";
+import { MdAccountBalance, MdOutlineMultilineChart } from "react-icons/md";
 
 // ============================================================================
 // ANALYTICS UTILITY FUNCTIONS
@@ -31,12 +34,18 @@ function calculateFundingGrowth(grants: GrantWithDetails[]) {
         return { percentChange: 0, yearsSpan: 0 };
     }
 
-    const sortedGrants = [...grants].sort((a, b) =>
-        new Date(a.agreement_start_date).getTime() - new Date(b.agreement_start_date).getTime()
+    const sortedGrants = [...grants].sort(
+        (a, b) =>
+            new Date(a.agreement_start_date).getTime() -
+            new Date(b.agreement_start_date).getTime(),
     );
 
-    const firstYear = new Date(sortedGrants[0].agreement_start_date).getFullYear();
-    const lastYear = new Date(sortedGrants[sortedGrants.length - 1].agreement_start_date).getFullYear();
+    const firstYear = new Date(
+        sortedGrants[0].agreement_start_date,
+    ).getFullYear();
+    const lastYear = new Date(
+        sortedGrants[sortedGrants.length - 1].agreement_start_date,
+    ).getFullYear();
     const yearsSpan = lastYear - firstYear;
 
     if (yearsSpan === 0) {
@@ -44,21 +53,28 @@ function calculateFundingGrowth(grants: GrantWithDetails[]) {
     }
 
     // Calculate average funding for first and last year
-    const firstYearGrants = grants.filter(g =>
-        new Date(g.agreement_start_date).getFullYear() === firstYear
+    const firstYearGrants = grants.filter(
+        (g) => new Date(g.agreement_start_date).getFullYear() === firstYear,
     );
-    const lastYearGrants = grants.filter(g =>
-        new Date(g.agreement_start_date).getFullYear() === lastYear
+    const lastYearGrants = grants.filter(
+        (g) => new Date(g.agreement_start_date).getFullYear() === lastYear,
     );
 
-    const firstYearTotal = firstYearGrants.reduce((sum, g) => sum + (Number(g.agreement_value) || 0), 0);
-    const lastYearTotal = lastYearGrants.reduce((sum, g) => sum + (Number(g.agreement_value) || 0), 0);
+    const firstYearTotal = firstYearGrants.reduce(
+        (sum, g) => sum + (Number(g.agreement_value) || 0),
+        0,
+    );
+    const lastYearTotal = lastYearGrants.reduce(
+        (sum, g) => sum + (Number(g.agreement_value) || 0),
+        0,
+    );
 
     if (firstYearTotal === 0) {
         return { percentChange: 0, yearsSpan };
     }
 
-    const percentChange = ((lastYearTotal - firstYearTotal) / firstYearTotal) * 100;
+    const percentChange =
+        ((lastYearTotal - firstYearTotal) / firstYearTotal) * 100;
 
     return { percentChange, yearsSpan };
 }
@@ -72,7 +88,7 @@ function calculateAgencySpecialization(grants: GrantWithDetails[]) {
     const agencyFunding: Record<string, number> = {};
     let totalFunding = 0;
 
-    grants.forEach(grant => {
+    grants.forEach((grant) => {
         const agency = grant.org || "Unknown";
         const value = Number(grant.agreement_value) || 0;
         agencyFunding[agency] = (agencyFunding[agency] || 0) + value;
@@ -103,16 +119,22 @@ function calculateAgencySpecialization(grants: GrantWithDetails[]) {
 }
 
 // Calculate recipient concentration (for institutes)
-function calculateRecipientConcentration(recipients: RecipientWithStats[], totalFunding: number) {
+function calculateRecipientConcentration(
+    recipients: RecipientWithStats[],
+    totalFunding: number,
+) {
     if (!recipients || recipients.length === 0 || totalFunding === 0) {
         return { rating: "No data", concentration: 0 };
     }
 
-    const sorted = [...recipients].sort((a, b) =>
-        (Number(b.total_funding) || 0) - (Number(a.total_funding) || 0)
+    const sorted = [...recipients].sort(
+        (a, b) =>
+            (Number(b.total_funding) || 0) - (Number(a.total_funding) || 0),
     );
 
-    const top3Funding = sorted.slice(0, 3).reduce((sum, r) => sum + (Number(r.total_funding) || 0), 0);
+    const top3Funding = sorted
+        .slice(0, 3)
+        .reduce((sum, r) => sum + (Number(r.total_funding) || 0), 0);
     const concentration = (top3Funding / totalFunding) * 100;
 
     let rating: string;
@@ -134,11 +156,12 @@ function calculateAvgGrantDuration(grants: GrantWithDetails[]) {
     }
 
     const durations = grants
-        .filter(g => g.agreement_end_date)
-        .map(g => {
+        .filter((g) => g.agreement_end_date)
+        .map((g) => {
             const start = new Date(g.agreement_start_date);
             const end = new Date(g.agreement_end_date!);
-            const months = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30);
+            const months =
+                (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30);
             return Math.max(0, months);
         });
 
@@ -146,18 +169,19 @@ function calculateAvgGrantDuration(grants: GrantWithDetails[]) {
         return { text: "N/A", months: 0 };
     }
 
-    const avgMonths = durations.reduce((sum, d) => sum + d, 0) / durations.length;
+    const avgMonths =
+        durations.reduce((sum, d) => sum + d, 0) / durations.length;
     const years = Math.floor(avgMonths / 12);
     const months = Math.round(avgMonths % 12);
 
     let text: string;
     if (years > 0) {
-        text = `${years} year${years !== 1 ? 's' : ''}`;
+        text = `${years} yr${years !== 1 ? "s" : ""}`;
         if (months > 0) {
-            text += ` ${months} month${months !== 1 ? 's' : ''}`;
+            text += ` ${months} month${months !== 1 ? "s" : ""}`;
         }
     } else {
-        text = `${months} month${months !== 1 ? 's' : ''}`;
+        text = `${months} month${months !== 1 ? "s" : ""}`;
     }
 
     return { text, months: avgMonths };
@@ -166,28 +190,6 @@ function calculateAvgGrantDuration(grants: GrantWithDetails[]) {
 // ============================================================================
 // SUB-COMPONENTS
 // ============================================================================
-
-// KPI Card
-export const KpiCard = ({
-    title,
-    value,
-    icon: Icon,
-}: {
-    title: string;
-    value: React.ReactNode;
-    icon: IconType;
-}) => (
-    <Card className="p-2.5 md:p-4 flex flex-col flex-1">
-        <div className="flex items-start mb-0.5 md:mb-2 gap-1.5 md:gap-2">
-            <Icon className="size-9 md:size-3.5 text-blue-600 md:mt-0.75" />
-            <h3 className="font-medium text-gray-600 md:text-gray-800 text-[11px] md:text-sm">{title}</h3>
-        </div>
-
-        <div className="h-px bg-gray-200 mb-2 md:mb-1.5" />
-
-        <div className="text-sm md:text-xl font-bold text-gray-900 flex flex-1 items-end md:items-center">{value}</div>
-    </Card>
-);
 
 // Top Recipients Analysis
 export const TopRecipientsAnalysis = ({
@@ -201,7 +203,9 @@ export const TopRecipientsAnalysis = ({
         .sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))
         .slice(0, 5);
 
-    const maxFunding = Math.max(...topRecipients.map(r => r.total_funding || 0));
+    const maxFunding = Math.max(
+        ...topRecipients.map((r) => r.total_funding || 0),
+    );
 
     return (
         <Card>
@@ -212,16 +216,24 @@ export const TopRecipientsAnalysis = ({
             />
             <Card.Content className="space-y-4">
                 {topRecipients.length === 0 ? (
-                    <p className="text-gray-500 text-sm">No recipient data available</p>
+                    <p className="text-gray-500 text-sm">
+                        No recipient data available
+                    </p>
                 ) : (
                     topRecipients.map((recipient) => {
-                        const sharePercentage = totalFunding > 0
-                            ? ((recipient.total_funding || 0) / totalFunding) * 100
-                            : 0;
+                        const sharePercentage =
+                            totalFunding > 0
+                                ? ((recipient.total_funding || 0) /
+                                      totalFunding) *
+                                  100
+                                : 0;
 
-                        const barPercentage = maxFunding > 0
-                            ? ((recipient.total_funding || 0) / maxFunding) * 100
-                            : 0;
+                        const barPercentage =
+                            maxFunding > 0
+                                ? ((recipient.total_funding || 0) /
+                                      maxFunding) *
+                                  100
+                                : 0;
 
                         return (
                             <div key={recipient.recipient_id}>
@@ -234,7 +246,9 @@ export const TopRecipientsAnalysis = ({
                                         {recipient.legal_name}
                                     </Link>
                                     <div className="font-semibold text-gray-900 text-xs md:text-sm whitespace-nowrap">
-                                        {formatCurrency(recipient.total_funding)}
+                                        {formatCurrency(
+                                            recipient.total_funding,
+                                        )}
                                     </div>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2 mb-0.5 md:mb-1">
@@ -267,9 +281,10 @@ export const AgencyBreakdown = ({
 }) => {
     const agencyFunding: Record<string, number> = {};
 
-    grants.forEach(grant => {
+    grants.forEach((grant) => {
         const agency = grant.org || "Unknown";
-        agencyFunding[agency] = (agencyFunding[agency] || 0) + (Number(grant.agreement_value) || 0);
+        agencyFunding[agency] =
+            (agencyFunding[agency] || 0) + (Number(grant.agreement_value) || 0);
     });
 
     const agencies = Object.entries(agencyFunding)
@@ -278,14 +293,11 @@ export const AgencyBreakdown = ({
 
     return (
         <Card>
-            <Card.Header
-                icon={MdAccountBalance}
-                title={title}
-                size="md"
-            />
+            <Card.Header icon={MdAccountBalance} title={title} size="md" />
             <Card.Content className="space-y-3">
                 {agencies.map(([agency, funding], index) => {
-                    const percentage = totalFunding > 0 ? (funding / totalFunding) * 100 : 0;
+                    const percentage =
+                        totalFunding > 0 ? (funding / totalFunding) * 100 : 0;
 
                     return (
                         <div key={agency} className="flex items-center gap-4">
@@ -304,7 +316,10 @@ export const AgencyBreakdown = ({
                                         className="h-2 rounded-full transition-all"
                                         style={{
                                             width: `${percentage}%`,
-                                            backgroundColor: getCategoryColor(agency, index)
+                                            backgroundColor: getCategoryColor(
+                                                agency,
+                                                index,
+                                            ),
                                         }}
                                     />
                                 </div>
@@ -328,7 +343,7 @@ export const TimePeriodAnalytics = ({
     // Group by year
     const yearData: Record<number, { funding: number; count: number }> = {};
 
-    grants.forEach(grant => {
+    grants.forEach((grant) => {
         const year = new Date(grant.agreement_start_date).getFullYear();
         if (!yearData[year]) {
             yearData[year] = { funding: 0, count: 0 };
@@ -345,21 +360,23 @@ export const TimePeriodAnalytics = ({
 
     return (
         <Card>
-            <Card.Header
-                icon={LuCalendarClock}
-                title={title}
-                size="md"
-            />
+            <Card.Header icon={LuCalendarClock} title={title} size="md" />
             <Card.Content className="space-y-3">
                 {years.map(([year, data]) => {
-                    const percentage = maxFunding > 0 ? (data.funding / maxFunding) * 100 : 0;
+                    const percentage =
+                        maxFunding > 0 ? (data.funding / maxFunding) * 100 : 0;
 
                     return (
                         <div key={year} className="flex items-center gap-4">
-                            <div className="w-8 md:w-12 font-medium text-gray-900 text-sm md:text-base">{year}</div>
+                            <div className="w-8 md:w-12 font-medium text-gray-900 text-sm md:text-base">
+                                {year}
+                            </div>
                             <div className="flex-1 mb-2">
                                 <div className="flex justify-between items-end text-sm text-gray-600 mb-0.25 md:mb-0.5 text-xs md:text-sm">
-                                    <span className="text-[10px] md:text-sm">{data.count.toLocaleString()} grant{data.count !== 1 ? 's' : ''}</span>
+                                    <span className="text-[10px] md:text-sm">
+                                        {data.count.toLocaleString()} grant
+                                        {data.count !== 1 ? "s" : ""}
+                                    </span>
                                     <span className="font-semibold text-gray-900 text-xs md:text-base">
                                         {formatCurrency(data.funding)}
                                     </span>
@@ -385,7 +402,7 @@ export const TimePeriodAnalytics = ({
 
 interface EntityAnalyticsProps {
     entity: InstituteWithStats | RecipientWithStats;
-    entityType: 'institute' | 'recipient';
+    entityType: "institute" | "recipient";
     grants: GrantWithDetails[];
     recipients?: any[];
 }
@@ -400,9 +417,10 @@ export default function EntityAnalytics({
     const [chartMetric] = useState<"funding" | "count">("funding");
 
     // Extract the correct ID based on entity type
-    const entityId = entityType === 'institute'
-        ? (entity as InstituteWithStats).institute_id
-        : (entity as RecipientWithStats).recipient_id;
+    const entityId =
+        entityType === "institute"
+            ? (entity as InstituteWithStats).institute_id
+            : (entity as RecipientWithStats).recipient_id;
 
     // Calculate analytics
     const fundingGrowth = calculateFundingGrowth(grants);
@@ -411,7 +429,10 @@ export default function EntityAnalytics({
 
     const recipientDiversity =
         entityType === "institute" && recipients.length > 0
-            ? calculateRecipientConcentration(recipients, entity.total_funding || 0)
+            ? calculateRecipientConcentration(
+                  recipients,
+                  entity.total_funding || 0,
+              )
             : null;
 
     return (
@@ -419,23 +440,22 @@ export default function EntityAnalytics({
             {/* KPI Cards */}
             <div className="flex md:grid md:grid-cols-3 gap-2 md:gap-4">
                 {/* Funding Growth */}
-                <KpiCard
-                    icon={MdOutlineSsidChart}
+                <KPICard
+                    icon={MdOutlineMultilineChart}
                     title="Funding Growth"
                     value={
-                        <div className="flex items-center">
+                        <div className="flex flex-col w-full text-center">
                             <span
                                 className={cn(
                                     fundingGrowth.percentChange > 0
                                         ? "text-green-600"
                                         : fundingGrowth.percentChange < 0
-                                            ? "text-red-600"
-                                            : "text-gray-500"
+                                          ? "text-red-600"
+                                          : "text-gray-500",
                                 )}
                             >
                                 {fundingGrowth.percentChange > 0 ? "+" : ""}
                                 {fundingGrowth.percentChange.toFixed(1)}%
-                                {fundingGrowth.yearsSpan > 0 && ` over ${fundingGrowth.yearsSpan} years`}
                                 {Math.abs(fundingGrowth.percentChange) < 10 ? (
                                     <LuMoveRight className="h-4 w-4 ml-1 inline" />
                                 ) : fundingGrowth.percentChange < 0 ? (
@@ -444,35 +464,46 @@ export default function EntityAnalytics({
                                     <LuTrendingUp className="h-4 w-4 ml-1 inline" />
                                 )}
                             </span>
+                            <span className="text-[10px] md:text-xs text-gray-600 mt-1 font-normal">
+                                {fundingGrowth.yearsSpan > 0
+                                    ? `Over ${fundingGrowth.yearsSpan} years`
+                                    : "Single year data"}
+                            </span>
                         </div>
                     }
                 />
 
                 {/* Entity-specific metric */}
                 {entityType === "institute" ? (
-                    <KpiCard
+                    <KPICard
                         icon={LuGraduationCap}
                         title="Recipient Diversity"
                         value={
-                            <div>
-                                <span className="italic text-sm md:text-lg">
+                            <div className="text-center">
+                                <span className="italic text-[12px] sm:text-sm md:text-lg">
                                     {recipientDiversity?.rating || "No data"}
                                 </span>
                                 {recipientDiversity && (
                                     <span className="block text-[10px] md:text-xs text-gray-600 md:mt-1 font-normal">
-                                        Top 3: {recipientDiversity.concentration.toFixed(1)}%
+                                        Top 3:{" "}
+                                        {recipientDiversity.concentration.toFixed(
+                                            1,
+                                        )}
+                                        %
                                     </span>
                                 )}
                             </div>
                         }
                     />
                 ) : (
-                    <KpiCard
-                        icon={LuCalendar}
+                    <KPICard
+                        icon={LuCalendarFold}
                         title="Grant Duration"
                         value={
-                            <div>
-                                <span className="text-sm md:text-lg">{grantDuration.text}</span>
+                            <div className="text-center">
+                                <span className="text-[12px] sm:text-sm md:text-lg">
+                                    {grantDuration.text}
+                                </span>
                                 <span className="block text-[10px] md:text-xs text-gray-600 md:mt-1 font-normal">
                                     Average across {grants.length} grants
                                 </span>
@@ -482,14 +513,17 @@ export default function EntityAnalytics({
                 )}
 
                 {/* Agency Distribution */}
-                <KpiCard
+                <KPICard
                     title="Agency Distribution"
                     value={
-                        <div>
-                            <span className="italic text-sm md:text-lg">{agencyAnalysis.specialization}</span>
+                        <div className="text-center">
+                            <span className="italic text-[12px] sm:text-sm md:text-lg">
+                                {agencyAnalysis.specialization}
+                            </span>
                             {agencyAnalysis.topAgency && (
                                 <span className="block text-[10px] md:text-xs text-gray-600 md:mt-1 font-normal">
-                                    {agencyAnalysis.topAgency}: {agencyAnalysis.topPercentage.toFixed(1)}%
+                                    {agencyAnalysis.topAgency}:{" "}
+                                    {agencyAnalysis.topPercentage.toFixed(1)}%
                                 </span>
                             )}
                         </div>
@@ -502,11 +536,15 @@ export default function EntityAnalytics({
             <TrendVisualizer
                 entityType={entityType}
                 ids={[entityId]}
-                viewContext={entityType === "institute" ? "institute" : "recipient"}
+                viewContext={
+                    entityType === "institute" ? "institute" : "recipient"
+                }
                 height={350}
                 initialChartType={chartType}
                 initialMetricType={chartMetric}
-                initialGrouping={entityType === "institute" ? "recipient" : "org"}
+                initialGrouping={
+                    entityType === "institute" ? "recipient" : "org"
+                }
             />
 
             {/* Institute-specific: Top Recipients */}
