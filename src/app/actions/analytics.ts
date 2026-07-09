@@ -85,11 +85,34 @@ export async function getAggregatedTrends(
 ): Promise<AggregatedTrendPoint[]> {
     // Empty IDs means "Global Mode" - fetch everything
     const isGlobal = ids.length === 0;
-    const cacheKey = `trend-agg-v5-${entityType}-${groupBy}-${isGlobal ? 'ALL' : ids.sort().join('-')}`;
+    const cacheKey = `trend-agg-v6-${entityType}-${groupBy}-${isGlobal ? 'ALL' : ids.sort().join('-')}`;
 
     return unstable_cache(
         async () => {
             try {
+                // Global mode is entity-independent and only changes with the
+                // monthly load, so it's served from the precomputed
+                // global_trend_stats materialized view (already top-50 bucketed)
+                // instead of re-scanning the whole grants table on every chart
+                // render. See migration 20260708170000.
+                if (isGlobal) {
+                    const knownDims = ['org', 'city', 'province', 'country', 'recipient', 'institute', 'program', 'year'];
+                    const dim = knownDims.includes(groupBy) ? groupBy : 'org';
+                    const result = await db.query(
+                        `SELECT year, category, funding, count
+                         FROM global_trend_stats
+                         WHERE group_dimension = $1
+                         ORDER BY year ASC`,
+                        [dim]
+                    );
+                    return result.rows.map(row => ({
+                        year: row.year,
+                        category: row.category,
+                        funding: Number(row.funding),
+                        count: Number(row.count)
+                    }));
+                }
+
                 const idColumn = entityType === 'recipient' ? 'r.recipient_id' : 'i.institute_id';
 
                 let groupColumn = '';
