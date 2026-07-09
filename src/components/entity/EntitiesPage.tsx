@@ -6,6 +6,11 @@ import { EntityCard } from "@/components/entity/EntityCard";
 import { IconType } from "react-icons";
 import { EntityType, InstituteWithStats, RecipientWithStats, SortOption } from "@/types/database";
 import { TrendVisualizer } from "@/components/visualizations/TrendVisualizer";
+import { getAggregatedTrends } from "@/app/actions/analytics";
+
+// The list-page chart defaults to grouping by funding agency; preload that view
+// server-side so it paints with data instead of a client-side fetch waterfall.
+const DEFAULT_TREND_GROUPING = "org";
 
 interface EntitiesPageProps {
     title: string;
@@ -20,7 +25,7 @@ interface EntitiesPageProps {
     page: number;
 }
 
-const EntitiesPage = ({
+const EntitiesPage = async ({
     title,
     subtitle,
     icon,
@@ -39,6 +44,17 @@ const EntitiesPage = ({
             : (entity as InstituteWithStats).institute_id
     );
 
+    // Only recipients/institutes get the funding-trend chart.
+    const vizEntityType =
+        (entityType === 'recipient' || entityType === 'institute') ? entityType : null;
+    const showViz = showVisualization && entities.length > 0 && vizEntityType !== null;
+
+    // Preload the default (global) grouping so the chart renders immediately.
+    // Served from the global_trend_stats materialized view, so this is cheap.
+    const trendData = showViz && vizEntityType
+        ? await getAggregatedTrends(vizEntityType, [], DEFAULT_TREND_GROUPING)
+        : undefined;
+
     return (
         <PageContainer className="space-y-6">
             <PageHeader
@@ -47,10 +63,12 @@ const EntitiesPage = ({
                 icon={icon}
             />
 
-            {showVisualization && entities.length > 0 && (entityType === 'recipient' || entityType === 'institute') && (
+            {showViz && vizEntityType && (
                 <TrendVisualizer
-                    entityType={entityType}
+                    entityType={vizEntityType}
                     title={`${title} Funding Trends`}
+                    preLoadedData={trendData}
+                    initialGrouping={DEFAULT_TREND_GROUPING}
                 />
             )}
 
