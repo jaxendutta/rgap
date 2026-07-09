@@ -1,7 +1,7 @@
 // src/components/visualizations/TrendVisualizer.tsx
 'use client';
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
     LuDollarSign, LuHash, LuChartColumnStacked, LuChartColumn,
     LuChartSpline, LuActivity, LuLandmark, LuGraduationCap,
@@ -117,10 +117,14 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
     const [isRefetching, setIsRefetching] = useState(false);
     const [error, setError] = useState(false);
 
+    // preLoadedData covers only the initial grouping (painted server-side).
+    // Track the first effect run so a grouping change still triggers a fetch.
+    const isFirstEffectRun = useRef(true);
+
     // --- 2. Data Fetching & Aggregation ---
     useEffect(() => {
-        // CASE 1: Pre-loaded or Amendment
-        if (preLoadedData || isAmendmentView) {
+        // CASE 1: Amendment history is fully static -- never fetch.
+        if (isAmendmentView) {
             setIsInitialLoading(false);
             return;
         }
@@ -203,6 +207,17 @@ export const TrendVisualizer: React.FC<TrendVisualizerProps> = ({
         if (!entityType) {
             setIsInitialLoading(false);
             return;
+        }
+
+        // The initial grouping was preloaded server-side, so the chart already
+        // has data on first paint -- skip the fetch on the first run only.
+        // Changing the grouping afterwards falls through and fetches normally.
+        if (isFirstEffectRun.current) {
+            isFirstEffectRun.current = false;
+            if (preLoadedData) {
+                setIsInitialLoading(false);
+                return;
+            }
         }
 
         let isMounted = true;
