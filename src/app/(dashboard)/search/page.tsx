@@ -2,11 +2,37 @@
 // Server Component - Fetches filter options server-side
 
 import { db } from '@/lib/db';
+import { unstable_cache } from 'next/cache';
 import SearchPageClient from './client';
 import { DEFAULT_FILTER_STATE } from '@/constants/filters';
 import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+// Filter dropdown options are derived from the whole dataset, which only
+// changes with the monthly pipeline load -- yet this used to run four
+// full-table DISTINCT scans (including SELECT DISTINCT org over all ~190K
+// grants just to find 3 agency codes) on every search-page view. Cache the
+// result so it's computed at most once an hour instead of every request.
+// Agencies come from the 3-row organizations table rather than a grants scan.
+const getFilterOptions = unstable_cache(
+    async () => {
+        const [agencies, countries, provinces, cities] = await Promise.all([
+            db.query(`SELECT org FROM organizations ORDER BY org`),
+            db.query(`SELECT DISTINCT country FROM institutes WHERE country IS NOT NULL ORDER BY country`),
+            db.query(`SELECT DISTINCT province FROM institutes WHERE province IS NOT NULL ORDER BY province`),
+            db.query(`SELECT DISTINCT city FROM institutes WHERE city IS NOT NULL ORDER BY city`),
+        ]);
+        return {
+            agencies: agencies.rows.map(r => r.org),
+            countries: countries.rows.map(r => r.country),
+            provinces: provinces.rows.map(r => r.province),
+            cities: cities.rows.map(r => r.city),
+        };
+    },
+    ['search-filter-options'],
+    { revalidate: 3600 }
+);
 
 interface SearchPageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -19,41 +45,8 @@ interface SearchPageProps {
 export default async function SearchPage({ searchParams }: SearchPageProps) {
     const resolvedSearchParams = await searchParams;
 
-    // Fetch all filter options in parallel
-    const [agencies, countries, provinces, cities] = await Promise.all([
-        db.query(`
-            SELECT DISTINCT org 
-            FROM grants 
-            WHERE org IS NOT NULL 
-            ORDER BY org
-        `),
-        db.query(`
-            SELECT DISTINCT country 
-            FROM institutes 
-            WHERE country IS NOT NULL 
-            ORDER BY country
-        `),
-        db.query(`
-            SELECT DISTINCT province 
-            FROM institutes 
-            WHERE province IS NOT NULL 
-            ORDER BY province
-        `),
-        db.query(`
-            SELECT DISTINCT city 
-            FROM institutes 
-            WHERE city IS NOT NULL 
-            ORDER BY city
-        `),
-    ]);
-
-    // Transform to simple arrays
-    const filterOptions = {
-        agencies: agencies.rows.map(r => r.org),
-        countries: countries.rows.map(r => r.country),
-        provinces: provinces.rows.map(r => r.province),
-        cities: cities.rows.map(r => r.city),
-    };
+    // Cached (see getFilterOptions above); recomputed at most hourly.
+    const filterOptions = await getFilterOptions();
 
     // Helper to get array from param
     const getArrayParam = (param: string | string[] | undefined): string[] => {

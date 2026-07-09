@@ -10,27 +10,29 @@ export async function getRecipient(id: number): Promise<RecipientWithStats | nul
     const user = await getCurrentUser();
     const userId = user?.id;
 
+    // Stats come from the recipient_stats materialized view (refreshed monthly
+    // by the pipeline) rather than aggregating this recipient's grants live.
     const result = await db.query<RecipientWithStats>(`
-    SELECT 
+    SELECT
       r.*,
       i.name as research_organization_name,
       i.city, i.province, i.country,
-      COUNT(DISTINCT g.grant_id) as grant_count,
-      SUM(g.agreement_value) as total_funding,
-      MAX(g.agreement_start_date) as latest_grant_date,
-      MIN(g.agreement_start_date) as first_grant_date,
+      s.grant_count,
+      s.total_funding,
+      s.avg_funding,
+      s.first_grant_date,
+      s.latest_grant_date,
       ${userId ? `
         EXISTS(
-          SELECT 1 FROM bookmarked_recipients br 
-          WHERE br.recipient_id = r.recipient_id 
+          SELECT 1 FROM bookmarked_recipients br
+          WHERE br.recipient_id = r.recipient_id
           AND br.user_id = $1
         ) as is_bookmarked
       ` : 'false as is_bookmarked'}
     FROM recipients r
+    LEFT JOIN recipient_stats s ON s.recipient_id = r.recipient_id
     LEFT JOIN institutes i ON r.institute_id = i.institute_id
-    LEFT JOIN grants g ON r.recipient_id = g.recipient_id
     WHERE r.recipient_id = $${userId ? 2 : 1}
-    GROUP BY r.recipient_id, i.name, i.city, i.province, i.country
   `, userId ? [userId, id] : [id]);
 
     return result.rows[0] || null;
@@ -41,26 +43,28 @@ export async function getInstitute(id: number): Promise<InstituteWithStats | nul
     const user = await getCurrentUser();
     const userId = user?.id;
 
+    // Stats come from the institute_stats materialized view (refreshed monthly
+    // by the pipeline) rather than aggregating the whole recipient/grant tree
+    // for this institute live.
     const result = await db.query<InstituteWithStats>(`
-    SELECT 
+    SELECT
       i.*,
-      COUNT(DISTINCT r.recipient_id) as recipient_count,
-      COUNT(DISTINCT g.grant_id) as grant_count,
-      SUM(g.agreement_value::numeric) as total_funding,
-      MAX(g.agreement_start_date::date) as latest_grant_date,
-      MIN(g.agreement_start_date::date) as first_grant_date,
+      s.recipient_count,
+      s.grant_count,
+      s.total_funding,
+      s.avg_funding,
+      s.first_grant_date,
+      s.latest_grant_date,
       ${userId ? `
         EXISTS(
-          SELECT 1 FROM bookmarked_institutes bi 
-          WHERE bi.institute_id = i.institute_id 
+          SELECT 1 FROM bookmarked_institutes bi
+          WHERE bi.institute_id = i.institute_id
           AND bi.user_id = $1
         ) as is_bookmarked
       ` : 'false as is_bookmarked'}
     FROM institutes i
-    LEFT JOIN recipients r ON i.institute_id = r.institute_id
-    LEFT JOIN grants g ON r.recipient_id = g.recipient_id
+    LEFT JOIN institute_stats s ON s.institute_id = i.institute_id
     WHERE i.institute_id = $${userId ? 2 : 1}
-    GROUP BY i.institute_id
   `, userId ? [userId, id] : [id]);
 
     return result.rows[0] || null;
