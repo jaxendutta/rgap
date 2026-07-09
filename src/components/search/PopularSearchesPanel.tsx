@@ -17,6 +17,8 @@ import Tabs from "@/components/ui/Tabs";
 import EmptyState from "@/components/ui/EmptyState";
 import { SearchCategory, PopularSearch } from "@/types/search"; // <--- NEW IMPORT
 import { getPopularSearches } from "@/app/actions/analytics";
+import { useAuth } from "@/providers/AuthProvider";
+import { useNotify } from "@/providers/NotificationProvider";
 
 interface PopularSearchesPanelProps {
     onSelect?: (category: SearchCategory, term: string) => void;
@@ -28,6 +30,8 @@ export const PopularSearchesPanel = ({
     className
 }: PopularSearchesPanelProps) => {
     const router = useRouter();
+    const { user } = useAuth();
+    const { notify } = useNotify();
     const [activeCategory, setActiveCategory] = useState<SearchCategory>("recipient");
     const [data, setData] = useState<PopularSearch[]>([]);
     const [isPending, startTransition] = useTransition();
@@ -124,7 +128,15 @@ export const PopularSearchesPanel = ({
                     variant="ghost"
                     size="sm"
                     className="w-full text-xs text-gray-500 hover:text-gray-900 mt-2"
-                    onClick={() => router.push(`/search/popular`)}
+                    onClick={() => {
+                        // Only signed-in users have a full popular-searches page.
+                        // Match the bookmarks nav: toast instead of a lock screen.
+                        if (!user) {
+                            notify("Please sign in to view all popular searches.", "info");
+                            return;
+                        }
+                        router.push(`/search/popular`);
+                    }}
                 >
                     View All
                     <LuChevronRight className="w-3 h-3 ml-1" />
