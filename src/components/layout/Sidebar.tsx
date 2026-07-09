@@ -57,7 +57,7 @@ const Sidebar = () => {
             {/* Desktop Sidebar */}
             <aside
                 className={cn(
-                    "peer hidden lg:block fixed left-0 top-0 h-screen z-30",
+                    "peer hidden lg:block fixed left-0 top-0 h-dvh z-30",
                     "bg-white border-r border-gray-200 shadow-sm",
                     "transition-all duration-300 ease-in-out",
                     isExpanded ? "w-48" : "w-16"

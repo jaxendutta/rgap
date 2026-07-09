@@ -9,6 +9,7 @@ import SearchInterface from '@/components/search/SearchInterface';
 import EntityList from '@/components/entity/EntityList';
 import { GrantCard } from '@/components/grants/GrantCard';
 import EmptyState from '@/components/ui/EmptyState';
+import { EntityListSkeleton } from '@/components/ui/Skeleton';
 import { LuSearch, LuGraduationCap, LuUniversity, LuBookMarked } from 'react-icons/lu';
 import type { GrantWithDetails } from '@/types/database';
 import { DEFAULT_FILTER_STATE } from '@/constants/filters';
@@ -200,9 +201,7 @@ export default function SearchPageClient({
 
             <div className="md:mt-8 space-y-6">
                 {isLoading ? (
-                    <div className="flex justify-center py-12">
-                        <div className="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full" />
-                    </div>
+                    <EntityListSkeleton layout="list" />
                 ) : !hasSearched ? (
                     <EmptyState
                         icon={LuSearch}

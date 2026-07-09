@@ -9,7 +9,10 @@
 @layer base {
     html,
     body {
-        @apply min-h-screen bg-slate-100 text-black;
+        /* dvh (not vh): iOS Safari's 100vh is the *toolbars-hidden* height, which
+           overflows the visible area at rest and causes a tiny phantom scroll on
+           pages that shouldn't scroll. dvh tracks the actually-visible viewport. */
+        @apply min-h-dvh bg-slate-100 text-black;
     }
 }
 

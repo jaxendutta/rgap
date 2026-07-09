@@ -5,7 +5,7 @@ import React, { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn, getSortOptions } from "@/lib/utils";
 import { EntityType } from "@/types/database";
-import LoadingState from "@/components/ui/LoadingState";
+import { EntityListSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
 import ErrorState from "@/components/ui/ErrorState";
 import { AnimatePresence, motion } from "framer-motion";
@@ -97,7 +97,7 @@ function EntityList<T>(props: EntityListProps<T>) {
     };
 
     if (isError) return <ErrorState title="Error" message={error instanceof Error ? error.message : "Error"} />;
-    if (isLoading) return <LoadingState title="Loading..." message={`Loading ${entityType}s...`} />;
+    if (isLoading) return <EntityListSkeleton layout={layoutVariant} className={className} />;
     if (!entities || entities.length === 0) return <EmptyState title="No results" message={emptyMessage} />;
 
     return (
