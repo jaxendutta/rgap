@@ -167,6 +167,7 @@ export default function AuthPage() {
                                         <InputField
                                             label="Full Name"
                                             name="name"
+                                            autoComplete="name"
                                             placeholder="Jane Doe"
                                             required={mode === 'register'}
                                         />
@@ -179,6 +180,7 @@ export default function AuthPage() {
                                     label="Email"
                                     name="email"
                                     type="email"
+                                    autoComplete="email"
                                     placeholder="name@example.com"
                                     required
                                 />
@@ -189,6 +191,7 @@ export default function AuthPage() {
                                     label="Password"
                                     name="password"
                                     type="password"
+                                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                                     placeholder="••••••••"
                                     required
                                 />
@@ -218,6 +221,7 @@ export default function AuthPage() {
                                             label="Confirm Password"
                                             name="confirmPassword"
                                             type="password"
+                                            autoComplete="new-password"
                                             placeholder="••••••••"
                                             required={mode === 'register'}
                                         />
