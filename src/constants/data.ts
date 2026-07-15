@@ -45,7 +45,7 @@ export const RECIPIENT_TYPE_LABELS: Record<string, string> = {
 
 export const DEFAULT_ITEM_PER_PAGE = 30;
 export const MAX_NOTE_LENGTH = 2000;
-export const LAST_UPDATED: Date = new Date('2026-07-02T00:00:00Z');
+export const LAST_UPDATED: Date = new Date('2026-07-15T00:00:00Z');
 // Rounded down to the nearest 1,000 (so "over X grants" always stays true).
 // Updated automatically by scripts/update-grant-count.mjs during the monthly refresh.
 export const GRANTS_COUNT_APPROX: number = 195000;
