@@ -441,10 +441,10 @@ export default function EntityAnalytics({
             <div className="flex md:grid md:grid-cols-3 gap-2 md:gap-4">
                 {/* Funding Growth */}
                 <KPICard
-                    icon={MdOutlineMultilineChart}
+                    icon={LuTrendingUp}
                     title="Funding Growth"
                     value={
-                        <div className="flex flex-col w-full text-center">
+                        <div className="flex flex-col items-center justify-center w-full text-center">
                             <span
                                 className={cn(
                                     fundingGrowth.percentChange > 0
@@ -479,7 +479,7 @@ export default function EntityAnalytics({
                         icon={LuGraduationCap}
                         title="Recipient Diversity"
                         value={
-                            <div className="text-center">
+                            <div className="flex flex-col items-center justify-center w-full text-center">
                                 <span className="italic text-[12px] sm:text-sm md:text-lg">
                                     {recipientDiversity?.rating || "No data"}
                                 </span>
@@ -500,7 +500,7 @@ export default function EntityAnalytics({
                         icon={LuCalendarFold}
                         title="Grant Duration"
                         value={
-                            <div className="text-center">
+                            <div className="flex flex-col items-center justify-center w-full text-center">
                                 <span className="text-[12px] sm:text-sm md:text-lg">
                                     {grantDuration.text}
                                 </span>
@@ -516,7 +516,7 @@ export default function EntityAnalytics({
                 <KPICard
                     title="Agency Distribution"
                     value={
-                        <div className="text-center">
+                        <div className="flex flex-col items-center justify-center w-full text-center">
                             <span className="italic text-[12px] sm:text-sm md:text-lg">
                                 {agencyAnalysis.specialization}
                             </span>

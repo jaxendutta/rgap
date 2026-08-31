@@ -112,18 +112,24 @@ export interface StatItem {
 const StatItemContent: React.FC<{ item: StatItem }> = ({ item }) => {
     const Icon = item.icon;
     return (
-        <div className="flex flex-col items-center p-3 bg-blue-100/60 rounded-2xl gap-1">
-            <span className="flex text-gray-700 rounded-lg text-[10px] md:text-xs items-start text-center gap-1">
-                <Icon className="size-2.5 md:size-3 mt-0.5" />
+        <div className="relative overflow-hidden flex flex-col items-center p-3 md:p-4 bg-blue-100/60 rounded-2xl gap-1 justify-center min-h-[72px]">
+            {/* Static background watermark icon */}
+            {Icon && (
+                <div className="absolute -right-3 -bottom-3 text-blue-900/10 pointer-events-none z-0">
+                    <Icon className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0" />
+                </div>
+            )}
+
+            <span className="relative z-10 text-gray-600 rounded-lg text-[10px] md:text-xs text-center font-medium">
                 {item.label}
             </span>
-            <div className="text-sm md:text-lg font-semibold text-gray-900 text-center flex flex-wrap justify-center gap-2">
+            <div className="relative z-10 text-sm md:text-lg font-semibold text-gray-900 text-center flex flex-wrap justify-center gap-1.5 md:gap-2">
                 {item.values.length === 0
                     ? 'N/A'
                     : item.values.length === 1
                         ? typeof item.values[0] === 'number' ? item.values[0].toLocaleString() : item.values[0]
                         : item.values.map((val, idx) => (
-                            <div key={idx} className="bg-white/60 rounded-3xl px-2 py-1">
+                            <div key={idx} className="bg-white/60 rounded-3xl px-2 py-0.5 text-xs md:text-sm font-medium">
                                 {typeof val === 'number' ? val.toLocaleString() : val}</div>
                         ))}
             </div>
