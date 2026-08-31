@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Card } from "@/components/ui/Card";
 import Tabs, { TabItem } from "@/components/ui/Tabs";
 import PageContainer from "@/components/layout/PageContainer";
-import { LuChevronDown } from 'react-icons/lu';
+import { LuChevronDown, LuUniversity, LuGraduationCap } from 'react-icons/lu';
 import { BsChevronLeft } from "react-icons/bs";
 import { useRouter } from 'next/navigation';
 import Tag from '@/components/ui/Tag';
@@ -36,7 +36,7 @@ export interface ActionButton {
 
 export interface EntityHeaderProps {
     title: string;
-    icon: IconType;
+    icon?: IconType;
     entityType: 'institute' | 'recipient';
     location?: string;
     metadata?: MetadataItem[];
@@ -50,7 +50,6 @@ export interface EntityHeaderProps {
 
 export const EntityHeader: React.FC<EntityHeaderProps> = ({
     title,
-    icon: Icon,
     entityType,
     location,
     metadata = [],
@@ -60,31 +59,28 @@ export const EntityHeader: React.FC<EntityHeaderProps> = ({
 }) => {
     const router = useRouter();
 
-    const colorScheme = entityType === 'institute'
-        ? { bg: 'bg-blue-100', text: 'text-blue-600' }
-        : { bg: 'bg-purple-100', text: 'text-purple-600' };
-
     return (
         <div>
             <div className="flex items-start justify-between">
                 <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className={`p-2 ${colorScheme.bg} rounded-lg`}>
-                            <Icon className={`h-4 md:h-6 w-4 md:w-6 ${colorScheme.text}`} />
-                        </div>
-                        <div>
-                            <h1 className="text-lg md:text-2xl font-bold text-gray-900">
-                                {title}
-                            </h1>
-                            {subtitle && (
-                                <p className="text-sm text-gray-600 mt-1">
-                                    {subtitle}
-                                </p>
-                            )}
-                        </div>
+                    <div className="mb-2">
+                        <h1 className="text-xl md:text-3xl font-bold tracking-tight text-gray-900">
+                            {title}
+                        </h1>
+                        {subtitle && (
+                            <p className="text-sm text-gray-600 mt-1">
+                                {subtitle}
+                            </p>
+                        )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 mt-3 w-full">
+                        <Tag
+                            text={entityType === 'institute' ? 'Institute' : 'Recipient'}
+                            icon={entityType === 'institute' ? LuUniversity : LuGraduationCap}
+                            variant={entityType === 'institute' ? 'primary' : 'secondary'}
+                            className="text-xs md:text-sm"
+                        />
                         {badge && (<Tag icon={badge.icon} text={badge.text} className="text-xs md:text-sm" />)}
                         {metadata.length > 0 &&
                             metadata.map((item, index) =>
