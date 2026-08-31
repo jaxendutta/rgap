@@ -38,12 +38,6 @@ const EntitiesPage = async ({
     page,
 }: EntitiesPageProps) => {
 
-    const ids = entities.map(entity =>
-        'recipient_id' in entity
-            ? entity.recipient_id
-            : (entity as InstituteWithStats).institute_id
-    );
-
     // Only recipients/institutes get the funding-trend chart.
     const vizEntityType =
         (entityType === 'recipient' || entityType === 'institute') ? entityType : null;

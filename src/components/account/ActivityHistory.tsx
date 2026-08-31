@@ -1,7 +1,7 @@
 // src/components/account/ActivityHistory.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { FiEdit2, FiLock, FiMail, FiLogIn, FiClock, FiBookmark, FiTrash2 } from 'react-icons/fi';
 import { SlSocialDropbox } from 'react-icons/sl';
 import { MdLockReset } from 'react-icons/md';
@@ -30,12 +30,7 @@ export default function ActivityHistory({
     currentDir,
     onSort
 }: ActivityHistoryProps) {
-    const [isMounted, setIsMounted] = useState(false);
     const router = useRouter();
-
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
 
     const getIcon = (type: string) => {
         if (type.startsWith('REMOVE_BOOKMARK')) return FiTrash2;

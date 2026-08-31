@@ -22,7 +22,7 @@ import {
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { getCategoryColor } from "@/lib/chartColors";
-import { MdAccountBalance, MdOutlineMultilineChart } from "react-icons/md";
+import { MdAccountBalance } from "react-icons/md";
 
 // ============================================================================
 // ANALYTICS UTILITY FUNCTIONS

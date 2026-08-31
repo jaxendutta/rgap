@@ -1,6 +1,6 @@
-import { LuInfo, LuTriangleAlert, LuLightbulb, LuFlame } from "react-icons/lu";
+import { LuInfo, LuTriangleAlert, LuLightbulb } from "react-icons/lu";
 import { cn } from "@/lib/utils";
-import { PiWarningOctagon, PiWarningOctagonLight } from "react-icons/pi";
+import { PiWarningOctagon } from "react-icons/pi";
 
 type AlertType = 'note' | 'tip' | 'important' | 'warning' | 'caution';
 

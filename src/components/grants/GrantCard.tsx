@@ -18,14 +18,12 @@ import {
     LuTrendingUp,
     LuTrendingDown,
     LuCornerDownRight,
-    LuLayers,
     LuChartLine,
     LuHourglass,
     LuCalendar1,
     LuGraduationCap,
     LuLandmark,
     LuBookOpen,
-    LuCalendarDays,
     LuBookmarkCheck
 } from "react-icons/lu";
 import { GrantAmendment, GrantWithDetails } from "@/types/database";

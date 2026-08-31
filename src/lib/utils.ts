@@ -2,7 +2,7 @@
 
 import { EntityType, SortOption } from '@/types/database';
 import { clsx, type ClassValue } from 'clsx';
-import { LuCalendar, LuDollarSign, LuHash, LuUsers } from 'react-icons/lu';
+import { LuCalendar, LuDollarSign, LuHash } from 'react-icons/lu';
 import { PiUsersThree } from 'react-icons/pi';
 import { MdSortByAlpha } from 'react-icons/md';
 import { twMerge } from 'tailwind-merge';

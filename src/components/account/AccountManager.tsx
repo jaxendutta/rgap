@@ -21,7 +21,6 @@ import { MdLockReset } from 'react-icons/md';
 import { BsPersonGear } from 'react-icons/bs';
 import { TbClockSearch } from 'react-icons/tb';
 import { RiProfileLine } from 'react-icons/ri';
-import { useNotify } from '@/providers/NotificationProvider';
 import { SearchHistoryItem } from '@/types/search';
 
 interface AccountManagerProps {
@@ -75,8 +74,6 @@ export default function AccountManager({
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
-    const { notify } = useNotify();
-
     // Initialize state from URL param if available, otherwise prop, otherwise default
     const paramTab = searchParams.get('tab');
     const [activeTab, setActiveTab] = useState<string>(

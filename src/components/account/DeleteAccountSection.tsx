@@ -10,7 +10,7 @@ import { Card } from '../ui/Card';
 export default function DeleteAccountSection({ userEmail }: { userEmail: string }) {
     const [isOpen, setIsOpen] = useState(false);
     const [agreed, setAgreed] = useState(false);
-    const [state, formAction] = useActionState(deleteAccountAction, { success: false, message: '' });
+    const [, formAction] = useActionState(deleteAccountAction, { success: false, message: '' });
 
     return (
         <Card className="p-4 md:p-6 border-red-200 rounded-3xl">

@@ -21,7 +21,7 @@ import LocationMapDropdown from '@/components/entity/LocationMapDropdown';
 // ============================================================================
 
 export interface MetadataItem {
-    icon: IconType;
+    icon?: IconType;
     text: string;
     href?: string;
 }
@@ -59,6 +59,15 @@ export const EntityHeader: React.FC<EntityHeaderProps> = ({
 }) => {
     const router = useRouter();
 
+    const displayMetadata: MetadataItem[] = [
+        {
+            text: entityType === 'institute' ? 'Institute' : 'Recipient',
+            icon: entityType === 'institute' ? LuUniversity : LuGraduationCap,
+        },
+        ...(badge ? [{ text: badge.text, icon: badge.icon }] : []),
+        ...metadata,
+    ];
+
     return (
         <div>
             <div className="flex items-start justify-between">
@@ -75,26 +84,17 @@ export const EntityHeader: React.FC<EntityHeaderProps> = ({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 mt-3 w-full">
-                        <Tag
-                            text={entityType === 'institute' ? 'Institute' : 'Recipient'}
-                            icon={entityType === 'institute' ? LuUniversity : LuGraduationCap}
-                            variant={entityType === 'institute' ? 'primary' : 'secondary'}
-                            className="text-xs md:text-sm"
-                        />
-                        {badge && (<Tag icon={badge.icon} text={badge.text} className="text-xs md:text-sm" />)}
-                        {metadata.length > 0 &&
-                            metadata.map((item, index) =>
-                                item.href
-                                    ? (<Tag
-                                        key={index}
-                                        onClick={() => router.push(item.href!)}
-                                        text={item.text}
-                                        icon={item.icon}
-                                        className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs md:text-sm"
-                                    />)
-                                    : (<Tag key={index} text={item.text} icon={item.icon} />)
-                            )
-                        }
+                        {displayMetadata.map((item, index) =>
+                            item.href
+                                ? (<Tag
+                                    key={index}
+                                    onClick={() => router.push(item.href!)}
+                                    text={item.text}
+                                    icon={item.icon}
+                                    className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs md:text-sm"
+                                />)
+                                : (<Tag key={index} text={item.text} icon={item.icon} className="text-xs md:text-sm" />)
+                        )}
                         {location && <LocationMapDropdown instituteName={mapSearchQuery || title} location={location} />}
                     </div>
                 </div>
