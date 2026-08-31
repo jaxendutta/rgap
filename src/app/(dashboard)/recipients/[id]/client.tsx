@@ -78,6 +78,7 @@ export function RecipientDetailClient({
             location={location}
             metadata={metadata}
             badge={{ text: recipientType, icon: LuBuilding2 }}
+            mapSearchQuery={recipient.research_organization_name || recipient.legal_name}
         />
     );
 

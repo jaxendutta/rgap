@@ -1,11 +1,11 @@
 // src/components/entity/EntityProfilePage.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/Card";
 import Tabs, { TabItem } from "@/components/ui/Tabs";
 import PageContainer from "@/components/layout/PageContainer";
-import { LuMapPin, LuChevronLeft, LuChevronDown } from 'react-icons/lu';
+import { LuChevronLeft, LuChevronDown } from 'react-icons/lu';
 import { useRouter } from 'next/navigation';
 import Tag from '@/components/ui/Tag';
 import { Button } from '@/components/ui/Button';
@@ -13,6 +13,7 @@ import BookmarkButton from '@/components/bookmarks/BookmarkButton';
 import { IconType } from 'react-icons';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import LocationMapDropdown from '@/components/entity/LocationMapDropdown';
 
 // ============================================================================
 // EntityHeader Component
@@ -42,6 +43,7 @@ export interface EntityHeaderProps {
         text: string;
         icon?: IconType;
     };
+    mapSearchQuery?: string;
 }
 
 export const EntityHeader: React.FC<EntityHeaderProps> = ({
@@ -52,23 +54,16 @@ export const EntityHeader: React.FC<EntityHeaderProps> = ({
     metadata = [],
     subtitle,
     badge,
+    mapSearchQuery,
 }) => {
     const router = useRouter();
-    const locationTag = React.useMemo(() => {
-        if (!location) return null;
-        return {
-            icon: LuMapPin,
-            text: location,
-            variant: 'default' as const,
-        };
-    }, [location]);
 
     const colorScheme = entityType === 'institute'
         ? { bg: 'bg-blue-100', text: 'text-blue-600' }
         : { bg: 'bg-purple-100', text: 'text-purple-600' };
 
     return (
-        <div className="p-4 md:p-6">
+        <div>
             <div className="flex items-start justify-between">
                 <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -87,8 +82,7 @@ export const EntityHeader: React.FC<EntityHeaderProps> = ({
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 mt-3">
-                        {locationTag && (<Tag icon={locationTag.icon} text={locationTag.text} variant={locationTag.variant} className="text-xs md:text-sm" />)}
+                    <div className="flex flex-wrap items-center gap-2 mt-3 w-full">
                         {badge && (<Tag icon={badge.icon} text={badge.text} className="text-xs md:text-sm" />)}
                         {metadata.length > 0 &&
                             metadata.map((item, index) =>
@@ -103,6 +97,7 @@ export const EntityHeader: React.FC<EntityHeaderProps> = ({
                                     : (<Tag key={index} text={item.text} icon={item.icon} />)
                             )
                         }
+                        {location && <LocationMapDropdown instituteName={mapSearchQuery || title} location={location} />}
                     </div>
                 </div>
             </div>
@@ -154,7 +149,7 @@ export const StatDisplay: React.FC<StatDisplayProps> = ({
     };
 
     return (
-        <div className={`grid ${gridCols[columns]} gap-2 md:gap-4 p-3 md:p-6 pt-0`}>
+        <div className={`grid ${gridCols[columns]} gap-2 md:gap-4`}>
             {items.map((item, index) => (
                 <StatItemContent key={index} item={item} />
             ))}
@@ -241,63 +236,75 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                 </div>
             </div>
 
-            <Card className="mb-6 overflow-hidden">
-                {renderHeader()}
-
-                {(() => {
-                    const statsNode = renderStats();
-                    if (!React.isValidElement(statsNode) || statsNode.type !== StatDisplay) {
-                        return statsNode;
-                    }
+            {(() => {
+                const statsNode = renderStats();
+                let hasMore = false;
+                if (React.isValidElement(statsNode) && statsNode.type === StatDisplay) {
                     const allItems = (statsNode.props as StatDisplayProps).items as StatItem[];
-                    const columns = (statsNode.props as StatDisplayProps).columns || 4;
-                    const initialCount = 4;
-                    const hasMore = allItems.length > initialCount;
-                    const visibleItems = allItems.slice(0, initialCount);
-                    const hiddenItems = hasMore ? allItems.slice(initialCount) : [];
+                    hasMore = allItems.length > 4;
+                }
 
-                    const gridCols = {
-                        2: 'grid-cols-2',
-                        3: 'grid-cols-2 md:grid-cols-3',
-                        4: 'grid-cols-2 md:grid-cols-4',
-                    };
-                    const gridClassName = `grid ${gridCols[columns]} gap-2 md:gap-4 px-3 md:px-6 pb-2 md:pb-4`;
+                return (
+                    <Card className={cn(
+                        "mb-6 p-4 md:p-6 flex flex-col gap-4 md:gap-6",
+                        hasMore && "pb-2 md:pb-3"
+                    )}>
+                        {renderHeader()}
 
-                    return (
-                        <div>
-                            <div className={cn(gridClassName)}>
-                                {visibleItems.map((item, index) => (
-                                    <StatItemContent key={index} item={item} />
-                                ))}
-                            </div>
-                            <AnimatePresence>
-                                {statsExpanded && hasMore && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.3, ease: 'easeInOut' }}
-                                        className="overflow-hidden"
-                                    >
-                                        <div className={cn(gridClassName)}>
-                                            {hiddenItems.map((item, index) => (
-                                                <StatItemContent key={index} item={item} />
-                                            ))}
+                        {(() => {
+                            if (!React.isValidElement(statsNode) || statsNode.type !== StatDisplay) {
+                                return statsNode;
+                            }
+                            const allItems = (statsNode.props as StatDisplayProps).items as StatItem[];
+                            const columns = (statsNode.props as StatDisplayProps).columns || 4;
+                            const initialCount = 4;
+                            const visibleItems = allItems.slice(0, initialCount);
+                            const hiddenItems = allItems.slice(initialCount);
+
+                            const gridCols = {
+                                2: 'grid-cols-2',
+                                3: 'grid-cols-2 md:grid-cols-3',
+                                4: 'grid-cols-2 md:grid-cols-4',
+                            };
+                            const gridClassName = `grid ${gridCols[columns]} gap-2 md:gap-4`;
+
+                            return (
+                                <div className="flex flex-col gap-2 md:gap-4">
+                                    <div className={cn(gridClassName)}>
+                                        {visibleItems.map((item, index) => (
+                                            <StatItemContent key={index} item={item} />
+                                        ))}
+                                    </div>
+                                    <AnimatePresence>
+                                        {statsExpanded && hasMore && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className={cn(gridClassName)}>
+                                                    {hiddenItems.map((item, index) => (
+                                                        <StatItemContent key={index} item={item} />
+                                                    ))}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                    {hasMore && (
+                                        <div className="flex justify-center items-center -mb-2 md:-mb-3">
+                                            <Button variant="ghost" size="sm" onClick={() => setStatsExpanded(!statsExpanded)} className="rounded-full w-8 h-8 p-0 bg-white/50 hover:bg-gray-200 z-10">
+                                                <LuChevronDown className={cn("h-5 w-5 text-gray-500 transition-transform duration-300", statsExpanded && "rotate-180")} />
+                                            </Button>
                                         </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                            {hasMore && (
-                                <div className="flex justify-center items-center">
-                                    <Button variant="ghost" size="sm" onClick={() => setStatsExpanded(!statsExpanded)} className="rounded-full w-8 h-8 p-0 bg-white/50 hover:bg-gray-200 z-10 -mt-2 md:-mt-4">
-                                        <LuChevronDown className={cn("h-5 w-5 text-gray-500 transition-transform duration-300", statsExpanded && "rotate-180")} />
-                                    </Button>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    );
-                })()}
-            </Card>
+                            );
+                        })()}
+                    </Card>
+                );
+            })()}
 
             <Tabs
                 tabs={tabs}
