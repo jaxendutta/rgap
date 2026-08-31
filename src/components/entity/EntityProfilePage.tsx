@@ -112,7 +112,7 @@ export interface StatItem {
 const StatItemContent: React.FC<{ item: StatItem }> = ({ item }) => {
     const Icon = item.icon;
     return (
-        <div className="relative overflow-hidden flex flex-col items-center p-3 md:p-4 bg-blue-100/60 rounded-2xl gap-1 justify-center min-h-[72px]">
+        <div className="relative overflow-hidden flex flex-col items-center px-3.5 pt-1 md:px-4 md:py-2 bg-blue-100/60 rounded-2xl gap-1 justify-center min-h-[72px] md:min-h-[84px]">
             {/* Static background watermark icon */}
             {Icon && (
                 <div className="absolute -right-3 -bottom-3 text-blue-900/10 pointer-events-none z-0">
@@ -120,16 +120,16 @@ const StatItemContent: React.FC<{ item: StatItem }> = ({ item }) => {
                 </div>
             )}
 
-            <span className="relative z-10 text-gray-600 rounded-lg text-[10px] md:text-xs text-center font-medium">
+            <span className="relative z-10 text-gray-600 rounded-lg text-[11px] md:text-sm text-center font-medium">
                 {item.label}
             </span>
-            <div className="relative z-10 text-sm md:text-lg font-semibold text-gray-900 text-center flex flex-wrap justify-center gap-1.5 md:gap-2">
+            <div className="relative z-10 text-base sm:text-lg md:text-xl font-bold text-gray-900 text-center flex flex-wrap justify-center gap-1.5 md:gap-2">
                 {item.values.length === 0
                     ? 'N/A'
                     : item.values.length === 1
                         ? typeof item.values[0] === 'number' ? item.values[0].toLocaleString() : item.values[0]
                         : item.values.map((val, idx) => (
-                            <div key={idx} className="bg-white/60 rounded-3xl px-2 py-0.5 text-xs md:text-sm font-medium">
+                            <div key={idx} className="bg-white/60 rounded-3xl px-2.5 py-0.5 text-xs md:text-sm font-semibold">
                                 {typeof val === 'number' ? val.toLocaleString() : val}</div>
                         ))}
             </div>
@@ -153,7 +153,7 @@ export const StatDisplay: React.FC<StatDisplayProps> = ({
     };
 
     return (
-        <div className={`grid ${gridCols[columns]} gap-2 md:gap-4`}>
+        <div className={`grid ${gridCols[columns]} gap-3 md:gap-4`}>
             {items.map((item, index) => (
                 <StatItemContent key={index} item={item} />
             ))}
@@ -272,7 +272,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                                 3: 'grid-cols-2 md:grid-cols-3',
                                 4: 'grid-cols-2 md:grid-cols-4',
                             };
-                            const gridClassName = `grid ${gridCols[columns]} gap-2 md:gap-4`;
+                            const gridClassName = `grid ${gridCols[columns]} gap-3 md:gap-4`;
 
                             return (
                                 <div className="flex flex-col gap-2 md:gap-4">
