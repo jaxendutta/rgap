@@ -20,31 +20,31 @@ const variants = {
 // Define size styles
 const padding = {
     xs: "px-2 py-0.75",
-    sm: "px-3 py-1",
-    md: "px-3.5 py-1",
-    lg: "px-4 py-1.5",
+    sm: "px-2.5 py-0.75 md:px-3 md:py-1",
+    md: "px-3 py-0.75 md:px-3.5 md:py-1",
+    lg: "px-3.5 py-1 md:px-4 md:py-1.5",
 };
 
 // Define font size styles
 const fontSizes = {
     xs: "text-[10px] md:text-xs",
     sm: "text-xs md:text-sm",
-    md: "text-sm md:text-base",
-    lg: "text-base",
+    md: "text-xs md:text-sm",
+    lg: "text-sm md:text-base",
 };
 
 // Define icon sizes
 const iconSizes = {
-    xs: "size-2.75",
-    sm: "h-3 w-3",
-    md: "h-4 w-4",
-    lg: "h-5 w-5",
+    xs: "size-2.5 md:size-3",
+    sm: "size-3 md:size-3.5",
+    md: "size-3.5 md:size-4",
+    lg: "size-4 md:size-5",
 };
 
 // Spacing between icon and text
 const iconSpacing = {
-    xs: "mr-0.5 mb-0.25",
-    sm: "mr-0.5",
+    xs: "mr-0.5",
+    sm: "mr-0.5 md:mr-1",
     md: "mr-1",
     lg: "mr-1",
 };
@@ -92,7 +92,8 @@ export const Tag: React.FC<TagProps> = ({
                         className={cn(
                             iconSizes[size],
                             onRemove ? "" : iconSpacing[size],
-                            "flex-shrink-0"
+                            "flex-shrink-0",
+                            iconProps?.className
                         )}
                         {...iconProps}
                     />
