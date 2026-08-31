@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LuBookOpen, LuCircleArrowUp, LuHouse, LuLogIn, LuUser } from "react-icons/lu";
+import { LuCircleArrowUp, LuLogIn, LuUser } from "react-icons/lu";
 import { GiAbstract014 } from "react-icons/gi";
 import { AnimatePresence, motion } from "framer-motion";
 import { SITE_NAME } from "@/constants/site";

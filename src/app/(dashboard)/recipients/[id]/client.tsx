@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
     LuGraduationCap, LuBookMarked, LuCalendar,
     LuCircleDollarSign, LuAward, LuUniversity, LuBuilding2, LuScale,
+    LuArrowUpRight,
 } from 'react-icons/lu';
-import { TbWorldSearch } from 'react-icons/tb';
 import { GrAnalytics } from 'react-icons/gr';
 import { Card } from '@/components/ui/Card';
 import { TabItem } from '@/components/ui/Tabs';
@@ -63,7 +63,7 @@ export function RecipientDetailClient({
 
     const actions: ActionButton[] = [
         {
-            icon: TbWorldSearch,
+            rightIcon: LuArrowUpRight,
             label: 'Search',
             onClick: () => window.open(`https://www.google.com/search?q=${encodeURIComponent(recipient.legal_name + ' ' + (recipient.research_organization_name || ''))}`, '_blank'),
             variant: 'outline',

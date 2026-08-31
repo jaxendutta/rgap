@@ -5,7 +5,8 @@ import React, { useState } from 'react';
 import { Card } from "@/components/ui/Card";
 import Tabs, { TabItem } from "@/components/ui/Tabs";
 import PageContainer from "@/components/layout/PageContainer";
-import { LuChevronLeft, LuChevronDown } from 'react-icons/lu';
+import { LuChevronDown } from 'react-icons/lu';
+import { BsChevronLeft } from "react-icons/bs";
 import { useRouter } from 'next/navigation';
 import Tag from '@/components/ui/Tag';
 import { Button } from '@/components/ui/Button';
@@ -26,7 +27,8 @@ export interface MetadataItem {
 }
 
 export interface ActionButton {
-    icon: IconType;
+    icon?: IconType;
+    rightIcon?: IconType;
     label: string;
     onClick: () => void;
     variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
@@ -205,7 +207,7 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                 <Button
                     variant="outline"
                     size="sm"
-                    leftIcon={LuChevronLeft}
+                    leftIcon={BsChevronLeft}
                     onClick={() => router.back()}
                     className="text-xs md:text-sm bg-white"
                 >
@@ -215,12 +217,14 @@ const EntityProfilePage: React.FC<EntityProfilePageProps> = ({
                 <div className="flex flex-wrap gap-2">
                     {actions.map((action, index) => {
                         const ActionIcon = action.icon;
+                        const RightIcon = action.rightIcon;
                         return (
                             <Button
                                 key={index}
                                 variant={action.variant || 'outline'}
                                 size="sm"
                                 leftIcon={ActionIcon}
+                                rightIcon={RightIcon}
                                 onClick={action.onClick}
                                 className="text-xs md:text-sm bg-white"
                             >

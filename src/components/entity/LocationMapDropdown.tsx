@@ -2,8 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { LuMapPin, LuChevronDown, LuX, LuLoader } from 'react-icons/lu';
-import { Button } from '@/components/ui/Button';
+import { LuMapPin, LuChevronDown, LuLoader } from 'react-icons/lu';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -81,12 +80,19 @@ export const LocationMapDropdown: React.FC<LocationMapDropdownProps> = ({
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="inline-flex items-center gap-1.5 font-medium rounded-full text-xs md:text-sm px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/80 transition-all cursor-pointer shadow-xs group"
+                className="flex items-center font-medium gap-1 max-w-full group bg-gray-100 text-blue-600 hover:text-blue-700 text-xs md:text-sm rounded-full cursor-pointer hover:opacity-90 active:opacity-80 transition-all"
                 title="Click to view map location"
             >
-                <LuMapPin className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                <span>{location}</span>
-                <LuChevronDown className={cn("h-3.5 w-3.5 text-blue-500 transition-transform duration-300 shrink-0", isOpen && "rotate-180")} />
+                <div className="flex flex-row gap-0.75 md:gap-1 items-center justify-center px-3.5 py-1 flex-1 pr-0">
+                    <LuMapPin className="size-3 md:size-4 mr-0.5 md:mr-1 flex-shrink-0 text-blue-600 group-hover:text-blue-700" />
+                    <span>{location}</span>
+                </div>
+                <LuChevronDown
+                    className={cn(
+                        "size-3.5 md:size-4 flex text-blue-400 flex-shrink-0 transition-transform duration-300 ease-in-out group-hover:text-blue-600 mr-1",
+                        isOpen && "rotate-180"
+                    )}
+                />
             </button>
 
             <AnimatePresence>
@@ -98,61 +104,32 @@ export const LocationMapDropdown: React.FC<LocationMapDropdownProps> = ({
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                         className="overflow-hidden w-full mt-3 basis-full"
                     >
-                        <div className="w-full p-3 sm:p-4 bg-slate-50/90 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-                            {/* Pane Header */}
-                            <div className="flex items-center justify-between w-full">
-                                <div className="flex items-center gap-2 overflow-hidden pr-2">
-                                    <div className="p-1.5 bg-blue-100 text-blue-700 rounded-lg shrink-0">
-                                        <LuMapPin className="h-4 w-4" />
-                                    </div>
-                                    <div className="truncate">
-                                        <p className="text-xs font-semibold text-gray-900 truncate">
-                                            {instituteName}
-                                        </p>
-                                        <p className="text-[11px] text-gray-500 truncate">
-                                            {location}
-                                        </p>
-                                    </div>
+                        {/* Direct Map Frame */}
+                        <div className="w-full h-64 sm:h-80 md:h-96 rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 relative flex items-center justify-center shadow-xs">
+                            {loading && (
+                                <div className="flex flex-col items-center justify-center gap-2 text-gray-500 py-12">
+                                    <LuLoader className="h-6 w-6 animate-spin text-blue-600" />
+                                    <span className="text-xs font-medium">Locating on OpenStreetMap...</span>
                                 </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setIsOpen(false)}
-                                    className="h-7 w-7 p-0 rounded-full hover:bg-gray-200 text-gray-500"
-                                >
-                                    <LuX className="h-4 w-4" />
-                                </Button>
-                            </div>
+                            )}
 
-                            {/* Full Width Map Frame */}
-                            <div className="w-full h-64 sm:h-80 md:h-96 rounded-xl overflow-hidden border border-gray-200 bg-gray-100 relative flex items-center justify-center">
-                                {loading && (
-                                    <div className="flex flex-col items-center justify-center gap-2 text-gray-500 py-12">
-                                        <LuLoader className="h-6 w-6 animate-spin text-blue-600" />
-                                        <span className="text-xs font-medium">Locating on OpenStreetMap...</span>
-                                    </div>
-                                )}
+                            {!loading && error && (
+                                <div className="text-center p-4 text-gray-600 space-y-2">
+                                    <p className="text-xs">{error}</p>
+                                </div>
+                            )}
 
-                                {!loading && error && (
-                                    <div className="text-center p-4 text-gray-600 space-y-2">
-                                        <p className="text-xs">{error}</p>
-                                    </div>
-                                )}
-
-                                {!loading && coords && (
-                                    <iframe
-                                        title={`Map of ${instituteName}`}
-                                        width="100%"
-                                        height="100%"
-                                        frameBorder="0"
-                                        scrolling="no"
-                                        marginHeight={0}
-                                        marginWidth={0}
-                                        src={osmEmbedUrl}
-                                        className="w-full h-full rounded-xl"
-                                    />
-                                )}
-                            </div>
+                            {!loading && coords && (
+                                <iframe
+                                    title={`Map of ${instituteName}`}
+                                    src={osmEmbedUrl}
+                                    className="w-full h-full rounded-2xl border-0"
+                                    loading="lazy"
+                                    allowFullScreen
+                                    aria-hidden="false"
+                                    tabIndex={0}
+                                />
+                            )}
                         </div>
                     </motion.div>
                 )}

@@ -6,7 +6,6 @@
 
 import {
     LuMapPin,
-    LuUniversity,
     LuUsers,
     LuBookMarked,
     LuArrowUpRight,
@@ -286,7 +285,7 @@ export const EntityCard = ({
                                 <Icon className="size-2 md:size-3 mb-0.25 md:mb-0" />
                                 <div className="text-[10px] md:text-xs">{stat.label}</div>
                             </div>
-                            
+
                             <div className="text-xs md:text-sm font-medium text-gray-900">{stat.value}</div>
                         </div>
                     );

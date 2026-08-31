@@ -3,7 +3,7 @@
 
 import {
     LuUniversity, LuUsers, LuBookMarked, LuCalendar, LuDollarSign,
-    LuExternalLink, LuUserCheck, LuFileCheck,
+    LuArrowUpRight, LuUserCheck, LuFileCheck,
 } from 'react-icons/lu';
 import { GrAnalytics } from 'react-icons/gr';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -53,7 +53,7 @@ export function InstituteDetailClient({
 
     const actions: ActionButton[] = [
         {
-            icon: LuExternalLink,
+            rightIcon: LuArrowUpRight,
             label: 'Search',
             onClick: () => window.open(`https://www.google.com/search?q=${encodeURIComponent(institute.name)}`, '_blank'),
             variant: 'outline',
