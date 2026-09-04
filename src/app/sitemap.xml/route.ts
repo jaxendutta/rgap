@@ -6,10 +6,10 @@ export const revalidate = 86400; // Cache sitemap index for 24 hours
 
 const CHUNK_SIZE = 10000;
 
-export async function GET() {
-    const baseUrl =
-        process.env.NEXT_PUBLIC_APP_URL ||
-        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://rgap.ca');
+export async function GET(request: Request) {
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:3000';
+    const proto = request.headers.get('x-forwarded-proto') || 'https';
+    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || `${proto}://${host}`).replace(/\/$/, '');
     const lastMod = LAST_UPDATED.toISOString();
 
     let recipientCount = 0;

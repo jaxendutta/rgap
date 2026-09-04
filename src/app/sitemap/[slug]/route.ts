@@ -47,9 +47,9 @@ export async function GET(
     const { slug } = await params;
     const cleanSlug = slug.endsWith('.xml') ? slug.slice(0, -4) : slug;
 
-    const baseUrl =
-        process.env.NEXT_PUBLIC_APP_URL ||
-        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://rgap.ca');
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || 'localhost:3000';
+    const proto = request.headers.get('x-forwarded-proto') || 'https';
+    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || `${proto}://${host}`).replace(/\/$/, '');
     const lastMod = LAST_UPDATED.toISOString();
 
     let urls: Array<{ loc: string; lastmod: string; changefreq?: string; priority?: string }> = [];
