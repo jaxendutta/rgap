@@ -40,13 +40,13 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.1.1",
-    "sharp": "^0.34.5",
+    "eslint-config-next": "^16",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
   "allowScripts": {
-    "sharp@0.34.5": true,
-    "unrs-resolver@1.11.1": true
+    "sharp@0.35.4": true,
+    "unrs-resolver@1.12.2": true
   }
 }
