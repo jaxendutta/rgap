@@ -172,7 +172,7 @@ export default function AccountManager({
                         title="Sign Out"
                         onClick={() => setShowLogoutConfirm(true)}
                     >
-                        <FiLogOut className="size-3.5 md:size-4 flex-shrink-0" />
+                        <FiLogOut className="size-3.5 md:size-4 shrink-0" />
                         <span>Sign Out</span>
                     </Button>
                 </div>

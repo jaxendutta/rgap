@@ -246,7 +246,7 @@ export const EntityCard = ({
                     className="text-sm md:text-base font-medium hover:text-blue-600 transition-colors group flex items-start max-w-[90%]"
                 >
                     <span className="line-clamp-2">{name}</span>
-                    <LuArrowUpRight className="ml-1 h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
+                    <LuArrowUpRight className="ml-1 h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-1" />
                 </Link>
 
                 <BookmarkButton
@@ -282,7 +282,7 @@ export const EntityCard = ({
                     return (
                         <div key={index} className="grow text-center py-2 px-2 bg-slate-100 rounded-lg">
                             <div className="flex justify-center items-center mb-0.5 md:mb-1 gap-1 text-gray-500">
-                                <Icon className="size-2 md:size-3 mb-0.25 md:mb-0" />
+                                <Icon className="size-2 md:size-3 mb-px md:mb-0" />
                                 <div className="text-[10px] md:text-xs">{stat.label}</div>
                             </div>
 

@@ -118,7 +118,7 @@ export function RecipientDetailClient({
                                 <div className="space-y-3">
                                     {topPrograms.map((program, index) => (
                                         <div key={program.prog_id || index} className="flex items-center gap-2 md:gap-4 p-2 md:p-4 bg-gray-100 rounded-3xl">
-                                            <div className="flex-shrink-0">
+                                            <div className="shrink-0">
                                                 <span className="size-6 md:size-10 flex items-center justify-center bg-purple-100 text-purple-600 rounded-full font-semibold text-sm md:text-base">
                                                     {index + 1}
                                                 </span>

@@ -92,7 +92,7 @@ export const Tag: React.FC<TagProps> = ({
                         className={cn(
                             iconSizes[size],
                             onRemove ? "" : iconSpacing[size],
-                            "flex-shrink-0",
+                            "shrink-0",
                             iconProps?.className
                         )}
                         {...iconProps}
@@ -108,7 +108,7 @@ export const Tag: React.FC<TagProps> = ({
                 <LuArrowRight
                     className={cn(
                         iconSizes[size],
-                        "flex text-blue-400 flex-shrink-0 transition-transform duration-300 ease-in-out",
+                        "flex text-blue-400 shrink-0 transition-transform duration-300 ease-in-out",
                         "group-hover:text-blue-600 mr-1"
                     )}
                 />

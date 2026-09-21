@@ -105,7 +105,7 @@ export default function HomePage() {
                                 href="/search"
                                 className={`${actionLinkClasses} bg-gray-900 text-white hover:bg-black`}
                             >
-                                <LuSearch className="size-3.5 md:size-4 flex-shrink-0" />
+                                <LuSearch className="size-3.5 md:size-4 shrink-0" />
                                 <span>Explore</span>
                             </Link>
 
@@ -114,7 +114,7 @@ export default function HomePage() {
                                 className={`${actionLinkClasses} bg-gray-200 text-gray-700 hover:bg-gray-300`}
                             >
                                 <span>Sign In</span>
-                                <LuLogIn className="size-3.5 md:size-4 flex-shrink-0" />
+                                <LuLogIn className="size-3.5 md:size-4 shrink-0" />
                             </Link>
                         </div>
                     </div>
@@ -133,9 +133,9 @@ export default function HomePage() {
                                 {label}
                             </span>
                         </div>
-                        <div className="flex flex-col md:flex-row w-full flex-grow items-center justify-center md:justify-between gap-1 text-gray-200 md:gap-4 text-[12px] md:text-sm lg:text-base font-medium px-2 sm:px-0.5 md:pr-2 min-w-0">
+                        <div className="flex flex-col md:flex-row w-full grow items-center justify-center md:justify-between gap-1 text-gray-200 md:gap-4 text-[12px] md:text-sm lg:text-base font-medium px-2 sm:px-0.5 md:pr-2 min-w-0">
                             <span>{formatDate(dateValue, "long")}</span>
-                            <div className="w-full h-px md:w-auto md:flex-grow bg-gray-100/50" />
+                            <div className="w-full h-px md:w-auto md:grow bg-gray-100/50" />
                             <span className="text-center md:text-end">
                                 {diff}
                             </span>

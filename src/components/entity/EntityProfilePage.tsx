@@ -112,11 +112,11 @@ export interface StatItem {
 const StatItemContent: React.FC<{ item: StatItem }> = ({ item }) => {
     const Icon = item.icon;
     return (
-        <div className="relative overflow-hidden flex flex-col items-center px-3.5 pt-1 md:px-4 md:py-2 bg-blue-100/60 rounded-2xl gap-1 justify-center min-h-[72px] md:min-h-[84px]">
+        <div className="relative overflow-hidden flex flex-col items-center px-3.5 pt-1 md:px-4 md:py-2 bg-blue-100/60 rounded-2xl gap-1 justify-center min-h-18 md:min-h-21">
             {/* Static background watermark icon */}
             {Icon && (
                 <div className="absolute -right-3 -bottom-3 text-blue-900/10 pointer-events-none z-0">
-                    <Icon className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0" />
+                    <Icon className="w-16 h-16 md:w-20 md:h-20 shrink-0" />
                 </div>
             )}
 

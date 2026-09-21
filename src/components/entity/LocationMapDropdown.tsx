@@ -84,12 +84,12 @@ export const LocationMapDropdown: React.FC<LocationMapDropdownProps> = ({
                 title="Click to view map location"
             >
                 <div className="flex flex-row gap-0.75 md:gap-1 items-center justify-center px-3.5 py-1 flex-1 pr-0">
-                    <LuMapPin className="size-3 md:size-4 mr-0.5 md:mr-1 flex-shrink-0 text-blue-600 group-hover:text-blue-700" />
+                    <LuMapPin className="size-3 md:size-4 mr-0.5 md:mr-1 shrink-0 text-blue-600 group-hover:text-blue-700" />
                     <span>{location}</span>
                 </div>
                 <LuChevronDown
                     className={cn(
-                        "size-3.5 md:size-4 flex text-blue-400 flex-shrink-0 transition-transform duration-300 ease-in-out group-hover:text-blue-600 mr-1",
+                        "size-3.5 md:size-4 flex text-blue-400 shrink-0 transition-transform duration-300 ease-in-out group-hover:text-blue-600 mr-1",
                         isOpen && "rotate-180"
                     )}
                 />

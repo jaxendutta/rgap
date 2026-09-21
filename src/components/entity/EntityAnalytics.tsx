@@ -305,7 +305,7 @@ export const AgencyBreakdown = ({
                                 {agency}
                             </div>
                             <div className="flex-1 mb-2">
-                                <div className="flex justify-between text-xs md:text-sm text-gray-600 mb-0.25 md:mb-0.5 text-xs md:text-sm">
+                                <div className="flex justify-between text-xs md:text-sm text-gray-600 mb-px md:mb-0.5">
                                     <span>{percentage.toFixed(1)}%</span>
                                     <span className="font-semibold text-gray-900 text-xs md:text-base">
                                         {formatCurrency(funding)}
@@ -372,7 +372,7 @@ export const TimePeriodAnalytics = ({
                                 {year}
                             </div>
                             <div className="flex-1 mb-2">
-                                <div className="flex justify-between items-end text-sm text-gray-600 mb-0.25 md:mb-0.5 text-xs md:text-sm">
+                                <div className="flex justify-between items-end text-xs md:text-sm text-gray-600 mb-px md:mb-0.5">
                                     <span className="text-[10px] md:text-sm">
                                         {data.count.toLocaleString()} grant
                                         {data.count !== 1 ? "s" : ""}

@@ -16,7 +16,7 @@ export const KPICard = ({
         {/* Static background watermark icon */}
         {Icon && (
             <div className="absolute -right-3 -bottom-3 text-blue-900/10 pointer-events-none z-0">
-                <Icon className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0" />
+                <Icon className="w-16 h-16 md:w-20 md:h-20 shrink-0" />
             </div>
         )}
 

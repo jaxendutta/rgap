@@ -108,7 +108,7 @@ const GrantHeader = ({
                         className="flex text-sm md:text-[16px] lg:text-[18px] items-start font-medium hover:text-blue-700 transition-colors gap-1 group mb-0.5 md:mb-2 pl-1 md:pl-0"
                         aria-label={`View profile for recipient ${grant.legal_name}`}
                     >
-                        <LuGraduationCap className="hidden md:flex md:size-4 lg:size-4.5 mt-0.5 md:mt-0.75 lg:mt-1 align-text-bottom flex-shrink-0" />
+                        <LuGraduationCap className="hidden md:flex md:size-4 lg:size-4.5 mt-0.5 md:mt-0.75 lg:mt-1 align-text-bottom shrink-0" />
                         <span className="inline-block">
                             {grant.legal_name}
                             <LuArrowUpRight className="hidden md:inline-block h-4 w-4 ml-1 mb-0.5 align-text-bottom opacity-20 group-hover:opacity-100 group-hover:-translate-y-0.5 transition-all" />
@@ -508,7 +508,7 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
                     <span className="ml-1">{isExpanded ? "Show Less" : "Show More"}</span>
                 </button>
 
-                <div className={cn("flex flex-col gap-2 overflow-hidden transition-all duration-300 ease-in-out", isExpanded ? "opacity-100 max-h-[2000px] pt-4" : "opacity-0 max-h-0")}>
+                <div className={cn("flex flex-col gap-2 overflow-hidden transition-all duration-300 ease-in-out", isExpanded ? "opacity-100 max-h-500 pt-4" : "opacity-0 max-h-0")}>
                     <Tabs
                         className="mb-2 bg-gray-100"
                         variant="pills"
@@ -524,7 +524,7 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 md:gap-4">
                                 <Card>
                                     <Card.Header title="Grant Information" icon={LuDatabase} size="sm" />
-                                    <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700 space-y-1">
+                                    <Card.Content size="sm" className="text-[11px] md:text-sm text-gray-700 space-y-1">
                                         <InfoRow
                                             label="Reference Number"
                                             value={
@@ -536,7 +536,7 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
                                                         className="text-blue-700 inline-flex items-center gap-0.5"
                                                     >
                                                         {grant.ref_number}
-                                                        <LuArrowUpRight className="size-3 flex-shrink-0" />
+                                                        <LuArrowUpRight className="size-3 shrink-0" />
                                                     </a>
                                                 ) : grant.ref_number
                                             }
@@ -549,7 +549,7 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
 
                                 <Card>
                                     <Card.Header title="Funding Summary" icon={LuDollarSign} size="sm" />
-                                    <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700 space-y-1">
+                                    <Card.Content size="sm" className="text-[11px] md:text-sm text-gray-700 space-y-1">
                                         <div className="grid grid-cols-12 gap-2 items-center">
                                             <span className="col-span-5 text-gray-500 self-start">Current Value</span>
                                             <div className="col-span-7 flex items-center">
@@ -566,7 +566,7 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
                                         />
                                         <div className="grid grid-cols-12 gap-2">
                                             <span className="col-span-5 text-gray-500 self-start">Funding Agency</span>
-                                            <span className="col-span-7 text-gray-800 break-words">
+                                            <span className="col-span-7 text-gray-800 wrap-break-word">
                                                 {grant.org_title_en} &ndash; {grant.org}
                                             </span>
                                         </div>
@@ -581,7 +581,7 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
 
                                 <Card>
                                     <Card.Header title="Funding Timeline" icon={LuCalendar} size="sm" />
-                                    <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700 space-y-1">
+                                    <Card.Content size="sm" className="text-[11px] md:text-sm text-gray-700 space-y-1">
                                         <InfoRow label="Start Date" value={formatDate(grant.agreement_start_date)} />
                                         <InfoRow label="End Date" value={formatDate(grant.agreement_end_date)} />
                                         <InfoRow label="Duration" value={grant.agreement_end_date
@@ -592,7 +592,7 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
 
                                 <Card>
                                     <Card.Header title="Location" icon={LuMapPin} size="sm" />
-                                    <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700 space-y-1">
+                                    <Card.Content size="sm" className="text-[11px] md:text-sm text-gray-700 space-y-1">
                                         <InfoRow label="Country" value={grant.country} placeholder="Not specified" checkValue={v => !!v && v.toUpperCase() !== "N/A"} />
                                         <InfoRow label="Province/State" value={grant.province} placeholder="Not specified" checkValue={v => !!v && v.toUpperCase() !== "N/A"} />
                                         <InfoRow label="City" value={grant.city} placeholder="Not specified" checkValue={v => !!v && v.toUpperCase() !== "N/A"} />
@@ -601,14 +601,14 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
 
                                 <Card>
                                     <Card.Header title={grant.prog_title_en || "Program Information"} subtitle={grant.prog_title_en ? "Program Purpose" : "Unspecified Program"} icon={LuBookOpen} size="sm" />
-                                    <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700">
+                                    <Card.Content size="sm" className="text-[11px] md:text-sm text-gray-700">
                                         {hasValue(grant.prog_purpose_en) ? grant.prog_purpose_en : "Program purpose not specified"}
                                     </Card.Content>
                                 </Card>
 
                                 <Card>
                                     <Card.Header title={grant.agreement_title_en || "Agreement Description"} subtitle={grant.agreement_title_en ? "Agreement Description" : "Unspecified Agreement Description"} icon={LuFileText} size="sm" />
-                                    <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700">
+                                    <Card.Content size="sm" className="text-[11px] md:text-sm text-gray-700">
                                         {grant.description_en || "Agreement description not specified"}
                                     </Card.Content>
                                 </Card>
@@ -616,7 +616,7 @@ export const GrantCard = (grant: GrantCardProps["grant"]) => {
                                 {hasValue(grant.expected_results_en) && (
                                     <Card>
                                         <Card.Header title="Expected Results" icon={LuCircleAlert} size="sm" />
-                                        <Card.Content size="sm" className="text-[11px] md:text-xs md:text-sm text-gray-700">
+                                        <Card.Content size="sm" className="text-[11px] md:text-sm text-gray-700">
                                             {grant.expected_results_en}
                                         </Card.Content>
                                     </Card>
