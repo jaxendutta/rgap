@@ -120,8 +120,15 @@ async function getAnalyticsGrants(id: number) {
     return result.rows;
 }
 
+interface TopProgram {
+    prog_id: number;
+    program_name: string;
+    grant_count: number;
+    total_funding: number;
+}
+
 async function getTopPrograms(id: number) {
-    const result = await db.query(`
+    const result = await db.query<TopProgram>(`
         SELECT 
             p.prog_id,
             p.prog_title_en as program_name,
@@ -155,7 +162,7 @@ export default async function RecipientPage({ params, searchParams }: PageProps)
     if (!recipient) notFound();
 
     let grants: GrantWithDetails[] = [];
-    let topPrograms: any[] = [];
+    let topPrograms: TopProgram[] = [];
 
     if (tab === 'analytics') {
         grants = await getAnalyticsGrants(id);
@@ -180,13 +187,17 @@ export default async function RecipientPage({ params, searchParams }: PageProps)
 export async function generateMetadata({ params }: PageProps) {
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
-    if (isNaN(id)) return { title: 'Recipient Not Found | RGAP' };
+    if (isNaN(id)) return { title: 'Recipient Not Found | RGAP', robots: { index: false, follow: false } };
 
     const result = await db.query('SELECT legal_name FROM recipients WHERE recipient_id = $1', [id]);
-    if (result.rows.length === 0) return { title: 'Recipient Not Found | RGAP' };
+    if (result.rows.length === 0) return { title: 'Recipient Not Found | RGAP', robots: { index: false, follow: false } };
 
     return {
         title: `${result.rows[0].legal_name} | RGAP`,
-        description: `View detailed information about ${result.rows[0].legal_name}.`
+        description: `View detailed information about ${result.rows[0].legal_name}.`,
+        robots: {
+            index: false,
+            follow: false,
+        },
     };
 }

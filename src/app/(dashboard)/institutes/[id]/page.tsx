@@ -207,11 +207,15 @@ export default async function InstitutePage({ params, searchParams }: PageProps)
 export async function generateMetadata({ params }: PageProps) {
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
-    if (isNaN(id)) return { title: 'Institute Not Found | RGAP' };
+    if (isNaN(id)) return { title: 'Institute Not Found | RGAP', robots: { index: false, follow: false } };
     const result = await db.query('SELECT name FROM institutes WHERE institute_id = $1', [id]);
-    if (result.rows.length === 0) return { title: 'Institute Not Found | RGAP' };
+    if (result.rows.length === 0) return { title: 'Institute Not Found | RGAP', robots: { index: false, follow: false } };
     return {
         title: `${result.rows[0].name} | RGAP`,
-        description: `View information about ${result.rows[0].name}.`
+        description: `View information about ${result.rows[0].name}.`,
+        robots: {
+            index: false,
+            follow: false,
+        },
     };
 }
