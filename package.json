@@ -9,7 +9,8 @@
     "lint": "eslint",
     "bump-last-updated": "node scripts/bump-last-updated.mjs",
     "update-grant-count": "node scripts/update-grant-count.mjs",
-    "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs"
+    "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs",
+    "prune:deployments": "node scripts/prune_vercel_deployments.mjs 3"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
