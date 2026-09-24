@@ -11,7 +11,9 @@ import {
     LuBookmark,
     LuUser,
     LuLogIn,
-    LuBookOpen
+    LuBookOpen,
+    LuPanelLeftClose,
+    LuPanelLeftOpen
 } from "react-icons/lu";
 import { GiAbstract014 } from "react-icons/gi";
 import Tabs from "@/components/ui/Tabs";
@@ -62,10 +64,43 @@ const Sidebar = () => {
                     "transition-all duration-300 ease-in-out",
                     isExpanded ? "w-48" : "w-16"
                 )}
-                onMouseEnter={() => setIsExpanded(true)}
-                onMouseLeave={() => setIsExpanded(false)}
+                onMouseEnter={() => {
+                    // Touchscreens fire a synthetic mouseenter on tap; only real hover-capable
+                    // pointers (mice/trackpads) should be able to expand the sidebar this way.
+                    if (window.matchMedia("(hover: hover)").matches) setIsExpanded(true);
+                }}
+                onMouseLeave={() => {
+                    if (window.matchMedia("(hover: hover)").matches) setIsExpanded(false);
+                }}
             >
                 <nav className="p-2 space-y-1 mt-2">
+                    {/* Touch-only expand/collapse toggle — hover doesn't work on touchscreens, so this is hidden whenever the device can hover */}
+                    <button
+                        type="button"
+                        onClick={() => setIsExpanded((prev) => !prev)}
+                        className={cn(
+                            "hidden [@media(hover:none)]:flex items-center h-10 rounded-3xl transition-colors",
+                            "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        )}
+                        aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
+                        aria-expanded={isExpanded}
+                    >
+                        <div className="min-w-12 h-full flex items-center justify-center">
+                            {isExpanded
+                                ? <LuPanelLeftClose className="h-5 w-5" />
+                                : <LuPanelLeftOpen className="h-5 w-5" />}
+                        </div>
+
+                        <div
+                            className={cn(
+                                "whitespace-nowrap overflow-hidden transition-opacity duration-300",
+                                isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+                            )}
+                        >
+                            <span className="text-sm font-medium">{isExpanded ? "Collapse" : "Expand"}</span>
+                        </div>
+                    </button>
+
                     {desktopNavigation.map((item) => {
                         // Check strict equality OR if we are inside the account section
                         const isActive = pathname === item.href || (item.href === '/account' && pathname.startsWith('/account'));
@@ -114,7 +149,7 @@ const Sidebar = () => {
                             {SITE_NAME}
                         </span>
 
-                        <span className="whitespace-nowrap text-[10px] tracking-[0.2em] text-gray-400 font-medium [writing-mode:vertical-rl] select-none uppercase">
+                        <span className="hidden xl:block whitespace-nowrap text-[10px] tracking-[0.2em] text-gray-400 font-medium [writing-mode:vertical-rl] select-none uppercase">
                             {SITE_FULL_NAME}
                         </span>
                     </div>
@@ -136,7 +171,7 @@ const Sidebar = () => {
             </aside>
 
             {/* Spacer for Desktop Content */}
-            <div className="hidden lg:block w-16 flex-shrink-0" />
+            <div className="hidden lg:block w-16 shrink-0" />
 
             {/* Mobile Bottom Navigation */}
             <div
