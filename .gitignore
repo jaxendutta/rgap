@@ -47,3 +47,5 @@ next-env.d.ts
 __pycache__/
 .venv/
 pipeline/*.csv
+.env*
+!.env.example
